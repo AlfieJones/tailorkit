@@ -1,0 +1,26 @@
+{
+  "name": "@tailorkit/sandbox-ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./worker": "./src/worker.ts",
+    "./host": "./src/host.ts",
+    "./protocol": "./src/protocol.ts",
+    "./react": "./src/react.ts"
+  },
+  "dependencies": {
+    "@orpc/client": "catalog:",
+    "@orpc/server": "catalog:",
+    "preact": "^10.29.1"
+  },
+  "devDependencies": {
+    "@tailorkit/config": "workspace:*",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

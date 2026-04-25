@@ -31,8 +31,6 @@ const llmMiddleware = createMiddleware().server(({ next, request }) => {
   return next();
 });
 
-export const startInstance = createStart(() => {
-  return {
-    requestMiddleware: [llmMiddleware],
-  };
-});
+export const startInstance = createStart(() => ({
+  requestMiddleware: [llmMiddleware],
+}));

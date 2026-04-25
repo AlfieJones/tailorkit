@@ -1,5 +1,5 @@
 {
-  "extends": "@tailorkit-new/config/tsconfig.base.json",
+  "extends": "@tailorkit/config/tsconfig.base.json",
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,

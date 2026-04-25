@@ -1,2 +1,2 @@
-@import "@tailorkit-new/ui/globals.css";
+@import "@tailorkit/ui/globals.css";
 @source "../node_modules/streamdown/dist/*.js";

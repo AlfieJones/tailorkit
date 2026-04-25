@@ -1,4 +1,4 @@
-import { auth } from "@tailorkit-new/auth";
+import { auth } from "@tailorkit/auth";
 
 export async function createContext({ req }: { req: Request }) {
   const session = await auth.api.getSession({

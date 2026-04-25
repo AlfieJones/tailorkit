@@ -1,10 +1,10 @@
 {
-  "extends": "@tailorkit-new/config/tsconfig.base.json",
+  "extends": "@tailorkit/config/tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
-      "@tailorkit-new/ui/*": ["./src/*"]
+      "@tailorkit/ui/*": ["./src/*"]
     },
     "strictNullChecks": true
   },

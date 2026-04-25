@@ -1,4 +1,4 @@
-import { auth } from "@tailorkit-new/auth";
+import { auth } from "@tailorkit/auth";
 import { createMiddleware } from "@tanstack/react-start";
 
 export const authMiddleware = createMiddleware().server(async ({ next, request }) => {

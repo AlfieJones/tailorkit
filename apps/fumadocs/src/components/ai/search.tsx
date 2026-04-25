@@ -1,20 +1,12 @@
 "use client";
-import { useChat, type UseChatHelpers } from "@ai-sdk/react";
+import { useChat } from "@ai-sdk/react";
+import type { UseChatHelpers } from "@ai-sdk/react";
 import { Presence } from "@radix-ui/react-presence";
-import { DefaultChatTransport, type Tool, type UIToolInvocation } from "ai";
+import { DefaultChatTransport } from "ai";
+import type { Tool, UIToolInvocation } from "ai";
 import { Loader2, MessageCircleIcon, RefreshCw, SearchIcon, Send, X } from "lucide-react";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  type SyntheticEvent,
-  use,
-  useEffect,
-  useEffectEvent,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { createContext, use, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import type { ComponentProps, ReactNode, SyntheticEvent } from "react";
 
 import { cn } from "../../lib/cn";
 import type { ChatUIMessage, SearchTool } from "../../routes/api.chat";
@@ -50,9 +42,9 @@ export function AISearchPanelHeader({ className, ...props }: ComponentProps<"div
         tabIndex={-1}
         className={cn(
           buttonVariants({
-            size: "icon-sm",
-            color: "ghost",
             className: "text-fd-muted-foreground rounded-full",
+            color: "ghost",
+            size: "icon-sm",
           }),
         )}
         onClick={() => setOpen(false)}
@@ -67,7 +59,9 @@ export function AISearchInputActions() {
   const { messages, status, setMessages, regenerate } = useChatContext();
   const isLoading = status === "streaming";
 
-  if (messages.length === 0) return null;
+  if (messages.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -76,9 +70,9 @@ export function AISearchInputActions() {
           type="button"
           className={cn(
             buttonVariants({
+              className: "rounded-full gap-1.5",
               color: "secondary",
               size: "sm",
-              className: "rounded-full gap-1.5",
             }),
           )}
           onClick={() => regenerate()}
@@ -91,9 +85,9 @@ export function AISearchInputActions() {
         type="button"
         className={cn(
           buttonVariants({
+            className: "rounded-full",
             color: "secondary",
             size: "sm",
-            className: "rounded-full",
           }),
         )}
         onClick={() => setMessages([])}
@@ -112,29 +106,33 @@ export function AISearchInput(props: ComponentProps<"form">) {
   const onStart = (e?: SyntheticEvent) => {
     e?.preventDefault();
     const message = input.trim();
-    if (message.length === 0) return;
+    if (message.length === 0) {
+      return;
+    }
 
     void sendMessage({
-      role: "user",
       parts: [
         {
-          type: "data-client",
           data: {
             location: location.href,
           },
+          type: "data-client",
         },
         {
-          type: "text",
           text: message,
+          type: "text",
         },
       ],
+      role: "user",
     });
     setInput("");
     localStorage.removeItem(StorageKeyInput);
   };
 
   useEffect(() => {
-    if (isLoading) document.getElementById("nd-ai-input")?.focus();
+    if (isLoading) {
+      document.querySelector("#nd-ai-input")?.focus();
+    }
   }, [isLoading]);
 
   return (
@@ -161,8 +159,8 @@ export function AISearchInput(props: ComponentProps<"form">) {
           type="button"
           className={cn(
             buttonVariants({
-              color: "secondary",
               className: "transition-all rounded-full mt-2 gap-2",
+              color: "secondary",
             }),
           )}
           onClick={stop}
@@ -176,8 +174,8 @@ export function AISearchInput(props: ComponentProps<"form">) {
           type="submit"
           className={cn(
             buttonVariants({
-              color: "primary",
               className: "transition-all rounded-full mt-2",
+              color: "primary",
             }),
           )}
           disabled={input.length === 0}
@@ -193,14 +191,18 @@ function List(props: Omit<ComponentProps<"div">, "dir">) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) {
+      return;
+    }
     function callback() {
       const container = containerRef.current;
-      if (!container) return;
+      if (!container) {
+        return;
+      }
 
       container.scrollTo({
-        top: container.scrollHeight,
         behavior: "instant",
+        top: container.scrollHeight,
       });
     }
 
@@ -251,8 +253,8 @@ function Input(props: ComponentProps<"textarea">) {
 }
 
 const roleName: Record<string, string> = {
-  user: "you",
   assistant: "fumadocs",
+  user: "you",
 };
 
 function Message({ message, ...props }: { message: ChatUIMessage } & ComponentProps<"div">) {
@@ -269,7 +271,9 @@ function Message({ message, ...props }: { message: ChatUIMessage } & ComponentPr
       const toolName = part.type.slice("tool-".length);
       const p = part as UIToolInvocation<Tool>;
 
-      if (toolName !== "search" || !p.toolCallId) continue;
+      if (toolName !== "search" || !p.toolCallId) {
+        continue;
+      }
       searchCalls.push(p);
     }
   }
@@ -288,21 +292,19 @@ function Message({ message, ...props }: { message: ChatUIMessage } & ComponentPr
         <Markdown text={markdown} />
       </div>
 
-      {searchCalls.map((call) => {
-        return (
-          <div
-            key={call.toolCallId}
-            className="flex flex-row gap-2 items-center mt-3 rounded-lg border bg-fd-secondary text-fd-muted-foreground text-xs p-2"
-          >
-            <SearchIcon className="size-4" />
-            {call.state === "output-error" || call.state === "output-denied" ? (
-              <p className="text-fd-error">{call.errorText ?? "Failed to search"}</p>
-            ) : (
-              <p>{!call.output ? "Searching…" : `${call.output.length} search results`}</p>
-            )}
-          </div>
-        );
-      })}
+      {searchCalls.map((call) => (
+        <div
+          key={call.toolCallId}
+          className="flex flex-row gap-2 items-center mt-3 rounded-lg border bg-fd-secondary text-fd-muted-foreground text-xs p-2"
+        >
+          <SearchIcon className="size-4" />
+          {call.state === "output-error" || call.state === "output-denied" ? (
+            <p className="text-fd-error">{call.errorText ?? "Failed to search"}</p>
+          ) : (
+            <p>{!call.output ? "Searching…" : `${call.output.length} search results`}</p>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -465,9 +467,17 @@ export function useHotKey() {
 }
 
 export function useAISearchContext() {
-  return use(Context)!;
+  const ctx = use(Context);
+  if (!ctx) {
+    throw new Error("useAISearchContext must be used within AISearch");
+  }
+  return ctx;
 }
 
 function useChatContext() {
-  return use(Context)!.chat;
+  const ctx = use(Context);
+  if (!ctx) {
+    throw new Error("useChatContext must be used within AISearch");
+  }
+  return ctx.chat;
 }

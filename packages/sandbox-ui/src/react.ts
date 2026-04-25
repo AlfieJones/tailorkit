@@ -1,0 +1,136 @@
+import { Fragment, createElement, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { createReactHostRenderer } from "./adapters";
+import { createRemoteUiHost, createWorkerUiClient } from "./host";
+import type { HostController, RemoteUiHost, WorkerUiClient } from "./host";
+import type { RemoteEventBinding, RemoteHostEvent, WorkerRenderResult } from "./protocol";
+
+interface UseWorkerUiOptions {
+  components?: Record<string, unknown>;
+  worker: Worker | (() => Worker);
+}
+
+interface UseWorkerUiResult {
+  error: Error | null;
+  node: ReactNode;
+  revision: number | null;
+  status: "error" | "ready" | "starting";
+}
+
+const reactCreateElement = (
+  type: unknown,
+  props: Record<string, unknown> | null,
+  ...children: unknown[]
+): unknown =>
+  createElement(type as Parameters<typeof createElement>[0], props, ...(children as ReactNode[]));
+
+const toReactNode = (
+  result: WorkerRenderResult,
+  remoteHost: RemoteUiHost<unknown>,
+): {
+  error: Error | null;
+  node: ReactNode;
+  revision: number | null;
+  status: UseWorkerUiResult["status"];
+} => {
+  if (result.type === "error") {
+    return {
+      error: new Error(result.message),
+      node: null,
+      revision: null,
+      status: "error",
+    };
+  }
+
+  const rendered = remoteHost.handleWorkerMessage(result);
+  return {
+    error: null,
+    node: rendered as ReactNode,
+    revision: result.revision,
+    status: "ready",
+  };
+};
+
+export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
+  const { components, worker: workerOption } = options;
+  const [result, setResult] = useState<UseWorkerUiResult>({
+    error: null,
+    node: null,
+    revision: null,
+    status: "starting",
+  });
+
+  useEffect(() => {
+    let active = true;
+    const worker = typeof workerOption === "function" ? workerOption() : workerOption;
+    const client: WorkerUiClient = createWorkerUiClient(worker);
+    const remoteHostRef: { current: RemoteUiHost<unknown> | null } = {
+      current: null,
+    };
+
+    const setRenderResult = (renderResult: WorkerRenderResult): void => {
+      if (!active || remoteHostRef.current === null) {
+        return;
+      }
+      setResult(toReactNode(renderResult, remoteHostRef.current));
+    };
+
+    const setError = (error: unknown): void => {
+      if (!active) {
+        return;
+      }
+      setResult({
+        error: error instanceof Error ? error : new Error(String(error)),
+        node: null,
+        revision: null,
+        status: "error",
+      });
+    };
+
+    const controller: HostController = {
+      async dispatchEvent(
+        binding: RemoteEventBinding,
+        event: RemoteHostEvent,
+      ): Promise<WorkerRenderResult> {
+        const renderResult = await client.dispatchEvent({
+          event,
+          handlerId: binding.handlerId,
+        });
+        setRenderResult(renderResult);
+        return renderResult;
+      },
+      mount: () => client.mount(),
+      unmount: () => client.unmount(),
+    };
+
+    remoteHostRef.current = createRemoteUiHost(
+      createReactHostRenderer(reactCreateElement, Fragment, controller, {
+        components,
+        onEventError: setError,
+      }),
+    );
+
+    const mount = async (): Promise<void> => {
+      try {
+        setRenderResult(await controller.mount());
+      } catch (error) {
+        setError(error);
+      }
+    };
+
+    void mount();
+
+    return () => {
+      active = false;
+      void (async () => {
+        try {
+          await controller.unmount();
+        } finally {
+          worker.terminate();
+        }
+      })();
+    };
+  }, [components, workerOption]);
+
+  return result;
+};

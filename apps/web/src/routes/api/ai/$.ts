@@ -1,7 +1,8 @@
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
 import { createFileRoute } from "@tanstack/react-router";
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import type { UIMessage } from "ai";
 
 export const Route = createFileRoute("/api/ai/$")({
   server: {
@@ -11,21 +12,18 @@ export const Route = createFileRoute("/api/ai/$")({
           const { messages }: { messages: UIMessage[] } = await request.json();
 
           const model = wrapLanguageModel({
-            model: google("gemini-2.5-flash"),
             middleware: devToolsMiddleware(),
+            model: google("gemini-2.5-flash"),
           });
           const result = streamText({
-            model,
             messages: await convertToModelMessages(messages),
+            model,
           });
 
           return result.toUIMessageStreamResponse();
         } catch (error) {
           console.error("AI API error:", error);
-          return new Response(JSON.stringify({ error: "Failed to process AI request" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
+          return Response.json({ error: "Failed to process AI request" }, { status: 500 });
         }
       },
     },

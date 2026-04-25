@@ -11,14 +11,16 @@
     "prefix": ""
   },
   "iconLibrary": "lucide",
-  "aliases": {
-    "components": "@tailorkit-new/ui/components",
-    "utils": "@tailorkit-new/ui/lib/utils",
-    "hooks": "@tailorkit-new/ui/hooks",
-    "lib": "@tailorkit-new/ui/lib",
-    "ui": "@tailorkit-new/ui/components"
-  },
   "menuColor": "default",
   "menuAccent": "subtle",
-  "registries": {}
+  "aliases": {
+    "components": "@tailorkit/ui/components",
+    "utils": "@tailorkit/ui/lib/utils",
+    "ui": "@tailorkit/ui/components",
+    "lib": "@tailorkit/ui/lib",
+    "hooks": "@tailorkit/ui/hooks"
+  },
+  "registries": {
+    "@coss": "https://coss.com/ui/r/{name}.json"
+  }
 }

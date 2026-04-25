@@ -1,5 +1,5 @@
 {
-  "name": "@tailorkit-new/db",
+  "name": "@tailorkit/db",
   "type": "module",
   "exports": {
     ".": {
@@ -13,21 +13,17 @@
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate",
-    "db:start": "docker compose up -d",
-    "db:watch": "docker compose up",
-    "db:stop": "docker compose stop",
-    "db:down": "docker compose down"
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
-    "@tailorkit-new/env": "workspace:*",
+    "@tailorkit/env": "workspace:*",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "pg": "^8.17.1",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@tailorkit-new/config": "workspace:*",
+    "@tailorkit/config": "workspace:*",
     "@types/pg": "catalog:",
     "drizzle-kit": "^0.31.8",
     "typescript": "catalog:"

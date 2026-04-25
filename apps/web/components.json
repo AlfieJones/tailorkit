@@ -13,8 +13,8 @@
   "iconLibrary": "lucide",
   "aliases": {
     "components": "@/components",
-    "utils": "@tailorkit-new/ui/lib/utils",
-    "ui": "@tailorkit-new/ui/components",
+    "utils": "@tailorkit/ui/lib/utils",
+    "ui": "@tailorkit/ui/components",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },

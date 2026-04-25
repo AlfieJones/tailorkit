@@ -31,18 +31,18 @@
       "cache": false,
       "persistent": true
     },
-    "db:start": {
+    "services:start": {
       "cache": false,
       "persistent": true
     },
-    "db:stop": {
+    "services:stop": {
       "cache": false
     },
-    "db:watch": {
+    "services:watch": {
       "cache": false,
       "persistent": true
     },
-    "db:down": {
+    "services:down": {
       "cache": false
     }
   }

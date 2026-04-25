@@ -38,12 +38,14 @@ const serverLoader = createServerFn({
   .inputValidator((slugs: string[]) => slugs)
   .handler(async ({ data: slugs }) => {
     const page = source.getPage(slugs);
-    if (!page) throw notFound();
+    if (!page) {
+      throw notFound();
+    }
 
     return {
-      path: page.path,
       markdownUrl: getPageMarkdownUrl(page).url,
       pageTree: await source.serializePageTree(source.getPageTree()),
+      path: page.path,
     };
   });
 
@@ -89,8 +91,8 @@ function Page() {
           position="float"
           className={cn(
             buttonVariants({
-              variant: "secondary",
               className: "text-fd-muted-foreground rounded-2xl",
+              variant: "secondary",
             }),
           )}
         >

@@ -1,5 +1,5 @@
 {
-  "name": "@tailorkit-new/env",
+  "name": "@tailorkit/env",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@tailorkit-new/config": "workspace:*",
+    "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

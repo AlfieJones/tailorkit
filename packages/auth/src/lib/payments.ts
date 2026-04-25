@@ -1,7 +1,7 @@
-import { Polar } from "@polar-sh/sdk";
-import { env } from "@tailorkit-new/env/server";
+// import { Polar } from "@polar-sh/sdk";
+// import { env } from "@tailorkit/env/server";
 
-export const polarClient = new Polar({
-  accessToken: env.POLAR_ACCESS_TOKEN,
-  server: "sandbox",
-});
+// export const polarClient = new Polar({
+//   accessToken: env.POLAR_ACCESS_TOKEN,
+//   server: "sandbox",
+// });

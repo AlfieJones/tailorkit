@@ -1,4 +1,4 @@
-import { Button } from "@tailorkit-new/ui/components/button";
+import { Button } from "@tailorkit/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,8 +7,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@tailorkit-new/ui/components/dropdown-menu";
-import { Skeleton } from "@tailorkit-new/ui/components/skeleton";
+} from "@tailorkit/ui/components/dropdown-menu";
+import { Skeleton } from "@tailorkit/ui/components/skeleton";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { authClient } from "@/lib/auth-client";

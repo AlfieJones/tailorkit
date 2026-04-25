@@ -1,5 +1,5 @@
 {
-  "name": "@tailorkit-new/api",
+  "name": "@tailorkit/api",
   "type": "module",
   "exports": {
     ".": {
@@ -15,16 +15,16 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "@tailorkit-new/auth": "workspace:*",
-    "@tailorkit-new/db": "workspace:*",
-    "@tailorkit-new/env": "workspace:*",
+    "@tailorkit/auth": "workspace:*",
+    "@tailorkit/db": "workspace:*",
+    "@tailorkit/env": "workspace:*",
     "@types/pg": "catalog:",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@tailorkit-new/config": "workspace:*",
+    "@tailorkit/config": "workspace:*",
     "typescript": "catalog:"
   }
 }
