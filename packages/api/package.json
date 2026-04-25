@@ -1,0 +1,30 @@
+{
+  "name": "@tailorkit-new/api",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@orpc/client": "catalog:",
+    "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/zod": "catalog:",
+    "@tailorkit-new/auth": "workspace:*",
+    "@tailorkit-new/db": "workspace:*",
+    "@tailorkit-new/env": "workspace:*",
+    "@types/pg": "catalog:",
+    "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailorkit-new/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

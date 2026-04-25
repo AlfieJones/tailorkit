@@ -1,0 +1,26 @@
+{
+  "name": "@tailorkit-new/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@polar-sh/better-auth": "catalog:",
+    "@polar-sh/sdk": "^0.42.2",
+    "@tailorkit-new/db": "workspace:*",
+    "@tailorkit-new/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailorkit-new/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
