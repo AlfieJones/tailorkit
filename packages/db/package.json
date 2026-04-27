@@ -25,7 +25,7 @@
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
     "@types/pg": "catalog:",
-    "drizzle-kit": "^0.31.8",
+    "drizzle-kit": "^1.0.0-beta.22",
     "typescript": "catalog:"
   }
 }

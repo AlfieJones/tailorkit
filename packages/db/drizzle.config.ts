@@ -1,8 +1,8 @@
-import dotenv from "dotenv";
+import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
-dotenv.config({
-  path: "../../apps/web/.env",
+config({
+  path: ["../../apps/web/.env.local", "../../apps/web/.env"],
 });
 
 export default defineConfig({
@@ -11,5 +11,6 @@ export default defineConfig({
   },
   dialect: "postgresql",
   out: "./src/migrations",
-  schema: "./src/schema",
+  schema: "./src/schema/index.ts",
+  verbose: true,
 });

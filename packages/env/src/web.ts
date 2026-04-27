@@ -4,5 +4,5 @@ export const env = createEnv({
   client: {},
   clientPrefix: "VITE_",
   emptyStringAsUndefined: true,
-  runtimeEnv: import.meta.env as Record<string, string | undefined>,
+  runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 });

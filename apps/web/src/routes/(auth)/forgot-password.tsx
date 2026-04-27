@@ -11,7 +11,7 @@ import {
   CardFrameTitle,
   CardPanel,
 } from "@tailorkit/ui/components/card";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
+import { Field, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
 import { Form } from "@tailorkit/ui/components/form";
 import { Input } from "@tailorkit/ui/components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@tailorkit/ui/components/input-group";
@@ -24,7 +24,7 @@ import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
-export const Route = createFileRoute("/forgot-password")({
+export const Route = createFileRoute("/(auth)/forgot-password")({
   component: RouteComponent,
 });
 

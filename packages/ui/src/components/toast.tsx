@@ -7,10 +7,11 @@ import {
   InfoIcon,
   LoaderCircleIcon,
   TriangleAlertIcon,
+  XIcon,
 } from "lucide-react";
 import type React from "react";
 import { cn } from "@tailorkit/ui/lib/utils";
-import { buttonVariants } from "@tailorkit/ui/components/button";
+import { Button, buttonVariants } from "@tailorkit/ui/components/button";
 
 const TOAST_ICONS = {
   error: CircleAlertIcon,
@@ -127,6 +128,13 @@ function Toasts({
               toast={toast}
             >
               <Toast.Content className="pointer-events-auto flex items-center justify-between gap-1.5 overflow-hidden px-3.5 py-3 text-sm transition-opacity duration-250 data-behind:not-data-expanded:pointer-events-none data-behind:opacity-0 data-expanded:opacity-100">
+                <Toast.Close
+                  aria-label="Close"
+                  className={"absolute top-2 right-2"}
+                  render={<Button variant={"ghost"} size={"icon-xs"} />}
+                >
+                  <XIcon />
+                </Toast.Close>
                 <div className="flex gap-2">
                   {Icon && (
                     <div

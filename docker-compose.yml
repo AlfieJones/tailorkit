@@ -19,5 +19,17 @@ services:
       retries: 5
     restart: unless-stopped
 
+  email:
+    image: axllent/mailpit:v1.29
+    ports:
+      - "1025:1025" # SMTP port
+      - "4000:8025" # Web UI
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8025/livez"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   tailorkit_postgres_data:

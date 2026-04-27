@@ -19,6 +19,7 @@
     "@polar-sh/better-auth": "catalog:",
     "@tailorkit/api": "workspace:*",
     "@tailorkit/auth": "workspace:*",
+    "@tailorkit/db": "workspace:*",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/ui": "workspace:*",
     "@tailwindcss/vite": "catalog:",

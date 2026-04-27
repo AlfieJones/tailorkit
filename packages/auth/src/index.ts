@@ -1,7 +1,8 @@
 // import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { createDb } from "@tailorkit/db";
 import * as schema from "@tailorkit/db/schema/auth";
-import { env } from "@tailorkit/env/server";
+import { sendBetterAuthOtpEmail } from "@tailorkit/email";
+import { env, getBaseUrl } from "@tailorkit/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
@@ -9,7 +10,6 @@ import { waitUntil as vercelWaitUntil } from "@vercel/functions";
 import { haveIBeenPwned } from "better-auth/plugins";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { organization } from "better-auth/plugins/organization";
-import { sendOtpEmail } from "./lib/email";
 
 const noopWaitUntil = (promise: Promise<unknown>) => void promise;
 
@@ -33,24 +33,40 @@ export function createAuth() {
         generateId: "uuid",
       },
     },
-    baseURL: env.BETTER_AUTH_URL,
+    baseURL: getBaseUrl(),
     database: drizzleAdapter(db, {
       provider: "pg",
       schema,
+      transaction: true,
     }),
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
+      minPasswordLength: 10,
+      revokeSessionsOnPasswordReset: true,
     },
     plugins: [
       haveIBeenPwned(),
       emailOTP({
         expiresIn: 600,
-        sendVerificationOTP: async ({ email, otp, type }) => {
-          backgroundTaskHandler(sendOtpEmail({ email, otp, type }));
+        sendVerificationOTP: ({ email, otp, type }) => {
+          backgroundTaskHandler(sendBetterAuthOtpEmail({ email, otp, type }));
+          return Promise.resolve();
         },
       }),
-      organization(),
+      organization({
+        schema: {
+          organization: {
+            additionalFields: {
+              slug: {
+                type: "string",
+                fieldName: "slug",
+                unique: true,
+              },
+            },
+          },
+        },
+      }),
       // polar({
       //   client: polarClient,
       //   createCustomerOnSignUp: true,
@@ -72,7 +88,17 @@ export function createAuth() {
       tanstackStartCookies(),
     ],
     secret: env.BETTER_AUTH_SECRET,
-    trustedOrigins: [env.CORS_ORIGIN],
+    trustedOrigins: [getBaseUrl()],
+    user: {
+      additionalFields: {
+        bio: {
+          defaultValue: null,
+          fieldName: "bio",
+          required: false,
+          type: "string",
+        },
+      },
+    },
   });
 }
 

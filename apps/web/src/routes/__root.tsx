@@ -6,9 +6,8 @@ import { AnchoredToastProvider, ToastProvider } from "@tailorkit/ui/toast";
 
 import type { orpc } from "@/utils/orpc";
 
-import Header from "../components/header";
-
 import appCss from "../index.css?url";
+
 export interface RouterAppContext {
   orpc: typeof orpc;
   queryClient: QueryClient;
@@ -33,7 +32,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         name: "viewport",
       },
       {
-        title: "My App",
+        title: "TailorKit",
       },
     ],
   }),

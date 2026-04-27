@@ -9,33 +9,82 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as SignUpRouteImport } from './routes/sign-up'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as authRouteRouteImport } from './routes/(auth)/route'
+import { Route as appRouteRouteImport } from './routes/(app)/route'
+import { Route as appIndexRouteImport } from './routes/(app)/index'
+import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
+import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
+import { Route as authLoginRouteImport } from './routes/(auth)/login'
+import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as appSettingsRouteRouteImport } from './routes/(app)/settings/route'
+import { Route as appOrgSlugRouteRouteImport } from './routes/(app)/$orgSlug/route'
+import { Route as appSettingsIndexRouteImport } from './routes/(app)/settings/index'
+import { Route as appOrgSlugIndexRouteImport } from './routes/(app)/$orgSlug/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAiSplatRouteImport } from './routes/api/ai/$'
+import { Route as appSettingsSecurityRouteImport } from './routes/(app)/settings/security'
+import { Route as appOrgSlugSupportRouteImport } from './routes/(app)/$orgSlug/support'
+import { Route as appOrgSlugSettingsRouteImport } from './routes/(app)/$orgSlug/settings'
+import { Route as appOrgSlugProjectsRouteImport } from './routes/(app)/$orgSlug/projects'
+import { Route as appOrgSlugProjectSlugRouteImport } from './routes/(app)/$orgSlug/$projectSlug'
+import { Route as appOrgSlugSettingsIndexRouteImport } from './routes/(app)/$orgSlug/settings/index'
+import { Route as appOrgSlugProjectSlugIndexRouteImport } from './routes/(app)/$orgSlug/$projectSlug/index'
+import { Route as appOrgSlugSettingsMembersRouteImport } from './routes/(app)/$orgSlug/settings/members'
+import { Route as appOrgSlugSettingsBillingRouteImport } from './routes/(app)/$orgSlug/settings/billing'
 
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
+const authRouteRoute = authRouteRouteImport.update({
+  id: '/(auth)',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const appRouteRoute = appRouteRouteImport.update({
+  id: '/(app)',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const appIndexRoute = appIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
 } as any)
-const SignUpRoute = SignUpRouteImport.update({
+const authSignUpRoute = authSignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
 } as any)
-const LoginRoute = LoginRouteImport.update({
+const authLoginRoute = authLoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
 } as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
+} as any)
+const appSettingsRouteRoute = appSettingsRouteRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appOrgSlugRouteRoute = appOrgSlugRouteRouteImport.update({
+  id: '/$orgSlug',
+  path: '/$orgSlug',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appSettingsIndexRoute = appSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => appSettingsRouteRoute,
+} as any)
+const appOrgSlugIndexRoute = appOrgSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => appOrgSlugRouteRoute,
 } as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
@@ -52,70 +101,196 @@ const ApiAiSplatRoute = ApiAiSplatRouteImport.update({
   path: '/api/ai/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const appSettingsSecurityRoute = appSettingsSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => appSettingsRouteRoute,
+} as any)
+const appOrgSlugSupportRoute = appOrgSlugSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => appOrgSlugRouteRoute,
+} as any)
+const appOrgSlugSettingsRoute = appOrgSlugSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => appOrgSlugRouteRoute,
+} as any)
+const appOrgSlugProjectsRoute = appOrgSlugProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => appOrgSlugRouteRoute,
+} as any)
+const appOrgSlugProjectSlugRoute = appOrgSlugProjectSlugRouteImport.update({
+  id: '/$projectSlug',
+  path: '/$projectSlug',
+  getParentRoute: () => appOrgSlugRouteRoute,
+} as any)
+const appOrgSlugSettingsIndexRoute = appOrgSlugSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => appOrgSlugSettingsRoute,
+} as any)
+const appOrgSlugProjectSlugIndexRoute =
+  appOrgSlugProjectSlugIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => appOrgSlugProjectSlugRoute,
+  } as any)
+const appOrgSlugSettingsMembersRoute =
+  appOrgSlugSettingsMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => appOrgSlugSettingsRoute,
+  } as any)
+const appOrgSlugSettingsBillingRoute =
+  appOrgSlugSettingsBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => appOrgSlugSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
-  '/sign-up': typeof SignUpRoute
-  '/verify-email': typeof VerifyEmailRoute
+  '/$orgSlug': typeof appOrgSlugRouteRouteWithChildren
+  '/settings': typeof appSettingsRouteRouteWithChildren
+  '/forgot-password': typeof authForgotPasswordRoute
+  '/login': typeof authLoginRoute
+  '/sign-up': typeof authSignUpRoute
+  '/verify-email': typeof authVerifyEmailRoute
+  '/': typeof appIndexRoute
+  '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteWithChildren
+  '/$orgSlug/projects': typeof appOrgSlugProjectsRoute
+  '/$orgSlug/settings': typeof appOrgSlugSettingsRouteWithChildren
+  '/$orgSlug/support': typeof appOrgSlugSupportRoute
+  '/settings/security': typeof appSettingsSecurityRoute
   '/api/ai/$': typeof ApiAiSplatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/$orgSlug/': typeof appOrgSlugIndexRoute
+  '/settings/': typeof appSettingsIndexRoute
+  '/$orgSlug/settings/billing': typeof appOrgSlugSettingsBillingRoute
+  '/$orgSlug/settings/members': typeof appOrgSlugSettingsMembersRoute
+  '/$orgSlug/$projectSlug/': typeof appOrgSlugProjectSlugIndexRoute
+  '/$orgSlug/settings/': typeof appOrgSlugSettingsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
-  '/sign-up': typeof SignUpRoute
-  '/verify-email': typeof VerifyEmailRoute
+  '/forgot-password': typeof authForgotPasswordRoute
+  '/login': typeof authLoginRoute
+  '/sign-up': typeof authSignUpRoute
+  '/verify-email': typeof authVerifyEmailRoute
+  '/': typeof appIndexRoute
+  '/$orgSlug/projects': typeof appOrgSlugProjectsRoute
+  '/$orgSlug/support': typeof appOrgSlugSupportRoute
+  '/settings/security': typeof appSettingsSecurityRoute
   '/api/ai/$': typeof ApiAiSplatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/$orgSlug': typeof appOrgSlugIndexRoute
+  '/settings': typeof appSettingsIndexRoute
+  '/$orgSlug/settings/billing': typeof appOrgSlugSettingsBillingRoute
+  '/$orgSlug/settings/members': typeof appOrgSlugSettingsMembersRoute
+  '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugIndexRoute
+  '/$orgSlug/settings': typeof appOrgSlugSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
-  '/sign-up': typeof SignUpRoute
-  '/verify-email': typeof VerifyEmailRoute
+  '/(app)': typeof appRouteRouteWithChildren
+  '/(auth)': typeof authRouteRouteWithChildren
+  '/(app)/$orgSlug': typeof appOrgSlugRouteRouteWithChildren
+  '/(app)/settings': typeof appSettingsRouteRouteWithChildren
+  '/(auth)/forgot-password': typeof authForgotPasswordRoute
+  '/(auth)/login': typeof authLoginRoute
+  '/(auth)/sign-up': typeof authSignUpRoute
+  '/(auth)/verify-email': typeof authVerifyEmailRoute
+  '/(app)/': typeof appIndexRoute
+  '/(app)/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteWithChildren
+  '/(app)/$orgSlug/projects': typeof appOrgSlugProjectsRoute
+  '/(app)/$orgSlug/settings': typeof appOrgSlugSettingsRouteWithChildren
+  '/(app)/$orgSlug/support': typeof appOrgSlugSupportRoute
+  '/(app)/settings/security': typeof appSettingsSecurityRoute
   '/api/ai/$': typeof ApiAiSplatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/(app)/$orgSlug/': typeof appOrgSlugIndexRoute
+  '/(app)/settings/': typeof appSettingsIndexRoute
+  '/(app)/$orgSlug/settings/billing': typeof appOrgSlugSettingsBillingRoute
+  '/(app)/$orgSlug/settings/members': typeof appOrgSlugSettingsMembersRoute
+  '/(app)/$orgSlug/$projectSlug/': typeof appOrgSlugProjectSlugIndexRoute
+  '/(app)/$orgSlug/settings/': typeof appOrgSlugSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/$orgSlug'
+    | '/settings'
     | '/forgot-password'
     | '/login'
     | '/sign-up'
     | '/verify-email'
+    | '/'
+    | '/$orgSlug/$projectSlug'
+    | '/$orgSlug/projects'
+    | '/$orgSlug/settings'
+    | '/$orgSlug/support'
+    | '/settings/security'
     | '/api/ai/$'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/$orgSlug/'
+    | '/settings/'
+    | '/$orgSlug/settings/billing'
+    | '/$orgSlug/settings/members'
+    | '/$orgSlug/$projectSlug/'
+    | '/$orgSlug/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
     | '/login'
     | '/sign-up'
     | '/verify-email'
+    | '/'
+    | '/$orgSlug/projects'
+    | '/$orgSlug/support'
+    | '/settings/security'
     | '/api/ai/$'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/$orgSlug'
+    | '/settings'
+    | '/$orgSlug/settings/billing'
+    | '/$orgSlug/settings/members'
+    | '/$orgSlug/$projectSlug'
+    | '/$orgSlug/settings'
   id:
     | '__root__'
-    | '/forgot-password'
-    | '/login'
-    | '/sign-up'
-    | '/verify-email'
+    | '/(app)'
+    | '/(auth)'
+    | '/(app)/$orgSlug'
+    | '/(app)/settings'
+    | '/(auth)/forgot-password'
+    | '/(auth)/login'
+    | '/(auth)/sign-up'
+    | '/(auth)/verify-email'
+    | '/(app)/'
+    | '/(app)/$orgSlug/$projectSlug'
+    | '/(app)/$orgSlug/projects'
+    | '/(app)/$orgSlug/settings'
+    | '/(app)/$orgSlug/support'
+    | '/(app)/settings/security'
     | '/api/ai/$'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/(app)/$orgSlug/'
+    | '/(app)/settings/'
+    | '/(app)/$orgSlug/settings/billing'
+    | '/(app)/$orgSlug/settings/members'
+    | '/(app)/$orgSlug/$projectSlug/'
+    | '/(app)/$orgSlug/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  ForgotPasswordRoute: typeof ForgotPasswordRoute
-  LoginRoute: typeof LoginRoute
-  SignUpRoute: typeof SignUpRoute
-  VerifyEmailRoute: typeof VerifyEmailRoute
+  appRouteRoute: typeof appRouteRouteWithChildren
+  authRouteRoute: typeof authRouteRouteWithChildren
   ApiAiSplatRoute: typeof ApiAiSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
@@ -123,33 +298,82 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify-email': {
-      id: '/verify-email'
+    '/(auth)': {
+      id: '/(auth)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof authRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(app)': {
+      id: '/(app)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof appRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(app)/': {
+      id: '/(app)/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof appIndexRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(auth)/verify-email': {
+      id: '/(auth)/verify-email'
       path: '/verify-email'
       fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof authVerifyEmailRouteImport
+      parentRoute: typeof authRouteRoute
     }
-    '/sign-up': {
-      id: '/sign-up'
+    '/(auth)/sign-up': {
+      id: '/(auth)/sign-up'
       path: '/sign-up'
       fullPath: '/sign-up'
-      preLoaderRoute: typeof SignUpRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof authSignUpRouteImport
+      parentRoute: typeof authRouteRoute
     }
-    '/login': {
-      id: '/login'
+    '/(auth)/login': {
+      id: '/(auth)/login'
       path: '/login'
       fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof authLoginRouteImport
+      parentRoute: typeof authRouteRoute
     }
-    '/forgot-password': {
-      id: '/forgot-password'
+    '/(auth)/forgot-password': {
+      id: '/(auth)/forgot-password'
       path: '/forgot-password'
       fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof authForgotPasswordRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(app)/settings': {
+      id: '/(app)/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof appSettingsRouteRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/$orgSlug': {
+      id: '/(app)/$orgSlug'
+      path: '/$orgSlug'
+      fullPath: '/$orgSlug'
+      preLoaderRoute: typeof appOrgSlugRouteRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/settings/': {
+      id: '/(app)/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof appSettingsIndexRouteImport
+      parentRoute: typeof appSettingsRouteRoute
+    }
+    '/(app)/$orgSlug/': {
+      id: '/(app)/$orgSlug/'
+      path: '/'
+      fullPath: '/$orgSlug/'
+      preLoaderRoute: typeof appOrgSlugIndexRouteImport
+      parentRoute: typeof appOrgSlugRouteRoute
     }
     '/api/rpc/$': {
       id: '/api/rpc/$'
@@ -172,14 +396,170 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(app)/settings/security': {
+      id: '/(app)/settings/security'
+      path: '/security'
+      fullPath: '/settings/security'
+      preLoaderRoute: typeof appSettingsSecurityRouteImport
+      parentRoute: typeof appSettingsRouteRoute
+    }
+    '/(app)/$orgSlug/support': {
+      id: '/(app)/$orgSlug/support'
+      path: '/support'
+      fullPath: '/$orgSlug/support'
+      preLoaderRoute: typeof appOrgSlugSupportRouteImport
+      parentRoute: typeof appOrgSlugRouteRoute
+    }
+    '/(app)/$orgSlug/settings': {
+      id: '/(app)/$orgSlug/settings'
+      path: '/settings'
+      fullPath: '/$orgSlug/settings'
+      preLoaderRoute: typeof appOrgSlugSettingsRouteImport
+      parentRoute: typeof appOrgSlugRouteRoute
+    }
+    '/(app)/$orgSlug/projects': {
+      id: '/(app)/$orgSlug/projects'
+      path: '/projects'
+      fullPath: '/$orgSlug/projects'
+      preLoaderRoute: typeof appOrgSlugProjectsRouteImport
+      parentRoute: typeof appOrgSlugRouteRoute
+    }
+    '/(app)/$orgSlug/$projectSlug': {
+      id: '/(app)/$orgSlug/$projectSlug'
+      path: '/$projectSlug'
+      fullPath: '/$orgSlug/$projectSlug'
+      preLoaderRoute: typeof appOrgSlugProjectSlugRouteImport
+      parentRoute: typeof appOrgSlugRouteRoute
+    }
+    '/(app)/$orgSlug/settings/': {
+      id: '/(app)/$orgSlug/settings/'
+      path: '/'
+      fullPath: '/$orgSlug/settings/'
+      preLoaderRoute: typeof appOrgSlugSettingsIndexRouteImport
+      parentRoute: typeof appOrgSlugSettingsRoute
+    }
+    '/(app)/$orgSlug/$projectSlug/': {
+      id: '/(app)/$orgSlug/$projectSlug/'
+      path: '/'
+      fullPath: '/$orgSlug/$projectSlug/'
+      preLoaderRoute: typeof appOrgSlugProjectSlugIndexRouteImport
+      parentRoute: typeof appOrgSlugProjectSlugRoute
+    }
+    '/(app)/$orgSlug/settings/members': {
+      id: '/(app)/$orgSlug/settings/members'
+      path: '/members'
+      fullPath: '/$orgSlug/settings/members'
+      preLoaderRoute: typeof appOrgSlugSettingsMembersRouteImport
+      parentRoute: typeof appOrgSlugSettingsRoute
+    }
+    '/(app)/$orgSlug/settings/billing': {
+      id: '/(app)/$orgSlug/settings/billing'
+      path: '/billing'
+      fullPath: '/$orgSlug/settings/billing'
+      preLoaderRoute: typeof appOrgSlugSettingsBillingRouteImport
+      parentRoute: typeof appOrgSlugSettingsRoute
+    }
   }
 }
 
+interface appOrgSlugProjectSlugRouteChildren {
+  appOrgSlugProjectSlugIndexRoute: typeof appOrgSlugProjectSlugIndexRoute
+}
+
+const appOrgSlugProjectSlugRouteChildren: appOrgSlugProjectSlugRouteChildren = {
+  appOrgSlugProjectSlugIndexRoute: appOrgSlugProjectSlugIndexRoute,
+}
+
+const appOrgSlugProjectSlugRouteWithChildren =
+  appOrgSlugProjectSlugRoute._addFileChildren(
+    appOrgSlugProjectSlugRouteChildren,
+  )
+
+interface appOrgSlugSettingsRouteChildren {
+  appOrgSlugSettingsBillingRoute: typeof appOrgSlugSettingsBillingRoute
+  appOrgSlugSettingsMembersRoute: typeof appOrgSlugSettingsMembersRoute
+  appOrgSlugSettingsIndexRoute: typeof appOrgSlugSettingsIndexRoute
+}
+
+const appOrgSlugSettingsRouteChildren: appOrgSlugSettingsRouteChildren = {
+  appOrgSlugSettingsBillingRoute: appOrgSlugSettingsBillingRoute,
+  appOrgSlugSettingsMembersRoute: appOrgSlugSettingsMembersRoute,
+  appOrgSlugSettingsIndexRoute: appOrgSlugSettingsIndexRoute,
+}
+
+const appOrgSlugSettingsRouteWithChildren =
+  appOrgSlugSettingsRoute._addFileChildren(appOrgSlugSettingsRouteChildren)
+
+interface appOrgSlugRouteRouteChildren {
+  appOrgSlugProjectSlugRoute: typeof appOrgSlugProjectSlugRouteWithChildren
+  appOrgSlugProjectsRoute: typeof appOrgSlugProjectsRoute
+  appOrgSlugSettingsRoute: typeof appOrgSlugSettingsRouteWithChildren
+  appOrgSlugSupportRoute: typeof appOrgSlugSupportRoute
+  appOrgSlugIndexRoute: typeof appOrgSlugIndexRoute
+}
+
+const appOrgSlugRouteRouteChildren: appOrgSlugRouteRouteChildren = {
+  appOrgSlugProjectSlugRoute: appOrgSlugProjectSlugRouteWithChildren,
+  appOrgSlugProjectsRoute: appOrgSlugProjectsRoute,
+  appOrgSlugSettingsRoute: appOrgSlugSettingsRouteWithChildren,
+  appOrgSlugSupportRoute: appOrgSlugSupportRoute,
+  appOrgSlugIndexRoute: appOrgSlugIndexRoute,
+}
+
+const appOrgSlugRouteRouteWithChildren = appOrgSlugRouteRoute._addFileChildren(
+  appOrgSlugRouteRouteChildren,
+)
+
+interface appSettingsRouteRouteChildren {
+  appSettingsSecurityRoute: typeof appSettingsSecurityRoute
+  appSettingsIndexRoute: typeof appSettingsIndexRoute
+}
+
+const appSettingsRouteRouteChildren: appSettingsRouteRouteChildren = {
+  appSettingsSecurityRoute: appSettingsSecurityRoute,
+  appSettingsIndexRoute: appSettingsIndexRoute,
+}
+
+const appSettingsRouteRouteWithChildren =
+  appSettingsRouteRoute._addFileChildren(appSettingsRouteRouteChildren)
+
+interface appRouteRouteChildren {
+  appOrgSlugRouteRoute: typeof appOrgSlugRouteRouteWithChildren
+  appSettingsRouteRoute: typeof appSettingsRouteRouteWithChildren
+  appIndexRoute: typeof appIndexRoute
+}
+
+const appRouteRouteChildren: appRouteRouteChildren = {
+  appOrgSlugRouteRoute: appOrgSlugRouteRouteWithChildren,
+  appSettingsRouteRoute: appSettingsRouteRouteWithChildren,
+  appIndexRoute: appIndexRoute,
+}
+
+const appRouteRouteWithChildren = appRouteRoute._addFileChildren(
+  appRouteRouteChildren,
+)
+
+interface authRouteRouteChildren {
+  authForgotPasswordRoute: typeof authForgotPasswordRoute
+  authLoginRoute: typeof authLoginRoute
+  authSignUpRoute: typeof authSignUpRoute
+  authVerifyEmailRoute: typeof authVerifyEmailRoute
+}
+
+const authRouteRouteChildren: authRouteRouteChildren = {
+  authForgotPasswordRoute: authForgotPasswordRoute,
+  authLoginRoute: authLoginRoute,
+  authSignUpRoute: authSignUpRoute,
+  authVerifyEmailRoute: authVerifyEmailRoute,
+}
+
+const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
+  authRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  ForgotPasswordRoute: ForgotPasswordRoute,
-  LoginRoute: LoginRoute,
-  SignUpRoute: SignUpRoute,
-  VerifyEmailRoute: VerifyEmailRoute,
+  appRouteRoute: appRouteRouteWithChildren,
+  authRouteRoute: authRouteRouteWithChildren,
   ApiAiSplatRoute: ApiAiSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,

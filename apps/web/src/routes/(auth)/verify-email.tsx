@@ -1,7 +1,7 @@
 "use client";
 
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,
@@ -18,7 +18,7 @@ import { toastManager } from "@tailorkit/ui/components/toast";
 
 import { authClient } from "@/lib/auth-client";
 
-export const Route = createFileRoute("/verify-email")({
+export const Route = createFileRoute("/(auth)/verify-email")({
   component: RouteComponent,
   validateSearch: (search) => ({
     email: search.email as string,
@@ -29,7 +29,7 @@ const OTP_LENGTH = 6;
 const SLOT_KEYS = Array.from({ length: OTP_LENGTH }, (_, i) => `slot-${i}`);
 
 function RouteComponent() {
-  const { email } = useSearch({ from: "/verify-email" });
+  const { email } = useSearch({ from: "/(auth)/verify-email" });
   const navigate = useNavigate();
   const [otp, setOtp] = useState("");
   const [invalid, setInvalid] = useState(false);
@@ -38,7 +38,7 @@ function RouteComponent() {
   const [resendCountdown, setResendCountdown] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const startResendTimer = () => {
+  const startResendTimer = useCallback(() => {
     setResendCountdown(60);
     timerRef.current = setInterval(() => {
       setResendCountdown((prev) => {
@@ -51,9 +51,9 @@ function RouteComponent() {
         return prev - 1;
       });
     }, 1000);
-  };
+  }, []);
 
-  const sendOtp = async () => {
+  const sendOtp = useCallback(async () => {
     setSending(true);
     const result = await authClient.emailOtp.sendVerificationOtp({
       email,
@@ -69,7 +69,7 @@ function RouteComponent() {
       return;
     }
     startResendTimer();
-  };
+  }, [email, startResendTimer]);
 
   useEffect(() => {
     if (email) {
@@ -80,7 +80,7 @@ function RouteComponent() {
         clearInterval(timerRef.current);
       }
     };
-  }, []);
+  }, [email, sendOtp]);
 
   const verifyOtp = async (code: string) => {
     setVerifying(true);
@@ -102,7 +102,7 @@ function RouteComponent() {
       title: "Email verified",
       type: "success",
     });
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/" });
   };
 
   const handleOtpChange = (value: string) => {

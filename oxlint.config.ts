@@ -18,5 +18,12 @@ export default defineConfig({
     "no-use-before-define": "off",
     "prefer-await-to-callbacks": "off",
     "prefer-logical-operator-over-ternary": "off",
+    "sort-keys": "off",
+    "prefer-destructuring": "off",
+    "no-barrel-file": "off",
+    "no-inline-comments": "off",
+    "no-warning-comments": "warn",
+    "avoid-new": "off",
+    "no-promise-executor-return": "off",
   },
 });
