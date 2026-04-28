@@ -9,27 +9,16 @@ const getActiveOrgId = createIsomorphicFn()
 export const Route = createFileRoute("/(app)/")({
   component: () => null,
   loader: async ({ context }) => {
-    const [session, orgs] = await Promise.allSettled([
-      context.queryClient.ensureQueryData(context.orpc.user.getSession.queryOptions()),
-      context.queryClient.ensureQueryData(context.orpc.user.getOrgs.queryOptions()),
-    ]);
-
-    if (session.status === "rejected") {
-      throw new Error("Something went wrong", { cause: session.reason });
-    } else if (!!session.value.user || !!session.value.session) {
-      throw redirect({ to: "/login" });
-    }
-
-    if (orgs.status === "rejected") {
-      throw new Error("Something went wrong", { cause: orgs.reason });
-    }
+    const orgs = await context.queryClient.ensureQueryData(
+      context.orpc.user.getOrgs.queryOptions(),
+    );
 
     const orgId = getActiveOrgId();
-    const org = orgs.value.find((org) => org.id === orgId) || orgs.value[0];
+    const org = orgs.find((org) => org.id === orgId) || orgs[0];
     if (org) {
-      throw redirect({ params: { orgSlug: org.id }, to: "/$orgSlug" });
+      throw redirect({ params: { orgSlug: org.slug }, to: "/$orgSlug" });
     }
 
-    throw redirect({ to: "/settings" });
+    throw redirect({ to: "/onboarding" });
   },
 });

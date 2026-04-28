@@ -467,6 +467,41 @@ const reservedOrgSlugs = new Set([
   "latest",
 ]);
 
-export function isOrgSlugReserved(slug: string) {
+function isOrgSlugReserved(slug: string) {
   return reservedOrgSlugs.has(slug);
+}
+
+export function validateOrgSlug(slug: string) {
+  if (isOrgSlugReserved(slug)) {
+    return {
+      valid: false,
+      reason: `Slug "${slug}" is reserved and cannot be used.`,
+    };
+  }
+
+  if (slug.length < 3) {
+    return {
+      valid: false,
+      reason: `Slug "${slug}" must be at least 3 characters long.`,
+    };
+  }
+
+  if (slug.length > 64) {
+    return {
+      valid: false,
+      reason: `Slug "${slug}" must be at most 64 characters long.`,
+    };
+  }
+
+  const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  if (!SLUG_RE.test(slug)) {
+    return {
+      valid: false,
+      reason: `Slug "${slug}" contains invalid characters.`,
+    };
+  }
+
+  return {
+    valid: true,
+  };
 }

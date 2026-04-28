@@ -1,21 +1,8 @@
-import { ORPCError, os } from "@orpc/server";
+import type { InferClientErrorUnion } from "@orpc/client";
+import { appRouter } from "./routers/index";
+import type { AppRouter, AppRouterClient } from "./routers/index";
+import type { RouterClient } from "@orpc/server";
 
-import type { Context } from "./context";
-
-export const o = os.$context<Context>();
-
-export const publicProcedure = o;
-
-const requireAuth = o.middleware(({ context, next }) => {
-  if (!context.session?.user) {
-    throw new ORPCError("UNAUTHORIZED");
-  }
-
-  return next({
-    context: {
-      session: context.session,
-    },
-  });
-});
-
-export const protectedProcedure = publicProcedure.use(requireAuth);
+type AppError = InferClientErrorUnion<RouterClient<AppRouter>>;
+export { appRouter, type AppRouter, type AppRouterClient, type AppError };
+export { createContext } from "./context";

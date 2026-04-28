@@ -22,6 +22,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         href: appCss,
         rel: "stylesheet",
       },
+      {
+        href: "/favicon.svg",
+        rel: "icon",
+        type: "image/svg+xml",
+      },
     ],
     meta: [
       {

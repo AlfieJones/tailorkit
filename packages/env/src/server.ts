@@ -33,25 +33,35 @@ export const env = createEnv({
   extends: [vercel()],
   runtimeEnv: process.env,
   server: {
-    BETTER_AUTH_SECRET:
-      process.env.NODE_ENV === "production"
-        ? z.string().min(32)
-        : z.string().min(32).default("some-very-secure-secret"),
+    // Auth
+    AUTH_SECRET:
+      process.env.NODE_ENV === "production" ? z.string().min(32) : z.string().min(32).optional(),
+
+    // AWS
     AWS_ACCESS_KEY_ID: z.string().min(1).optional(),
     AWS_DEFAULT_REGION: z.string().min(1).optional(),
     AWS_REGION: z.string().min(1).optional(),
     AWS_ROLE_ARN: z.string().min(1).optional(),
-    AWS_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+
+    // Database
     DATABASE_URL: z.string().min(1),
+
+    // Deployment
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     PORT: z.number().optional(),
+
+    // Email
     SMTP_FROM: z.string().min(1),
     SMTP_FROM_AUTH: z.string().min(1).optional(),
     SMTP_FROM_INVITE: z.string().min(1).optional(),
     SMTP_REPLY_TO: z.string().min(1).optional(),
     SMTP_URL: z.string().min(1).optional(),
-    // POLAR_ACCESS_TOKEN: z.string().min(1),
-    // POLAR_SUCCESS_URL: z.url(),
+    // Billing
+    POLAR_ACCESS_TOKEN: z.string().min(1),
+    // Cache variables
+    UPSTASH_REDIS_REST_URL: z.string().min(1).optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+    REDIS_URL: z.string().min(1).optional(),
   },
 });
 

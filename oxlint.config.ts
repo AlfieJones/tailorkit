@@ -4,6 +4,7 @@ import react from "ultracite/oxlint/react";
 
 export default defineConfig({
   extends: [core, react],
+  ignorePatterns: [".agents/skills", ".claude/skills", "routeTree.gen.ts"],
   rules: {
     "ban-types": "warn",
     eqeqeq: "warn",
@@ -25,5 +26,8 @@ export default defineConfig({
     "no-warning-comments": "warn",
     "avoid-new": "off",
     "no-promise-executor-return": "off",
+    "no-named-as-default": "off",
+    "prefer-ternary": "off",
+    "prefer-await-to-then": "off",
   },
 });

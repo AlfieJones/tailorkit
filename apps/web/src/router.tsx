@@ -3,9 +3,11 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
-import { orpc, queryClient } from "./utils/orpc";
+import { orpc, getQueryClient } from "./utils/orpc";
 
 export const getRouter = () => {
+  const queryClient = getQueryClient();
+
   const router = createRouter({
     context: { orpc, queryClient },
     routeTree,

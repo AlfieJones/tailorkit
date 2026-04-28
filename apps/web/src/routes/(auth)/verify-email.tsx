@@ -1,27 +1,31 @@
 "use client";
 
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,
+  CardFooter,
   CardFrame,
-  CardFrameDescription,
   CardFrameFooter,
-  CardFrameHeader,
-  CardFrameTitle,
+  CardHeader,
   CardPanel,
+  CardTitle,
 } from "@tailorkit/ui/components/card";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
-import { OTPField, OTPFieldInput } from "@tailorkit/ui/components/otp-field";
+import { Logo } from "@tailorkit/ui/components/logo";
+import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/components/otp-field";
 import { toastManager } from "@tailorkit/ui/components/toast";
 
 import { authClient } from "@/lib/auth-client";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChevronLeftIcon } from "lucide-react";
 
 export const Route = createFileRoute("/(auth)/verify-email")({
   component: RouteComponent,
   validateSearch: (search) => ({
     email: search.email as string,
+    return_to: search.return_to as string | undefined,
   }),
 });
 
@@ -29,14 +33,15 @@ const OTP_LENGTH = 6;
 const SLOT_KEYS = Array.from({ length: OTP_LENGTH }, (_, i) => `slot-${i}`);
 
 function RouteComponent() {
-  const { email } = useSearch({ from: "/(auth)/verify-email" });
-  const navigate = useNavigate();
+  const { email, return_to } = useSearch({ from: "/(auth)/verify-email" });
+  const navigate = Route.useNavigate();
   const [otp, setOtp] = useState("");
   const [invalid, setInvalid] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [sending, setSending] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sentRef = useRef(false);
 
   const startResendTimer = useCallback(() => {
     setResendCountdown(60);
@@ -57,7 +62,7 @@ function RouteComponent() {
     setSending(true);
     const result = await authClient.emailOtp.sendVerificationOtp({
       email,
-      type: "email-verification",
+      type: "sign-in",
     });
     setSending(false);
     if (result.error) {
@@ -72,7 +77,8 @@ function RouteComponent() {
   }, [email, startResendTimer]);
 
   useEffect(() => {
-    if (email) {
+    if (!sentRef.current) {
+      sentRef.current = true;
       sendOtp();
     }
     return () => {
@@ -80,12 +86,14 @@ function RouteComponent() {
         clearInterval(timerRef.current);
       }
     };
-  }, [email, sendOtp]);
+  }, [sendOtp]);
+
+  const queryClient = useQueryClient();
 
   const verifyOtp = async (code: string) => {
     setVerifying(true);
     setInvalid(false);
-    const result = await authClient.emailOtp.verifyEmail({ email, otp: code });
+    const result = await authClient.signIn.emailOtp({ email, otp: code });
     setVerifying(false);
     if (result.error) {
       setInvalid(true);
@@ -102,12 +110,20 @@ function RouteComponent() {
       title: "Email verified",
       type: "success",
     });
-    navigate({ to: "/" });
+
+    queryClient.clear();
+
+    if (return_to) {
+      window.location.href = return_to;
+    } else {
+      navigate({ to: "/" });
+    }
   };
 
   const handleOtpChange = (value: string) => {
     setOtp(value);
     setInvalid(false);
+
     if (value.length === OTP_LENGTH) {
       verifyOtp(value);
     }
@@ -115,62 +131,80 @@ function RouteComponent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
-      <CardFrame className="w-full max-w-sm">
-        <CardFrameHeader>
-          <CardFrameTitle>Verify your email</CardFrameTitle>
-          <CardFrameDescription>
-            {email
-              ? `We sent a 6-digit code to ${email}`
-              : "Enter the 6-digit code sent to your email"}
-          </CardFrameDescription>
-        </CardFrameHeader>
-        <Card>
-          <CardPanel>
-            <div className="flex flex-col items-center gap-6">
-              <Field className="items-center">
-                <FieldLabel>Verification code</FieldLabel>
-                <OTPField
-                  length={OTP_LENGTH}
-                  value={otp}
-                  onValueChange={handleOtpChange}
-                  disabled={verifying}
-                  size="lg"
-                >
-                  {SLOT_KEYS.map((key, index) => (
-                    <OTPFieldInput
-                      key={key}
-                      aria-invalid={invalid || undefined}
-                      aria-label={`Digit ${index + 1} of ${OTP_LENGTH}`}
-                    />
-                  ))}
-                </OTPField>
-                {invalid && <FieldError>Invalid or expired code. Please try again.</FieldError>}
-                {verifying && <FieldDescription>Verifying…</FieldDescription>}
-              </Field>
-
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-muted-foreground text-sm">Didn't receive a code?</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={sendOtp}
-                  disabled={sending || resendCountdown > 0}
-                  loading={sending}
-                >
-                  {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend code"}
-                </Button>
+      <div className="flex w-full max-w-sm flex-col items-center gap-4">
+        <a
+          className="flex items-center gap-2"
+          href="https://tailorkit.dev"
+          rel="noopener"
+          target="_blank"
+        >
+          <Logo className="size-8" />
+          <span className="font-semibold text-lg">TailorKit</span>
+        </a>
+        <CardFrame className="w-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>Verify your email</CardTitle>
+            </CardHeader>
+            <CardPanel className="flex flex-col gap-6">
+              <div className="flex flex-col items-center gap-6">
+                <Field className="items-center gap-1.5">
+                  <FieldLabel>Verification code</FieldLabel>
+                  <OTPField
+                    length={OTP_LENGTH}
+                    value={otp}
+                    onValueChange={handleOtpChange}
+                    disabled={verifying}
+                    size="lg"
+                    className="gap-2.5"
+                  >
+                    {SLOT_KEYS.map((key, index) => (
+                      <Fragment key={key}>
+                        <OTPFieldInput
+                          className="size-11 text-xl leading-11 sm:size-10 sm:text-lg sm:leading-10"
+                          aria-invalid={invalid || undefined}
+                          aria-label={`Digit ${index + 1} of ${OTP_LENGTH}`}
+                        />
+                        {index === 2 && <OTPFieldSeparator />}
+                      </Fragment>
+                    ))}
+                  </OTPField>
+                  <FieldDescription>
+                    {email ? `Sent to ${email}` : "Enter the 6-digit code sent to your email"}
+                  </FieldDescription>
+                  {invalid && <FieldError>Invalid or expired code. Please try again.</FieldError>}
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={sendOtp}
+                    disabled={sending || resendCountdown > 0}
+                    loading={sending}
+                    className="h-auto p-0 text-xs"
+                  >
+                    {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend code"}
+                  </Button>
+                </Field>
               </div>
-            </div>
-          </CardPanel>
-        </Card>
-        <CardFrameFooter>
-          <p className="text-muted-foreground text-sm">
-            <Link to="/login" className="text-foreground hover:underline underline-offset-4">
+            </CardPanel>
+            <CardFooter className="pt-4">
+              <Button
+                className="w-full"
+                disabled={otp.length < OTP_LENGTH || verifying}
+                loading={verifying}
+                onClick={() => verifyOtp(otp)}
+              >
+                Continue
+              </Button>
+            </CardFooter>
+          </Card>
+          <CardFrameFooter>
+            <Button variant={"link"} render={<Link search={{ email, return_to }} to="/login" />}>
+              <ChevronLeftIcon />
               Back to sign in
-            </Link>
-          </p>
-        </CardFrameFooter>
-      </CardFrame>
+            </Button>
+          </CardFrameFooter>
+        </CardFrame>
+      </div>
     </div>
   );
 }

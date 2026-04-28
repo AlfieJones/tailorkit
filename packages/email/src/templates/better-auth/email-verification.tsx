@@ -1,16 +1,15 @@
 import { AuthEmailLayout, AuthOtpContent, COMPANY_NAME } from "./shared";
 import type { BetterAuthTemplateProps } from "./shared";
 
-export function EmailVerificationTemplate({ otp }: BetterAuthTemplateProps) {
+export function EmailVerificationTemplate({ logoBaseUrl, otp }: BetterAuthTemplateProps) {
   return (
-    <AuthEmailLayout preview={`Verify your ${COMPANY_NAME} email address.`}>
+    <AuthEmailLayout
+      logoBaseUrl={logoBaseUrl}
+      preview={`Verify your ${COMPANY_NAME} email address.`}
+    >
       <AuthOtpContent
         description={
-          <>
-            Thank you for signing up for {COMPANY_NAME}.
-            <br />
-            To finish setting up your account, enter this code to verify your email address.
-          </>
+          <>Enter this code to verify your email address and finish setting up your account.</>
         }
         heading="Verify your email address"
         otp={otp}

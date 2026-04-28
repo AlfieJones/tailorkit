@@ -12,14 +12,16 @@ export const NumberFieldContext: React.Context<{
   fieldId: string;
 } | null>(null);
 
+export type NumberFieldProps = NumberFieldPrimitive.Root.Props & {
+  size?: "sm" | "default" | "lg";
+};
+
 export function NumberField({
   id,
   className,
   size = "default",
   ...props
-}: NumberFieldPrimitive.Root.Props & {
-  size?: "sm" | "default" | "lg";
-}): React.ReactElement {
+}: NumberFieldProps): React.ReactElement {
   const generatedId = React.useId();
   const fieldId = id ?? generatedId;
 

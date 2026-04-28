@@ -44,10 +44,10 @@ export const betterAuthEmailSubjects = Object.fromEntries(
   Object.entries(emailConfig).map(([type, value]) => [type, value.subject]),
 ) as Record<BetterAuthEmailType, string>;
 
-export function BetterAuthOtpTemplate({ otp, type }: BetterAuthOtpTemplateProps) {
+export function BetterAuthOtpTemplate({ logoBaseUrl, otp, type }: BetterAuthOtpTemplateProps) {
   const Template = emailConfig[type].component;
 
-  return createElement(Template, { otp });
+  return createElement(Template, { logoBaseUrl, otp });
 }
 
 export { ChangeEmailTemplate } from "./better-auth/change-email";

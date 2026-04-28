@@ -1,7 +1,6 @@
 "use client";
 
-import { useForm } from "@tanstack/react-form";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,
@@ -12,19 +11,23 @@ import {
   CardPanel,
   CardTitle,
 } from "@tailorkit/ui/components/card";
-import { Field, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
-import { Form } from "@tailorkit/ui/components/form";
-import { Input } from "@tailorkit/ui/components/input";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@tailorkit/ui/components/input-group";
+import { Logo } from "@tailorkit/ui/components/logo";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
-import { ArrowLeftIcon, EyeIcon, EyeOffIcon } from "lucide-react";
+import { useAppForm } from "@tailorkit/ui/form";
+import { ArrowLeftIcon } from "lucide-react";
+import { clsx } from "clsx";
 import { useState } from "react";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/(auth)/login")({
+  validateSearch: (search) => ({
+    email: search.email as string | undefined,
+    return_to: search.return_to as string | undefined,
+  }),
   component: RouteComponent,
 });
 
@@ -58,11 +61,11 @@ const GitHubIcon = () => (
 type Step = "email" | "password";
 
 function RouteComponent() {
-  const navigate = useNavigate({ from: "/(auth)/login" });
+  const { email: emailFromSearch, return_to } = useSearch({ from: "/(auth)/login" });
+  const navigate = Route.useNavigate();
   const [step, setStep] = useState<Step>("email");
   const [visible, setVisible] = useState(true);
-  const [email, setEmail] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState(emailFromSearch || "");
 
   const transition = (nextStep: Step, nextEmail?: string) => {
     setVisible(false);
@@ -75,8 +78,8 @@ function RouteComponent() {
     }, 150);
   };
 
-  const emailForm = useForm({
-    defaultValues: { email: "" },
+  const emailForm = useAppForm({
+    defaultValues: { email: emailFromSearch || "" },
     onSubmit: async ({ value }) => {
       await new Promise((resolve) => setTimeout(resolve, 300));
       transition("password", value.email);
@@ -86,7 +89,9 @@ function RouteComponent() {
     },
   });
 
-  const passwordForm = useForm({
+  const queryClient = useQueryClient();
+
+  const passwordForm = useAppForm({
     defaultValues: { password: "" },
     onSubmit: async ({ value }) => {
       await authClient.signIn.email(
@@ -94,7 +99,7 @@ function RouteComponent() {
         {
           onError: (error) => {
             if (error.error.code === "EMAIL_NOT_VERIFIED") {
-              navigate({ search: { email }, to: "/verify-email" });
+              navigate({ search: { email, return_to }, to: "/verify-email" });
               return;
             }
             toastManager.add({
@@ -103,8 +108,13 @@ function RouteComponent() {
               type: "error",
             });
           },
-          onSuccess: () => {
-            navigate({ to: "/" });
+          onSuccess: async () => {
+            await queryClient.invalidateQueries();
+            if (return_to) {
+              window.location.href = return_to;
+            } else {
+              navigate({ to: "/" });
+            }
           },
         },
       );
@@ -116,200 +126,146 @@ function RouteComponent() {
     },
   });
 
-  const contentClass = `transition-all duration-150 ${
-    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
-  }`;
+  const contentClass = clsx(
+    "transition-all duration-150",
+    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1",
+  );
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
-      <CardFrame className="w-full max-w-sm">
-        <Card>
-          <CardHeader>
-            <CardTitle>Welcome back</CardTitle>
-          </CardHeader>
+      <div className="flex w-full max-w-sm flex-col items-center gap-4">
+        <a
+          className="flex items-center gap-2"
+          href="https://tailorkit.dev"
+          rel="noopener"
+          target="_blank"
+        >
+          <Logo className="size-8" />
+          <span className="font-semibold text-lg">TailorKit</span>
+        </a>
+        <CardFrame className="w-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>Welcome back</CardTitle>
+            </CardHeader>
 
-          <div className={contentClass}>
-            {step === "email" ? (
-              <Form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  emailForm.handleSubmit();
-                }}
-              >
-                <CardPanel className="flex flex-col gap-4">
-                  <emailForm.Field name="email">
-                    {(field) => (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
+            <div className={contentClass}>
+              {step === "email" ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    emailForm.handleSubmit();
+                  }}
+                >
+                  <CardPanel className="flex flex-col gap-4">
+                    <emailForm.AppField name="email">
+                      {(field) => (
+                        <field.TextField
+                          label="Email"
                           type="email"
                           placeholder="you@example.com"
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(event) => field.handleChange(event.target.value)}
-                          aria-invalid={field.state.meta.errors.length > 0 || undefined}
                           autoFocus
                         />
-                        {field.state.meta.errors.map((error) => (
-                          <FieldError key={error?.message}>{error?.message}</FieldError>
-                        ))}
-                      </Field>
-                    )}
-                  </emailForm.Field>
+                      )}
+                    </emailForm.AppField>
 
-                  <emailForm.Subscribe
-                    selector={(state) => ({
-                      canSubmit: state.canSubmit,
-                      isSubmitting: state.isSubmitting,
-                    })}
-                  >
-                    {({ canSubmit, isSubmitting }) => (
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={!canSubmit || isSubmitting}
-                        loading={isSubmitting}
-                      >
-                        Continue
-                      </Button>
-                    )}
-                  </emailForm.Subscribe>
+                    <emailForm.AppForm>
+                      <emailForm.SubmitButton className="w-full">Continue</emailForm.SubmitButton>
+                    </emailForm.AppForm>
 
-                  <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                    <span className="bg-card text-muted-foreground relative z-10 px-2 text-xs">
-                      OR
-                    </span>
-                  </div>
+                    <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                      <span className="bg-card text-muted-foreground relative z-10 px-2 text-xs">
+                        OR
+                      </span>
+                    </div>
 
-                  <div className="flex flex-col gap-2">
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={<Button variant="outline" className="w-full" disabled />}
-                      >
-                        <GoogleIcon />
-                        Continue with Google
-                      </TooltipTrigger>
-                      <TooltipPopup>Coming soon</TooltipPopup>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={<Button variant="outline" className="w-full" disabled />}
-                      >
-                        <GitHubIcon />
-                        Continue with GitHub
-                      </TooltipTrigger>
-                      <TooltipPopup>Coming soon</TooltipPopup>
-                    </Tooltip>
-                  </div>
-                </CardPanel>
-              </Form>
-            ) : (
-              <Form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  passwordForm.handleSubmit();
-                }}
-              >
-                <CardPanel className="flex flex-col gap-4">
-                  <button
-                    type="button"
-                    onClick={() => transition("email")}
-                    className="flex w-fit items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
-                  >
-                    <ArrowLeftIcon className="size-3.5" />
-                    <span>{email}</span>
-                  </button>
-
-                  <passwordForm.Field name="password">
-                    {(field) => (
-                      <Field>
-                        <div className="flex w-full items-center justify-between">
-                          <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                          <Link
-                            to="/forgot-password"
-                            className="text-muted-foreground text-xs hover:underline"
-                          >
-                            Forgot password?
-                          </Link>
-                        </div>
-                        <InputGroup>
-                          <InputGroupInput
-                            id={field.name}
-                            name={field.name}
-                            placeholder="••••••••"
-                            type={showPassword ? "text" : "password"}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(event) => field.handleChange(event.target.value)}
-                            aria-invalid={field.state.meta.errors.length > 0 || undefined}
-                            autoFocus
-                          />
-                          <InputGroupAddon align="inline-end">
-                            <Tooltip>
-                              <TooltipTrigger
-                                render={
-                                  <Button
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    size="icon-xs"
-                                    type="button"
-                                    variant="ghost"
-                                  />
-                                }
-                              >
-                                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                              </TooltipTrigger>
-                              <TooltipPopup>
-                                {showPassword ? "Hide password" : "Show password"}
-                              </TooltipPopup>
-                            </Tooltip>
-                          </InputGroupAddon>
-                        </InputGroup>
-                        {field.state.meta.errors.map((error) => (
-                          <FieldError key={error?.message}>{error?.message}</FieldError>
-                        ))}
-                      </Field>
-                    )}
-                  </passwordForm.Field>
-                </CardPanel>
-
-                <passwordForm.Subscribe
-                  selector={(state) => ({
-                    canSubmit: state.canSubmit,
-                    isSubmitting: state.isSubmitting,
-                  })}
+                    <div className="flex flex-col gap-2">
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={<Button variant="outline" className="w-full" disabled />}
+                        >
+                          <GoogleIcon />
+                          Continue with Google
+                        </TooltipTrigger>
+                        <TooltipPopup>Coming soon</TooltipPopup>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={<Button variant="outline" className="w-full" disabled />}
+                        >
+                          <GitHubIcon />
+                          Continue with GitHub
+                        </TooltipTrigger>
+                        <TooltipPopup>Coming soon</TooltipPopup>
+                      </Tooltip>
+                    </div>
+                  </CardPanel>
+                </form>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    passwordForm.handleSubmit();
+                  }}
                 >
-                  {({ canSubmit, isSubmitting }) => (
-                    <CardFooter className="pt-4">
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={!canSubmit || isSubmitting}
-                        loading={isSubmitting}
-                      >
-                        Sign In
-                      </Button>
-                    </CardFooter>
-                  )}
-                </passwordForm.Subscribe>
-              </Form>
-            )}
-          </div>
-        </Card>
+                  <CardPanel className="flex flex-col gap-4">
+                    <button
+                      type="button"
+                      onClick={() => transition("email")}
+                      className="flex w-fit items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
+                    >
+                      <ArrowLeftIcon className="size-3.5" />
+                      <span>{email}</span>
+                    </button>
 
-        <CardFrameFooter>
-          <p className="text-muted-foreground text-sm">
-            Don't have an account?{" "}
-            <Link to="/sign-up" className="text-foreground hover:underline underline-offset-4">
-              Sign up
-            </Link>
-          </p>
-        </CardFrameFooter>
-      </CardFrame>
+                    <passwordForm.AppField name="password">
+                      {(field) => (
+                        <field.SecretTextField
+                          label="Password"
+                          placeholder="••••••••"
+                          autoFocus
+                          labelAction={
+                            <Link
+                              search={{ email, return_to }}
+                              to="/forgot-password"
+                              className="text-muted-foreground text-xs hover:underline"
+                            >
+                              Forgot password?
+                            </Link>
+                          }
+                        />
+                      )}
+                    </passwordForm.AppField>
+                  </CardPanel>
+
+                  <passwordForm.AppForm>
+                    <CardFooter className="pt-4">
+                      <passwordForm.SubmitButton className="w-full">
+                        Sign In
+                      </passwordForm.SubmitButton>
+                    </CardFooter>
+                  </passwordForm.AppForm>
+                </form>
+              )}
+            </div>
+          </Card>
+
+          <CardFrameFooter>
+            <p className="text-muted-foreground text-sm">
+              Don't have an account?{" "}
+              <Link
+                search={{ email, return_to }}
+                to="/sign-up"
+                className="text-foreground hover:underline underline-offset-4"
+              >
+                Sign up
+              </Link>
+            </p>
+          </CardFrameFooter>
+        </CardFrame>
+      </div>
     </div>
   );
 }

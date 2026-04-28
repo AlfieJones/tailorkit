@@ -30,6 +30,7 @@
     "@tanstack/react-start": "catalog:",
     "ai": "catalog:",
     "better-auth": "catalog:",
+    "clsx": "^2.1.1",
     "dotenv": "catalog:",
     "lucide-react": "catalog:",
     "next-themes": "catalog:",

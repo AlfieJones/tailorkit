@@ -1,0 +1,51 @@
+{
+  "name": "docs",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "dev": "vite dev --port=4000",
+    "build": "vite build",
+    "start": "vite preview",
+    "preview": "vite preview",
+    "types:check": "fumadocs-mdx && tsc --noEmit",
+    "postinstall": "fumadocs-mdx"
+  },
+  "dependencies": {
+    "@ai-sdk/react": "catalog:",
+    "@openrouter/ai-sdk-provider": "^2.8.0",
+    "@radix-ui/react-presence": "^1.1.5",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-router-devtools": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "ai": "catalog:",
+    "class-variance-authority": "catalog:",
+    "flexsearch": "^0.8.212",
+    "fumadocs-core": "16.8.3",
+    "fumadocs-mdx": "14.3.1",
+    "fumadocs-ui": "16.8.3",
+    "hast-util-to-jsx-runtime": "^2.3.6",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "remark": "^15.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-rehype": "^11.1.2",
+    "tailwind-merge": "catalog:",
+    "unist-util-visit": "^5.1.0",
+    "vite": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "catalog:",
+    "@types/hast": "^3.0.4",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "nitro": "3.0.260415-beta",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}

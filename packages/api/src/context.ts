@@ -1,15 +1,23 @@
 import { auth } from "@tailorkit/auth";
+import type { Session, User } from "@tailorkit/auth";
+import { ipAddress } from "@vercel/functions";
 
-export async function createContext({ req }: { req: Request }) {
+export interface Context {
+  session: Session | null | undefined;
+  user: User | null | undefined;
+  ip: string;
+  headers: Headers;
+}
+
+export async function createContext({ request }: { request: Request }): Promise<Context> {
   const sessionData = await auth.api.getSession({
-    headers: req.headers,
+    headers: request.headers,
   });
 
   return {
     session: sessionData?.session,
     user: sessionData?.user,
-    headers: req.headers,
+    ip: ipAddress(request) ?? "unknown",
+    headers: request.headers,
   };
 }
-
-export type Context = Awaited<ReturnType<typeof createContext>>;

@@ -1,9 +1,9 @@
 import { AuthEmailLayout, AuthOtpContent, COMPANY_NAME } from "./shared";
 import type { BetterAuthTemplateProps } from "./shared";
 
-export function ForgetPasswordTemplate({ otp }: BetterAuthTemplateProps) {
+export function ForgetPasswordTemplate({ logoBaseUrl, otp }: BetterAuthTemplateProps) {
   return (
-    <AuthEmailLayout preview={`Reset your ${COMPANY_NAME} password.`}>
+    <AuthEmailLayout logoBaseUrl={logoBaseUrl} preview={`Reset your ${COMPANY_NAME} password.`}>
       <AuthOtpContent
         description={
           <>

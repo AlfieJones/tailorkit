@@ -1,7 +1,6 @@
 "use client";
 
-import { useForm } from "@tanstack/react-form";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,
@@ -12,19 +11,22 @@ import {
   CardPanel,
   CardTitle,
 } from "@tailorkit/ui/components/card";
-import { Field, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
-import { Form } from "@tailorkit/ui/components/form";
-import { Input } from "@tailorkit/ui/components/input";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@tailorkit/ui/components/input-group";
+import { Logo } from "@tailorkit/ui/components/logo";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
-import { ArrowLeftIcon, EyeIcon, EyeOffIcon } from "lucide-react";
+import { useAppForm } from "@tailorkit/ui/form";
+import { ArrowLeftIcon } from "lucide-react";
+import { clsx } from "clsx";
 import { useState } from "react";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/(auth)/sign-up")({
+  validateSearch: (search) => ({
+    email: search.email as string | undefined,
+    return_to: search.return_to as string | undefined,
+  }),
   component: RouteComponent,
 });
 
@@ -58,11 +60,11 @@ const GitHubIcon = () => (
 type Step = "email" | "details";
 
 function RouteComponent() {
-  const navigate = useNavigate({ from: "/(auth)/sign-up" });
+  const { email: emailFromSearch, return_to } = useSearch({ from: "/(auth)/sign-up" });
+  const navigate = Route.useNavigate();
   const [step, setStep] = useState<Step>("email");
   const [visible, setVisible] = useState(true);
-  const [email, setEmail] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState(emailFromSearch || "");
 
   const transition = (nextStep: Step, nextEmail?: string) => {
     setVisible(false);
@@ -75,8 +77,8 @@ function RouteComponent() {
     }, 150);
   };
 
-  const emailForm = useForm({
-    defaultValues: { email: "" },
+  const emailForm = useAppForm({
+    defaultValues: { email: emailFromSearch || "" },
     onSubmit: async ({ value }) => {
       await new Promise((resolve) => setTimeout(resolve, 300));
       transition("details", value.email);
@@ -86,7 +88,7 @@ function RouteComponent() {
     },
   });
 
-  const detailsForm = useForm({
+  const detailsForm = useAppForm({
     defaultValues: { name: "", password: "" },
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
@@ -100,7 +102,7 @@ function RouteComponent() {
             });
           },
           onSuccess: () => {
-            navigate({ search: { email }, to: "/verify-email" });
+            navigate({ search: { email, return_to }, to: "/verify-email" });
           },
         },
       );
@@ -108,217 +110,142 @@ function RouteComponent() {
     validators: {
       onSubmit: z.object({
         name: z.string().min(2, "Name must be at least 2 characters"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
+        password: z.string().min(10, "Password must be at least 10 characters"),
       }),
     },
   });
 
-  const contentClass = `transition-all duration-150 ${
-    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
-  }`;
+  const contentClass = clsx(
+    "transition-all duration-150",
+    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1",
+  );
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
-      <CardFrame className="w-full max-w-sm">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create an account</CardTitle>
-          </CardHeader>
+      <div className="flex w-full max-w-sm flex-col items-center gap-4">
+        <a
+          className="flex items-center gap-2"
+          href="https://tailorkit.dev"
+          rel="noopener"
+          target="_blank"
+        >
+          <Logo className="size-8" />
+          <span className="font-semibold text-lg">TailorKit</span>
+        </a>
+        <CardFrame className="w-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>Create your account</CardTitle>
+            </CardHeader>
 
-          <div className={contentClass}>
-            {step === "email" ? (
-              <Form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  emailForm.handleSubmit();
-                }}
-              >
-                <CardPanel className="flex flex-col gap-4">
-                  <emailForm.Field name="email">
-                    {(field) => (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
+            <div className={contentClass}>
+              {step === "email" ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    emailForm.handleSubmit();
+                  }}
+                >
+                  <CardPanel className="flex flex-col gap-4">
+                    <emailForm.AppField name="email">
+                      {(field) => (
+                        <field.TextField
+                          label="Email"
                           type="email"
                           placeholder="you@example.com"
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(event) => field.handleChange(event.target.value)}
-                          aria-invalid={field.state.meta.errors.length > 0 || undefined}
                           autoFocus
                         />
-                        {field.state.meta.errors.map((error) => (
-                          <FieldError key={error?.message}>{error?.message}</FieldError>
-                        ))}
-                      </Field>
-                    )}
-                  </emailForm.Field>
+                      )}
+                    </emailForm.AppField>
 
-                  <emailForm.Subscribe
-                    selector={(state) => ({
-                      canSubmit: state.canSubmit,
-                      isSubmitting: state.isSubmitting,
-                    })}
-                  >
-                    {({ canSubmit, isSubmitting }) => (
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={!canSubmit || isSubmitting}
-                        loading={isSubmitting}
-                      >
-                        Continue
-                      </Button>
-                    )}
-                  </emailForm.Subscribe>
+                    <emailForm.AppForm>
+                      <emailForm.SubmitButton className="w-full">Continue</emailForm.SubmitButton>
+                    </emailForm.AppForm>
 
-                  <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                    <span className="bg-card text-muted-foreground relative z-10 px-2 text-xs">
-                      OR
-                    </span>
-                  </div>
+                    <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                      <span className="bg-card text-muted-foreground relative z-10 px-2 text-xs">
+                        OR
+                      </span>
+                    </div>
 
-                  <div className="flex flex-col gap-2">
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={<Button variant="outline" className="w-full" disabled />}
-                      >
-                        <GoogleIcon />
-                        Continue with Google
-                      </TooltipTrigger>
-                      <TooltipPopup>Coming soon</TooltipPopup>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={<Button variant="outline" className="w-full" disabled />}
-                      >
-                        <GitHubIcon />
-                        Continue with GitHub
-                      </TooltipTrigger>
-                      <TooltipPopup>Coming soon</TooltipPopup>
-                    </Tooltip>
-                  </div>
-                </CardPanel>
-              </Form>
-            ) : (
-              <Form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  detailsForm.handleSubmit();
-                }}
-              >
-                <CardPanel className="flex flex-col gap-4">
-                  <button
-                    type="button"
-                    onClick={() => transition("email")}
-                    className="flex w-fit items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
-                  >
-                    <ArrowLeftIcon className="size-3.5" />
-                    <span>{email}</span>
-                  </button>
-
-                  <detailsForm.Field name="name">
-                    {(field) => (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          placeholder="Your name"
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(event) => field.handleChange(event.target.value)}
-                          aria-invalid={field.state.meta.errors.length > 0 || undefined}
-                          autoFocus
-                        />
-                        {field.state.meta.errors.map((error) => (
-                          <FieldError key={error?.message}>{error?.message}</FieldError>
-                        ))}
-                      </Field>
-                    )}
-                  </detailsForm.Field>
-
-                  <detailsForm.Field name="password">
-                    {(field) => (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                        <InputGroup>
-                          <InputGroupInput
-                            id={field.name}
-                            name={field.name}
-                            placeholder="••••••••"
-                            type={showPassword ? "text" : "password"}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(event) => field.handleChange(event.target.value)}
-                            aria-invalid={field.state.meta.errors.length > 0 || undefined}
-                          />
-                          <InputGroupAddon align="inline-end">
-                            <Tooltip>
-                              <TooltipTrigger
-                                render={
-                                  <Button
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    size="icon-xs"
-                                    type="button"
-                                    variant="ghost"
-                                  />
-                                }
-                              >
-                                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                              </TooltipTrigger>
-                              <TooltipPopup>
-                                {showPassword ? "Hide password" : "Show password"}
-                              </TooltipPopup>
-                            </Tooltip>
-                          </InputGroupAddon>
-                        </InputGroup>
-                        {field.state.meta.errors.map((error) => (
-                          <FieldError key={error?.message}>{error?.message}</FieldError>
-                        ))}
-                      </Field>
-                    )}
-                  </detailsForm.Field>
-                </CardPanel>
-
-                <detailsForm.Subscribe
-                  selector={(state) => ({
-                    canSubmit: state.canSubmit,
-                    isSubmitting: state.isSubmitting,
-                  })}
+                    <div className="flex flex-col gap-2">
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={<Button variant="outline" className="w-full" disabled />}
+                        >
+                          <GoogleIcon />
+                          Continue with Google
+                        </TooltipTrigger>
+                        <TooltipPopup>Coming soon</TooltipPopup>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={<Button variant="outline" className="w-full" disabled />}
+                        >
+                          <GitHubIcon />
+                          Continue with GitHub
+                        </TooltipTrigger>
+                        <TooltipPopup>Coming soon</TooltipPopup>
+                      </Tooltip>
+                    </div>
+                  </CardPanel>
+                </form>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    detailsForm.handleSubmit();
+                  }}
                 >
-                  {({ canSubmit, isSubmitting }) => (
-                    <CardFooter className="pt-4">
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={!canSubmit || isSubmitting}
-                        loading={isSubmitting}
-                      >
-                        Create Account
-                      </Button>
-                    </CardFooter>
-                  )}
-                </detailsForm.Subscribe>
-              </Form>
-            )}
-          </div>
-        </Card>
+                  <CardPanel className="flex flex-col gap-4">
+                    <button
+                      type="button"
+                      onClick={() => transition("email")}
+                      className="flex w-fit items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
+                    >
+                      <ArrowLeftIcon className="size-3.5" />
+                      <span>{email}</span>
+                    </button>
 
-        <CardFrameFooter>
-          <p className="text-muted-foreground text-sm">
-            Already have an account?{" "}
-            <Link to="/login" className="text-foreground hover:underline underline-offset-4">
-              Sign in
-            </Link>
-          </p>
-        </CardFrameFooter>
-      </CardFrame>
+                    <detailsForm.AppField name="name">
+                      {(field) => (
+                        <field.TextField label="Name" placeholder="Your name" autoFocus />
+                      )}
+                    </detailsForm.AppField>
+
+                    <detailsForm.AppField name="password">
+                      {(field) => <field.SecretTextField label="Password" placeholder="••••••••" />}
+                    </detailsForm.AppField>
+                  </CardPanel>
+
+                  <detailsForm.AppForm>
+                    <CardFooter className="pt-4">
+                      <detailsForm.SubmitButton className="w-full">
+                        Create Account
+                      </detailsForm.SubmitButton>
+                    </CardFooter>
+                  </detailsForm.AppForm>
+                </form>
+              )}
+            </div>
+          </Card>
+
+          <CardFrameFooter>
+            <p className="text-muted-foreground text-sm">
+              Already have an account?{" "}
+              <Link
+                search={{ email, return_to }}
+                to="/login"
+                className="text-foreground hover:underline underline-offset-4"
+              >
+                Sign in
+              </Link>
+            </p>
+          </CardFrameFooter>
+        </CardFrame>
+      </div>
     </div>
   );
 }

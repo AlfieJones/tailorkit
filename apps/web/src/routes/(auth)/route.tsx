@@ -1,13 +1,17 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(auth)")({
-  loader: async ({ context }) => {
+  validateSearch: (search) => ({
+    return_to: search.return_to as string | undefined,
+  }),
+  loader: async ({ context, location }) => {
     const session = await context.queryClient.ensureQueryData(
       context.orpc.user.getSession.queryOptions(),
     );
 
     if (session.session || session.user) {
-      throw redirect({ to: "/" });
+      const returnTo = (location.search as { return_to?: string }).return_to;
+      throw redirect({ to: returnTo ?? "/" });
     }
   },
 });

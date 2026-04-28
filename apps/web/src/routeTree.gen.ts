@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as appIndexRouteImport } from './routes/(app)/index'
@@ -16,23 +17,28 @@ import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-emai
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
-import { Route as appSettingsRouteRouteImport } from './routes/(app)/settings/route'
+import { Route as appOnboardingRouteImport } from './routes/(app)/onboarding'
 import { Route as appOrgSlugRouteRouteImport } from './routes/(app)/$orgSlug/route'
-import { Route as appSettingsIndexRouteImport } from './routes/(app)/settings/index'
-import { Route as appOrgSlugIndexRouteImport } from './routes/(app)/$orgSlug/index'
-import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as ApiAiSplatRouteImport } from './routes/api/ai/$'
-import { Route as appSettingsSecurityRouteImport } from './routes/(app)/settings/security'
-import { Route as appOrgSlugSupportRouteImport } from './routes/(app)/$orgSlug/support'
-import { Route as appOrgSlugSettingsRouteImport } from './routes/(app)/$orgSlug/settings'
-import { Route as appOrgSlugProjectsRouteImport } from './routes/(app)/$orgSlug/projects'
-import { Route as appOrgSlugProjectSlugRouteImport } from './routes/(app)/$orgSlug/$projectSlug'
-import { Route as appOrgSlugSettingsIndexRouteImport } from './routes/(app)/$orgSlug/settings/index'
+import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as appAccountSettingsRouteRouteImport } from './routes/(app)/account/settings/route'
+import { Route as appOrgSlugorgRouteRouteImport } from './routes/(app)/$orgSlug/(org)/route'
+import { Route as appOrgSlugProjectSlugRouteRouteImport } from './routes/(app)/$orgSlug/$projectSlug/route'
+import { Route as appAccountSettingsIndexRouteImport } from './routes/(app)/account/settings/index'
+import { Route as appOrgSlugorgIndexRouteImport } from './routes/(app)/$orgSlug/(org)/index'
 import { Route as appOrgSlugProjectSlugIndexRouteImport } from './routes/(app)/$orgSlug/$projectSlug/index'
-import { Route as appOrgSlugSettingsMembersRouteImport } from './routes/(app)/$orgSlug/settings/members'
-import { Route as appOrgSlugSettingsBillingRouteImport } from './routes/(app)/$orgSlug/settings/billing'
+import { Route as appAccountSettingsSecurityRouteImport } from './routes/(app)/account/settings/security'
+import { Route as appOrgSlugorgSettingsRouteImport } from './routes/(app)/$orgSlug/(org)/settings'
+import { Route as appOrgSlugorgProjectsRouteImport } from './routes/(app)/$orgSlug/(org)/projects'
+import { Route as appOrgSlugorgSettingsIndexRouteImport } from './routes/(app)/$orgSlug/(org)/settings/index'
+import { Route as appOrgSlugorgSettingsMembersRouteImport } from './routes/(app)/$orgSlug/(org)/settings/members'
+import { Route as appOrgSlugorgSettingsBillingRouteImport } from './routes/(app)/$orgSlug/(org)/settings/billing'
 
+const LogoutRoute = LogoutRouteImport.update({
+  id: '/logout',
+  path: '/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
   getParentRoute: () => rootRouteImport,
@@ -66,25 +72,15 @@ const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => authRouteRoute,
 } as any)
-const appSettingsRouteRoute = appSettingsRouteRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const appOnboardingRoute = appOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => appRouteRoute,
 } as any)
 const appOrgSlugRouteRoute = appOrgSlugRouteRouteImport.update({
   id: '/$orgSlug',
   path: '/$orgSlug',
   getParentRoute: () => appRouteRoute,
-} as any)
-const appSettingsIndexRoute = appSettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => appSettingsRouteRoute,
-} as any)
-const appOrgSlugIndexRoute = appOrgSlugIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => appOrgSlugRouteRoute,
 } as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
@@ -96,208 +92,229 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAiSplatRoute = ApiAiSplatRouteImport.update({
-  id: '/api/ai/$',
-  path: '/api/ai/$',
-  getParentRoute: () => rootRouteImport,
+const appAccountSettingsRouteRoute = appAccountSettingsRouteRouteImport.update({
+  id: '/account/settings',
+  path: '/account/settings',
+  getParentRoute: () => appRouteRoute,
 } as any)
-const appSettingsSecurityRoute = appSettingsSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => appSettingsRouteRoute,
-} as any)
-const appOrgSlugSupportRoute = appOrgSlugSupportRouteImport.update({
-  id: '/support',
-  path: '/support',
+const appOrgSlugorgRouteRoute = appOrgSlugorgRouteRouteImport.update({
+  id: '/(org)',
   getParentRoute: () => appOrgSlugRouteRoute,
 } as any)
-const appOrgSlugSettingsRoute = appOrgSlugSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => appOrgSlugRouteRoute,
-} as any)
-const appOrgSlugProjectsRoute = appOrgSlugProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
-  getParentRoute: () => appOrgSlugRouteRoute,
-} as any)
-const appOrgSlugProjectSlugRoute = appOrgSlugProjectSlugRouteImport.update({
-  id: '/$projectSlug',
-  path: '/$projectSlug',
-  getParentRoute: () => appOrgSlugRouteRoute,
-} as any)
-const appOrgSlugSettingsIndexRoute = appOrgSlugSettingsIndexRouteImport.update({
+const appOrgSlugProjectSlugRouteRoute =
+  appOrgSlugProjectSlugRouteRouteImport.update({
+    id: '/$projectSlug',
+    path: '/$projectSlug',
+    getParentRoute: () => appOrgSlugRouteRoute,
+  } as any)
+const appAccountSettingsIndexRoute = appAccountSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => appOrgSlugSettingsRoute,
+  getParentRoute: () => appAccountSettingsRouteRoute,
+} as any)
+const appOrgSlugorgIndexRoute = appOrgSlugorgIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => appOrgSlugorgRouteRoute,
 } as any)
 const appOrgSlugProjectSlugIndexRoute =
   appOrgSlugProjectSlugIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => appOrgSlugProjectSlugRoute,
+    getParentRoute: () => appOrgSlugProjectSlugRouteRoute,
   } as any)
-const appOrgSlugSettingsMembersRoute =
-  appOrgSlugSettingsMembersRouteImport.update({
+const appAccountSettingsSecurityRoute =
+  appAccountSettingsSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => appAccountSettingsRouteRoute,
+  } as any)
+const appOrgSlugorgSettingsRoute = appOrgSlugorgSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => appOrgSlugorgRouteRoute,
+} as any)
+const appOrgSlugorgProjectsRoute = appOrgSlugorgProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => appOrgSlugorgRouteRoute,
+} as any)
+const appOrgSlugorgSettingsIndexRoute =
+  appOrgSlugorgSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => appOrgSlugorgSettingsRoute,
+  } as any)
+const appOrgSlugorgSettingsMembersRoute =
+  appOrgSlugorgSettingsMembersRouteImport.update({
     id: '/members',
     path: '/members',
-    getParentRoute: () => appOrgSlugSettingsRoute,
+    getParentRoute: () => appOrgSlugorgSettingsRoute,
   } as any)
-const appOrgSlugSettingsBillingRoute =
-  appOrgSlugSettingsBillingRouteImport.update({
+const appOrgSlugorgSettingsBillingRoute =
+  appOrgSlugorgSettingsBillingRouteImport.update({
     id: '/billing',
     path: '/billing',
-    getParentRoute: () => appOrgSlugSettingsRoute,
+    getParentRoute: () => appOrgSlugorgSettingsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/$orgSlug': typeof appOrgSlugRouteRouteWithChildren
-  '/settings': typeof appSettingsRouteRouteWithChildren
+  '/logout': typeof LogoutRoute
+  '/$orgSlug': typeof appOrgSlugorgRouteRouteWithChildren
+  '/onboarding': typeof appOnboardingRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/sign-up': typeof authSignUpRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/': typeof appIndexRoute
-  '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteWithChildren
-  '/$orgSlug/projects': typeof appOrgSlugProjectsRoute
-  '/$orgSlug/settings': typeof appOrgSlugSettingsRouteWithChildren
-  '/$orgSlug/support': typeof appOrgSlugSupportRoute
-  '/settings/security': typeof appSettingsSecurityRoute
-  '/api/ai/$': typeof ApiAiSplatRoute
+  '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
+  '/account/settings': typeof appAccountSettingsRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/$orgSlug/': typeof appOrgSlugIndexRoute
-  '/settings/': typeof appSettingsIndexRoute
-  '/$orgSlug/settings/billing': typeof appOrgSlugSettingsBillingRoute
-  '/$orgSlug/settings/members': typeof appOrgSlugSettingsMembersRoute
+  '/$orgSlug/projects': typeof appOrgSlugorgProjectsRoute
+  '/$orgSlug/settings': typeof appOrgSlugorgSettingsRouteWithChildren
+  '/account/settings/security': typeof appAccountSettingsSecurityRoute
   '/$orgSlug/$projectSlug/': typeof appOrgSlugProjectSlugIndexRoute
-  '/$orgSlug/settings/': typeof appOrgSlugSettingsIndexRoute
+  '/$orgSlug/': typeof appOrgSlugorgIndexRoute
+  '/account/settings/': typeof appAccountSettingsIndexRoute
+  '/$orgSlug/settings/billing': typeof appOrgSlugorgSettingsBillingRoute
+  '/$orgSlug/settings/members': typeof appOrgSlugorgSettingsMembersRoute
+  '/$orgSlug/settings/': typeof appOrgSlugorgSettingsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/logout': typeof LogoutRoute
+  '/$orgSlug': typeof appOrgSlugorgIndexRoute
+  '/onboarding': typeof appOnboardingRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/sign-up': typeof authSignUpRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/': typeof appIndexRoute
-  '/$orgSlug/projects': typeof appOrgSlugProjectsRoute
-  '/$orgSlug/support': typeof appOrgSlugSupportRoute
-  '/settings/security': typeof appSettingsSecurityRoute
-  '/api/ai/$': typeof ApiAiSplatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/$orgSlug': typeof appOrgSlugIndexRoute
-  '/settings': typeof appSettingsIndexRoute
-  '/$orgSlug/settings/billing': typeof appOrgSlugSettingsBillingRoute
-  '/$orgSlug/settings/members': typeof appOrgSlugSettingsMembersRoute
+  '/$orgSlug/projects': typeof appOrgSlugorgProjectsRoute
+  '/account/settings/security': typeof appAccountSettingsSecurityRoute
   '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugIndexRoute
-  '/$orgSlug/settings': typeof appOrgSlugSettingsIndexRoute
+  '/account/settings': typeof appAccountSettingsIndexRoute
+  '/$orgSlug/settings/billing': typeof appOrgSlugorgSettingsBillingRoute
+  '/$orgSlug/settings/members': typeof appOrgSlugorgSettingsMembersRoute
+  '/$orgSlug/settings': typeof appOrgSlugorgSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(app)': typeof appRouteRouteWithChildren
   '/(auth)': typeof authRouteRouteWithChildren
+  '/logout': typeof LogoutRoute
   '/(app)/$orgSlug': typeof appOrgSlugRouteRouteWithChildren
-  '/(app)/settings': typeof appSettingsRouteRouteWithChildren
+  '/(app)/onboarding': typeof appOnboardingRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/sign-up': typeof authSignUpRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
   '/(app)/': typeof appIndexRoute
-  '/(app)/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteWithChildren
-  '/(app)/$orgSlug/projects': typeof appOrgSlugProjectsRoute
-  '/(app)/$orgSlug/settings': typeof appOrgSlugSettingsRouteWithChildren
-  '/(app)/$orgSlug/support': typeof appOrgSlugSupportRoute
-  '/(app)/settings/security': typeof appSettingsSecurityRoute
-  '/api/ai/$': typeof ApiAiSplatRoute
+  '/(app)/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
+  '/(app)/$orgSlug/(org)': typeof appOrgSlugorgRouteRouteWithChildren
+  '/(app)/account/settings': typeof appAccountSettingsRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/(app)/$orgSlug/': typeof appOrgSlugIndexRoute
-  '/(app)/settings/': typeof appSettingsIndexRoute
-  '/(app)/$orgSlug/settings/billing': typeof appOrgSlugSettingsBillingRoute
-  '/(app)/$orgSlug/settings/members': typeof appOrgSlugSettingsMembersRoute
+  '/(app)/$orgSlug/(org)/projects': typeof appOrgSlugorgProjectsRoute
+  '/(app)/$orgSlug/(org)/settings': typeof appOrgSlugorgSettingsRouteWithChildren
+  '/(app)/account/settings/security': typeof appAccountSettingsSecurityRoute
   '/(app)/$orgSlug/$projectSlug/': typeof appOrgSlugProjectSlugIndexRoute
-  '/(app)/$orgSlug/settings/': typeof appOrgSlugSettingsIndexRoute
+  '/(app)/$orgSlug/(org)/': typeof appOrgSlugorgIndexRoute
+  '/(app)/account/settings/': typeof appAccountSettingsIndexRoute
+  '/(app)/$orgSlug/(org)/settings/billing': typeof appOrgSlugorgSettingsBillingRoute
+  '/(app)/$orgSlug/(org)/settings/members': typeof appOrgSlugorgSettingsMembersRoute
+  '/(app)/$orgSlug/(org)/settings/': typeof appOrgSlugorgSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/logout'
     | '/$orgSlug'
-    | '/settings'
+    | '/onboarding'
     | '/forgot-password'
     | '/login'
     | '/sign-up'
     | '/verify-email'
     | '/'
     | '/$orgSlug/$projectSlug'
-    | '/$orgSlug/projects'
-    | '/$orgSlug/settings'
-    | '/$orgSlug/support'
-    | '/settings/security'
-    | '/api/ai/$'
+    | '/account/settings'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/$orgSlug/projects'
+    | '/$orgSlug/settings'
+    | '/account/settings/security'
+    | '/$orgSlug/$projectSlug/'
     | '/$orgSlug/'
-    | '/settings/'
+    | '/account/settings/'
     | '/$orgSlug/settings/billing'
     | '/$orgSlug/settings/members'
-    | '/$orgSlug/$projectSlug/'
     | '/$orgSlug/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/logout'
+    | '/$orgSlug'
+    | '/onboarding'
     | '/forgot-password'
     | '/login'
     | '/sign-up'
     | '/verify-email'
     | '/'
-    | '/$orgSlug/projects'
-    | '/$orgSlug/support'
-    | '/settings/security'
-    | '/api/ai/$'
     | '/api/auth/$'
     | '/api/rpc/$'
-    | '/$orgSlug'
-    | '/settings'
+    | '/$orgSlug/projects'
+    | '/account/settings/security'
+    | '/$orgSlug/$projectSlug'
+    | '/account/settings'
     | '/$orgSlug/settings/billing'
     | '/$orgSlug/settings/members'
-    | '/$orgSlug/$projectSlug'
     | '/$orgSlug/settings'
   id:
     | '__root__'
     | '/(app)'
     | '/(auth)'
+    | '/logout'
     | '/(app)/$orgSlug'
-    | '/(app)/settings'
+    | '/(app)/onboarding'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/sign-up'
     | '/(auth)/verify-email'
     | '/(app)/'
     | '/(app)/$orgSlug/$projectSlug'
-    | '/(app)/$orgSlug/projects'
-    | '/(app)/$orgSlug/settings'
-    | '/(app)/$orgSlug/support'
-    | '/(app)/settings/security'
-    | '/api/ai/$'
+    | '/(app)/$orgSlug/(org)'
+    | '/(app)/account/settings'
     | '/api/auth/$'
     | '/api/rpc/$'
-    | '/(app)/$orgSlug/'
-    | '/(app)/settings/'
-    | '/(app)/$orgSlug/settings/billing'
-    | '/(app)/$orgSlug/settings/members'
+    | '/(app)/$orgSlug/(org)/projects'
+    | '/(app)/$orgSlug/(org)/settings'
+    | '/(app)/account/settings/security'
     | '/(app)/$orgSlug/$projectSlug/'
-    | '/(app)/$orgSlug/settings/'
+    | '/(app)/$orgSlug/(org)/'
+    | '/(app)/account/settings/'
+    | '/(app)/$orgSlug/(org)/settings/billing'
+    | '/(app)/$orgSlug/(org)/settings/members'
+    | '/(app)/$orgSlug/(org)/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   appRouteRoute: typeof appRouteRouteWithChildren
   authRouteRoute: typeof authRouteRouteWithChildren
-  ApiAiSplatRoute: typeof ApiAiSplatRoute
+  LogoutRoute: typeof LogoutRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)': {
       id: '/(auth)'
       path: ''
@@ -347,11 +364,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authForgotPasswordRouteImport
       parentRoute: typeof authRouteRoute
     }
-    '/(app)/settings': {
-      id: '/(app)/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof appSettingsRouteRouteImport
+    '/(app)/onboarding': {
+      id: '/(app)/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof appOnboardingRouteImport
       parentRoute: typeof appRouteRoute
     }
     '/(app)/$orgSlug': {
@@ -360,20 +377,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/$orgSlug'
       preLoaderRoute: typeof appOrgSlugRouteRouteImport
       parentRoute: typeof appRouteRoute
-    }
-    '/(app)/settings/': {
-      id: '/(app)/settings/'
-      path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof appSettingsIndexRouteImport
-      parentRoute: typeof appSettingsRouteRoute
-    }
-    '/(app)/$orgSlug/': {
-      id: '/(app)/$orgSlug/'
-      path: '/'
-      fullPath: '/$orgSlug/'
-      preLoaderRoute: typeof appOrgSlugIndexRouteImport
-      parentRoute: typeof appOrgSlugRouteRoute
     }
     '/api/rpc/$': {
       id: '/api/rpc/$'
@@ -389,150 +392,181 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/ai/$': {
-      id: '/api/ai/$'
-      path: '/api/ai/$'
-      fullPath: '/api/ai/$'
-      preLoaderRoute: typeof ApiAiSplatRouteImport
-      parentRoute: typeof rootRouteImport
+    '/(app)/account/settings': {
+      id: '/(app)/account/settings'
+      path: '/account/settings'
+      fullPath: '/account/settings'
+      preLoaderRoute: typeof appAccountSettingsRouteRouteImport
+      parentRoute: typeof appRouteRoute
     }
-    '/(app)/settings/security': {
-      id: '/(app)/settings/security'
-      path: '/security'
-      fullPath: '/settings/security'
-      preLoaderRoute: typeof appSettingsSecurityRouteImport
-      parentRoute: typeof appSettingsRouteRoute
-    }
-    '/(app)/$orgSlug/support': {
-      id: '/(app)/$orgSlug/support'
-      path: '/support'
-      fullPath: '/$orgSlug/support'
-      preLoaderRoute: typeof appOrgSlugSupportRouteImport
-      parentRoute: typeof appOrgSlugRouteRoute
-    }
-    '/(app)/$orgSlug/settings': {
-      id: '/(app)/$orgSlug/settings'
-      path: '/settings'
-      fullPath: '/$orgSlug/settings'
-      preLoaderRoute: typeof appOrgSlugSettingsRouteImport
-      parentRoute: typeof appOrgSlugRouteRoute
-    }
-    '/(app)/$orgSlug/projects': {
-      id: '/(app)/$orgSlug/projects'
-      path: '/projects'
-      fullPath: '/$orgSlug/projects'
-      preLoaderRoute: typeof appOrgSlugProjectsRouteImport
+    '/(app)/$orgSlug/(org)': {
+      id: '/(app)/$orgSlug/(org)'
+      path: ''
+      fullPath: '/$orgSlug'
+      preLoaderRoute: typeof appOrgSlugorgRouteRouteImport
       parentRoute: typeof appOrgSlugRouteRoute
     }
     '/(app)/$orgSlug/$projectSlug': {
       id: '/(app)/$orgSlug/$projectSlug'
       path: '/$projectSlug'
       fullPath: '/$orgSlug/$projectSlug'
-      preLoaderRoute: typeof appOrgSlugProjectSlugRouteImport
+      preLoaderRoute: typeof appOrgSlugProjectSlugRouteRouteImport
       parentRoute: typeof appOrgSlugRouteRoute
     }
-    '/(app)/$orgSlug/settings/': {
-      id: '/(app)/$orgSlug/settings/'
+    '/(app)/account/settings/': {
+      id: '/(app)/account/settings/'
       path: '/'
-      fullPath: '/$orgSlug/settings/'
-      preLoaderRoute: typeof appOrgSlugSettingsIndexRouteImport
-      parentRoute: typeof appOrgSlugSettingsRoute
+      fullPath: '/account/settings/'
+      preLoaderRoute: typeof appAccountSettingsIndexRouteImport
+      parentRoute: typeof appAccountSettingsRouteRoute
+    }
+    '/(app)/$orgSlug/(org)/': {
+      id: '/(app)/$orgSlug/(org)/'
+      path: '/'
+      fullPath: '/$orgSlug/'
+      preLoaderRoute: typeof appOrgSlugorgIndexRouteImport
+      parentRoute: typeof appOrgSlugorgRouteRoute
     }
     '/(app)/$orgSlug/$projectSlug/': {
       id: '/(app)/$orgSlug/$projectSlug/'
       path: '/'
       fullPath: '/$orgSlug/$projectSlug/'
       preLoaderRoute: typeof appOrgSlugProjectSlugIndexRouteImport
-      parentRoute: typeof appOrgSlugProjectSlugRoute
+      parentRoute: typeof appOrgSlugProjectSlugRouteRoute
     }
-    '/(app)/$orgSlug/settings/members': {
-      id: '/(app)/$orgSlug/settings/members'
+    '/(app)/account/settings/security': {
+      id: '/(app)/account/settings/security'
+      path: '/security'
+      fullPath: '/account/settings/security'
+      preLoaderRoute: typeof appAccountSettingsSecurityRouteImport
+      parentRoute: typeof appAccountSettingsRouteRoute
+    }
+    '/(app)/$orgSlug/(org)/settings': {
+      id: '/(app)/$orgSlug/(org)/settings'
+      path: '/settings'
+      fullPath: '/$orgSlug/settings'
+      preLoaderRoute: typeof appOrgSlugorgSettingsRouteImport
+      parentRoute: typeof appOrgSlugorgRouteRoute
+    }
+    '/(app)/$orgSlug/(org)/projects': {
+      id: '/(app)/$orgSlug/(org)/projects'
+      path: '/projects'
+      fullPath: '/$orgSlug/projects'
+      preLoaderRoute: typeof appOrgSlugorgProjectsRouteImport
+      parentRoute: typeof appOrgSlugorgRouteRoute
+    }
+    '/(app)/$orgSlug/(org)/settings/': {
+      id: '/(app)/$orgSlug/(org)/settings/'
+      path: '/'
+      fullPath: '/$orgSlug/settings/'
+      preLoaderRoute: typeof appOrgSlugorgSettingsIndexRouteImport
+      parentRoute: typeof appOrgSlugorgSettingsRoute
+    }
+    '/(app)/$orgSlug/(org)/settings/members': {
+      id: '/(app)/$orgSlug/(org)/settings/members'
       path: '/members'
       fullPath: '/$orgSlug/settings/members'
-      preLoaderRoute: typeof appOrgSlugSettingsMembersRouteImport
-      parentRoute: typeof appOrgSlugSettingsRoute
+      preLoaderRoute: typeof appOrgSlugorgSettingsMembersRouteImport
+      parentRoute: typeof appOrgSlugorgSettingsRoute
     }
-    '/(app)/$orgSlug/settings/billing': {
-      id: '/(app)/$orgSlug/settings/billing'
+    '/(app)/$orgSlug/(org)/settings/billing': {
+      id: '/(app)/$orgSlug/(org)/settings/billing'
       path: '/billing'
       fullPath: '/$orgSlug/settings/billing'
-      preLoaderRoute: typeof appOrgSlugSettingsBillingRouteImport
-      parentRoute: typeof appOrgSlugSettingsRoute
+      preLoaderRoute: typeof appOrgSlugorgSettingsBillingRouteImport
+      parentRoute: typeof appOrgSlugorgSettingsRoute
     }
   }
 }
 
-interface appOrgSlugProjectSlugRouteChildren {
+interface appOrgSlugProjectSlugRouteRouteChildren {
   appOrgSlugProjectSlugIndexRoute: typeof appOrgSlugProjectSlugIndexRoute
 }
 
-const appOrgSlugProjectSlugRouteChildren: appOrgSlugProjectSlugRouteChildren = {
-  appOrgSlugProjectSlugIndexRoute: appOrgSlugProjectSlugIndexRoute,
-}
+const appOrgSlugProjectSlugRouteRouteChildren: appOrgSlugProjectSlugRouteRouteChildren =
+  {
+    appOrgSlugProjectSlugIndexRoute: appOrgSlugProjectSlugIndexRoute,
+  }
 
-const appOrgSlugProjectSlugRouteWithChildren =
-  appOrgSlugProjectSlugRoute._addFileChildren(
-    appOrgSlugProjectSlugRouteChildren,
+const appOrgSlugProjectSlugRouteRouteWithChildren =
+  appOrgSlugProjectSlugRouteRoute._addFileChildren(
+    appOrgSlugProjectSlugRouteRouteChildren,
   )
 
-interface appOrgSlugSettingsRouteChildren {
-  appOrgSlugSettingsBillingRoute: typeof appOrgSlugSettingsBillingRoute
-  appOrgSlugSettingsMembersRoute: typeof appOrgSlugSettingsMembersRoute
-  appOrgSlugSettingsIndexRoute: typeof appOrgSlugSettingsIndexRoute
+interface appOrgSlugorgSettingsRouteChildren {
+  appOrgSlugorgSettingsBillingRoute: typeof appOrgSlugorgSettingsBillingRoute
+  appOrgSlugorgSettingsMembersRoute: typeof appOrgSlugorgSettingsMembersRoute
+  appOrgSlugorgSettingsIndexRoute: typeof appOrgSlugorgSettingsIndexRoute
 }
 
-const appOrgSlugSettingsRouteChildren: appOrgSlugSettingsRouteChildren = {
-  appOrgSlugSettingsBillingRoute: appOrgSlugSettingsBillingRoute,
-  appOrgSlugSettingsMembersRoute: appOrgSlugSettingsMembersRoute,
-  appOrgSlugSettingsIndexRoute: appOrgSlugSettingsIndexRoute,
+const appOrgSlugorgSettingsRouteChildren: appOrgSlugorgSettingsRouteChildren = {
+  appOrgSlugorgSettingsBillingRoute: appOrgSlugorgSettingsBillingRoute,
+  appOrgSlugorgSettingsMembersRoute: appOrgSlugorgSettingsMembersRoute,
+  appOrgSlugorgSettingsIndexRoute: appOrgSlugorgSettingsIndexRoute,
 }
 
-const appOrgSlugSettingsRouteWithChildren =
-  appOrgSlugSettingsRoute._addFileChildren(appOrgSlugSettingsRouteChildren)
+const appOrgSlugorgSettingsRouteWithChildren =
+  appOrgSlugorgSettingsRoute._addFileChildren(
+    appOrgSlugorgSettingsRouteChildren,
+  )
+
+interface appOrgSlugorgRouteRouteChildren {
+  appOrgSlugorgProjectsRoute: typeof appOrgSlugorgProjectsRoute
+  appOrgSlugorgSettingsRoute: typeof appOrgSlugorgSettingsRouteWithChildren
+  appOrgSlugorgIndexRoute: typeof appOrgSlugorgIndexRoute
+}
+
+const appOrgSlugorgRouteRouteChildren: appOrgSlugorgRouteRouteChildren = {
+  appOrgSlugorgProjectsRoute: appOrgSlugorgProjectsRoute,
+  appOrgSlugorgSettingsRoute: appOrgSlugorgSettingsRouteWithChildren,
+  appOrgSlugorgIndexRoute: appOrgSlugorgIndexRoute,
+}
+
+const appOrgSlugorgRouteRouteWithChildren =
+  appOrgSlugorgRouteRoute._addFileChildren(appOrgSlugorgRouteRouteChildren)
 
 interface appOrgSlugRouteRouteChildren {
-  appOrgSlugProjectSlugRoute: typeof appOrgSlugProjectSlugRouteWithChildren
-  appOrgSlugProjectsRoute: typeof appOrgSlugProjectsRoute
-  appOrgSlugSettingsRoute: typeof appOrgSlugSettingsRouteWithChildren
-  appOrgSlugSupportRoute: typeof appOrgSlugSupportRoute
-  appOrgSlugIndexRoute: typeof appOrgSlugIndexRoute
+  appOrgSlugProjectSlugRouteRoute: typeof appOrgSlugProjectSlugRouteRouteWithChildren
+  appOrgSlugorgRouteRoute: typeof appOrgSlugorgRouteRouteWithChildren
 }
 
 const appOrgSlugRouteRouteChildren: appOrgSlugRouteRouteChildren = {
-  appOrgSlugProjectSlugRoute: appOrgSlugProjectSlugRouteWithChildren,
-  appOrgSlugProjectsRoute: appOrgSlugProjectsRoute,
-  appOrgSlugSettingsRoute: appOrgSlugSettingsRouteWithChildren,
-  appOrgSlugSupportRoute: appOrgSlugSupportRoute,
-  appOrgSlugIndexRoute: appOrgSlugIndexRoute,
+  appOrgSlugProjectSlugRouteRoute: appOrgSlugProjectSlugRouteRouteWithChildren,
+  appOrgSlugorgRouteRoute: appOrgSlugorgRouteRouteWithChildren,
 }
 
 const appOrgSlugRouteRouteWithChildren = appOrgSlugRouteRoute._addFileChildren(
   appOrgSlugRouteRouteChildren,
 )
 
-interface appSettingsRouteRouteChildren {
-  appSettingsSecurityRoute: typeof appSettingsSecurityRoute
-  appSettingsIndexRoute: typeof appSettingsIndexRoute
+interface appAccountSettingsRouteRouteChildren {
+  appAccountSettingsSecurityRoute: typeof appAccountSettingsSecurityRoute
+  appAccountSettingsIndexRoute: typeof appAccountSettingsIndexRoute
 }
 
-const appSettingsRouteRouteChildren: appSettingsRouteRouteChildren = {
-  appSettingsSecurityRoute: appSettingsSecurityRoute,
-  appSettingsIndexRoute: appSettingsIndexRoute,
-}
+const appAccountSettingsRouteRouteChildren: appAccountSettingsRouteRouteChildren =
+  {
+    appAccountSettingsSecurityRoute: appAccountSettingsSecurityRoute,
+    appAccountSettingsIndexRoute: appAccountSettingsIndexRoute,
+  }
 
-const appSettingsRouteRouteWithChildren =
-  appSettingsRouteRoute._addFileChildren(appSettingsRouteRouteChildren)
+const appAccountSettingsRouteRouteWithChildren =
+  appAccountSettingsRouteRoute._addFileChildren(
+    appAccountSettingsRouteRouteChildren,
+  )
 
 interface appRouteRouteChildren {
   appOrgSlugRouteRoute: typeof appOrgSlugRouteRouteWithChildren
-  appSettingsRouteRoute: typeof appSettingsRouteRouteWithChildren
+  appOnboardingRoute: typeof appOnboardingRoute
   appIndexRoute: typeof appIndexRoute
+  appAccountSettingsRouteRoute: typeof appAccountSettingsRouteRouteWithChildren
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
   appOrgSlugRouteRoute: appOrgSlugRouteRouteWithChildren,
-  appSettingsRouteRoute: appSettingsRouteRouteWithChildren,
+  appOnboardingRoute: appOnboardingRoute,
   appIndexRoute: appIndexRoute,
+  appAccountSettingsRouteRoute: appAccountSettingsRouteRouteWithChildren,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(
@@ -560,7 +594,7 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   appRouteRoute: appRouteRouteWithChildren,
   authRouteRoute: authRouteRouteWithChildren,
-  ApiAiSplatRoute: ApiAiSplatRoute,
+  LogoutRoute: LogoutRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }

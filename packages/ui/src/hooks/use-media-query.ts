@@ -26,7 +26,7 @@ function resolveMax(value: Breakpoint | number): string {
   return `(max-width: ${px - 1}px)`;
 }
 
-function parseQuery(query: BreakpointQuery | MediaQueryInput | (string & {})): string {
+function parseQuery(query: BreakpointQuery | MediaQueryInput | (string & object)): string {
   if (typeof query !== "string") {
     const parts: string[] = [];
     if (query.min != null) {
@@ -77,7 +77,9 @@ export interface MediaQueryInput {
   pointer?: "coarse" | "fine";
 }
 
-export function useMediaQuery(query: BreakpointQuery | MediaQueryInput | (string & {})): boolean {
+export function useMediaQuery(
+  query: BreakpointQuery | MediaQueryInput | (string & object),
+): boolean {
   const mediaQuery = parseQuery(query);
 
   const subscribe = useCallback(

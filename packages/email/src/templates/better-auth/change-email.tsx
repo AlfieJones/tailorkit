@@ -1,9 +1,12 @@
 import { AuthEmailLayout, AuthOtpContent, COMPANY_NAME } from "./shared";
 import type { BetterAuthTemplateProps } from "./shared";
 
-export function ChangeEmailTemplate({ otp }: BetterAuthTemplateProps) {
+export function ChangeEmailTemplate({ logoBaseUrl, otp }: BetterAuthTemplateProps) {
   return (
-    <AuthEmailLayout preview={`Confirm your new ${COMPANY_NAME} email address.`}>
+    <AuthEmailLayout
+      logoBaseUrl={logoBaseUrl}
+      preview={`Confirm your new ${COMPANY_NAME} email address.`}
+    >
       <AuthOtpContent
         description={
           <>

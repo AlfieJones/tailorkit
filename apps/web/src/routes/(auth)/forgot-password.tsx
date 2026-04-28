@@ -1,49 +1,64 @@
 "use client";
 
-import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import { ChevronLeftIcon } from "lucide-react";
+import { Fragment, useRef, useState } from "react";
+import { clsx } from "clsx";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,
+  CardFooter,
   CardFrame,
-  CardFrameDescription,
-  CardFrameHeader,
-  CardFrameTitle,
+  CardFrameFooter,
+  CardHeader,
   CardPanel,
+  CardTitle,
 } from "@tailorkit/ui/components/card";
-import { Field, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
-import { Form } from "@tailorkit/ui/components/form";
-import { Input } from "@tailorkit/ui/components/input";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@tailorkit/ui/components/input-group";
-import { OTPField, OTPFieldInput } from "@tailorkit/ui/components/otp-field";
-import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
+import { Field, FieldDescription, FieldError } from "@tailorkit/ui/components/field";
+import { Logo } from "@tailorkit/ui/components/logo";
+import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/components/otp-field";
 import { toastManager } from "@tailorkit/ui/components/toast";
-import { useForm } from "@tanstack/react-form";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useAppForm } from "@tailorkit/ui/form";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/(auth)/forgot-password")({
+  validateSearch: (search) => ({
+    email: search.email as string | undefined,
+    return_to: search.return_to as string | undefined,
+  }),
   component: RouteComponent,
 });
 
 const OTP_LENGTH = 6;
 const SLOT_KEYS = Array.from({ length: OTP_LENGTH }, (_, i) => `slot-${i}`);
 
-type Step = "email" | "reset";
+type Step = "email" | "otp" | "reset";
 
 function RouteComponent() {
-  const navigate = useNavigate();
+  const { email: emailFromSearch, return_to } = useSearch({ from: "/(auth)/forgot-password" });
+  const navigate = Route.useNavigate();
   const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
+  const [visible, setVisible] = useState(true);
+  const [email, setEmail] = useState(emailFromSearch || "");
   const [otp, setOtp] = useState("");
   const [otpInvalid, setOtpInvalid] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
   const [resending, setResending] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const transition = (nextStep: Step, nextEmail?: string) => {
+    setVisible(false);
+    setTimeout(() => {
+      if (nextEmail !== undefined) {
+        setEmail(nextEmail);
+      }
+      setStep(nextStep);
+      setVisible(true);
+    }, 150);
+  };
 
   const startResendTimer = () => {
     setResendCountdown(60);
@@ -77,13 +92,12 @@ function RouteComponent() {
     return true;
   };
 
-  const emailForm = useForm({
-    defaultValues: { email: "" },
+  const emailForm = useAppForm({
+    defaultValues: { email: emailFromSearch || "" },
     onSubmit: async ({ value }) => {
       const sent = await sendOtp(value.email);
       if (sent) {
-        setEmail(value.email);
-        setStep("reset");
+        transition("otp", value.email);
       }
     },
     validators: {
@@ -91,23 +105,43 @@ function RouteComponent() {
     },
   });
 
-  const resetForm = useForm({
+  const verifyOtp = async (code = otp) => {
+    if (!code || code.length < OTP_LENGTH) {
+      setOtpInvalid(true);
+      return;
+    }
+    setVerifyingOtp(true);
+    const result = await authClient.emailOtp.checkVerificationOtp({
+      email,
+      otp: code,
+      type: "forget-password",
+    });
+    setVerifyingOtp(false);
+    if (result.error) {
+      if (result.error.code === "INVALID_OTP" || result.error.code === "OTP_EXPIRED") {
+        setOtpInvalid(true);
+        setOtp("");
+      }
+      toastManager.add({
+        description: result.error.message || "Failed to verify code",
+        title: "Verification failed",
+        type: "error",
+      });
+      return;
+    }
+    setOtpInvalid(false);
+    transition("reset");
+  };
+
+  const resetForm = useAppForm({
     defaultValues: { confirmPassword: "", password: "" },
     onSubmit: async ({ value }) => {
-      if (!otp || otp.length < OTP_LENGTH) {
-        setOtpInvalid(true);
-        return;
-      }
       const result = await authClient.emailOtp.resetPassword({
         email,
         otp,
         password: value.password,
       });
       if (result.error) {
-        if (result.error.code === "INVALID_OTP" || result.error.code === "OTP_EXPIRED") {
-          setOtpInvalid(true);
-          setOtp("");
-        }
         toastManager.add({
           description: result.error.message || "Failed to reset password",
           title: "Reset failed",
@@ -120,7 +154,10 @@ function RouteComponent() {
         title: "Password reset",
         type: "success",
       });
-      navigate({ to: "/login" });
+      navigate({
+        search: { email, return_to },
+        to: "/login",
+      });
     },
     validators: {
       onSubmit: z
@@ -135,250 +172,198 @@ function RouteComponent() {
     },
   });
 
-  return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12">
-      <CardFrame className="w-full max-w-sm">
-        <CardFrameHeader>
-          <CardFrameTitle>
-            {step === "email" ? "Forgot password?" : "Reset password"}
-          </CardFrameTitle>
-          <CardFrameDescription>
-            {step === "email"
-              ? "Enter your email and we'll send you a code"
-              : `Enter the code sent to ${email} and choose a new password`}
-          </CardFrameDescription>
-        </CardFrameHeader>
-        <Card>
-          <CardPanel>
-            {step === "email" ? (
-              <Form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  emailForm.handleSubmit();
-                }}
-                className="flex w-full flex-col gap-4"
-              >
-                <emailForm.Field name="email">
-                  {(field) => (
-                    <Field>
-                      <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="email"
-                        placeholder="you@example.com"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={field.state.meta.errors.length > 0 || undefined}
-                      />
-                      {field.state.meta.errors.map((error) => (
-                        <FieldError key={error?.message}>{error?.message}</FieldError>
-                      ))}
-                    </Field>
-                  )}
-                </emailForm.Field>
+  const getTitle = () => {
+    if (step === "email") {
+      return "Forgot password?";
+    }
+    if (step === "otp") {
+      return "Verify code";
+    }
+    return "Reset password";
+  };
 
-                <emailForm.Subscribe
-                  selector={(state) => ({
-                    canSubmit: state.canSubmit,
-                    isSubmitting: state.isSubmitting,
-                  })}
+  const getDescription = () => {
+    if (step === "email") {
+      return "Enter your email and we'll send you a code";
+    }
+    if (step === "otp") {
+      return "Check your email for a reset code";
+    }
+    return "Choose a new password for your account";
+  };
+
+  const contentClass = clsx(
+    "transition-all duration-150",
+    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1",
+  );
+
+  const renderStep = () => {
+    if (step === "email") {
+      return (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            emailForm.handleSubmit();
+          }}
+        >
+          <CardPanel className="flex flex-col gap-4">
+            <emailForm.AppField name="email">
+              {(field) => (
+                <field.TextField
+                  label="Email"
+                  type="email"
+                  placeholder="you@example.com"
+                  autoFocus
+                />
+              )}
+            </emailForm.AppField>
+          </CardPanel>
+
+          <emailForm.AppForm>
+            <CardFooter className="pt-4">
+              <emailForm.SubmitButton className="w-full">Send code</emailForm.SubmitButton>
+            </CardFooter>
+          </emailForm.AppForm>
+        </form>
+      );
+    }
+
+    if (step === "otp") {
+      return (
+        <>
+          <CardPanel className="flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-6">
+              <Field className="items-center gap-1.5">
+                <FieldDescription>Verification code</FieldDescription>
+                <OTPField
+                  length={OTP_LENGTH}
+                  value={otp}
+                  onValueChange={(value) => {
+                    setOtp(value);
+                    setOtpInvalid(false);
+                    if (value.length === OTP_LENGTH) {
+                      verifyOtp(value);
+                    }
+                  }}
+                  disabled={verifyingOtp}
+                  size="lg"
+                  className="gap-2.5"
                 >
-                  {({ canSubmit, isSubmitting }) => (
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={!canSubmit || isSubmitting}
-                      loading={isSubmitting}
-                    >
-                      Send code
-                    </Button>
-                  )}
-                </emailForm.Subscribe>
-
-                <div className="text-center">
-                  <Link to="/login" className="text-muted-foreground text-sm hover:underline">
-                    Back to sign in
-                  </Link>
-                </div>
-              </Form>
-            ) : (
-              <Form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  resetForm.handleSubmit();
-                }}
-                className="flex w-full flex-col gap-6"
-              >
-                <Field className="items-center">
-                  <FieldLabel>Verification code</FieldLabel>
-                  <OTPField
-                    length={OTP_LENGTH}
-                    value={otp}
-                    onValueChange={(value) => {
-                      setOtp(value);
-                      setOtpInvalid(false);
-                    }}
-                    size="lg"
-                  >
-                    {SLOT_KEYS.map((key, index) => (
+                  {SLOT_KEYS.map((key, index) => (
+                    <Fragment key={key}>
                       <OTPFieldInput
-                        key={key}
+                        className="size-11 text-xl leading-11 sm:size-10 sm:text-lg sm:leading-10"
                         aria-invalid={otpInvalid || undefined}
                         aria-label={`Digit ${index + 1} of ${OTP_LENGTH}`}
                       />
-                    ))}
-                  </OTPField>
-                  {otpInvalid && <FieldError>Invalid or expired code.</FieldError>}
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground text-xs">Didn't get it?</span>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      type="button"
-                      onClick={async () => {
-                        setResending(true);
-                        await sendOtp(email);
-                        setResending(false);
-                        setOtp("");
-                        setOtpInvalid(false);
-                      }}
-                      disabled={resending || resendCountdown > 0}
-                      loading={resending}
-                      className="h-auto p-0 text-xs"
-                    >
-                      {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend code"}
-                    </Button>
-                  </div>
-                </Field>
-
-                <div className="flex flex-col gap-4">
-                  <resetForm.Field name="password">
-                    {(field) => (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>New password</FieldLabel>
-                        <InputGroup>
-                          <InputGroupInput
-                            id={field.name}
-                            name={field.name}
-                            placeholder="••••••••"
-                            type={showPassword ? "text" : "password"}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            aria-invalid={field.state.meta.errors.length > 0 || undefined}
-                          />
-                          <InputGroupAddon align="inline-end">
-                            <Tooltip>
-                              <TooltipTrigger
-                                render={
-                                  <Button
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    size="icon-xs"
-                                    type="button"
-                                    variant="ghost"
-                                  />
-                                }
-                              >
-                                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                              </TooltipTrigger>
-                              <TooltipPopup>
-                                {showPassword ? "Hide password" : "Show password"}
-                              </TooltipPopup>
-                            </Tooltip>
-                          </InputGroupAddon>
-                        </InputGroup>
-                        {field.state.meta.errors.map((error) => (
-                          <FieldError key={error?.message}>{error?.message}</FieldError>
-                        ))}
-                      </Field>
-                    )}
-                  </resetForm.Field>
-
-                  <resetForm.Field name="confirmPassword">
-                    {(field) => (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Confirm password</FieldLabel>
-                        <InputGroup>
-                          <InputGroupInput
-                            id={field.name}
-                            name={field.name}
-                            placeholder="••••••••"
-                            type={showConfirm ? "text" : "password"}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            aria-invalid={field.state.meta.errors.length > 0 || undefined}
-                          />
-                          <InputGroupAddon align="inline-end">
-                            <Tooltip>
-                              <TooltipTrigger
-                                render={
-                                  <Button
-                                    aria-label={showConfirm ? "Hide password" : "Show password"}
-                                    onClick={() => setShowConfirm(!showConfirm)}
-                                    size="icon-xs"
-                                    type="button"
-                                    variant="ghost"
-                                  />
-                                }
-                              >
-                                {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
-                              </TooltipTrigger>
-                              <TooltipPopup>
-                                {showConfirm ? "Hide password" : "Show password"}
-                              </TooltipPopup>
-                            </Tooltip>
-                          </InputGroupAddon>
-                        </InputGroup>
-                        {field.state.meta.errors.map((error) => (
-                          <FieldError key={error?.message}>{error?.message}</FieldError>
-                        ))}
-                      </Field>
-                    )}
-                  </resetForm.Field>
-                </div>
-
-                <resetForm.Subscribe
-                  selector={(state) => ({
-                    canSubmit: state.canSubmit,
-                    isSubmitting: state.isSubmitting,
-                  })}
+                      {index === 2 && <OTPFieldSeparator />}
+                    </Fragment>
+                  ))}
+                </OTPField>
+                <FieldDescription>Sent to {email}</FieldDescription>
+                {otpInvalid && <FieldError>Invalid or expired code. Please try again.</FieldError>}
+                <Button
+                  variant="link"
+                  size="sm"
+                  type="button"
+                  onClick={async () => {
+                    setResending(true);
+                    await sendOtp(email);
+                    setResending(false);
+                    setOtp("");
+                    setOtpInvalid(false);
+                  }}
+                  disabled={resending || resendCountdown > 0}
+                  loading={resending}
+                  className="h-auto p-0 text-xs"
                 >
-                  {({ canSubmit, isSubmitting }) => (
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={!canSubmit || isSubmitting || otp.length < OTP_LENGTH}
-                      loading={isSubmitting}
-                    >
-                      Reset password
-                    </Button>
-                  )}
-                </resetForm.Subscribe>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep("email");
-                      setOtp("");
-                      setOtpInvalid(false);
-                    }}
-                    className="text-muted-foreground text-sm hover:underline"
-                  >
-                    Use a different email
-                  </button>
-                </div>
-              </Form>
-            )}
+                  {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend code"}
+                </Button>
+              </Field>
+            </div>
           </CardPanel>
-        </Card>
-      </CardFrame>
+          <CardFooter className="pt-4">
+            <Button
+              className="w-full"
+              disabled={otp.length < OTP_LENGTH || verifyingOtp}
+              loading={verifyingOtp}
+              onClick={() => verifyOtp(otp)}
+            >
+              Continue
+            </Button>
+          </CardFooter>
+        </>
+      );
+    }
+
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          resetForm.handleSubmit();
+        }}
+      >
+        <CardPanel className="flex flex-col gap-4">
+          <resetForm.AppField name="password">
+            {(field) => (
+              <field.SecretTextField label="New password" placeholder="••••••••" autoFocus />
+            )}
+          </resetForm.AppField>
+
+          <resetForm.AppField name="confirmPassword">
+            {(field) => <field.SecretTextField label="Confirm password" placeholder="••••••••" />}
+          </resetForm.AppField>
+        </CardPanel>
+
+        <resetForm.AppForm>
+          <CardFooter className="pt-4">
+            <resetForm.SubmitButton className="w-full">Reset password</resetForm.SubmitButton>
+          </CardFooter>
+        </resetForm.AppForm>
+      </form>
+    );
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4 py-12">
+      <div className="flex w-full max-w-sm flex-col items-center gap-4">
+        <a
+          className="flex items-center gap-2"
+          href="https://tailorkit.dev"
+          rel="noopener"
+          target="_blank"
+        >
+          <Logo className="size-8" />
+          <span className="font-semibold text-lg">TailorKit</span>
+        </a>
+        <CardFrame className="w-full">
+          <Card>
+            <div className={contentClass}>
+              <CardHeader>
+                <CardTitle>{getTitle()}</CardTitle>
+                <p className="text-muted-foreground text-sm">{getDescription()}</p>
+              </CardHeader>
+              {renderStep()}
+            </div>
+          </Card>
+
+          <CardFrameFooter>
+            {step === "email" ? (
+              <Button variant={"link"} render={<Link search={{ email, return_to }} to="/login" />}>
+                <ChevronLeftIcon />
+                Back to sign in
+              </Button>
+            ) : (
+              <Button variant={"link"} render={<Link search={{ email, return_to }} to="/login" />}>
+                <ChevronLeftIcon />
+                Use a different email
+              </Button>
+            )}
+          </CardFrameFooter>
+        </CardFrame>
+      </div>
     </div>
   );
 }

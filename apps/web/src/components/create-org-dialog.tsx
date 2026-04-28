@@ -5,15 +5,15 @@ import {
   DialogBackdrop,
   DialogClose,
   DialogDescription,
-  DialogHeading,
+  DialogTitle,
   DialogPopup,
   DialogPortal,
   DialogTrigger,
 } from "@tailorkit/ui/components/dialog";
-import { isOrgSlugReserved } from "@tailorkit/db/validate-org-slug";
+import { toastManager } from "@tailorkit/ui/components/toast";
 import { useNavigate } from "@tanstack/react-router";
-
-const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { orpc, client } from "@/utils/orpc";
 
 function toSlug(name: string) {
   return name
@@ -23,38 +23,61 @@ function toSlug(name: string) {
     .replaceAll(/^-+|-+$/g, "");
 }
 
-interface CreateOrgDialogProps {
-  children: React.ReactNode;
+function validateSlug(slug: string): string | null {
+  if (!slug) {
+    return "Slug is required";
+  }
+  if (slug.length < 2) {
+    return "Slug must be at least 2 characters";
+  }
+  if (slug.length > 48) {
+    return "Slug must be 48 characters or fewer";
+  }
+  if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug)) {
+    return "Slug may only contain lowercase letters, numbers, and hyphens";
+  }
+  return null;
 }
 
-export function CreateOrgDialog({ children }: CreateOrgDialogProps) {
+interface CreateOrgDialogProps {
+  children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function CreateOrgDialog({ children, open: openProp, onOpenChange }: CreateOrgDialogProps) {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const [openInternal, setOpenInternal] = useState(false);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : openInternal;
+  const setOpen = isControlled ? (onOpenChange ?? (() => {})) : setOpenInternal;
+
   const derivedSlug = slugTouched ? slug : toSlug(name);
 
-  function validateSlug(value: string): string | null {
-    if (!value) {
-      return "Slug is required.";
-    }
-    if (!SLUG_RE.test(value)) {
-      return "Only lowercase letters, numbers, and hyphens allowed.";
-    }
-    if (value.length < 2) {
-      return "Slug must be at least 2 characters.";
-    }
-    if (value.length > 48) {
-      return "Slug must be at most 48 characters.";
-    }
-    if (isOrgSlugReserved(value)) {
-      return `"${value}" is a reserved name and cannot be used.`;
-    }
-    return null;
-  }
+  const createMutation = useMutation({
+    mutationFn: (input: { name: string; slug: string }) => client.user.createOrg(input),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(orpc.user.getOrgs.queryOptions());
+      const orgSlug = (data as { slug?: string })?.slug ?? derivedSlug;
+      setOpen(false);
+      setName("");
+      setSlug("");
+      setSlugTouched(false);
+      setError(null);
+      navigate({ params: { orgSlug }, to: "/$orgSlug" });
+    },
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : "Failed to create organisation";
+      setError(message);
+      toastManager.add({ title: "Error", description: message, type: "error" });
+    },
+  });
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,23 +86,16 @@ export function CreateOrgDialog({ children }: CreateOrgDialogProps) {
       setError(validationError);
       return;
     }
-    // TODO: call API to create org
-    document.cookie = `last-org=${derivedSlug}; path=/; max-age=${60 * 60 * 24 * 30}`;
-    setOpen(false);
-    setName("");
-    setSlug("");
-    setSlugTouched(false);
-    setError(null);
-    navigate({ params: { orgSlug: derivedSlug }, to: "/$orgSlug" });
+    createMutation.mutate({ name: name.trim(), slug: derivedSlug });
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<span />}>{children}</DialogTrigger>
+      {children !== undefined && <DialogTrigger render={<span />}>{children}</DialogTrigger>}
       <DialogPortal>
         <DialogBackdrop />
         <DialogPopup className="w-full max-w-md rounded-xl border bg-popover p-6 shadow-xl">
-          <DialogHeading className="font-semibold text-lg">Create organisation</DialogHeading>
+          <DialogTitle className="font-semibold text-lg">Create organisation</DialogTitle>
           <DialogDescription className="mt-1 text-muted-foreground text-sm">
             Your organisation will get a unique URL based on its slug.
           </DialogDescription>
@@ -109,14 +125,13 @@ export function CreateOrgDialog({ children }: CreateOrgDialogProps) {
                 onChange={(e) => {
                   setSlugTouched(true);
                   setSlug(e.target.value);
-                  setError(validateSlug(e.target.value));
                 }}
               />
               {error ? (
                 <p className="text-destructive text-xs">{error}</p>
               ) : (
                 <p className="text-muted-foreground text-xs">
-                  app.tailorkit.com/{derivedSlug || "your-slug"}
+                  tailorkit.com/{derivedSlug || "your-slug"}
                 </p>
               )}
             </div>
@@ -125,8 +140,8 @@ export function CreateOrgDialog({ children }: CreateOrgDialogProps) {
               <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
                 Cancel
               </DialogClose>
-              <Button disabled={!name.trim()} size="sm" type="submit">
-                Create organisation
+              <Button disabled={!name.trim() || createMutation.isPending} size="sm" type="submit">
+                {createMutation.isPending ? "Creating…" : "Create organisation"}
               </Button>
             </div>
           </form>

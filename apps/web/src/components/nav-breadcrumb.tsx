@@ -29,7 +29,7 @@ export function NavBreadcrumb() {
     const id = match.routeId;
     const params = match.params as Record<string, string>;
 
-    if (id === "__root__" || id === "/" || id === "/_app") {
+    if (id === "__root__" || id === "/(app)" || id === "/(auth)") {
       continue;
     }
 
@@ -64,10 +64,10 @@ export function NavBreadcrumb() {
         segments.push({ label: "Settings" });
       }
     }
-    if (id === "/settings/profile") {
+    if (id === "/(app)/account/settings/") {
       segments.push({ label: "Profile" });
     }
-    if (id === "/settings/security") {
+    if (id === "/(app)/account/settings/security") {
       segments.push({ label: "Security" });
     }
   }

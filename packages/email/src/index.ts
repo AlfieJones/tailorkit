@@ -1,6 +1,6 @@
 import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import { render } from "@react-email/render";
-import { env } from "@tailorkit/env/server";
+import { env, getBaseUrl } from "@tailorkit/env/server";
 import nodemailer from "nodemailer";
 import type Mail from "nodemailer/lib/mailer";
 import type SESTransport from "nodemailer/lib/ses-transport";
@@ -70,7 +70,7 @@ const renderBetterAuthOtpEmail = async ({
   otp,
   type,
 }: Pick<SendBetterAuthOtpInput, "otp" | "type">) => {
-  const component = BetterAuthOtpTemplate({ otp, type });
+  const component = BetterAuthOtpTemplate({ logoBaseUrl: getBaseUrl(), otp, type });
 
   return {
     html: await render(component),
