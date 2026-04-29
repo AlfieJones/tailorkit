@@ -69,7 +69,7 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
                 </SidebarMenuItem>
 
                 <SidebarMenuItem>
-                  <SidebarPanelTrigger target="settings">
+                  <SidebarPanelTrigger isActive={onSettingsPath} target="settings">
                     <SettingsIcon />
                     <span className="grow">Settings</span>
                   </SidebarPanelTrigger>

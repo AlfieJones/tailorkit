@@ -1,5 +1,15 @@
-import { ChevronsUpDownIcon, LogOutIcon, ShieldIcon, UserIcon } from "lucide-react";
+import {
+  BookOpenIcon,
+  ChevronsUpDownIcon,
+  HomeIcon,
+  LaptopMinimalIcon,
+  LogOutIcon,
+  MoonIcon,
+  SunIcon,
+  UserIcon,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@tailorkit/ui/components/avatar";
+import { Button } from "@tailorkit/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,19 +19,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@tailorkit/ui/components/dropdown-menu";
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { ToggleGroup, ToggleGroupItem } from "@tailorkit/ui/components/toggle-group";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { toastManager } from "@tailorkit/ui/components/toast";
+import { useTheme } from "next-themes";
 
 import { authClient } from "@/lib/auth-client";
-import { Button } from "@tailorkit/ui/components/button";
+import {
+  fallbackTheme,
+  getUserTheme,
+  isAppTheme,
+  themeCookieName,
+  themeStorageKey,
+} from "@/lib/theme";
 
 export function SidebarUserMenu() {
-  const location = useLocation();
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
+  const { setTheme, theme } = useTheme();
 
   const name = session?.user.name ?? "User";
   const email = session?.user.email ?? "";
   const image = session?.user.image ?? undefined;
+  const selectedTheme = isAppTheme(theme) ? theme : (getUserTheme(session?.user) ?? fallbackTheme);
   const initials = name
     .split(" ")
     .map((w) => w[0])
@@ -59,30 +79,89 @@ export function SidebarUserMenu() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onSelect={() => navigate({ to: "/account/settings" })}>
+          <DropdownMenuItem render={<Link to="/account/settings" />}>
             <UserIcon />
-            Profile
+            Account
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => navigate({ to: "/account/settings/security" })}>
-            <ShieldIcon />
-            Security
+          <DropdownMenuItem
+            render={
+              <a href="https://tailorkit.dev" rel="noopener" target="_blank">
+                <span className="sr-only">Homepage</span>
+              </a>
+            }
+          >
+            <HomeIcon />
+            Homepage
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            render={
+              <a href="https://tailorkit.dev/docs" rel="noopener" target="_blank">
+                <span className="sr-only">Documentation</span>
+              </a>
+            }
+          >
+            <BookOpenIcon />
+            Documentation
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          onSelect={() =>
-            authClient.signOut({
-              fetchOptions: {
-                onSuccess: () =>
-                  navigate({
-                    search: { email: undefined, return_to: location.pathname },
-                    to: "/login",
-                  }),
-              },
-            })
-          }
-        >
+        <DropdownMenuItem closeOnClick={false} className="p-0 data-highlighted:bg-transparent">
+          <div className="flex w-full items-center justify-between gap-3">
+            <p className="px-2 text-sm">Theme</p>
+            <ToggleGroup
+              aria-label="Theme"
+              size="sm"
+              value={[selectedTheme]}
+              variant="default"
+              onValueChange={(value) => {
+                const nextTheme = value[0];
+
+                if (!isAppTheme(nextTheme)) {
+                  return;
+                }
+
+                setTheme(nextTheme);
+                localStorage.setItem(themeStorageKey, nextTheme);
+                void window.cookieStore?.set({
+                  name: themeCookieName,
+                  path: "/",
+                  sameSite: "lax",
+                  value: nextTheme,
+                });
+                void authClient
+                  .updateUser({ theme: nextTheme } as Parameters<typeof authClient.updateUser>[0])
+                  .then((result) => {
+                    if (result.error) {
+                      toastManager.add({
+                        description: result.error.message || "Failed to update theme",
+                        title: "Theme not saved",
+                        type: "error",
+                      });
+                    }
+                  })
+                  .catch(() => {
+                    toastManager.add({
+                      description: "Failed to update theme",
+                      title: "Theme not saved",
+                      type: "error",
+                    });
+                  });
+              }}
+            >
+              <ToggleGroupItem aria-label="System theme" title="System" value="system">
+                <LaptopMinimalIcon />
+              </ToggleGroupItem>
+              <ToggleGroupItem aria-label="Light theme" title="Light" value="light">
+                <SunIcon />
+              </ToggleGroupItem>
+              <ToggleGroupItem aria-label="Dark theme" title="Dark" value="dark">
+                <MoonIcon />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => navigate({ to: "/logout" })} variant="destructive">
           <LogOutIcon />
           Sign out
         </DropdownMenuItem>

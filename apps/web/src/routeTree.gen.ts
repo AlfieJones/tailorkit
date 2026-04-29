@@ -18,9 +18,12 @@ import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as appOnboardingRouteImport } from './routes/(app)/onboarding'
+import { Route as appAccountRouteRouteImport } from './routes/(app)/account/route'
 import { Route as appOrgSlugRouteRouteImport } from './routes/(app)/$orgSlug/route'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as appAccountOrganizationsRouteImport } from './routes/(app)/account/organizations'
+import { Route as appAccountInvitesRouteImport } from './routes/(app)/account/invites'
 import { Route as appAccountSettingsRouteRouteImport } from './routes/(app)/account/settings/route'
 import { Route as appOrgSlugorgRouteRouteImport } from './routes/(app)/$orgSlug/(org)/route'
 import { Route as appOrgSlugProjectSlugRouteRouteImport } from './routes/(app)/$orgSlug/$projectSlug/route'
@@ -77,6 +80,11 @@ const appOnboardingRoute = appOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => appRouteRoute,
 } as any)
+const appAccountRouteRoute = appAccountRouteRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => appRouteRoute,
+} as any)
 const appOrgSlugRouteRoute = appOrgSlugRouteRouteImport.update({
   id: '/$orgSlug',
   path: '/$orgSlug',
@@ -92,10 +100,20 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const appAccountOrganizationsRoute = appAccountOrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
+  getParentRoute: () => appAccountRouteRoute,
+} as any)
+const appAccountInvitesRoute = appAccountInvitesRouteImport.update({
+  id: '/invites',
+  path: '/invites',
+  getParentRoute: () => appAccountRouteRoute,
+} as any)
 const appAccountSettingsRouteRoute = appAccountSettingsRouteRouteImport.update({
-  id: '/account/settings',
-  path: '/account/settings',
-  getParentRoute: () => appRouteRoute,
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => appAccountRouteRoute,
 } as any)
 const appOrgSlugorgRouteRoute = appOrgSlugorgRouteRouteImport.update({
   id: '/(org)',
@@ -161,6 +179,7 @@ const appOrgSlugorgSettingsBillingRoute =
 export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/$orgSlug': typeof appOrgSlugorgRouteRouteWithChildren
+  '/account': typeof appAccountRouteRouteWithChildren
   '/onboarding': typeof appOnboardingRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
@@ -169,6 +188,8 @@ export interface FileRoutesByFullPath {
   '/': typeof appIndexRoute
   '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
   '/account/settings': typeof appAccountSettingsRouteRouteWithChildren
+  '/account/invites': typeof appAccountInvitesRoute
+  '/account/organizations': typeof appAccountOrganizationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/$orgSlug/projects': typeof appOrgSlugorgProjectsRoute
@@ -184,12 +205,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/$orgSlug': typeof appOrgSlugorgIndexRoute
+  '/account': typeof appAccountRouteRouteWithChildren
   '/onboarding': typeof appOnboardingRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/sign-up': typeof authSignUpRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/': typeof appIndexRoute
+  '/account/invites': typeof appAccountInvitesRoute
+  '/account/organizations': typeof appAccountOrganizationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/$orgSlug/projects': typeof appOrgSlugorgProjectsRoute
@@ -206,6 +230,7 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/logout': typeof LogoutRoute
   '/(app)/$orgSlug': typeof appOrgSlugRouteRouteWithChildren
+  '/(app)/account': typeof appAccountRouteRouteWithChildren
   '/(app)/onboarding': typeof appOnboardingRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
@@ -215,6 +240,8 @@ export interface FileRoutesById {
   '/(app)/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
   '/(app)/$orgSlug/(org)': typeof appOrgSlugorgRouteRouteWithChildren
   '/(app)/account/settings': typeof appAccountSettingsRouteRouteWithChildren
+  '/(app)/account/invites': typeof appAccountInvitesRoute
+  '/(app)/account/organizations': typeof appAccountOrganizationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/(app)/$orgSlug/(org)/projects': typeof appOrgSlugorgProjectsRoute
@@ -232,6 +259,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/logout'
     | '/$orgSlug'
+    | '/account'
     | '/onboarding'
     | '/forgot-password'
     | '/login'
@@ -240,6 +268,8 @@ export interface FileRouteTypes {
     | '/'
     | '/$orgSlug/$projectSlug'
     | '/account/settings'
+    | '/account/invites'
+    | '/account/organizations'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/$orgSlug/projects'
@@ -255,12 +285,15 @@ export interface FileRouteTypes {
   to:
     | '/logout'
     | '/$orgSlug'
+    | '/account'
     | '/onboarding'
     | '/forgot-password'
     | '/login'
     | '/sign-up'
     | '/verify-email'
     | '/'
+    | '/account/invites'
+    | '/account/organizations'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/$orgSlug/projects'
@@ -276,6 +309,7 @@ export interface FileRouteTypes {
     | '/(auth)'
     | '/logout'
     | '/(app)/$orgSlug'
+    | '/(app)/account'
     | '/(app)/onboarding'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
@@ -285,6 +319,8 @@ export interface FileRouteTypes {
     | '/(app)/$orgSlug/$projectSlug'
     | '/(app)/$orgSlug/(org)'
     | '/(app)/account/settings'
+    | '/(app)/account/invites'
+    | '/(app)/account/organizations'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/(app)/$orgSlug/(org)/projects'
@@ -371,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appOnboardingRouteImport
       parentRoute: typeof appRouteRoute
     }
+    '/(app)/account': {
+      id: '/(app)/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof appAccountRouteRouteImport
+      parentRoute: typeof appRouteRoute
+    }
     '/(app)/$orgSlug': {
       id: '/(app)/$orgSlug'
       path: '/$orgSlug'
@@ -392,12 +435,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(app)/account/organizations': {
+      id: '/(app)/account/organizations'
+      path: '/organizations'
+      fullPath: '/account/organizations'
+      preLoaderRoute: typeof appAccountOrganizationsRouteImport
+      parentRoute: typeof appAccountRouteRoute
+    }
+    '/(app)/account/invites': {
+      id: '/(app)/account/invites'
+      path: '/invites'
+      fullPath: '/account/invites'
+      preLoaderRoute: typeof appAccountInvitesRouteImport
+      parentRoute: typeof appAccountRouteRoute
+    }
     '/(app)/account/settings': {
       id: '/(app)/account/settings'
-      path: '/account/settings'
+      path: '/settings'
       fullPath: '/account/settings'
       preLoaderRoute: typeof appAccountSettingsRouteRouteImport
-      parentRoute: typeof appRouteRoute
+      parentRoute: typeof appAccountRouteRoute
     }
     '/(app)/$orgSlug/(org)': {
       id: '/(app)/$orgSlug/(org)'
@@ -555,18 +612,34 @@ const appAccountSettingsRouteRouteWithChildren =
     appAccountSettingsRouteRouteChildren,
   )
 
+interface appAccountRouteRouteChildren {
+  appAccountSettingsRouteRoute: typeof appAccountSettingsRouteRouteWithChildren
+  appAccountInvitesRoute: typeof appAccountInvitesRoute
+  appAccountOrganizationsRoute: typeof appAccountOrganizationsRoute
+}
+
+const appAccountRouteRouteChildren: appAccountRouteRouteChildren = {
+  appAccountSettingsRouteRoute: appAccountSettingsRouteRouteWithChildren,
+  appAccountInvitesRoute: appAccountInvitesRoute,
+  appAccountOrganizationsRoute: appAccountOrganizationsRoute,
+}
+
+const appAccountRouteRouteWithChildren = appAccountRouteRoute._addFileChildren(
+  appAccountRouteRouteChildren,
+)
+
 interface appRouteRouteChildren {
   appOrgSlugRouteRoute: typeof appOrgSlugRouteRouteWithChildren
+  appAccountRouteRoute: typeof appAccountRouteRouteWithChildren
   appOnboardingRoute: typeof appOnboardingRoute
   appIndexRoute: typeof appIndexRoute
-  appAccountSettingsRouteRoute: typeof appAccountSettingsRouteRouteWithChildren
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
   appOrgSlugRouteRoute: appOrgSlugRouteRouteWithChildren,
+  appAccountRouteRoute: appAccountRouteRouteWithChildren,
   appOnboardingRoute: appOnboardingRoute,
   appIndexRoute: appIndexRoute,
-  appAccountSettingsRouteRoute: appAccountSettingsRouteRouteWithChildren,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(

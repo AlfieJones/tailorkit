@@ -6,6 +6,7 @@ import type { WorkerUiRouter } from "./worker";
 import type {
   RemoteElementNode,
   RemoteEventBinding,
+  RemoteFunctionCallResult,
   RemoteHostEvent,
   RemoteNode,
   WorkerRenderResult,
@@ -25,6 +26,7 @@ export interface RemoteUiHost<TRenderedNode> {
 }
 
 export interface HostController {
+  callFunction(handlerId: string, args: unknown[]): Promise<RemoteFunctionCallResult>;
   dispatchEvent(binding: RemoteEventBinding, event: RemoteHostEvent): Promise<WorkerRenderResult>;
   mount(): Promise<WorkerRenderResult>;
   unmount(): Promise<WorkerRenderResult>;
@@ -42,6 +44,12 @@ export const createWorkerUiClient = (port: SupportedMessagePort): WorkerUiClient
 };
 
 export const createHostController = (client: WorkerUiClient): HostController => ({
+  callFunction(handlerId, args) {
+    return client.callFunction({
+      args,
+      handlerId,
+    });
+  },
   dispatchEvent(binding, event) {
     return client.dispatchEvent({
       event,

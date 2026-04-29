@@ -366,7 +366,6 @@ export function SidebarMenuButton({
 interface SidebarPanelsContextProps {
   activePanel: string;
   setActivePanel: (panel: string) => void;
-  registerPanel: (name: string) => void;
   panelOrder: string[];
 }
 
@@ -378,6 +377,27 @@ function useSidebarPanels(): SidebarPanelsContextProps {
     throw new Error("useSidebarPanels must be used within SidebarPanels.");
   }
   return context;
+}
+
+function getPanelNames(children: React.ReactNode): string[] {
+  const names: string[] = [];
+
+  React.Children.forEach(children, (child) => {
+    if (!React.isValidElement<{ children?: React.ReactNode; name?: unknown }>(child)) {
+      return;
+    }
+
+    if (child.type === React.Fragment) {
+      names.push(...getPanelNames(child.props.children));
+      return;
+    }
+
+    if (typeof child.props.name === "string") {
+      names.push(child.props.name);
+    }
+  });
+
+  return names;
 }
 
 export function SidebarPanels({
@@ -392,7 +412,7 @@ export function SidebarPanels({
   children: React.ReactNode;
 }): React.ReactElement {
   const [_panel, _setPanel] = React.useState(defaultPanel);
-  const [panelOrder, setPanelOrder] = React.useState<string[]>([]);
+  const panelOrder = React.useMemo(() => getPanelNames(children), [children]);
   const activePanel = panelProp ?? _panel;
 
   const setActivePanel = React.useCallback(
@@ -406,13 +426,9 @@ export function SidebarPanels({
     [onPanelChange],
   );
 
-  const registerPanel = React.useCallback((name: string) => {
-    setPanelOrder((prev) => (prev.includes(name) ? prev : [...prev, name]));
-  }, []);
-
   const contextValue = React.useMemo(
-    () => ({ activePanel, panelOrder, registerPanel, setActivePanel }),
-    [activePanel, panelOrder, registerPanel, setActivePanel],
+    () => ({ activePanel, panelOrder, setActivePanel }),
+    [activePanel, panelOrder, setActivePanel],
   );
 
   return (
@@ -428,11 +444,7 @@ export function SidebarPanel({
   children,
   ...props
 }: React.ComponentProps<"div"> & { name: string }): React.ReactElement {
-  const { activePanel, panelOrder, registerPanel } = useSidebarPanels();
-
-  React.useEffect(() => {
-    registerPanel(name);
-  }, [name, registerPanel]);
+  const { activePanel, panelOrder } = useSidebarPanels();
 
   const activeIndex = panelOrder.indexOf(activePanel);
   const myIndex = panelOrder.indexOf(name);
@@ -453,6 +465,7 @@ export function SidebarPanel({
       )}
       data-panel={name}
       data-slot="sidebar-panel"
+      inert={!isActive}
       {...props}
     >
       {children}
@@ -464,10 +477,12 @@ export function SidebarPanelTrigger({
   target,
   children,
   back = false,
+  isActive = false,
   ...props
 }: {
   target: string;
   back?: boolean;
+  isActive?: boolean;
   children: React.ReactNode;
   className?: string;
 }): React.ReactElement {
@@ -476,8 +491,10 @@ export function SidebarPanelTrigger({
     <Button
       className={cn(
         "w-full hover:text-sidebar-accent-foreground text-sidebar-accent-foreground/75",
+        "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground",
         back ? "pr-8 text-center mb-1" : "text-left",
       )}
+      data-active={isActive}
       onClick={() => setActivePanel(target)}
       variant={"ghost"}
       size={back ? "lg" : "default"}

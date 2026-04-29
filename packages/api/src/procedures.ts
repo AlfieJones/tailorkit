@@ -106,3 +106,64 @@ export function requireOrg(permissions?: OrgPermissions) {
     return next({ context: { org } });
   });
 }
+
+type ProjectInput = ({ orgSlug: string } | { orgId: string }) &
+  ({ projectSlug: string } | { projectId: string });
+
+/**
+ * Resolves a project inside an org the caller belongs to and adds both to context.
+ * Optionally checks org-scoped project permissions.
+ */
+export function requireProject(permissions?: OrgPermissions) {
+  return o.middleware(async ({ context, next }, input: ProjectInput) => {
+    if (!context.user) {
+      throw new ORPCError("UNAUTHORIZED");
+    }
+
+    const org = await ("orgSlug" in input
+      ? db.query.organization.findFirst({
+          where: { slug: input.orgSlug, members: { userId: context.user.id } },
+          with: {
+            projects: {
+              where: "projectSlug" in input ? { slug: input.projectSlug } : { id: input.projectId },
+            },
+          },
+        })
+      : db.query.organization.findFirst({
+          where: { id: input.orgId, members: { userId: context.user.id } },
+          with: {
+            projects: {
+              where: "projectSlug" in input ? { slug: input.projectSlug } : { id: input.projectId },
+            },
+          },
+        }));
+
+    if (!org) {
+      throw new ORPCError("NOT_FOUND");
+    }
+
+    const project = org.projects.find((p) =>
+      "projectSlug" in input ? p.slug === input.projectSlug : p.id === input.projectId,
+    );
+
+    if (!project) {
+      throw new ORPCError("NOT_FOUND");
+    }
+
+    if (permissions) {
+      const result = await auth.api.hasPermission({
+        headers: context.headers,
+        body: {
+          organizationId: org.id,
+          permissions,
+        },
+      });
+
+      if (!result.success) {
+        throw new ORPCError("FORBIDDEN");
+      }
+    }
+
+    return next({ context: { org, project } });
+  });
+}

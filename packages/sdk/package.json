@@ -1,0 +1,20 @@
+{
+  "name": "@tailorkit/sdk",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@json-render/core": "^0.18.0",
+    "@json-render/react": "^0.18.0",
+    "@standard-schema/spec": "^1.1.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@tailorkit/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

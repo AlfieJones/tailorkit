@@ -103,9 +103,9 @@ export function createAuth() {
     trustedOrigins: [getBaseUrl()],
     user: {
       additionalFields: {
-        bio: {
-          defaultValue: null,
-          fieldName: "bio",
+        theme: {
+          defaultValue: "system",
+          fieldName: "theme",
           required: false,
           type: "string",
         },

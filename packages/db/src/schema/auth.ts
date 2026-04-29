@@ -14,7 +14,7 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-  bio: text("bio"),
+  theme: text("theme").default("system"),
 });
 
 export const session = pgTable(

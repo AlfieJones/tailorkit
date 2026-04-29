@@ -14,6 +14,8 @@ import {
   SidebarSeparator,
 } from "@tailorkit/ui/components/sidebar";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
 
 import { SidebarBrand } from "./sidebar-brand";
 import { SidebarUserMenu } from "./sidebar-user-menu";
@@ -28,11 +30,9 @@ export function ProjectSidebar({ orgSlug, projectSlug }: ProjectSidebarProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const base = `/${orgSlug}/${projectSlug}`;
   const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
-
-  const projectName = projectSlug
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+  const { data: project } = useSuspenseQuery(
+    orpc.project.get.queryOptions({ input: { orgSlug, projectSlug } }),
+  );
 
   return (
     <Sidebar>
@@ -51,9 +51,9 @@ export function ProjectSidebar({ orgSlug, projectSlug }: ProjectSidebarProps) {
 
         <div className="flex min-w-0 items-center gap-2">
           <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-violet-500/15 text-violet-600 dark:text-violet-400">
-            <span className="font-bold text-[10px]">{projectName.charAt(0).toUpperCase()}</span>
+            <span className="font-bold text-[10px]">{project.name.charAt(0).toUpperCase()}</span>
           </div>
-          <span className="truncate font-medium text-sm">{projectName}</span>
+          <span className="truncate font-medium text-sm">{project.name}</span>
         </div>
       </SidebarHeader>
 

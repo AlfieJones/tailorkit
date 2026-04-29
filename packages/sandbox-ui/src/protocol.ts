@@ -1,6 +1,6 @@
 export type RemoteNode = RemoteElementNode | RemoteTextNode | RemoteFragmentNode;
 
-const remoteComponentPrefix = "sandbox-ui:component:";
+const remoteComponentPrefix = "sandbox-ui-component-";
 
 export interface RemoteTextNode {
   kind: "text";
@@ -32,6 +32,11 @@ export type RemoteProps = Record<string, unknown>;
 export interface RemoteFunctionRef {
   kind: "function";
   handlerId: string;
+}
+
+export interface RemoteFunctionCallResult {
+  result: unknown;
+  render: WorkerRenderResult;
 }
 
 export interface RemoteEventBinding {

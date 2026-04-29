@@ -17,6 +17,7 @@
     "@orpc/tanstack-query": "^1.13.14",
     "@orpc/zod": "catalog:",
     "@polar-sh/better-auth": "catalog:",
+    "@rolldown/plugin-babel": "^0.2.3",
     "@tailorkit/api": "workspace:*",
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",

@@ -24,7 +24,6 @@
     "@tailorkit/config": "workspace:*",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "catalog:",
-    "add": "2.0.6",
     "typescript": "catalog:"
   }
 }

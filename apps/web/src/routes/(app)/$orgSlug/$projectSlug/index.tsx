@@ -1,22 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { CheckSquareIcon, FileTextIcon, UsersIcon } from "lucide-react";
+import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/(app)/$orgSlug/$projectSlug/")({
   component: ProjectHome,
 });
 
 function ProjectHome() {
-  const { projectSlug } = Route.useParams();
-  const projectName = projectSlug
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+  const { orgSlug, projectSlug } = Route.useParams();
+  const { data: project } = useSuspenseQuery(
+    orpc.project.get.queryOptions({ input: { orgSlug, projectSlug } }),
+  );
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">{projectName}</h1>
-        <p className="mt-1 text-muted-foreground text-sm">Project overview.</p>
+        <h1 className="font-semibold text-2xl tracking-tight">{project.name}</h1>
+        <p className="mt-1 text-muted-foreground text-sm">
+          {project.description || "Project overview."}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

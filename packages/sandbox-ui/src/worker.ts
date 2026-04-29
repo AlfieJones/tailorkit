@@ -7,6 +7,7 @@ import type {
   RemoteElementNode,
   RemoteEventBinding,
   RemoteEventName,
+  RemoteFunctionCallResult,
   RemoteFragmentNode,
   RemoteHostEvent,
   RemoteNode,
@@ -14,6 +15,7 @@ import type {
   RemoteTextNode,
   WorkerRenderResult,
 } from "./protocol";
+import { getRemoteComponentName } from "./protocol";
 import { createRemoteFunctionSerializer } from "./serializers";
 import type { RemoteCallable } from "./serializers";
 export { createRemoteComponentType as createRemoteComponent } from "./protocol";
@@ -28,6 +30,12 @@ interface ListenerRecord {
 
 interface PreactPrivateListeners {
   l?: Record<string, EventHandler | undefined>;
+}
+
+interface PreactPrivateVNode {
+  __e?: unknown;
+  props?: Record<string, unknown>;
+  type?: unknown;
 }
 
 const blockedPropertyNames = new Set(["__proto__", "constructor", "prototype"]);
@@ -221,9 +229,27 @@ class RemoteWorkerElement {
   }
 }
 
+const createRemoteWorkerElement = (name: string): RemoteWorkerElement => {
+  const element = new RemoteWorkerElement(name);
+  return new Proxy(element, {
+    set(target, property, value, receiver) {
+      if (
+        typeof property !== "string" ||
+        property in target ||
+        property === "l" ||
+        property.startsWith("_")
+      ) {
+        return Reflect.set(target, property, value, receiver);
+      }
+      target.setProp(property, value);
+      return true;
+    },
+  });
+};
+
 const remoteDocument = {
-  createElement: (name: string) => new RemoteWorkerElement(name),
-  createElementNS: (_namespace: string, name: string) => new RemoteWorkerElement(name),
+  createElement: (name: string) => createRemoteWorkerElement(name),
+  createElementNS: (_namespace: string, name: string) => createRemoteWorkerElement(name),
   createTextNode: (text: string) => createRemoteWorkerText(text),
 };
 
@@ -313,6 +339,28 @@ export const createWorkerPreactRuntime = (app: () => ComponentChild) => {
   let revision = 0;
 
   options.debounceRendering = queueMicrotask;
+  const previousDiffed = options.diffed;
+  options.diffed = (vnode) => {
+    previousDiffed?.(vnode);
+    const privateVNode = vnode as PreactPrivateVNode;
+    if (
+      typeof privateVNode.type !== "string" ||
+      getRemoteComponentName(privateVNode.type) === null ||
+      typeof privateVNode.__e !== "object" ||
+      privateVNode.__e === null ||
+      !("setProp" in privateVNode.__e) ||
+      typeof privateVNode.__e.setProp !== "function"
+    ) {
+      return;
+    }
+
+    for (const [name, value] of Object.entries(privateVNode.props ?? {})) {
+      if (name === "children") {
+        continue;
+      }
+      privateVNode.__e.setProp(name, value);
+    }
+  };
 
   const registerHandler = (handler: RemoteCallable): string => {
     const existingId = handlerIds.get(handler);
@@ -339,23 +387,37 @@ export const createWorkerPreactRuntime = (app: () => ComponentChild) => {
     return createSnapshot();
   };
 
+  const callFunction = async (
+    handlerId: string,
+    args: unknown[],
+  ): Promise<RemoteFunctionCallResult> => {
+    const handler = handlers.get(handlerId);
+    if (handler === undefined) {
+      return {
+        render: {
+          message: `Unknown handler "${handlerId}".`,
+          type: "error",
+        },
+        result: undefined,
+      };
+    }
+    const result = await handler(...(args as never[]));
+    return {
+      render: createSnapshot(),
+      result,
+    };
+  };
+
   const dispatchEvent = async (
     handlerId: string,
     event: RemoteHostEvent,
   ): Promise<WorkerRenderResult> => {
-    const handler = handlers.get(handlerId);
-    if (handler === undefined) {
-      return {
-        message: `Unknown handler "${handlerId}".`,
-        type: "error",
-      };
-    }
-    (handler as EventHandler)(event);
-    await Promise.resolve();
-    return createSnapshot();
+    const result = await callFunction(handlerId, [event]);
+    return result.render;
   };
 
   return {
+    callFunction,
     dispatchEvent,
     mount(): WorkerRenderResult {
       return rerender();
@@ -376,6 +438,20 @@ const toRenderError = (error: unknown): WorkerRenderResult => ({
 });
 
 export const createWorkerUiRouter = (runtime: WorkerPreactRuntime) => ({
+  callFunction: os.handler(async ({ input }) => {
+    const { args, handlerId } = input as {
+      args: unknown[];
+      handlerId: string;
+    };
+    try {
+      return await runtime.callFunction(handlerId, args);
+    } catch (error) {
+      return {
+        render: toRenderError(error),
+        result: undefined,
+      } satisfies RemoteFunctionCallResult;
+    }
+  }),
   dispatchEvent: os.handler(async ({ input }) => {
     const { event, handlerId } = input as {
       event: RemoteHostEvent;

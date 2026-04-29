@@ -1,18 +1,23 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Dialog,
-  DialogBackdrop,
   DialogClose,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
   DialogTitle,
   DialogPopup,
-  DialogPortal,
   DialogTrigger,
 } from "@tailorkit/ui/components/dialog";
 import { toastManager } from "@tailorkit/ui/components/toast";
+import { useAppForm } from "@tailorkit/ui/form";
+import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import { orpc, client } from "@/utils/orpc";
 
 function toSlug(name: string) {
@@ -23,24 +28,21 @@ function toSlug(name: string) {
     .replaceAll(/^-+|-+$/g, "");
 }
 
-function validateSlug(slug: string): string | null {
-  if (!slug) {
-    return "Slug is required";
-  }
-  if (slug.length < 2) {
-    return "Slug must be at least 2 characters";
-  }
-  if (slug.length > 48) {
-    return "Slug must be 48 characters or fewer";
-  }
-  if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug)) {
-    return "Slug may only contain lowercase letters, numbers, and hyphens";
-  }
-  return null;
-}
+const orgSchema = z.object({
+  name: z.string().min(1, "Name is required."),
+  slug: z.string().superRefine((value, ctx) => {
+    const result = validateOrgSlug(value);
+    if (!result.valid) {
+      ctx.addIssue({
+        code: "custom",
+        message: result.reason ?? "This slug is reserved and cannot be used.",
+      });
+    }
+  }),
+});
 
 interface CreateOrgDialogProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -49,104 +51,119 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [openInternal, setOpenInternal] = useState(false);
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [slugTouched, setSlugTouched] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const slugTouched = useRef(false);
 
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp : openInternal;
   const setOpen = isControlled ? (onOpenChange ?? (() => {})) : setOpenInternal;
 
-  const derivedSlug = slugTouched ? slug : toSlug(name);
-
   const createMutation = useMutation({
     mutationFn: (input: { name: string; slug: string }) => client.user.createOrg(input),
-    onSuccess: (data) => {
+    onSuccess: (data, input) => {
       queryClient.invalidateQueries(orpc.user.getOrgs.queryOptions());
-      const orgSlug = (data as { slug?: string })?.slug ?? derivedSlug;
+      const orgSlug = (data as { slug?: string })?.slug ?? input.slug;
       setOpen(false);
-      setName("");
-      setSlug("");
-      setSlugTouched(false);
-      setError(null);
+      resetForm();
       navigate({ params: { orgSlug }, to: "/$orgSlug" });
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : "Failed to create organisation";
-      setError(message);
       toastManager.add({ title: "Error", description: message, type: "error" });
     },
   });
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const validationError = validateSlug(derivedSlug);
-    if (validationError) {
-      setError(validationError);
-      return;
+  const form = useAppForm({
+    defaultValues: { name: "", slug: "" },
+    onSubmit: async ({ value }) => {
+      try {
+        await createMutation.mutateAsync(value);
+      } catch {
+        // The mutation onError handler displays the toast.
+      }
+    },
+    validators: { onSubmit: orgSchema },
+  });
+
+  function resetForm() {
+    slugTouched.current = false;
+    form.reset();
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      resetForm();
     }
-    createMutation.mutate({ name: name.trim(), slug: derivedSlug });
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       {children !== undefined && <DialogTrigger render={<span />}>{children}</DialogTrigger>}
-      <DialogPortal>
-        <DialogBackdrop />
-        <DialogPopup className="w-full max-w-md rounded-xl border bg-popover p-6 shadow-xl">
-          <DialogTitle className="font-semibold text-lg">Create organisation</DialogTitle>
-          <DialogDescription className="mt-1 text-muted-foreground text-sm">
+      <DialogPopup className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create organisation</DialogTitle>
+          <DialogDescription>
             Your organisation will get a unique URL based on its slug.
           </DialogDescription>
+        </DialogHeader>
 
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-            <div className="space-y-1">
-              <label className="font-medium text-sm">Name</label>
-              <input
-                className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                placeholder="Acme Corp"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (!slugTouched) {
-                    setError(null);
-                  }
-                }}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-medium text-sm">Slug</label>
-              <input
-                className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                placeholder="acme-corp"
-                value={derivedSlug}
-                onChange={(e) => {
-                  setSlugTouched(true);
-                  setSlug(e.target.value);
-                }}
-              />
-              {error ? (
-                <p className="text-destructive text-xs">{error}</p>
-              ) : (
-                <p className="text-muted-foreground text-xs">
-                  tailorkit.com/{derivedSlug || "your-slug"}
-                </p>
+        <form
+          className="contents"
+          id="create-org-dialog-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+        >
+          <DialogPanel className="flex flex-col gap-4">
+            <form.AppField name="name">
+              {(field) => (
+                <field.TextField
+                  autoComplete="organization"
+                  label="Name"
+                  placeholder="Acme Corp"
+                  required
+                  type="text"
+                  onChange={(e) => {
+                    if (!slugTouched.current) {
+                      form.setFieldValue("slug", toSlug(e.target.value));
+                    }
+                  }}
+                />
               )}
-            </div>
+            </form.AppField>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
-                Cancel
-              </DialogClose>
-              <Button disabled={!name.trim() || createMutation.isPending} size="sm" type="submit">
-                {createMutation.isPending ? "Creating…" : "Create organisation"}
-              </Button>
-            </div>
-          </form>
-        </DialogPopup>
-      </DialogPortal>
+            <form.AppField name="slug">
+              {(field) => (
+                <field.TextField
+                  autoComplete="off"
+                  description={`tailorkit.com/${field.state.value || "your-slug"}`}
+                  label="Slug"
+                  placeholder="acme-corp"
+                  required
+                  type="text"
+                  onChange={(e) => {
+                    slugTouched.current = true;
+                    field.handleChange(toSlug(e.target.value));
+                  }}
+                />
+              )}
+            </form.AppField>
+          </DialogPanel>
+
+          <DialogFooter>
+            <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
+              Cancel
+            </DialogClose>
+            <form.AppForm>
+              <form.SubmitButton form="create-org-dialog-form" size="sm">
+                Create organisation
+              </form.SubmitButton>
+            </form.AppForm>
+          </DialogFooter>
+        </form>
+      </DialogPopup>
     </Dialog>
   );
 }

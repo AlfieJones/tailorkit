@@ -14,11 +14,75 @@ interface BreadcrumbSegment {
   label: string;
 }
 
+const accountRouteLabels: Record<string, string> = {
+  "/(app)/account/invites": "Invites",
+  "/(app)/account/organizations": "Organisations",
+  "/(app)/account/settings/": "Profile",
+  "/(app)/account/settings/security": "Security",
+};
+
 function toLabel(segment: string) {
   return segment
     .split("-")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+function addOrgSegment(id: string, params: Record<string, string>, segments: BreadcrumbSegment[]) {
+  if (!("orgSlug" in params) || segments.some((s) => s.label === toLabel(params.orgSlug))) {
+    return;
+  }
+
+  const isLast =
+    !("projectSlug" in params) &&
+    !id.includes("/projects") &&
+    !id.includes("/support") &&
+    !id.includes("/settings");
+  segments.push({
+    href: isLast ? undefined : `/${params.orgSlug}`,
+    label: toLabel(params.orgSlug),
+  });
+}
+
+function addProjectSegment(
+  id: string,
+  params: Record<string, string>,
+  segments: BreadcrumbSegment[],
+) {
+  if (!("projectSlug" in params) || segments.some((s) => s.label === toLabel(params.projectSlug))) {
+    return;
+  }
+
+  const isLast = id.endsWith("/$projectSlug") || id.endsWith("/$projectSlug/");
+  segments.push({
+    href: isLast ? undefined : `/${params.orgSlug}/${params.projectSlug}`,
+    label: toLabel(params.projectSlug),
+  });
+}
+
+function addStaticSegments(
+  id: string,
+  params: Record<string, string>,
+  segments: BreadcrumbSegment[],
+) {
+  if (id.includes("/projects") && !id.includes("$projectSlug")) {
+    segments.push({ label: "Projects" });
+  }
+  if (id.includes("/support")) {
+    segments.push({ label: "Support" });
+  }
+  if (
+    id.includes("/settings") &&
+    !("orgSlug" in params) &&
+    !segments.some((s) => s.label === "Settings")
+  ) {
+    segments.push({ label: "Settings" });
+  }
+
+  const accountLabel = accountRouteLabels[id];
+  if (accountLabel) {
+    segments.push({ label: accountLabel });
+  }
 }
 
 export function NavBreadcrumb() {
@@ -33,43 +97,9 @@ export function NavBreadcrumb() {
       continue;
     }
 
-    if ("orgSlug" in params && !segments.some((s) => s.label === toLabel(params.orgSlug))) {
-      const isLast =
-        !("projectSlug" in params) &&
-        !id.includes("/projects") &&
-        !id.includes("/support") &&
-        !id.includes("/settings");
-      segments.push({
-        href: isLast ? undefined : `/${params.orgSlug}`,
-        label: toLabel(params.orgSlug),
-      });
-    }
-
-    if ("projectSlug" in params && !segments.some((s) => s.label === toLabel(params.projectSlug))) {
-      const isLast = id.endsWith("/$projectSlug") || id.endsWith("/$projectSlug/");
-      segments.push({
-        href: isLast ? undefined : `/${params.orgSlug}/${params.projectSlug}`,
-        label: toLabel(params.projectSlug),
-      });
-    }
-
-    if (id.includes("/projects") && !id.includes("$projectSlug")) {
-      segments.push({ label: "Projects" });
-    }
-    if (id.includes("/support")) {
-      segments.push({ label: "Support" });
-    }
-    if (id.includes("/settings") && !("orgSlug" in params)) {
-      if (!segments.some((s) => s.label === "Settings")) {
-        segments.push({ label: "Settings" });
-      }
-    }
-    if (id === "/(app)/account/settings/") {
-      segments.push({ label: "Profile" });
-    }
-    if (id === "/(app)/account/settings/security") {
-      segments.push({ label: "Security" });
-    }
+    addOrgSegment(id, params, segments);
+    addProjectSegment(id, params, segments);
+    addStaticSegments(id, params, segments);
   }
 
   if (segments.length === 0) {

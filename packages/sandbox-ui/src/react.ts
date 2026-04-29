@@ -1,11 +1,13 @@
 import { Fragment, createElement, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { createReactHostRenderer } from "./adapters";
+import type { RemoteCallbackDefinitions } from "./adapters";
 import { createRemoteUiHost, createWorkerUiClient } from "./host";
 import type { HostController, RemoteUiHost, WorkerUiClient } from "./host";
 import type { RemoteEventBinding, RemoteHostEvent, WorkerRenderResult } from "./protocol";
 
 interface UseWorkerUiOptions {
+  callbackDefinitions?: RemoteCallbackDefinitions;
   components?: Record<string, unknown>;
   worker: Worker | (() => Worker);
 }
@@ -52,7 +54,7 @@ const toReactNode = (
 };
 
 export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
-  const { components, worker: workerOption } = options;
+  const { callbackDefinitions, components, worker: workerOption } = options;
   const [result, setResult] = useState<UseWorkerUiResult>({
     error: null,
     node: null,
@@ -88,6 +90,14 @@ export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
     };
 
     const controller: HostController = {
+      async callFunction(handlerId: string, args: unknown[]) {
+        const result = await client.callFunction({
+          args,
+          handlerId,
+        });
+        setRenderResult(result.render);
+        return result;
+      },
       async dispatchEvent(
         binding: RemoteEventBinding,
         event: RemoteHostEvent,
@@ -105,6 +115,7 @@ export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
 
     remoteHostRef.current = createRemoteUiHost(
       createReactHostRenderer(reactCreateElement, Fragment, controller, {
+        callbackDefinitions,
         components,
         onEventError: setError,
       }),
@@ -130,7 +141,7 @@ export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
         }
       })();
     };
-  }, [components, workerOption]);
+  }, [callbackDefinitions, components, workerOption]);
 
   return result;
 };
