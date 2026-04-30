@@ -17,7 +17,7 @@ export const createPackageJson = ({
   return `${JSON.stringify(
     {
       name: packageName,
-      description: "A TailorKit app for building sandboxed custom UI components.",
+      description: "A TailorKit.dev app for building sandboxed custom UI components.",
       private: true,
       scripts: {
         build: "tailorkit build",
