@@ -1,12 +1,9 @@
-
 import { component, defineSchema } from "@tailorkit/sdk";
 import { native } from "@tailorkit/sdk/native-zod";
 import { z } from "zod";
 import { defineReactComponents } from "@tailorkit/react";
 import { Button } from "@tailorkit/ui/button";
 import { Input } from "@tailorkit/ui/input";
-import { schema } from "./schema";
-
 
 export const schema = defineSchema({
   components: {
@@ -45,12 +42,8 @@ export const schema = defineSchema({
       callbacks: {},
       slots: ["default"],
     }),
-
   },
 });
-
-
-
 
 export const components = defineReactComponents(schema, {
   Button: ({ props, slots }) => <Button {...props}>{slots.default}</Button>,
