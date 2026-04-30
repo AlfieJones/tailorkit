@@ -1,0 +1,25 @@
+{
+  "name": "@tailorkit/react",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tailorkit/adapter-core": "workspace:*",
+    "@tailorkit/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailorkit/config": "workspace:*",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

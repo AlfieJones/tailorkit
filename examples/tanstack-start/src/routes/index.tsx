@@ -1,10 +1,11 @@
 import { useWorkerUi } from "@tailorkit/sandbox-ui/react";
 import { createFileRoute } from "@tanstack/react-router";
 
+// oxlint-disable-next-line import/default
 import demoWorker from "../demo.worker?worker";
 
 import { RemoteButton } from "../remote-button";
-import { callbackDefinitions } from "../tailorkit.config";
+import { handlerDefinitions } from "../tailorkit.config";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -18,7 +19,7 @@ const createWorker = () => new demoWorker();
 
 function Home() {
   const { error, node, revision, status } = useWorkerUi({
-    callbackDefinitions,
+    callbackDefinitions: handlerDefinitions,
     components,
     worker: createWorker,
   });

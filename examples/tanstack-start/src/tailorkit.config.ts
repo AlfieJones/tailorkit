@@ -1,38 +1,11 @@
-import { defineConfig } from "@tailorkit/sdk";
-import { z } from "zod";
+import { schema } from "./schema";
 
-const nativeEventInput = z.object({
-  checked: z.boolean().optional(),
-  currentTargetId: z.string(),
-  key: z.string().optional(),
-  name: z.string(),
-  targetId: z.string(),
-  value: z.string().optional(),
-});
+export { components } from "./components";
+export { schema } from "./schema";
 
-export const tailorKitConfig = defineConfig({
-  components: {
-    Button: {
-      callbacks: {
-        onBlur: { input: nativeEventInput },
-        onClick: { input: nativeEventInput },
-        onFocus: { input: nativeEventInput },
-        onKeyDown: { input: nativeEventInput },
-        onKeyUp: { input: nativeEventInput },
-        onPointerDown: { input: nativeEventInput },
-        onPointerUp: { input: nativeEventInput },
-        validate: {
-          input: z.object({ value: z.string() }),
-          output: z.boolean(),
-        },
-      },
-      children: true,
-      props: z.object({
-        label: z.string(),
-      }),
-      render: () => null,
-    },
-  },
-});
-
-export const { callbackDefinitions } = tailorKitConfig;
+export const handlerDefinitions = Object.fromEntries(
+  Object.entries(schema.$internal.metadata.components).map(([name, metadata]) => [
+    name,
+    metadata.callbacks,
+  ]),
+);

@@ -4,46 +4,66 @@ import { useMemo, useState } from "preact/hooks";
 
 const RemoteButton = createRemoteComponent("Button");
 
+interface NativeClickPayload {
+  button: number;
+  ctrlKey: boolean;
+  currentTargetId: string;
+  metaKey: boolean;
+  name: "click";
+  shiftKey: boolean;
+  targetId: string;
+}
+
 interface ValidationInput {
   value: string;
 }
 
-interface NativeEventInput {
-  currentTargetId: string;
-  name: string;
-  targetId: string;
-}
-
 const WorkerApp = () => {
   const [clicks, setClicks] = useState(0);
+  const [lastEvent, setLastEvent] = useState("No events yet");
   const [lastValidation, setLastValidation] = useState("Not checked yet");
 
-  const label = useMemo(() => `Worker button clicked ${clicks} times`, [clicks]);
+  const isDisabled = clicks >= 5;
+
+  const label = useMemo(
+    () => (isDisabled ? "Disabled after 5 clicks" : `Clicked ${clicks} times`),
+    [clicks, isDisabled],
+  );
 
   return h(
     "section",
-    {
-      class: "remote-shell",
-    },
+    { class: "remote-shell" },
     h("p", null, "This text is rendered by Preact inside a Web Worker."),
     h(
       RemoteButton,
       {
         callbacks: {
+          onBlur: () => {
+            setLastEvent("blur");
+          },
+          onClick: ({ button, shiftKey }: NativeClickPayload) => {
+            setClicks((c) => c + 1);
+            setLastEvent(`click — button: ${button}, shift: ${shiftKey}`);
+          },
+          onFocus: () => {
+            setLastEvent("focus");
+          },
           validate: ({ value }: ValidationInput) => {
-            const valid = value.length >= 10;
-            setLastValidation(valid ? "Worker validation passed" : "Worker validation failed");
+            const valid = value.length >= 3;
+            setLastValidation(valid ? "Validation passed" : "Validation failed (need 3+ chars)");
             return valid;
           },
         },
-        label,
-        onClick: (_event: NativeEventInput) => {
-          setClicks((count) => count + 1);
-        },
+        // Native button props are type-checked against the schema preset.
+        disabled: isDisabled,
+        name: "demo-button",
+        type: "button",
+        value: label,
       },
-      "Run worker callback",
+      label,
     ),
-    h("p", { class: "remote-status" }, lastValidation),
+    h("p", { class: "remote-status" }, `Last event: ${lastEvent}`),
+    h("p", { class: "remote-status" }, `Validation: ${lastValidation}`),
   );
 };
 

@@ -4,17 +4,29 @@
   "exports": {
     ".": {
       "default": "./src/index.ts"
+    },
+    "./native-zod": {
+      "default": "./src/native-zod.ts"
+    },
+    "./native-valibot": {
+      "default": "./src/native-valibot.ts"
+    },
+    "./native-arktype": {
+      "default": "./src/native-arktype.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "generate:native": "bun scripts/generate-native-components/index.ts"
+  },
   "dependencies": {
-    "@json-render/core": "^0.18.0",
-    "@json-render/react": "^0.18.0",
     "@standard-schema/spec": "^1.1.0",
+    "arktype": "^2.2.0",
+    "valibot": "^1.3.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
+    "@types/bun": "^1.3.13",
     "typescript": "catalog:"
   }
 }

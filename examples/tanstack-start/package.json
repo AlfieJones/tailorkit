@@ -9,8 +9,10 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@tailorkit/react": "workspace:*",
     "@tailorkit/sandbox-ui": "workspace:*",
     "@tailorkit/sdk": "workspace:*",
+    "@tailorkit/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "@vitejs/plugin-react": "catalog:",

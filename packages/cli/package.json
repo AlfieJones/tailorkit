@@ -1,0 +1,29 @@
+{
+  "name": "@tailorkit/cli",
+  "version": "0.0.0",
+  "private": true,
+  "bin": {
+    "tailorkit": "./src/index.ts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.2.0",
+    "cac": "^6.7.14",
+    "cosmiconfig": "^9.0.1",
+    "picocolors": "^1.1.1",
+    "vite": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailorkit/config": "workspace:*",
+    "@types/bun": "^1.3.13",
+    "typescript": "catalog:"
+  }
+}
