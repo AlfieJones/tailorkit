@@ -5,7 +5,9 @@
     "packages": [
       "apps/*",
       "examples/*",
-      "packages/*"
+      "examples/apps/*",
+      "packages/*",
+      "packages/cli"
     ],
     "catalog": {
       "@ai-sdk/react": "^3.0.170",
@@ -55,7 +57,8 @@
     "services:stop": "docker compose stop",
     "services:down": "docker compose down",
     "check": "ultracite check",
-    "fix": "ultracite fix"
+    "fix": "ultracite fix",
+    "tailorkit": "bun packages/cli/src/index.ts --internal-workspace-deps"
   },
   "dependencies": {
     "@tailorkit/env": "workspace:*",

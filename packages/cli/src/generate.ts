@@ -2,7 +2,7 @@ import path from "node:path";
 import { mkdir } from "node:fs/promises";
 import { z } from "zod";
 
-import type { LoadedTailorKitConfig } from "./config";
+import type { LoadedTailorKitConfig } from "@tailorkit/app/config";
 
 const typeReferenceSchema = z.string().regex(/^[^\n\r;]+$/u, {
   message: "Type references must be a single TypeScript type expression.",

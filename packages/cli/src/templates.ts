@@ -1,33 +1,48 @@
 interface TemplateOptions {
   packageName: string;
+  packageVersions: {
+    preact: string;
+    typescript: string;
+  };
+  useWorkspaceDependencies?: boolean;
 }
 
-export const createPackageJson = ({ packageName }: TemplateOptions): string => `${JSON.stringify(
-  {
-    name: packageName,
-    private: true,
-    scripts: {
-      build: "tailorkit build",
-      dev: "tailorkit dev",
-      generate: "tailorkit generate",
+export const createPackageJson = ({
+  packageName,
+  packageVersions,
+  useWorkspaceDependencies,
+}: TemplateOptions): string => {
+  const tailorkitVersion = useWorkspaceDependencies ? "workspace:*" : "latest";
+
+  return `${JSON.stringify(
+    {
+      name: packageName,
+      description: "A TailorKit app for building sandboxed custom UI components.",
+      private: true,
+      scripts: {
+        build: "tailorkit build",
+        dev: "tailorkit dev",
+        generate: "tailorkit generate",
+      },
+      dependencies: {
+        "@tailorkit/app": tailorkitVersion,
+        "@tailorkit/sandbox-ui": tailorkitVersion,
+        preact: packageVersions.preact,
+      },
+      devDependencies: {
+        "@tailorkit/cli": tailorkitVersion,
+        typescript: packageVersions.typescript,
+      },
+      type: "module",
     },
-    dependencies: {
-      "@tailorkit/sandbox-ui": "latest",
-      preact: "^10.29.1",
-    },
-    devDependencies: {
-      "@tailorkit/cli": "latest",
-      typescript: "catalog:",
-    },
-    type: "module",
-  },
-  null,
-  2,
-)}
+    null,
+    2,
+  )}
 `;
+};
 
 export const createTailorKitConfig =
-  (): string => `import { defineTailorKitConfig } from "@tailorkit/cli/config";
+  (): string => `import { defineTailorKitConfig } from "@tailorkit/app";
 
 export default defineTailorKitConfig({
   components: {

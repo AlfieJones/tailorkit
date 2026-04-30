@@ -68,10 +68,12 @@ export type ReactComponentMap<
  * Binds a server-safe TailorKit schema to React render implementations.
  * Renderers receive merged React-ready `props` and declared `slots`.
  */
-export function defineReactComponents<
+export function createReactClient<
   const TSchema extends TailorKitSchema<Record<string, ComponentDefinition>>,
   const TComponents extends ReactComponentMap<TSchema>,
->(schema: TSchema, components: TComponents): TComponents {
-  void schema;
-  return components;
+>(schema: TSchema, options: { components: TComponents }) {
+  return {
+    schema,
+    components: options.components,
+  };
 }

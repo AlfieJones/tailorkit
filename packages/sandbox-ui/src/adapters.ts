@@ -17,7 +17,7 @@ interface ReactHostRendererOptions {
 }
 
 export interface RemoteCallbackDefinition {
-  input?: StandardSchemaV1;
+  input?: readonly StandardSchemaV1[];
   output?: StandardSchemaV1;
 }
 
@@ -214,10 +214,19 @@ const hydrateRemoteFunctions = (
         if (definition !== undefined && definition.input === undefined && args.length > 0) {
           throw new Error("Callback input failed validation: expected no arguments.");
         }
+        if (definition?.input !== undefined && args.length !== definition.input.length) {
+          throw new Error(
+            `Callback input failed validation: expected ${definition.input.length} arguments.`,
+          );
+        }
         const validatedArgs =
           definition?.input === undefined
             ? args
-            : [await validateSchema(definition.input, args[0], "Callback input")];
+            : await Promise.all(
+                definition.input.map((schema, index) =>
+                  validateSchema(schema, args[index], `Callback input ${index}`),
+                ),
+              );
         const callResult = await controller.callFunction(value.handlerId, validatedArgs);
         if (callResult.render.type === "error") {
           throw new Error(callResult.render.message);

@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
+import type { SerializedTailorKitSchema } from "@tailorkit/spec";
 
 export type Schema = StandardSchemaV1;
 export type CallbackMap = Record<string, CallbackDefinition | undefined>;
@@ -11,9 +12,17 @@ type InferSchema<TSchema> = TSchema extends StandardSchemaV1
   ? StandardSchemaV1.InferOutput<TSchema>
   : EmptyObject;
 
-type InferCallbackInput<TCallback> = TCallback extends { input?: infer TInput }
-  ? TInput extends StandardSchemaV1
-    ? StandardSchemaV1.InferOutput<TInput>
+type InferCallbackInputTuple<TInput extends readonly unknown[]> = {
+  [K in keyof TInput]: TInput[K] extends StandardSchemaV1
+    ? StandardSchemaV1.InferOutput<TInput[K]>
+    : never;
+};
+
+type InferCallbackInput<TCallback> = TCallback extends {
+  input?: infer TInput;
+}
+  ? TInput extends readonly StandardSchemaV1[]
+    ? InferCallbackInputTuple<TInput>
     : never
   : never;
 
@@ -30,7 +39,7 @@ type CallbackReturn<TCallback> = TCallback extends { async: true }
 export type InferCallback<TCallback> =
   InferCallbackInput<TCallback> extends never
     ? () => CallbackReturn<TCallback>
-    : (input: InferCallbackInput<TCallback>) => CallbackReturn<TCallback>;
+    : (...args: InferCallbackInput<TCallback>) => CallbackReturn<TCallback>;
 
 export type InferCallbacks<TCallbacks> =
   TCallbacks extends Record<string, unknown>
@@ -63,11 +72,11 @@ export type MergeProps<TBase, TOverride> = Omit<TBase, keyof TOverride> & TOverr
  * and output values; `async: true` marks a Promise-returning function.
  */
 export interface CallbackDefinition<
-  TInput extends Schema | undefined = Schema | undefined,
+  TInput extends readonly Schema[] | undefined = readonly Schema[] | undefined,
   TOutput extends Schema | undefined = Schema | undefined,
   TAsync extends boolean | undefined = boolean | undefined,
 > {
-  /** Serializable callback input. Omit for a zero-argument callback. */
+  /** Serializable callback inputs as positional args. Omit for a zero-argument callback. */
   input?: TInput;
   /** Serializable callback output. Omit for `void`. */
   output?: TOutput;
@@ -81,9 +90,11 @@ export interface CallbackDefinition<
  * in framework adapters such as `@tailorkit/react`.
  */
 export interface NativeEventDefinition<
-  TInput extends Schema | undefined = Schema | undefined,
+  TInput extends readonly Schema[] | undefined = readonly Schema[] | undefined,
 > extends CallbackDefinition<TInput, undefined, false> {
+  /** The DOM element type that emits this event (e.g. `"input"`, `"button"`). */
   element: string;
+  /** The native event name as it appears on the DOM element (e.g. `"change"`, `"click"`). */
   name: string;
 }
 
@@ -96,9 +107,16 @@ export interface ComponentPreset<
   TCallbacks extends CallbackMap = CallbackMap,
   TNativeEvents extends NativeEventMap = NativeEventMap,
 > {
+  /** Function props contributed by this preset, merged into any component that extends it. */
   callbacks?: TCallbacks;
+  /**
+   * Explicit list of field keys when TailorKit cannot infer them from `fields` at runtime.
+   * Required for schema libraries whose object shape is not stored under a `shape` or `entries` key.
+   */
   fieldKeys?: readonly string[];
+  /** Serializable value props contributed by this preset. */
   fields?: TFields;
+  /** Native DOM event bindings contributed by this preset. */
   nativeEvents?: TNativeEvents;
 }
 
@@ -162,8 +180,28 @@ export interface ResolvedComponentMetadata {
   slots: readonly string[];
 }
 
+/**
+ * Converts a StandardSchema instance to a JSON Schema object for wire
+ * serialization. Pass a validator-specific implementation when calling
+ * `schema.serialize()`. For Zod v4, use `(s) => z.toJsonSchema(s)`.
+ *
+ * Returning `undefined` omits the schema from the serialized output, which
+ * is useful when the schema type is not supported by the serializer.
+ */
+export type SchemaSerializer = (schema: Schema) => Record<string, unknown> | undefined;
+
 export interface TailorKitSchema<TComponents extends Record<string, ComponentDefinition>> {
+  /** Map of component name to its definition, as passed to `defineSchema`. */
   components: TComponents;
+  /**
+   * Produces a wire-safe, JSON-serializable representation of this schema.
+   * The output validates against the `TailorKitSchemaSpec` from `@tailorkit/spec`.
+   *
+   * @param schemaSerializer - Optional converter from StandardSchema to JSON
+   * Schema. Without it, `input`/`output`/`fields` shapes are omitted from
+   * callbacks and native events — only structural metadata is included.
+   */
+  serialize(schemaSerializer?: SchemaSerializer): SerializedTailorKitSchema;
   /**
    * Unstable runtime data for TailorKit adapters and tooling. This is
    * intentionally isolated from the public schema contract.
@@ -193,6 +231,9 @@ type NoFieldCallbackConflicts<TFields, TCallbacks> =
 
 /**
  * Creates a component definition while preserving literal types for inference.
+ *
+ * @param definition - The component contract to define. See {@link ComponentDefinition} for
+ * accepted properties.
  */
 export function component<
   const TExtends extends readonly ComponentPreset[] | undefined = undefined,
@@ -200,8 +241,16 @@ export function component<
   const TCallbacks extends CallbackMap = Record<string, never>,
   const TSlots extends readonly string[] | undefined = undefined,
 >(
-  definition: ComponentDefinition<TExtends, TFields, TCallbacks, TSlots> &
-    NoFieldCallbackConflicts<TFields, TCallbacks>,
+  definition: {
+    /** Presets to merge before local fields and callbacks. */
+    extends?: TExtends;
+    /** Serializable value props for this component. */
+    fields?: TFields;
+    /** Component-local function props. */
+    callbacks?: TCallbacks;
+    /** Named render regions. Use `["default"]` for the default child region. */
+    slots?: TSlots;
+  } & NoFieldCallbackConflicts<TFields, TCallbacks>,
 ): ComponentDefinition<TExtends, TFields, TCallbacks, TSlots> {
   return definition;
 }
@@ -323,23 +372,79 @@ const resolveComponentMetadata = (
 };
 
 /**
- * Defines a server-safe TailorKit schema and extracts runtime metadata for
- * adapters without importing React or any other UI framework.
+ * Defines a TailorKit schema and extracts runtime metadata for adapters.
  *
- * TODO - improve this doc comment. The serer-safe bit seems a bit odd. We should also link to docs once they're up
- * also saying we dont import react etc shouldn;t be said.
+ * @param schema - Schema definition object.
+ * @param schema.components - Map of component name to its {@link ComponentDefinition}.
+ *   Each entry describes the serializable fields, function callbacks, slots, and
+ *   optional preset extensions that make up the component's public contract.
  */
 export function defineSchema<
   const TComponents extends Record<string, ComponentDefinition>,
 >(schema: { components: TComponents }): TailorKitSchema<TComponents> {
-  const components = {} as TailorKitSchema<TComponents>["$internal"]["metadata"]["components"];
+  const resolvedComponents =
+    {} as TailorKitSchema<TComponents>["$internal"]["metadata"]["components"];
 
   for (const [name, definition] of Object.entries(schema.components)) {
-    components[name as keyof TComponents] = resolveComponentMetadata(name, definition);
+    resolvedComponents[name as keyof TComponents] = resolveComponentMetadata(name, definition);
   }
+
+  const serialize = (schemaSerializer?: SchemaSerializer): SerializedTailorKitSchema => {
+    const toJsonSchemas = (
+      schemas: readonly Schema[] | undefined,
+    ): Record<string, unknown>[] | undefined => {
+      if (!schemas || !schemaSerializer) {
+        return undefined;
+      }
+      const result = schemas
+        .map(schemaSerializer)
+        .filter((s): s is Record<string, unknown> => s !== undefined);
+      return result.length > 0 ? result : undefined;
+    };
+
+    const serializedComponents: SerializedTailorKitSchema["components"] = {};
+
+    for (const [name, meta] of Object.entries(resolvedComponents)) {
+      const callbacks: SerializedTailorKitSchema["components"][string]["callbacks"] = {};
+
+      for (const [cbName, cb] of Object.entries(meta.callbacks)) {
+        if (!cb) {
+          continue;
+        }
+        callbacks[cbName] = {
+          async: cb.async,
+          input: toJsonSchemas(cb.input),
+          output: schemaSerializer && cb.output ? schemaSerializer(cb.output) : undefined,
+        };
+      }
+
+      const nativeEvents: SerializedTailorKitSchema["components"][string]["nativeEvents"] = {};
+
+      for (const [evName, ev] of Object.entries(meta.nativeEvents)) {
+        if (!ev) {
+          continue;
+        }
+        nativeEvents[evName] = {
+          element: ev.element,
+          name: ev.name,
+          input: toJsonSchemas(ev.input),
+        };
+      }
+
+      serializedComponents[name] = {
+        fieldKeys: [...meta.fieldKeys],
+        callbacks,
+        slots: [...meta.slots],
+        nativeEvents,
+      };
+    }
+
+    return { version: 1, components: serializedComponents };
+  };
 
   return {
     ...schema,
-    $internal: { metadata: { components } },
+    serialize,
+    $internal: { metadata: { components: resolvedComponents } },
   };
 }

@@ -2,7 +2,7 @@ import path from "node:path";
 import { build } from "vite";
 import type { InlineConfig } from "vite";
 
-import type { LoadedTailorKitConfig } from "./config";
+import type { LoadedTailorKitConfig } from "@tailorkit/app/config";
 
 export const buildSandbox = async (loadedConfig: LoadedTailorKitConfig): Promise<string> => {
   const entry = path.resolve(loadedConfig.root, loadedConfig.config.entry);

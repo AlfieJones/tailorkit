@@ -27,7 +27,7 @@ export const schema = defineSchema({
         },
         validate: {
           async: true,
-          input: z.object({ value: z.string() }),
+          input: [z.object({ value: z.string() })],
           output: z.boolean(),
         },
       },

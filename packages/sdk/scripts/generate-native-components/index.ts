@@ -174,7 +174,7 @@ function generatePresetFile(
     for (const event of events) {
       lines.push(`  ${event.eventKey}: {`);
       lines.push(`    element: "${element}",`);
-      lines.push(`    input: ${renderer.renderHandlerInput(event.eventKey, event.payload)},`);
+      lines.push(`    input: [${renderer.renderHandlerInput(event.eventKey, event.payload)}],`);
       lines.push(`    name: "${event.eventKey}",`);
       lines.push("  },");
     }

@@ -1,0 +1,19 @@
+{
+  "name": "todo",
+  "private": true,
+  "scripts": {
+    "build": "tailorkit build",
+    "dev": "tailorkit dev",
+    "generate": "tailorkit generate"
+  },
+  "dependencies": {
+    "@tailorkit/app": "workspace:*",
+    "@tailorkit/sandbox-ui": "workspace:*",
+    "preact": "^10.29.1"
+  },
+  "devDependencies": {
+    "@tailorkit/cli": "workspace:*",
+    "typescript": "^6.0.3"
+  },
+  "type": "module"
+}

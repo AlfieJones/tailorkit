@@ -1,6 +1,6 @@
 import { schema } from "./schema";
 
-export { components } from "./components";
+export { tailorClient } from "./components";
 export { schema } from "./schema";
 
 export const handlerDefinitions = Object.fromEntries(

@@ -108,6 +108,18 @@
         "web-vitals": "^5.2.0",
       },
     },
+    "examples/apps/todo": {
+      "name": "todo",
+      "dependencies": {
+        "@tailorkit/app": "workspace:*",
+        "@tailorkit/sandbox-ui": "workspace:*",
+        "preact": "^10.29.1",
+      },
+      "devDependencies": {
+        "@tailorkit/cli": "workspace:*",
+        "typescript": "^6.0.3",
+      },
+    },
     "examples/tanstack-start": {
       "name": "tanstack-start-example",
       "dependencies": {
@@ -169,6 +181,19 @@
         "typescript": "catalog:",
       },
     },
+    "packages/app": {
+      "name": "@tailorkit/app",
+      "version": "0.0.0",
+      "dependencies": {
+        "cosmiconfig": "^9.0.1",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@tailorkit/config": "workspace:*",
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/auth": {
       "name": "@tailorkit/auth",
       "dependencies": {
@@ -197,8 +222,8 @@
       },
       "dependencies": {
         "@clack/prompts": "^1.2.0",
+        "@tailorkit/app": "workspace:*",
         "cac": "^6.7.14",
-        "cosmiconfig": "^9.0.1",
         "picocolors": "^1.1.1",
         "vite": "catalog:",
         "zod": "catalog:",
@@ -323,14 +348,37 @@
     "packages/sdk": {
       "name": "@tailorkit/sdk",
       "dependencies": {
+        "@tailorkit/spec": "workspace:*",
+        "hono": "^4.12.15",
+      },
+      "devDependencies": {
         "@standard-schema/spec": "^1.1.0",
+        "@tailorkit/config": "workspace:*",
+        "@types/bun": "^1.3.13",
         "arktype": "^2.2.0",
+        "typescript": "catalog:",
         "valibot": "^1.3.1",
         "zod": "^4.3.6",
       },
+      "peerDependencies": {
+        "arktype": "^2.1.0",
+        "valibot": "^1.0.0",
+        "zod": "^4.0.0",
+      },
+      "optionalPeers": [
+        "arktype",
+        "valibot",
+        "zod",
+      ],
+    },
+    "packages/spec": {
+      "name": "@tailorkit/spec",
+      "version": "0.0.0",
+      "dependencies": {
+        "zod": "catalog:",
+      },
       "devDependencies": {
         "@tailorkit/config": "workspace:*",
-        "@types/bun": "^1.3.13",
         "typescript": "catalog:",
       },
     },
@@ -1280,6 +1328,8 @@
 
     "@tailorkit/api": ["@tailorkit/api@workspace:packages/api"],
 
+    "@tailorkit/app": ["@tailorkit/app@workspace:packages/app"],
+
     "@tailorkit/auth": ["@tailorkit/auth@workspace:packages/auth"],
 
     "@tailorkit/cli": ["@tailorkit/cli@workspace:packages/cli"],
@@ -1299,6 +1349,8 @@
     "@tailorkit/sandbox-ui": ["@tailorkit/sandbox-ui@workspace:packages/sandbox-ui"],
 
     "@tailorkit/sdk": ["@tailorkit/sdk@workspace:packages/sdk"],
+
+    "@tailorkit/spec": ["@tailorkit/spec@workspace:packages/spec"],
 
     "@tailorkit/ui": ["@tailorkit/ui@workspace:packages/ui"],
 
@@ -2837,6 +2889,8 @@
     "tldts-core": ["tldts-core@7.0.28", "", {}, "sha512-7W5Efjhsc3chVdFhqtaU0KtK32J37Zcr9RKtID54nG+tIpcY79CQK/veYPODxtD/LJ4Lue66jvrQzIX2Z2/pUQ=="],
 
     "to-regex-range": ["to-regex-range@5.0.1", "", { "dependencies": { "is-number": "^7.0.0" } }, "sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ=="],
+
+    "todo": ["todo@workspace:examples/apps/todo"],
 
     "toidentifier": ["toidentifier@1.0.1", "", {}, "sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA=="],
 

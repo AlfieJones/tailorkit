@@ -1,4 +1,4 @@
-export { defineReactComponents } from "./components";
+export { createReactClient } from "./components";
 export type {
   ReactComponentMap,
   ReactComponentProps,

@@ -1,11 +1,11 @@
-import { component, defineSchema } from "@tailorkit/sdk";
+import { component, defineSchema, tailorKit } from "@tailorkit/sdk";
 import { native } from "@tailorkit/sdk/native-zod";
 import { z } from "zod";
-import { defineReactComponents } from "@tailorkit/react";
+import { createReactClient } from "@tailorkit/react";
 import { Button } from "@tailorkit/ui/button";
 import { Input } from "@tailorkit/ui/input";
 
-export const schema = defineSchema({
+export const tailorSchema = defineSchema({
   components: {
     Button: component({
       extends: [native.button],
@@ -30,7 +30,7 @@ export const schema = defineSchema({
         },
         validate: {
           async: true,
-          input: z.object({ value: z.string() }),
+          input: [z.object({ value: z.string() })],
           output: z.boolean(),
         },
       },
@@ -45,7 +45,13 @@ export const schema = defineSchema({
   },
 });
 
-export const components = defineReactComponents(schema, {
-  Button: ({ props, slots }) => <Button {...props}>{slots.default}</Button>,
-  Input: ({ props, slots }) => <Input {...props}>{slots.default}</Input>,
+export const tailor = tailorKit({
+  schema: tailorSchema,
+});
+
+export const tailorClient = createReactClient(tailorSchema, {
+  components: {
+    Button: ({ props, slots }) => <Button {...props}>{slots.default}</Button>,
+    Input: ({ props, slots }) => <Input {...props}>{slots.default}</Input>,
+  },
 });

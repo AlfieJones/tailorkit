@@ -49,3 +49,6 @@ coverage
 .cache
 tmp
 temp
+
+# CLI test output
+.sandbox-test

@@ -1,0 +1,12 @@
+{
+  "components": {
+    "Button": {
+      "props": {
+        "children": "ComponentChildren",
+        "disabled": "boolean",
+        "onClick": "() => void",
+        "variant": "\"default\" | \"secondary\""
+      }
+    }
+  }
+}

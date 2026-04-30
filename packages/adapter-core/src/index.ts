@@ -5,8 +5,10 @@ export type NativeElementEventRegistry = Record<string, NativeEventMap>;
 
 export type NativeEventPayload<TNativeEvent> =
   TNativeEvent extends NativeEventDefinition<infer TInput>
-    ? TInput extends Schema
-      ? StandardSchemaV1.InferOutput<TInput>
+    ? TInput extends readonly [infer TPayload, ...unknown[]]
+      ? TPayload extends Schema
+        ? StandardSchemaV1.InferOutput<TPayload>
+        : never
       : never
     : never;
 

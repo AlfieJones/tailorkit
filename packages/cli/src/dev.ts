@@ -1,7 +1,7 @@
 import { createServer } from "vite";
 import type { InlineConfig } from "vite";
 
-import type { LoadedTailorKitConfig } from "./config";
+import type { LoadedTailorKitConfig } from "@tailorkit/app/config";
 
 export const devSandbox = async (
   loadedConfig: LoadedTailorKitConfig,

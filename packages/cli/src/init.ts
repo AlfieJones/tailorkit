@@ -1,4 +1,4 @@
-import { cancel, confirm, isCancel, text } from "@clack/prompts";
+import { cancel, confirm, isCancel, select, spinner, text } from "@clack/prompts";
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -13,13 +13,21 @@ import {
   createTailorKitConfig,
   createTsconfig,
 } from "./templates";
+import { resolveTemplatePackageVersions } from "./package-versions";
 
 interface InitOptions {
   cwd: string;
   directory?: string;
   force?: boolean;
+  install?: boolean;
   name?: string;
+  packageManager?: string;
+  useWorkspaceDependencies?: boolean;
 }
+
+const packageManagers = ["bun", "yarn", "pnpm", "npm"] as const;
+
+type PackageManager = (typeof packageManagers)[number];
 
 const ensureDirectory = async (directory: string): Promise<void> => {
   await mkdir(directory, { recursive: true });
@@ -40,23 +48,73 @@ const normalizePackageName = (value: string): string =>
     .replaceAll(/[^a-z0-9._/-]+/gu, "-")
     .replaceAll(/^-+|-+$/gu, "");
 
+const isPackageManager = (value: string): value is PackageManager =>
+  packageManagers.includes(value as PackageManager);
+
+const resolvePackageManager = async (
+  packageManager: string | undefined,
+): Promise<PackageManager> => {
+  if (packageManager !== undefined) {
+    if (isPackageManager(packageManager)) {
+      return packageManager;
+    }
+
+    throw new Error("--package-manager must be one of bun, yarn, pnpm, or npm.");
+  }
+
+  const answer = await select({
+    initialValue: "bun",
+    message: "Package manager",
+    options: packageManagers.map((value) => ({
+      label: value,
+      value,
+    })),
+  });
+
+  if (isCancel(answer)) {
+    cancel("Init cancelled.");
+    process.exit(0);
+  }
+
+  if (isPackageManager(answer)) {
+    return answer;
+  }
+
+  throw new Error("--package-manager must be one of bun, yarn, pnpm, or npm.");
+};
+
+const installDependencies = async (
+  targetDirectory: string,
+  packageManager: PackageManager,
+): Promise<void> => {
+  const s = spinner();
+  s.start(`Installing dependencies with ${packageManager}`);
+
+  const process = Bun.spawn([packageManager, "install"], {
+    cwd: targetDirectory,
+    stderr: "inherit",
+    stdout: "inherit",
+  });
+  const exitCode = await process.exited;
+
+  if (exitCode !== 0) {
+    s.stop("Dependency install failed.");
+    throw new Error(`${packageManager} install exited with code ${exitCode}.`);
+  }
+
+  s.stop("Installed dependencies.");
+};
+
 export const initApp = async (options: InitOptions): Promise<string> => {
-  const directoryAnswer =
-    options.directory ??
-    (await text({
-      defaultValue: ".",
-      message: "Where should the sandbox app be created?",
-      placeholder: ".",
-    }));
+  const directoryAnswer = options.directory ?? ".";
 
   if (isCancel(directoryAnswer)) {
     cancel("Init cancelled.");
     process.exit(0);
   }
 
-  const targetDirectory = path.resolve(options.cwd, directoryAnswer);
-  const defaultPackageName =
-    normalizePackageName(path.basename(targetDirectory)) || "tailorkit-app";
+  const baseDirectory = path.resolve(options.cwd, directoryAnswer);
+  const defaultPackageName = normalizePackageName(path.basename(baseDirectory)) || "tailorkit-app";
   const nameAnswer =
     options.name ??
     (await text({
@@ -73,6 +131,7 @@ export const initApp = async (options: InitOptions): Promise<string> => {
   }
 
   const packageName = normalizePackageName(nameAnswer);
+  const targetDirectory = path.join(baseDirectory, packageName);
 
   let force = options.force ?? false;
 
@@ -90,11 +149,18 @@ export const initApp = async (options: InitOptions): Promise<string> => {
     force = true;
   }
 
+  const packageManager = await resolvePackageManager(options.packageManager);
+  const packageVersions = await resolveTemplatePackageVersions();
+
   await ensureDirectory(path.join(targetDirectory, "src"));
 
   await writeFile(
     path.join(targetDirectory, "package.json"),
-    createPackageJson({ packageName }),
+    createPackageJson({
+      packageName,
+      packageVersions,
+      useWorkspaceDependencies: options.useWorkspaceDependencies,
+    }),
     force,
   );
   await writeFile(
@@ -115,6 +181,22 @@ export const initApp = async (options: InitOptions): Promise<string> => {
     createGeneratedFile(),
     force,
   );
+
+  const shouldInstall =
+    options.install ??
+    (await confirm({
+      initialValue: true,
+      message: "Install dependencies?",
+    }));
+
+  if (isCancel(shouldInstall)) {
+    cancel("Init cancelled.");
+    process.exit(0);
+  }
+
+  if (shouldInstall) {
+    await installDependencies(targetDirectory, packageManager);
+  }
 
   return targetDirectory;
 };

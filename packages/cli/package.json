@@ -7,16 +7,16 @@
   },
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./config": "./src/config.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test:init": "rm -rf .sandbox-test && bun src/index.ts init .sandbox-test --name sandbox-test --force"
   },
   "dependencies": {
     "@clack/prompts": "^1.2.0",
+    "@tailorkit/app": "workspace:*",
     "cac": "^6.7.14",
-    "cosmiconfig": "^9.0.1",
     "picocolors": "^1.1.1",
     "vite": "catalog:",
     "zod": "catalog:"
