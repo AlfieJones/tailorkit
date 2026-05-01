@@ -19,7 +19,7 @@ body {
 button {
   border: 0;
   border-radius: 6px;
-  background: #0f766e;
+  background: #285e61;
   color: white;
   cursor: pointer;
   font: inherit;
@@ -28,7 +28,11 @@ button {
 }
 
 button:hover {
-  background: #115e59;
+  background: #1f4b4d;
+}
+
+button[aria-selected="true"] {
+  background: #151719;
 }
 
 .page {
@@ -61,7 +65,7 @@ button:hover {
 }
 
 .eyebrow {
-  color: #0f766e;
+  color: #285e61;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -78,6 +82,12 @@ button:hover {
   display: grid;
   gap: 18px;
   padding: 20px;
+}
+
+.screen-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .status-row {
@@ -104,6 +114,30 @@ button:hover {
   font-weight: 600;
 }
 
+.remote-screen-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.remote-screen {
+  background: #eef4f5;
+  border-radius: 999px;
+  color: #48525c;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  padding: 6px 10px;
+}
+
+.remote-screen-active {
+  background: #d7e7e7;
+  color: #151719;
+}
+
+.remote-context {
+  max-height: 180px;
+}
+
 .host-card {
   align-items: center;
   background: #f8fbfb;
@@ -113,6 +147,17 @@ button:hover {
   gap: 14px;
   grid-template-columns: 1fr auto;
   padding: 16px;
+}
+
+.host-field {
+  display: grid;
+  gap: 6px;
+}
+
+.host-field span {
+  color: #48525c;
+  font-size: 0.8125rem;
+  font-weight: 650;
 }
 
 .host-card h2 {

@@ -9,6 +9,7 @@ import {
   createComponentSpec,
   createFallbackScreen,
   createGeneratedFile,
+  createGitignore,
   createOxfmtConfig,
   createOxlintConfig,
   createPackageJson,
@@ -266,6 +267,7 @@ export const initApp = async (options: InitOptions): Promise<string> => {
     force,
   );
   await writeFile(path.join(targetDirectory, "tsconfig.json"), createTsconfig(), force);
+  await writeFile(path.join(targetDirectory, ".gitignore"), createGitignore(), force);
   if (codeQualitySelection.linting) {
     await writeFile(path.join(targetDirectory, "oxlint.config.ts"), createOxlintConfig(), force);
   }

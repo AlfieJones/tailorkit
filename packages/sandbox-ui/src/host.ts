@@ -10,6 +10,7 @@ import type {
   RemoteHostEvent,
   RemoteNode,
   RemoteSlots,
+  WorkerUiMountOptions,
   WorkerRenderResult,
 } from "./protocol";
 import { createRemoteFunctionSerializer } from "./serializers";
@@ -33,7 +34,7 @@ export interface RemoteUiHost<TRenderedNode> {
 export interface HostController {
   callFunction(handlerId: string, args: unknown[]): Promise<RemoteFunctionCallResult>;
   dispatchEvent(binding: RemoteEventBinding, event: RemoteHostEvent): Promise<WorkerRenderResult>;
-  mount(): Promise<WorkerRenderResult>;
+  mount(options?: WorkerUiMountOptions): Promise<WorkerRenderResult>;
   unmount(): Promise<WorkerRenderResult>;
 }
 
@@ -61,8 +62,8 @@ export const createHostController = (client: WorkerUiClient): HostController => 
       handlerId: binding.handlerId,
     });
   },
-  mount() {
-    return client.mount();
+  mount(options) {
+    return client.mount(options);
   },
   unmount() {
     return client.unmount();

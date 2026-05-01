@@ -2,6 +2,12 @@ export type RemoteNode = RemoteElementNode | RemoteTextNode | RemoteFragmentNode
 
 const remoteComponentPrefix = "sandbox-ui-component-";
 
+export interface WorkerUiMountOptions {
+  currentScreen?: string;
+  defaultContext?: unknown;
+  screenContext?: unknown;
+}
+
 export interface RemoteTextNode {
   kind: "text";
   id: string;

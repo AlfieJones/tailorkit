@@ -9,6 +9,7 @@ import { defineTailorKitConfig, loadTailorKitConfig } from "@tailorkit/app/confi
 import { devSandbox } from "./dev";
 import { generateTypes } from "./generate";
 import { initApp } from "./init";
+import { previewSandbox } from "./preview";
 
 export { defineTailorKitConfig };
 
@@ -31,6 +32,10 @@ interface InitCommandOptions {
 }
 
 interface DevCommandOptions extends GlobalOptions {
+  port?: string;
+}
+
+interface PreviewCommandOptions extends GlobalOptions {
   port?: string;
 }
 
@@ -115,15 +120,31 @@ cli.command("generate", "Generate sandbox component types").action(
   }),
 );
 
-cli.command("build", "Build the sandbox app").action(
+cli.command("build", "Build the TailorKit client assets").action(
   run(async (options: GlobalOptions) => {
     const s = spinner();
-    s.start("Building TailorKit sandbox");
+    s.start("Building TailorKit client assets");
     const loadedConfig = await loadTailorKitConfig(options.config, resolveCwd(options.cwd));
     const outDir = await buildSandbox(loadedConfig);
-    s.stop(`Built sandbox to ${pc.cyan(outDir)}.`);
+    s.stop(`Built client assets to ${pc.cyan(outDir)}.`);
   }),
 );
+
+cli
+  .command("preview", "Serve built TailorKit client assets")
+  .option("--port <port>", "Preview server port", {
+    default: "4174",
+  })
+  .action(
+    run(async (options: PreviewCommandOptions) => {
+      const loadedConfig = await loadTailorKitConfig(options.config, resolveCwd(options.cwd));
+      const port = options.port === undefined ? 4174 : Number.parseInt(options.port, 10);
+      if (Number.isNaN(port)) {
+        throw new TypeError("--port must be a number.");
+      }
+      await previewSandbox(loadedConfig, port);
+    }),
+  );
 
 cli
   .command("dev", "Run the sandbox app with Vite")

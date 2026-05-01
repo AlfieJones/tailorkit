@@ -2,7 +2,7 @@ import { createRemoteComponent, exposePreactWorker } from "@tailorkit/sandbox-ui
 import { h } from "preact";
 import { useMemo, useState } from "preact/hooks";
 
-const RemoteButton = createRemoteComponent("Button");
+const RemoteButton = createRemoteComponent<Record<string, unknown>>("Button");
 
 interface NativeClickPayload {
   button: number;

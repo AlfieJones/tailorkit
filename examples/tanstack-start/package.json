@@ -9,6 +9,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@tailorkit/app": "workspace:*",
     "@tailorkit/react": "workspace:*",
     "@tailorkit/sandbox-ui": "workspace:*",
     "@tailorkit/sdk": "workspace:*",

@@ -13,6 +13,7 @@ import type {
   RemoteNode,
   RemoteProps,
   RemoteTextNode,
+  WorkerUiMountOptions,
   WorkerRenderResult,
 } from "./protocol";
 import { createRemoteComponentType, getRemoteComponentName } from "./protocol";
@@ -522,12 +523,15 @@ const installPreactWorkerDom = (): void => {
   globalThis.document = remoteDocument as unknown as Document;
 };
 
-export const createWorkerPreactRuntime = (app: () => ComponentChild) => {
+export type WorkerPreactApp = (options: WorkerUiMountOptions) => ComponentChild;
+
+export const createWorkerPreactRuntime = (app: WorkerPreactApp) => {
   installPreactWorkerDom();
 
   const root = new RemoteWorkerElement("root");
   const handlers = new Map<string, RemoteCallable>();
   const handlerIds = new WeakMap<RemoteCallable, string>();
+  let mountOptions: WorkerUiMountOptions = {};
   let revision = 0;
 
   options.debounceRendering = queueMicrotask;
@@ -575,7 +579,7 @@ export const createWorkerPreactRuntime = (app: () => ComponentChild) => {
   };
 
   const rerender = (): WorkerRenderResult => {
-    render(app() as VNode, root as unknown as Element);
+    render(app(mountOptions) as VNode, root as unknown as Element);
     return createSnapshot();
   };
 
@@ -611,7 +615,8 @@ export const createWorkerPreactRuntime = (app: () => ComponentChild) => {
   return {
     callFunction,
     dispatchEvent,
-    mount(): WorkerRenderResult {
+    mount(options: WorkerUiMountOptions = {}): WorkerRenderResult {
+      mountOptions = options;
       return rerender();
     },
     registerFunction: registerHandler,
@@ -655,9 +660,9 @@ export const createWorkerUiRouter = (runtime: WorkerPreactRuntime) => ({
       return toRenderError(error);
     }
   }),
-  mount: os.handler(() => {
+  mount: os.handler(({ input }) => {
     try {
-      return runtime.mount();
+      return runtime.mount((input ?? {}) as WorkerUiMountOptions);
     } catch (error) {
       return toRenderError(error);
     }
@@ -688,7 +693,7 @@ export const upgradeWorkerUiPort = (
 
 export const exposePreactWorker = (
   port: SupportedMessagePort,
-  app: () => ComponentChild,
+  app: WorkerPreactApp,
 ): WorkerPreactRuntime => {
   const runtime = createWorkerPreactRuntime(app);
   upgradeWorkerUiPort(port, runtime);
@@ -696,4 +701,4 @@ export const exposePreactWorker = (
 };
 
 export { Fragment };
-export type { ComponentChild, RemoteHostEvent };
+export type { ComponentChild, RemoteHostEvent, WorkerUiMountOptions };

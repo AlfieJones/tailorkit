@@ -4,29 +4,13 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
 
-const componentSourceSchema = z.object({
-  input: z.string().default("./tailorkit.schema.json"),
-  output: z.string().default("./src/tailorkit.gen.ts"),
-});
-
 const clientConfigSchema = z.object({
   entry: z.string().default("./src/client.ts"),
 });
 
 const tailorkitConfigSchema = z.object({
   client: clientConfigSchema.optional(),
-  components: componentSourceSchema.default({
-    input: "./tailorkit.schema.json",
-    output: "./src/tailorkit.gen.ts",
-  }),
-  entry: z.string().optional(),
   outDir: z.string().default(".tailorkit"),
-  vite: z
-    .object({
-      plugins: z.array(z.unknown()).optional(),
-    })
-    .passthrough()
-    .optional(),
 });
 
 export type TailorKitConfig = z.input<typeof tailorkitConfigSchema>;

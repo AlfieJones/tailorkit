@@ -1,32 +1,33 @@
 import path from "node:path";
 import { build } from "vite";
-import type { InlineConfig } from "vite";
 
 import type { LoadedTailorKitConfig } from "@tailorkit/app/config";
 
+export const tailorkitClientOutputDirectory = "client";
+export const tailorkitWorkerFileName = "worker.js";
+export const defaultClientEntry = "./src/client.ts";
+
+export const resolveClientEntry = (loadedConfig: LoadedTailorKitConfig): string =>
+  loadedConfig.config.client?.entry ?? defaultClientEntry;
+
+export const resolveClientOutDir = (loadedConfig: LoadedTailorKitConfig): string =>
+  path.resolve(loadedConfig.root, loadedConfig.config.outDir, tailorkitClientOutputDirectory);
+
 export const buildSandbox = async (loadedConfig: LoadedTailorKitConfig): Promise<string> => {
-  const clientEntry =
-    loadedConfig.config.client?.entry ?? loadedConfig.config.entry ?? "./src/client.ts";
-  const entry = path.resolve(loadedConfig.root, clientEntry);
-  const outDir = path.resolve(loadedConfig.root, loadedConfig.config.outDir);
-  const viteConfig = (loadedConfig.config.vite ?? {}) as InlineConfig;
+  const entry = path.resolve(loadedConfig.root, resolveClientEntry(loadedConfig));
+  const outDir = resolveClientOutDir(loadedConfig);
 
   await build({
-    ...viteConfig,
     build: {
-      ...viteConfig.build,
       emptyOutDir: true,
-      lib: {
-        entry,
-        fileName: "sandbox",
-        formats: ["es"],
-      },
+      minify: "oxc",
+      assetsInlineLimit: 0,
       outDir,
       rollupOptions: {
+        input: entry,
         output: {
-          assetFileNames: "assets/[name]-[hash][extname]",
-          chunkFileNames: "chunks/[name]-[hash].js",
-          entryFileNames: "sandbox.js",
+          dir: outDir,
+          entryFileNames: tailorkitWorkerFileName,
         },
       },
       sourcemap: true,

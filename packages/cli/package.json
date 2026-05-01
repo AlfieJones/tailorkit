@@ -18,6 +18,7 @@
     "@tailorkit/app": "workspace:*",
     "@tailorkit/spec": "workspace:*",
     "cac": "^6.7.14",
+    "hono": "^4.10.7",
     "picocolors": "^1.1.1",
     "vite": "catalog:",
     "zod": "catalog:"

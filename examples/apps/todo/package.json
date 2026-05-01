@@ -1,0 +1,30 @@
+{
+  "name": "todo",
+  "private": true,
+  "description": "A TailorKit.dev app that embeds in a host app to extend what it can do.",
+  "type": "module",
+  "imports": {
+    "#tailorkit": "./src/tailorkit.gen.ts"
+  },
+  "scripts": {
+    "build": "tailorkit build",
+    "dev": "tailorkit dev",
+    "generate": "tailorkit generate",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt --check",
+    "format:fix": "oxfmt --write",
+    "check": "bun run lint && bun run format",
+    "fix": "bun run lint:fix && bun run format:fix"
+  },
+  "dependencies": {
+    "@tailorkit/app": "workspace:*",
+    "preact": "^10.29.1"
+  },
+  "devDependencies": {
+    "@tailorkit/cli": "workspace:*",
+    "oxfmt": "^0.47.0",
+    "oxlint": "^1.62.0",
+    "typescript": "^6.0.3"
+  }
+}

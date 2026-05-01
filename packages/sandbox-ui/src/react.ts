@@ -4,11 +4,17 @@ import { createReactHostRenderer } from "./adapters";
 import type { RemoteCallbackDefinitions } from "./adapters";
 import { createRemoteUiHost, createWorkerUiClient } from "./host";
 import type { HostController, RemoteUiHost, WorkerUiClient } from "./host";
-import type { RemoteEventBinding, RemoteHostEvent, WorkerRenderResult } from "./protocol";
+import type {
+  RemoteEventBinding,
+  RemoteHostEvent,
+  WorkerRenderResult,
+  WorkerUiMountOptions,
+} from "./protocol";
 
 interface UseWorkerUiOptions {
   callbackDefinitions?: RemoteCallbackDefinitions;
   components?: Record<string, unknown>;
+  mount?: WorkerUiMountOptions;
   worker: Worker | (() => Worker);
 }
 
@@ -54,7 +60,7 @@ const toReactNode = (
 };
 
 export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
-  const { callbackDefinitions, components, worker: workerOption } = options;
+  const { callbackDefinitions, components, mount: mountOptions, worker: workerOption } = options;
   const [result, setResult] = useState<UseWorkerUiResult>({
     error: null,
     node: null,
@@ -109,7 +115,7 @@ export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
         setRenderResult(renderResult);
         return renderResult;
       },
-      mount: () => client.mount(),
+      mount: (input) => client.mount(input),
       unmount: () => client.unmount(),
     };
 
@@ -123,7 +129,7 @@ export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
 
     const mount = async (): Promise<void> => {
       try {
-        setRenderResult(await controller.mount());
+        setRenderResult(await controller.mount(mountOptions));
       } catch (error) {
         setError(error);
       }
@@ -141,7 +147,9 @@ export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
         }
       })();
     };
-  }, [callbackDefinitions, components, workerOption]);
+  }, [callbackDefinitions, components, mountOptions, workerOption]);
 
   return result;
 };
+
+export type { WorkerUiMountOptions };
