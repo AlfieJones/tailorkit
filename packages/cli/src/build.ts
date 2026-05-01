@@ -5,7 +5,9 @@ import type { InlineConfig } from "vite";
 import type { LoadedTailorKitConfig } from "@tailorkit/app/config";
 
 export const buildSandbox = async (loadedConfig: LoadedTailorKitConfig): Promise<string> => {
-  const entry = path.resolve(loadedConfig.root, loadedConfig.config.entry);
+  const clientEntry =
+    loadedConfig.config.client?.entry ?? loadedConfig.config.entry ?? "./src/client.ts";
+  const entry = path.resolve(loadedConfig.root, clientEntry);
   const outDir = path.resolve(loadedConfig.root, loadedConfig.config.outDir);
   const viteConfig = (loadedConfig.config.vite ?? {}) as InlineConfig;
 

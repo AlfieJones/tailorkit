@@ -7,7 +7,7 @@ import babel from "@rolldown/plugin-babel";
 export default defineConfig({
   plugins: [
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({}),
     viteReact(),
     babel({
       presets: [reactCompilerPreset()],

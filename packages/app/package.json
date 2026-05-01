@@ -5,12 +5,17 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./config": "./src/config.ts"
+    "./client": {
+      "types": "./src/client.d.ts"
+    },
+    "./config": "./src/config.ts",
+    "./worker": "./src/worker.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@tailorkit/sandbox-ui": "workspace:*",
     "cosmiconfig": "^9.0.1",
     "zod": "catalog:"
   },

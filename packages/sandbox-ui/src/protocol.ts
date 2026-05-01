@@ -23,11 +23,14 @@ export interface RemoteElementNode {
   children: RemoteNode[];
   events?: RemoteEventBinding[];
   key?: RemoteKey;
+  slots?: RemoteSlots;
 }
 
 export type RemoteKey = string | number;
 
 export type RemoteProps = Record<string, unknown>;
+
+export type RemoteSlots = Record<string, RemoteNode[]>;
 
 export interface RemoteFunctionRef {
   kind: "function";

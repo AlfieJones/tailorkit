@@ -5,10 +5,12 @@ import path from "node:path";
 import pc from "picocolors";
 
 import {
-  createApp,
+  createClient,
   createComponentSpec,
+  createFallbackScreen,
   createGeneratedFile,
-  createMain,
+  createOxfmtConfig,
+  createOxlintConfig,
   createPackageJson,
   createTailorKitConfig,
   createTsconfig,
@@ -19,7 +21,9 @@ interface InitOptions {
   cwd: string;
   directory?: string;
   force?: boolean;
+  formatting?: boolean;
   install?: boolean;
+  linting?: boolean;
   name?: string;
   packageManager?: string;
   useWorkspaceDependencies?: boolean;
@@ -83,6 +87,69 @@ const resolvePackageManager = async (
   throw new Error("--package-manager must be one of bun, yarn, pnpm, or npm.");
 };
 
+interface CodeQualitySelection {
+  formatting: boolean;
+  linting: boolean;
+}
+
+const codeQualityChoices = ["all", "linting", "formatting", "none"] as const;
+
+type CodeQualityChoice = (typeof codeQualityChoices)[number];
+
+const isCodeQualityChoice = (value: string): value is CodeQualityChoice =>
+  codeQualityChoices.includes(value as CodeQualityChoice);
+
+const resolveCodeQualitySelection = async (
+  options: Pick<InitOptions, "formatting" | "linting">,
+): Promise<CodeQualitySelection> => {
+  if (options.formatting !== undefined || options.linting !== undefined) {
+    return {
+      formatting: options.formatting ?? true,
+      linting: options.linting ?? true,
+    };
+  }
+
+  const answer = await select({
+    initialValue: "all",
+    message: "Linting and formatting",
+    options: [
+      {
+        hint: "oxlint and oxfmt",
+        label: "Add linting and formatting",
+        value: "all",
+      },
+      {
+        hint: "oxlint only",
+        label: "Add linting only",
+        value: "linting",
+      },
+      {
+        hint: "oxfmt only",
+        label: "Add formatting only",
+        value: "formatting",
+      },
+      {
+        label: "Skip",
+        value: "none",
+      },
+    ],
+  });
+
+  if (isCancel(answer)) {
+    cancel("Init cancelled.");
+    process.exit(0);
+  }
+
+  if (!isCodeQualityChoice(answer)) {
+    throw new Error("Linting and formatting selection must be all, linting, formatting, or none.");
+  }
+
+  return {
+    formatting: answer === "all" || answer === "formatting",
+    linting: answer === "all" || answer === "linting",
+  };
+};
+
 const installDependencies = async (
   targetDirectory: string,
   packageManager: PackageManager,
@@ -103,6 +170,28 @@ const installDependencies = async (
   }
 
   s.stop("Installed dependencies.");
+};
+
+const formatProject = async (
+  targetDirectory: string,
+  packageManager: PackageManager,
+): Promise<void> => {
+  const s = spinner();
+  s.start("Formatting project");
+
+  const process = Bun.spawn([packageManager, "run", "format:fix"], {
+    cwd: targetDirectory,
+    stderr: "inherit",
+    stdout: "inherit",
+  });
+  const exitCode = await process.exited;
+
+  if (exitCode !== 0) {
+    s.stop("Formatting failed.");
+    throw new Error(`${packageManager} run format:fix exited with code ${exitCode}.`);
+  }
+
+  s.stop("Formatted project.");
 };
 
 export const initApp = async (options: InitOptions): Promise<string> => {
@@ -150,13 +239,16 @@ export const initApp = async (options: InitOptions): Promise<string> => {
   }
 
   const packageManager = await resolvePackageManager(options.packageManager);
+  const codeQualitySelection = await resolveCodeQualitySelection(options);
   const packageVersions = await resolveTemplatePackageVersions();
 
-  await ensureDirectory(path.join(targetDirectory, "src"));
+  await ensureDirectory(path.join(targetDirectory, "src", "views"));
 
   await writeFile(
     path.join(targetDirectory, "package.json"),
     createPackageJson({
+      formatting: codeQualitySelection.formatting,
+      linting: codeQualitySelection.linting,
       packageName,
       packageVersions,
       useWorkspaceDependencies: options.useWorkspaceDependencies,
@@ -169,15 +261,25 @@ export const initApp = async (options: InitOptions): Promise<string> => {
     force,
   );
   await writeFile(
-    path.join(targetDirectory, "tailorkit.components.json"),
+    path.join(targetDirectory, "tailorkit.schema.json"),
     createComponentSpec(),
     force,
   );
   await writeFile(path.join(targetDirectory, "tsconfig.json"), createTsconfig(), force);
-  await writeFile(path.join(targetDirectory, "src", "app.tsx"), createApp(), force);
-  await writeFile(path.join(targetDirectory, "src", "main.tsx"), createMain(), force);
+  if (codeQualitySelection.linting) {
+    await writeFile(path.join(targetDirectory, "oxlint.config.ts"), createOxlintConfig(), force);
+  }
+  if (codeQualitySelection.formatting) {
+    await writeFile(path.join(targetDirectory, "oxfmt.config.ts"), createOxfmtConfig(), force);
+  }
+  await writeFile(path.join(targetDirectory, "src", "client.ts"), createClient(), force);
   await writeFile(
-    path.join(targetDirectory, "src", "tailorkit.generated.tsx"),
+    path.join(targetDirectory, "src", "views", "fallback.tsx"),
+    createFallbackScreen(),
+    force,
+  );
+  await writeFile(
+    path.join(targetDirectory, "src", "tailorkit.gen.ts"),
     createGeneratedFile(),
     force,
   );
@@ -196,6 +298,10 @@ export const initApp = async (options: InitOptions): Promise<string> => {
 
   if (shouldInstall) {
     await installDependencies(targetDirectory, packageManager);
+
+    if (codeQualitySelection.formatting) {
+      await formatProject(targetDirectory, packageManager);
+    }
   }
 
   return targetDirectory;

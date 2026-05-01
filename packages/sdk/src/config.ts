@@ -4,6 +4,7 @@ import type { SerializedTailorKitSchema } from "@tailorkit/spec";
 export type Schema = StandardSchemaV1;
 export type CallbackMap = Record<string, CallbackDefinition | undefined>;
 export type NativeEventMap = Record<string, NativeEventDefinition | undefined>;
+export type ScreenMap = Record<string, ScreenDefinition>;
 
 type EmptyObject = Record<string, never>;
 type VoidResult = ReturnType<() => void>;
@@ -140,6 +141,14 @@ export interface ComponentDefinition<
   slots?: TSlots;
 }
 
+/**
+ * Describes a screen route and its serializable context shape.
+ */
+export interface ScreenDefinition<TContext extends Schema = Schema> {
+  /** Serializable context available to this screen. */
+  context: TContext;
+}
+
 export type ComponentProps<TComponent> =
   TComponent extends ComponentDefinition<
     infer TExtends,
@@ -190,9 +199,17 @@ export interface ResolvedComponentMetadata {
  */
 export type SchemaSerializer = (schema: Schema) => Record<string, unknown> | undefined;
 
-export interface TailorKitSchema<TComponents extends Record<string, ComponentDefinition>> {
+export interface TailorKitSchema<
+  TComponents extends Record<string, ComponentDefinition>,
+  TScreens extends ScreenMap = ScreenMap,
+  TDefaultContext extends Schema | undefined = Schema | undefined,
+> {
   /** Map of component name to its definition, as passed to `defineSchema`. */
   components: TComponents;
+  /** Optional default context shape shared across screens. */
+  defaultContext?: TDefaultContext;
+  /** Map of screen path patterns to their context definitions. */
+  screens: TScreens;
   /**
    * Produces a wire-safe, JSON-serializable representation of this schema.
    * The output validates against the `TailorKitSchemaSpec` from `@tailorkit/spec`.
@@ -227,6 +244,20 @@ type NoFieldCallbackConflicts<TFields, TCallbacks> =
     ? unknown
     : {
         readonly __tailorkit_error__: `Field and callback keys must be unique. Conflicting key: ${FieldCallbackConflictKeys<TFields, TCallbacks>}`;
+      };
+
+type ScreenDefinitionExtraKeys<TScreens> =
+  TScreens extends Record<string, unknown>
+    ? {
+        [TPath in keyof TScreens]: Extract<Exclude<keyof TScreens[TPath], "context">, string>;
+      }[keyof TScreens]
+    : never;
+
+type NoExtraScreenDefinitionKeys<TScreens> =
+  ScreenDefinitionExtraKeys<TScreens> extends never
+    ? unknown
+    : {
+        readonly __tailorkit_error__: `Screen definitions can only include "context". Invalid key: ${ScreenDefinitionExtraKeys<TScreens>}`;
       };
 
 /**
@@ -381,15 +412,33 @@ const resolveComponentMetadata = (
  */
 export function defineSchema<
   const TComponents extends Record<string, ComponentDefinition>,
->(schema: { components: TComponents }): TailorKitSchema<TComponents> {
-  const resolvedComponents =
-    {} as TailorKitSchema<TComponents>["$internal"]["metadata"]["components"];
+  const TScreens extends ScreenMap = Record<string, never>,
+  const TDefaultContext extends Schema | undefined = undefined,
+>(
+  schema: {
+    components: TComponents;
+    defaultContext?: TDefaultContext;
+    screens?: TScreens;
+  } & NoExtraScreenDefinitionKeys<TScreens>,
+): TailorKitSchema<TComponents, TScreens, TDefaultContext> {
+  const resolvedComponents = {} as TailorKitSchema<
+    TComponents,
+    TScreens,
+    TDefaultContext
+  >["$internal"]["metadata"]["components"];
 
   for (const [name, definition] of Object.entries(schema.components)) {
     resolvedComponents[name as keyof TComponents] = resolveComponentMetadata(name, definition);
   }
 
   const serialize = (schemaSerializer?: SchemaSerializer): SerializedTailorKitSchema => {
+    const toJsonSchema = (schema: Schema | undefined): Record<string, unknown> | undefined => {
+      if (!schema || !schemaSerializer) {
+        return undefined;
+      }
+      return schemaSerializer(schema);
+    };
+
     const toJsonSchemas = (
       schemas: readonly Schema[] | undefined,
     ): Record<string, unknown>[] | undefined => {
@@ -414,7 +463,7 @@ export function defineSchema<
         callbacks[cbName] = {
           async: cb.async,
           input: toJsonSchemas(cb.input),
-          output: schemaSerializer && cb.output ? schemaSerializer(cb.output) : undefined,
+          output: toJsonSchema(cb.output),
         };
       }
 
@@ -439,10 +488,24 @@ export function defineSchema<
       };
     }
 
-    return { version: 1, components: serializedComponents };
+    const serializedScreens: SerializedTailorKitSchema["screens"] = {};
+
+    for (const [path, screen] of Object.entries(schema.screens ?? {})) {
+      serializedScreens[path] = {
+        context: toJsonSchema(screen.context),
+      };
+    }
+
+    return {
+      version: 1,
+      components: serializedComponents,
+      defaultContext: toJsonSchema(schema.defaultContext),
+      screens: serializedScreens,
+    };
   };
 
   return {
+    screens: {} as TScreens,
     ...schema,
     serialize,
     $internal: { metadata: { components: resolvedComponents } },

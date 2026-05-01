@@ -48,6 +48,8 @@ const defaultBlockedElements = new Set([
   "title",
 ]);
 
+const slotElementName = "tailorkit-slot";
+const remoteComponentErrorProp = "__tailorkitError";
 const blockedProps = new Set(["dangerouslysetinnerhtml", "innerHTML", "v-html", "srcdoc", "style"]);
 const urlProps = new Set([
   "action",
@@ -330,9 +332,21 @@ export const createReactHostRenderer = (
       : new Set(options.blockedElements);
 
   return {
-    renderElement(node, children) {
+    renderElement(node, children, slots) {
       const elementName = node.type.toLowerCase();
       const componentName = getRemoteComponentName(node.type);
+
+      if (elementName === slotElementName) {
+        const owner = typeof node.props.owner === "string" ? node.props.owner : "its owner";
+        return createRemoteRenderError(
+          createElement,
+          `<${owner}.${String(node.props.name ?? "Slot")}> must be a direct child of <${owner}>.`,
+        );
+      }
+
+      if (typeof node.props[remoteComponentErrorProp] === "string") {
+        return createRemoteRenderError(createElement, node.props[remoteComponentErrorProp]);
+      }
 
       if (componentName === null && blockedElements.has(elementName)) {
         return createRemoteRenderError(createElement, `Blocked remote element "${elementName}".`);
@@ -384,7 +398,7 @@ export const createReactHostRenderer = (
         );
       }
 
-      return createElement(component, props, ...children);
+      return createElement(component, { ...props, slots: slots ?? {} }, ...children);
     },
     renderFragment(children) {
       return createElement(fragment, null, ...children);

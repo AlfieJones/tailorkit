@@ -5,6 +5,8 @@ interface PackageVersionRequest {
 }
 
 export interface TemplatePackageVersions {
+  oxfmt: string;
+  oxlint: string;
   preact: string;
   typescript: string;
 }
@@ -24,6 +26,16 @@ const registryUrl = "https://registry.npmjs.org";
 const registryTimeoutMs = 5000;
 
 const templatePackageRequests = {
+  oxfmt: {
+    fallback: "^0.46.0",
+    matcher: "^0",
+    packageName: "oxfmt",
+  },
+  oxlint: {
+    fallback: "^1.61.0",
+    matcher: "^1",
+    packageName: "oxlint",
+  },
   preact: {
     fallback: "^10.29.1",
     matcher: "^10",
@@ -133,12 +145,16 @@ const resolvePackageVersion = async ({
 };
 
 export const resolveTemplatePackageVersions = async (): Promise<TemplatePackageVersions> => {
-  const [preact, typescript] = await Promise.all([
+  const [oxfmt, oxlint, preact, typescript] = await Promise.all([
+    resolvePackageVersion(templatePackageRequests.oxfmt),
+    resolvePackageVersion(templatePackageRequests.oxlint),
     resolvePackageVersion(templatePackageRequests.preact),
     resolvePackageVersion(templatePackageRequests.typescript),
   ]);
 
   return {
+    oxfmt,
+    oxlint,
     preact,
     typescript,
   };

@@ -1,8 +1,8 @@
 import { os } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/message-port";
 import type { SupportedMessagePort } from "@orpc/client/message-port";
-import { Fragment, options, render } from "preact";
-import type { ComponentChild, VNode } from "preact";
+import { Fragment, h, options, render } from "preact";
+import type { ComponentChild, ComponentChildren, VNode } from "preact";
 import type {
   RemoteElementNode,
   RemoteEventBinding,
@@ -15,10 +15,88 @@ import type {
   RemoteTextNode,
   WorkerRenderResult,
 } from "./protocol";
-import { getRemoteComponentName } from "./protocol";
+import { createRemoteComponentType, getRemoteComponentName } from "./protocol";
 import { createRemoteFunctionSerializer } from "./serializers";
 import type { RemoteCallable } from "./serializers";
-export { createRemoteComponentType as createRemoteComponent } from "./protocol";
+
+export const TAILORKIT_SLOT_TYPE = "tailorkit-slot";
+const remoteComponentSlotsProp = "__tailorkitSlots";
+const remoteComponentErrorProp = "__tailorkitError";
+
+export interface SlotProps {
+  children?: ComponentChildren;
+}
+
+type RemoteComponent<TProps> = (props: TProps) => ComponentChild;
+export type SlotComponent = (props: SlotProps) => ComponentChild;
+
+type RemoteSlotComponents<TSlots extends readonly string[]> = {
+  [TSlot in Exclude<TSlots[number], "default"> as Capitalize<TSlot>]: SlotComponent;
+};
+
+interface CreateRemoteComponentOptions<TSlots extends readonly string[]> {
+  slots?: TSlots;
+}
+
+const toSlotPropertyName = (name: string): string =>
+  `${name.slice(0, 1).toUpperCase()}${name.slice(1)}`;
+
+export const createSlotComponent = (owner: string, name: string): SlotComponent => {
+  const Slot = ({ children }: SlotProps) =>
+    h(
+      TAILORKIT_SLOT_TYPE,
+      {
+        name,
+        owner,
+      },
+      children,
+    );
+
+  return Slot;
+};
+
+export function createRemoteComponent<TProps extends object = Record<string, never>>(
+  name: string,
+): RemoteComponent<TProps>;
+export function createRemoteComponent<
+  TProps extends object = Record<string, never>,
+  const TSlots extends readonly string[] = readonly string[],
+>(
+  name: string,
+  options: CreateRemoteComponentOptions<TSlots>,
+): RemoteComponent<TProps & { children?: ComponentChildren }> & RemoteSlotComponents<TSlots>;
+export function createRemoteComponent<
+  TProps extends object = Record<string, never>,
+  const TSlots extends readonly string[] = readonly string[],
+>(
+  name: string,
+  options: CreateRemoteComponentOptions<TSlots> = {},
+): RemoteComponent<TProps & { children?: ComponentChildren }> &
+  Partial<RemoteSlotComponents<TSlots>> {
+  const componentType = createRemoteComponentType(name);
+  const Root: RemoteComponent<TProps & { children?: ComponentChildren }> = (props) => {
+    const { children, ...remoteProps } = props;
+    return h(
+      componentType,
+      {
+        ...remoteProps,
+        ...(options.slots && { [remoteComponentSlotsProp]: options.slots }),
+      },
+      children,
+    );
+  };
+
+  const slots: Record<string, SlotComponent> = {};
+  for (const slot of options.slots ?? []) {
+    if (slot === "default") {
+      continue;
+    }
+    slots[toSlotPropertyName(slot)] = createSlotComponent(name, slot);
+  }
+
+  return Object.assign(Root, slots) as RemoteComponent<TProps & { children?: ComponentChildren }> &
+    Partial<RemoteSlotComponents<TSlots>>;
+}
 
 type EventHandler = (event: RemoteHostEvent) => void;
 
@@ -256,9 +334,25 @@ const remoteDocument = {
 const readProps = (element: RemoteWorkerElement): RemoteProps => {
   const props: RemoteProps = {};
   for (const [key, value] of element.props) {
+    if (key === remoteComponentSlotsProp || key === remoteComponentErrorProp) {
+      continue;
+    }
     props[key] = value;
   }
   return props;
+};
+
+const readStringProp = (element: RemoteWorkerElement, name: string): string | null => {
+  const value = element.props.get(name);
+  return typeof value === "string" ? value : null;
+};
+
+const readStringArrayProp = (element: RemoteWorkerElement, name: string): string[] => {
+  const value = element.props.get(name);
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter((entry): entry is string => typeof entry === "string");
 };
 
 const readPreactListeners = (node: RemoteWorkerElement): ListenerRecord[] => {
@@ -286,6 +380,97 @@ const readPreactListeners = (node: RemoteWorkerElement): ListenerRecord[] => {
   return records;
 };
 
+interface SerializedElementChildren {
+  children: RemoteNode[];
+  error: string | null;
+  slots: Record<string, RemoteNode[]>;
+}
+
+const isWhitespaceTextNode = (node: RemoteWorkerNode): boolean =>
+  node.nodeType === 3 && node.data.trim().length === 0;
+
+const isOwnedSlotNode = (
+  node: RemoteWorkerNode,
+  componentName: string | null,
+): node is RemoteWorkerElement =>
+  componentName !== null &&
+  node.nodeType === 1 &&
+  node.localName === TAILORKIT_SLOT_TYPE &&
+  readStringProp(node, "owner") === componentName;
+
+const shouldIgnoreDefaultChild = (
+  node: RemoteWorkerNode,
+  componentName: string | null,
+  declaredSlots: readonly string[],
+  acceptsDefaultSlot: boolean,
+): boolean =>
+  componentName !== null &&
+  declaredSlots.length > 0 &&
+  !acceptsDefaultSlot &&
+  isWhitespaceTextNode(node);
+
+const appendSlotChildren = (
+  slots: Record<string, RemoteNode[]>,
+  name: string,
+  nodes: RemoteNode[],
+): void => {
+  slots[name] ??= [];
+  slots[name].push(...nodes);
+};
+
+const serializeElementChildren = (
+  node: RemoteWorkerElement,
+  componentName: string | null,
+  registerHandler: (handler: EventHandler) => string,
+): SerializedElementChildren => {
+  const declaredSlots =
+    componentName === null ? [] : readStringArrayProp(node, remoteComponentSlotsProp);
+  const declaredSlotSet = new Set(declaredSlots);
+  const acceptsDefaultSlot = declaredSlotSet.has("default");
+  const children: RemoteNode[] = [];
+  const slots: Record<string, RemoteNode[]> = {};
+  let error: string | null = null;
+
+  for (const child of node.childNodes) {
+    if (!isOwnedSlotNode(child, componentName)) {
+      if (shouldIgnoreDefaultChild(child, componentName, declaredSlots, acceptsDefaultSlot)) {
+        continue;
+      }
+
+      const serializedChild = serializeWorkerNode(child, registerHandler);
+      if (componentName !== null && acceptsDefaultSlot) {
+        appendSlotChildren(slots, "default", [serializedChild]);
+      } else {
+        children.push(serializedChild);
+      }
+      continue;
+    }
+
+    const slotName = readStringProp(child, "name");
+    if (slotName !== null && declaredSlotSet.has(slotName) && slotName !== "default") {
+      appendSlotChildren(
+        slots,
+        slotName,
+        child.childNodes.map((slotChild) => serializeWorkerNode(slotChild, registerHandler)),
+      );
+      continue;
+    }
+
+    error ??= `Unknown slot <${componentName}.${toSlotPropertyName(slotName ?? "Slot")}>.`;
+  }
+
+  if (
+    componentName !== null &&
+    declaredSlots.length > 0 &&
+    !acceptsDefaultSlot &&
+    children.length > 0
+  ) {
+    error ??= `<${componentName}> does not accept default children. Use one of its named slots instead.`;
+  }
+
+  return { children, error, slots };
+};
+
 const serializeWorkerNode = (
   node: RemoteWorkerNode,
   registerHandler: (handler: EventHandler) => string,
@@ -307,12 +492,19 @@ const serializeWorkerNode = (
     });
   }
 
+  const componentName = getRemoteComponentName(node.localName);
+  const { children, error, slots } = serializeElementChildren(node, componentName, registerHandler);
+
   return {
-    children: node.childNodes.map((child) => serializeWorkerNode(child, registerHandler)),
+    children,
     events: events.length > 0 ? events : undefined,
     id: node.id,
     kind: "element",
-    props: readProps(node),
+    props: {
+      ...readProps(node),
+      ...(error && { [remoteComponentErrorProp]: error }),
+    },
+    slots: Object.keys(slots).length > 0 ? slots : undefined,
     type: node.localName,
   } satisfies RemoteElementNode;
 };
@@ -504,4 +696,4 @@ export const exposePreactWorker = (
 };
 
 export { Fragment };
-export type { RemoteHostEvent };
+export type { ComponentChild, RemoteHostEvent };

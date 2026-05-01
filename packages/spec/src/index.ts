@@ -41,12 +41,29 @@ const SerializedComponent = z.object({
   nativeEvents: z.record(z.string(), SerializedNativeEvent),
 });
 
+const screenPathPattern =
+  /^\/(?:(?:[A-Za-z0-9_-]+|:[A-Za-z][A-Za-z0-9_-]*)(?:\/(?:[A-Za-z0-9_-]+|:[A-Za-z][A-Za-z0-9_-]*))*)?$/u;
+
+const ScreenPath = z.string().regex(screenPathPattern, {
+  message:
+    'Screen paths must be "/" or slash-separated literal and parameter segments like "/settings" or "/:org-slug/projects/:project-slug".',
+});
+
+const SerializedScreen = z
+  .object({
+    context: JsonSchema.optional(),
+  })
+  .strict();
+
 export const TailorKitSchemaSpec = z.object({
   version: z.literal(1),
   components: z.record(z.string(), SerializedComponent),
+  defaultContext: JsonSchema.optional(),
+  screens: z.record(ScreenPath, SerializedScreen).default({}),
 });
 
 export type SerializedCallbackDefinition = z.infer<typeof SerializedCallback>;
 export type SerializedNativeEventDefinition = z.infer<typeof SerializedNativeEvent>;
 export type SerializedComponentDefinition = z.infer<typeof SerializedComponent>;
+export type SerializedScreenDefinition = z.infer<typeof SerializedScreen>;
 export type SerializedTailorKitSchema = z.infer<typeof TailorKitSchemaSpec>;

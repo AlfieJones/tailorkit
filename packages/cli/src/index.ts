@@ -23,7 +23,9 @@ interface InternalGlobalOptions {
 
 interface InitCommandOptions {
   force?: boolean;
+  format?: boolean;
   install?: boolean;
+  lint?: boolean;
   name?: string;
   packageManager?: string;
 }
@@ -81,6 +83,8 @@ cli
   .command("init [directory]", "Create a new TailorKit sandbox app")
   .option("--name <name>", "Package name")
   .option("--package-manager <name>", "Package manager: bun, yarn, pnpm, or npm")
+  .option("--lint", "Add oxlint; use --no-lint to skip")
+  .option("--format", "Add oxfmt; use --no-format to skip")
   .option("--install", "Install dependencies after creating the app; use --no-install to skip")
   .option("--force", "Overwrite existing files")
   .action(
@@ -90,7 +94,9 @@ cli
         cwd: resolveCwd(options.cwd),
         directory,
         force: options.force,
+        formatting: options.format,
         install: options.install,
+        linting: options.lint,
         name: options.name,
         packageManager: options.packageManager,
         useWorkspaceDependencies: internalGlobalOptions.useWorkspaceDependencies,

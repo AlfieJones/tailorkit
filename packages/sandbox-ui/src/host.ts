@@ -9,12 +9,17 @@ import type {
   RemoteFunctionCallResult,
   RemoteHostEvent,
   RemoteNode,
+  RemoteSlots,
   WorkerRenderResult,
 } from "./protocol";
 import { createRemoteFunctionSerializer } from "./serializers";
 
 export interface HostRenderer<TRenderedNode> {
-  renderElement(node: RemoteElementNode, children: TRenderedNode[]): TRenderedNode;
+  renderElement(
+    node: RemoteElementNode,
+    children: TRenderedNode[],
+    slots: Record<string, TRenderedNode[]> | undefined,
+  ): TRenderedNode;
   renderFragment(children: TRenderedNode[]): TRenderedNode;
   renderText(text: string): TRenderedNode;
 }
@@ -69,6 +74,20 @@ export const createRemoteUiHost = <TRenderedNode>(
 ): RemoteUiHost<TRenderedNode> => {
   let snapshot: RemoteNode | null = null;
 
+  const renderSlots = (
+    slots: RemoteSlots | undefined,
+  ): Record<string, TRenderedNode[]> | undefined => {
+    if (slots === undefined) {
+      return undefined;
+    }
+
+    const renderedSlots: Record<string, TRenderedNode[]> = {};
+    for (const [name, children] of Object.entries(slots)) {
+      renderedSlots[name] = children.map(renderNode);
+    }
+    return renderedSlots;
+  };
+
   const renderNode = (node: RemoteNode): TRenderedNode => {
     if (node.kind === "text") {
       return renderer.renderText(node.text);
@@ -77,7 +96,7 @@ export const createRemoteUiHost = <TRenderedNode>(
     if (node.kind === "fragment") {
       return renderer.renderFragment(children);
     }
-    return renderer.renderElement(node, children);
+    return renderer.renderElement(node, children, renderSlots(node.slots));
   };
 
   return {

@@ -5,16 +5,21 @@ import { pathToFileURL } from "node:url";
 import { z } from "zod";
 
 const componentSourceSchema = z.object({
-  input: z.string().default("./tailorkit.components.json"),
-  output: z.string().default("./src/tailorkit.generated.tsx"),
+  input: z.string().default("./tailorkit.schema.json"),
+  output: z.string().default("./src/tailorkit.gen.ts"),
+});
+
+const clientConfigSchema = z.object({
+  entry: z.string().default("./src/client.ts"),
 });
 
 const tailorkitConfigSchema = z.object({
+  client: clientConfigSchema.optional(),
   components: componentSourceSchema.default({
-    input: "./tailorkit.components.json",
-    output: "./src/tailorkit.generated.tsx",
+    input: "./tailorkit.schema.json",
+    output: "./src/tailorkit.gen.ts",
   }),
-  entry: z.string().default("./src/main.tsx"),
+  entry: z.string().optional(),
   outDir: z.string().default(".tailorkit"),
   vite: z
     .object({
@@ -24,10 +29,11 @@ const tailorkitConfigSchema = z.object({
     .optional(),
 });
 
-export type TailorKitConfig = z.infer<typeof tailorkitConfigSchema>;
+export type TailorKitConfig = z.input<typeof tailorkitConfigSchema>;
+type ResolvedTailorKitConfig = z.output<typeof tailorkitConfigSchema>;
 
 export interface LoadedTailorKitConfig {
-  config: TailorKitConfig;
+  config: ResolvedTailorKitConfig;
   filepath: string;
   root: string;
 }

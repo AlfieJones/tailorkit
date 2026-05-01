@@ -1,6 +1,10 @@
 interface TemplateOptions {
+  formatting: boolean;
+  linting: boolean;
   packageName: string;
   packageVersions: {
+    oxfmt: string;
+    oxlint: string;
     preact: string;
     typescript: string;
   };
@@ -8,29 +12,60 @@ interface TemplateOptions {
 }
 
 export const createPackageJson = ({
+  formatting,
+  linting,
   packageName,
   packageVersions,
   useWorkspaceDependencies,
 }: TemplateOptions): string => {
   const tailorkitVersion = useWorkspaceDependencies ? "workspace:*" : "latest";
+  const codeQualityScripts: Record<string, string> = {};
+  const codeQualityDevDependencies: Record<string, string> = {};
+  const checkScripts: string[] = [];
+  const fixScripts: string[] = [];
+
+  if (linting) {
+    codeQualityScripts.lint = "oxlint";
+    codeQualityScripts["lint:fix"] = "oxlint --fix";
+    codeQualityDevDependencies.oxlint = packageVersions.oxlint;
+    checkScripts.push("bun run lint");
+    fixScripts.push("bun run lint:fix");
+  }
+
+  if (formatting) {
+    codeQualityScripts.format = "oxfmt --check";
+    codeQualityScripts["format:fix"] = "oxfmt --write";
+    codeQualityDevDependencies.oxfmt = packageVersions.oxfmt;
+    checkScripts.push("bun run format");
+    fixScripts.push("bun run format:fix");
+  }
+
+  if (checkScripts.length > 0) {
+    codeQualityScripts.check = checkScripts.join(" && ");
+    codeQualityScripts.fix = fixScripts.join(" && ");
+  }
 
   return `${JSON.stringify(
     {
       name: packageName,
       description: "A TailorKit.dev app that embeds in a host app to extend what it can do.",
       private: true,
+      imports: {
+        "#tailorkit": "./src/tailorkit.gen.ts",
+      },
       scripts: {
         build: "tailorkit build",
         dev: "tailorkit dev",
         generate: "tailorkit generate",
+        ...codeQualityScripts,
       },
       dependencies: {
         "@tailorkit/app": tailorkitVersion,
-        "@tailorkit/sandbox-ui": tailorkitVersion,
         preact: packageVersions.preact,
       },
       devDependencies: {
         "@tailorkit/cli": tailorkitVersion,
+        ...codeQualityDevDependencies,
         typescript: packageVersions.typescript,
       },
       type: "module",
@@ -42,66 +77,124 @@ export const createPackageJson = ({
 };
 
 export const createTailorKitConfig =
-  (): string => `import { defineTailorKitConfig } from "@tailorkit/app";
+  (): string => `import { defineTailorKitConfig } from "@tailorkit/app/config";
 
 export default defineTailorKitConfig({
-  components: {
-    input: "./tailorkit.components.json",
-    output: "./src/tailorkit.generated.tsx",
+  client: {
+    entry: "./src/client.ts",
   },
-  entry: "./src/main.tsx",
-  outDir: ".tailorkit",
+});
+`;
+
+export const createOxlintConfig = (): string => `import { defineConfig } from "oxlint";
+
+export default defineConfig({
+  ignorePatterns: ["src/tailorkit.gen.ts"],
+});
+`;
+
+export const createOxfmtConfig = (): string => `import { defineConfig } from "oxfmt";
+
+export default defineConfig({
+  ignorePatterns: ["src/tailorkit.gen.ts"],
 });
 `;
 
 export const createComponentSpec = (): string => `${JSON.stringify(
   {
+    version: 1,
     components: {
       Button: {
-        props: {
-          children: "ComponentChildren",
-          disabled: "boolean",
-          onClick: "() => void",
-          variant: '"default" | "secondary"',
+        callbacks: {
+          onClick: {},
         },
+        fieldKeys: ["disabled", "variant"],
+        nativeEvents: {},
+        slots: ["default"],
+      },
+      Card: {
+        callbacks: {},
+        fieldKeys: [],
+        nativeEvents: {},
+        slots: ["header", "content", "footer"],
       },
     },
+    defaultContext: {
+      additionalProperties: false,
+      properties: {},
+      type: "object",
+    },
+    screens: {},
   },
   null,
   2,
 )}
 `;
 
-export const createApp = (): string => `import { Button } from "./tailorkit.generated";
+export const createFallbackScreen =
+  (): string => `import type { DefaultScreenProps } from "#tailorkit";
 
-export const App = () => (
-  <section>
-    <h1>TailorKit sandbox</h1>
-    <Button variant="default">Hello from the sandbox</Button>
-  </section>
-);
+const FallbackScreen = (_props: DefaultScreenProps) => <>Hello World from the fallback screen</>;
+
+export default FallbackScreen;
 `;
 
-export const createMain =
-  (): string => `import { exposePreactWorker } from "@tailorkit/sandbox-ui/worker";
-import { h } from "preact";
-import { App } from "./app";
+export const createClient = (): string => `import { defineClient } from "@tailorkit/app";
+import FallbackScreen from "./views/fallback";
 
-exposePreactWorker(self as unknown as MessagePort, () => h(App, null));
+const client = defineClient({
+  fallbackScreen: FallbackScreen,
+});
+
+export default client;
 `;
 
-export const createGeneratedFile =
-  (): string => `import { createRemoteComponent } from "@tailorkit/sandbox-ui/worker";
-import type { ComponentChildren, FunctionalComponent } from "preact";
+export const createGeneratedFile = (): string => `/* eslint-disable */
 
-export interface ButtonProps {
-  children?: ComponentChildren;
-  disabled?: boolean;
-  onClick?: () => void;
-  variant?: "default" | "secondary";
+// This file was automatically generated by TailorKit.
+// Documentation: https://tailorkit.dev/docs
+
+// Do not make changes to this file directly, as it will be overwritten.
+// Exclude this file from linting and formatting to avoid checking generated code.
+
+import { createRemoteComponent } from "@tailorkit/app";
+
+export interface FallbackScreenProps {
+  context: Record<string, never>;
 }
 
-export const Button = createRemoteComponent("Button") as unknown as FunctionalComponent<ButtonProps>;
+export interface ScreenPropsByPath {
+}
+
+declare module "@tailorkit/app" {
+  interface TailorKitFallbackScreenProps {
+    context: Record<string, never>;
+  }
+  interface TailorKitScreens extends ScreenPropsByPath {}
+}
+
+export type DefaultScreenProps = FallbackScreenProps;
+export type ScreenPath = keyof ScreenPropsByPath & string;
+export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
+
+export interface ButtonProps {
+  disabled?: unknown;
+  variant?: unknown;
+  onClick?: () => void;
+}
+
+export const Button = createRemoteComponent<ButtonProps, readonly ["default"]>("Button", {
+  slots: ["default"] as const,
+});
+
+export interface CardProps {}
+
+export const Card = createRemoteComponent<
+  CardProps,
+  readonly ["header", "content", "footer"]
+>("Card", {
+  slots: ["header", "content", "footer"] as const,
+});
 `;
 
 export const createTsconfig = (): string => `${JSON.stringify(
@@ -118,7 +211,7 @@ export const createTsconfig = (): string => `${JSON.stringify(
       noEmit: true,
       strict: true,
       target: "ESNext",
-      types: ["vite/client"],
+      types: ["@tailorkit/app/client"],
       verbatimModuleSyntax: true,
     },
     include: ["src", "tailorkit.config.ts"],
