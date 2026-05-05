@@ -7,27 +7,10 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { ReactNode } from "react";
-import type { HostController } from "@tailorkit/sandbox-ui/host";
-import type { RemoteElementNode } from "@tailorkit/sandbox-ui/protocol";
-import { getRemoteComponentName } from "@tailorkit/sandbox-ui/protocol";
-import type { NodeStore } from "./node-store";
-import type { RemoteCallbackDefinitions } from "./render-utils";
-import {
-  createHostEvent,
-  hydrateProps,
-  sanitizeProps,
-  toReactEventName,
-  toReactProps,
-} from "./render-utils";
-import { RemoteUIContext } from "./ui-context";
-
-export interface RemoteViewContext {
-  callbackDefinitions?: RemoteCallbackDefinitions;
-  components: Record<string, unknown>;
-  controller: { current: HostController | null };
-  onEventError?: (error: unknown) => void;
-  store: NodeStore;
-}
+import type { RemoteElementNode } from "@tailorkit/sandbox/protocol";
+import { RemoteUIContext } from "./remote-context";
+import type { RemoteViewContext } from "./remote-context";
+import { sanitizeProps, toReactEventName, toReactProps } from "./render-utils";
 
 const defaultBlockedElements = new Set([
   "applet",
@@ -50,9 +33,6 @@ const defaultBlockedElements = new Set([
   "svg",
   "title",
 ]);
-
-const slotElementName = "tailorkit-slot";
-const remoteComponentErrorProp = "__tailorkitError";
 
 const renderError = (message: string): ReactNode =>
   createElement(
@@ -81,78 +61,68 @@ const RemoteElementView = memo(function RemoteElementView({
   ctx,
   node,
 }: RemoteElementViewProps): ReactNode {
-  const { controller, components, callbackDefinitions, onEventError } = ctx;
+  const { dispatch, components } = ctx;
 
   const children = node.children.map((child) => <RemoteView key={child.id} nodeId={child.id} />);
 
-  const renderedSlots = node.slots
-    ? Object.fromEntries(
-        Object.entries(node.slots).map(([name, slotNodes]) => [
-          name,
-          slotNodes.map((sn) => <RemoteView key={sn.id} nodeId={sn.id} />),
-        ]),
-      )
-    : undefined;
-
   const elementName = node.type.toLowerCase();
-  const componentName = getRemoteComponentName(node.type);
+  const isCustomComponent = elementName.includes("-") || elementName in components;
+  const component = components[node.type];
 
-  if (elementName === slotElementName) {
-    const owner = typeof node.props.owner === "string" ? node.props.owner : "its owner";
-    return renderError(
-      `<${owner}.${String(node.props.name ?? "Slot")}> must be a direct child of <${owner}>.`,
-    );
-  }
-
-  if (typeof node.props[remoteComponentErrorProp] === "string") {
-    return renderError(node.props[remoteComponentErrorProp] as string);
-  }
-
-  if (componentName === null && defaultBlockedElements.has(elementName)) {
+  if (component === undefined && defaultBlockedElements.has(elementName)) {
     return renderError(`Blocked remote element "${elementName}".`);
   }
 
-  const sanitized = sanitizeProps(
-    { ...node.props, key: node.key ?? node.id },
-    { allowFunctionRefs: componentName !== null },
-  );
-  if (sanitized.error !== null) {
-    return renderError(sanitized.error);
+  // Native elements: sanitize props and block dangerous values
+  if (component === undefined) {
+    const sanitized = sanitizeProps(node.props);
+    if (sanitized.error !== null) {
+      return renderError(sanitized.error);
+    }
+
+    const props: Record<string, unknown> = { ...toReactProps(sanitized.props) };
+
+    for (const binding of node.events ?? []) {
+      props[toReactEventName(binding.event)] = (event?: Event) => {
+        const target = event?.target as HTMLInputElement | null | undefined;
+        dispatch({
+          data: {
+            checked: target?.checked,
+            key: event && "key" in event ? String(event.key) : undefined,
+            nodeId: node.id,
+            type: binding.event,
+            value: target?.value,
+          },
+          type: "dispatchEvent",
+        });
+      };
+    }
+
+    return createElement(node.type, props, ...children);
   }
 
-  const ctrl = controller.current;
-  if (ctrl === null) {
-    return null;
-  }
-
-  const props =
-    componentName === null
-      ? sanitized.props
-      : hydrateProps(sanitized.props, callbackDefinitions?.[componentName], ctrl, onEventError);
+  // Custom components: pass props through as-is (data only, no dangerous values in sandbox)
+  const props: Record<string, unknown> = { ...node.props };
 
   for (const binding of node.events ?? []) {
-    props[toReactEventName(binding.event)] = (event: Event) => {
-      void (async () => {
-        try {
-          await ctrl.dispatchEvent(binding, createHostEvent(node, binding.event, event));
-        } catch (error) {
-          onEventError?.(error);
-        }
-      })();
+    props[toReactEventName(binding.event)] = (event?: Event) => {
+      const target = event?.target as HTMLInputElement | null | undefined;
+      dispatch({
+        data: {
+          checked: target?.checked,
+          key: event && "key" in event ? String(event.key) : undefined,
+          nodeId: node.id,
+          type: binding.event,
+          value: target?.value,
+        },
+        type: "dispatchEvent",
+      });
     };
   }
 
-  if (componentName === null) {
-    return createElement(node.type, toReactProps(props), ...children);
-  }
-
-  const component = components[componentName];
-  if (component === undefined) {
-    return renderError(`Missing remote component "${componentName}".`);
-  }
-
+  void isCustomComponent;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return createElement(component as any, { ...props, slots: renderedSlots ?? {} }, ...children);
+  return createElement(component as any, props, ...children);
 });
 
 interface RemoteViewProps {

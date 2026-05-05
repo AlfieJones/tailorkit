@@ -1,9 +1,7 @@
-import { createContext, useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
-import type { RemoteViewContext } from "./remote-view";
+import type { RemoteViewContext } from "./remote-context";
 import { RemoteView } from "./remote-view";
-
-export const RemoteUIContext = createContext<RemoteViewContext | null>(null);
 
 interface UIRootProps {
   store: RemoteViewContext["store"];

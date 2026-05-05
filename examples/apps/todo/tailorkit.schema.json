@@ -5,21 +5,58 @@
       "callbacks": {
         "onClick": {}
       },
-      "fieldKeys": ["disabled", "variant"],
-      "nativeEvents": {},
+      "fields": {
+        "additionalProperties": false,
+        "properties": {
+          "disabled": {},
+          "variant": {}
+        },
+        "type": "object"
+      },
       "slots": ["default"]
     },
     "Card": {
       "callbacks": {},
-      "fieldKeys": [],
-      "nativeEvents": {},
+      "fields": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
       "slots": ["header", "content", "footer"]
     }
   },
-  "defaultContext": {
-    "additionalProperties": false,
-    "properties": {},
-    "type": "object"
-  },
-  "screens": {}
+  "screens": {
+    "home": {
+      "context": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": ["title"],
+            "type": "object"
+          },
+          "user": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": ["id"],
+            "type": "object"
+          }
+        },
+        "required": ["page", "user"],
+        "type": "object"
+      }
+    }
+  }
 }

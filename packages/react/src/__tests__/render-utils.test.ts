@@ -29,64 +29,44 @@ describe("toReactProps", () => {
 
 describe("sanitizeProps", () => {
   it("passes safe props through", () => {
-    const result = sanitizeProps({ id: "foo", "data-x": "1" }, { allowFunctionRefs: false });
+    const result = sanitizeProps({ id: "foo", "data-x": "1" });
     expect(result.error).toBeNull();
     expect(result.props).toEqual({ id: "foo", "data-x": "1" });
   });
 
   it("blocks dangerouslySetInnerHTML", () => {
-    const result = sanitizeProps(
-      { dangerouslySetInnerHTML: "<script>" },
-      { allowFunctionRefs: false },
-    );
+    const result = sanitizeProps({ dangerouslySetInnerHTML: "<script>" });
     expect(result.error).toMatch(/Blocked remote prop/);
   });
 
   it("blocks style prop", () => {
-    const result = sanitizeProps({ style: "color:red" }, { allowFunctionRefs: false });
+    const result = sanitizeProps({ style: "color:red" });
     expect(result.error).toMatch(/Blocked remote prop/);
   });
 
-  it("blocks on* event props when allowFunctionRefs is false", () => {
-    const result = sanitizeProps({ onClick: "foo" }, { allowFunctionRefs: false });
+  it("blocks on* event props", () => {
+    const result = sanitizeProps({ onClick: "foo" });
     expect(result.error).toMatch(/Blocked remote prop/);
-  });
-
-  it("allows on* event props when allowFunctionRefs is true", () => {
-    const result = sanitizeProps({ onClick: "foo" }, { allowFunctionRefs: true });
-    expect(result.error).toBeNull();
   });
 
   it("blocks javascript: URLs in href", () => {
-    const result = sanitizeProps({ href: "javascript:alert(1)" }, { allowFunctionRefs: false });
+    const result = sanitizeProps({ href: `java${"script"}:alert(1)` });
     expect(result.error).toMatch(/unsafe.*URL/);
   });
 
   it("blocks data: URLs", () => {
-    const result = sanitizeProps(
-      { src: "data:text/html,<h1>x</h1>" },
-      { allowFunctionRefs: false },
-    );
+    const result = sanitizeProps({ src: "data:text/html,<h1>x</h1>" });
     expect(result.error).toMatch(/unsafe.*URL/);
   });
 
-  it("blocks remote function refs when allowFunctionRefs is false", () => {
-    const ref = { kind: "function", handlerId: "h1" };
-    const result = sanitizeProps({ callback: ref }, { allowFunctionRefs: false });
-    expect(result.error).toMatch(/function/);
-  });
-
   it("adds noopener noreferrer when target is _blank", () => {
-    const result = sanitizeProps({ target: "_blank" }, { allowFunctionRefs: false });
+    const result = sanitizeProps({ target: "_blank" });
     expect(result.error).toBeNull();
     expect(result.props.rel).toBe("noopener noreferrer");
   });
 
   it("appends to existing rel when target is _blank", () => {
-    const result = sanitizeProps(
-      { target: "_blank", rel: "nofollow" },
-      { allowFunctionRefs: false },
-    );
+    const result = sanitizeProps({ target: "_blank", rel: "nofollow" });
     expect(result.props.rel).toBe("nofollow noopener noreferrer");
   });
 });

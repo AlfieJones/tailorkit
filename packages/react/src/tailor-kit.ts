@@ -3,9 +3,9 @@ import type {
   ComponentDefinition,
   ComponentProps,
   ComponentSlots,
+  ScreenDefinition,
   TailorKitSchema,
 } from "@tailorkit/core/schema";
-import type { RemoteCallbackDefinition, RemoteCallbackDefinitions } from "./render-utils";
 import { createUseRemoteUI } from "./use-remote-ui";
 import type { UseRemoteUIOptions, UseRemoteUIResult } from "./use-remote-ui";
 
@@ -18,45 +18,46 @@ type ComponentRenderers<TComponents extends Record<string, ComponentDefinition>>
   [TName in keyof TComponents]?: ComponentRenderer<TComponents[TName]>;
 };
 
-export interface TailorKitInstance<TComponents extends Record<string, ComponentDefinition>> {
+const componentTagPrefix = "tailorkit-";
+
+const toComponentTagName = (name: string): string =>
+  `${componentTagPrefix}${name
+    .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replaceAll(/[\s_]+/g, "-")
+    .toLowerCase()}`;
+
+export interface TailorKitInstance<
+  TComponents extends Record<string, ComponentDefinition>,
+  TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+> {
+  schema: TailorKitSchema<TComponents, TScreens>;
   useRemoteUI: (options: UseRemoteUIOptions) => UseRemoteUIResult;
-  schema: TailorKitSchema<TComponents>;
 }
 
-export function tailorKit<TComponents extends Record<string, ComponentDefinition>>(
-  schema: TailorKitSchema<TComponents>,
+export function tailorKit<
+  TComponents extends Record<string, ComponentDefinition>,
+  TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+>(
+  schema: TailorKitSchema<TComponents, TScreens>,
   options: { components?: ComponentRenderers<TComponents> } = {},
-): TailorKitInstance<TComponents> {
-  // Derive callback definitions from schema for automatic validation
-  const callbackDefinitions: RemoteCallbackDefinitions = {};
-  for (const [componentName, metadata] of Object.entries(schema.$internal.components)) {
-    const defs: Record<string, RemoteCallbackDefinition | undefined> = {};
-    for (const [cbName, cb] of Object.entries(metadata.callbacks)) {
-      if (cb !== undefined) {
-        defs[cbName] = { input: cb.input, output: cb.output };
-      }
-    }
-    callbackDefinitions[componentName] = defs;
-  }
-
-  // Wrap each component renderer so it receives { props, slots } and returns ReactNode.
-  // The raw remote component receives props directly including a `slots` key.
+): TailorKitInstance<TComponents, TScreens> {
   const wrappedComponents: Record<string, unknown> = {};
+
   for (const [name, renderer] of Object.entries(options.components ?? {})) {
     if (renderer) {
-      wrappedComponents[name] = function TailorKitComponent({
-        slots,
-        ...rest
-      }: Record<string, unknown>) {
+      const TailorKitComponent = function TailorKitComponent({
+        children,
+        ...props
+      }: Record<string, unknown> & { children?: ReactNode }) {
         return (renderer as ComponentRenderer<ComponentDefinition>)({
-          props: rest as ComponentProps<ComponentDefinition>,
-          slots: (slots ?? {}) as ComponentSlots<ComponentDefinition>,
+          props: props as ComponentProps<ComponentDefinition>,
+          slots: { default: children } as ComponentSlots<ComponentDefinition>,
         });
       };
+      wrappedComponents[name] = TailorKitComponent;
+      wrappedComponents[toComponentTagName(name)] = TailorKitComponent;
     }
   }
 
-  const useRemoteUI = createUseRemoteUI(wrappedComponents, callbackDefinitions);
-
-  return { schema, useRemoteUI };
+  return { schema, useRemoteUI: createUseRemoteUI(wrappedComponents) };
 }

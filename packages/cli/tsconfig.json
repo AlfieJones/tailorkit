@@ -4,5 +4,5 @@
     "strictNullChecks": true,
     "types": ["node"]
   },
-  "include": ["src", "../cli/src/liquid.d.ts"]
+  "include": ["src"]
 }

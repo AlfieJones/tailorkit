@@ -1,12 +1,12 @@
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { tailorKit } from "tailorkit/react";
-import { defineSchema } from "tailorkit";
+import { component, defineSchema, screen } from "tailorkit";
 import { z } from "zod";
 
 export const schema = defineSchema({
   components: {
-    Button: {
+    Button: component({
       fields: z.object({
         variant: z.enum(["primary", "secondary"]),
       }),
@@ -14,7 +14,20 @@ export const schema = defineSchema({
         onClick: {},
       },
       slots: ["default"],
-    },
+    }),
+  },
+  screens: {
+    home: screen({
+      context: z.object({
+        page: z.object({
+          title: z.string(),
+        }),
+        user: z.object({
+          id: z.string(),
+          name: z.string().optional(),
+        }),
+      }),
+    }),
   },
 });
 

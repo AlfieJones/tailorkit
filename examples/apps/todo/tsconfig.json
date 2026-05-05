@@ -5,13 +5,13 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "lib": ["ESNext", "DOM", "WebWorker"],
+    "lib": ["ESNext", "DOM"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
     "strict": true,
     "target": "ESNext",
-    "types": ["@tailorkit/app/client"],
+    "types": ["node"],
     "verbatimModuleSyntax": true
   },
   "include": ["src", "tailorkit.config.ts"]

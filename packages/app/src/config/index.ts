@@ -1,1 +1,1 @@
-export { defineConfig, type TailorKitConfig } from "./config";
+export { defineConfig, defineTailorKitConfig, type TailorKitConfig } from "./config";

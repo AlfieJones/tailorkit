@@ -1,6 +1,10 @@
-import { createClient } from "@tailorkit/app/client";
-import FallbackScreen from "./views/fallback";
+import { createClient } from "@tailorkit/app";
+import HomeScreen from "./screens/home";
 
-export default createClient({
-  fallbackScreen: FallbackScreen,
+const client = createClient({
+  screens: {
+    home: HomeScreen,
+  },
 });
+
+export default client;

@@ -8,21 +8,24 @@
 
 import { createRemoteComponent } from "@tailorkit/app";
 
-export interface FallbackScreenProps {
-  context: Record<string, never>;
-}
-
 export interface ScreenPropsByPath {
+  home: {
+    context: {
+      page: {
+        title: string;
+      };
+      user: {
+        id: string;
+        name?: string;
+      };
+    };
+  };
 }
 
 declare module "@tailorkit/app" {
-  interface TailorKitFallbackScreenProps {
-    context: Record<string, never>;
-  }
   interface TailorKitScreens extends ScreenPropsByPath {}
 }
 
-export type DefaultScreenProps = FallbackScreenProps;
 export type ScreenPath = keyof ScreenPropsByPath & string;
 export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
 

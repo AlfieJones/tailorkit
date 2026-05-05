@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@tailorkit/react": "workspace:*",
-    "@tailorkit/sandbox-ui": "workspace:*",
+    "@tailorkit/sandbox": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-router": "latest",

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "bin": {
-    "tailorkit": "./dist/cli/index.js"
+    "tailorkit": "./dist/cli.js"
   },
   "type": "module",
   "exports": {
@@ -11,15 +11,13 @@
     "./react": "./src/react.ts"
   },
   "scripts": {
-    "build": "bun build ./src/cli/index.ts ./src/index.ts --outdir ./dist --target node --minify",
+    "build": "bun build ./src/cli.ts ./src/index.ts ./src/react.ts --outdir ./dist --target node --minify",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@clack/prompts": "^1.2.0",
+    "@tailorkit/cli": "workspace:*",
     "@tailorkit/core": "workspace:*",
-    "@tailorkit/react": "workspace:*",
-    "cac": "^6.7.14",
-    "picocolors": "^1.1.1"
+    "@tailorkit/react": "workspace:*"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",

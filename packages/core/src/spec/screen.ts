@@ -1,15 +1,13 @@
 import { z } from "zod";
 import { JsonSchema } from "./json-schema";
 
-const screenPathPattern =
-  /^\/(?:(?:[A-Za-z0-9_-]+|:[A-Za-z][A-Za-z0-9_-]*)(?:\/(?:[A-Za-z0-9_-]+|:[A-Za-z][A-Za-z0-9_-]*))*)?$/u;
+const screenKeyPattern = /^[A-Za-z][A-Za-z0-9_-]*$/u;
 
-const ScreenPath = z.string().regex(screenPathPattern, {
-  message:
-    'Screen paths must be "/" or slash-separated literal and parameter segments like "/settings" or "/:org-slug/projects/:project-slug".',
+const ScreenKey = z.string().regex(screenKeyPattern, {
+  message: 'Screen keys must start with a letter and contain only letters, numbers, "_", or "-".',
 });
 
-type ScreenPath = z.infer<typeof ScreenPath>;
+type ScreenKey = z.infer<typeof ScreenKey>;
 
 const SerializedScreen = z
   .object({
@@ -17,4 +15,4 @@ const SerializedScreen = z
   })
   .strict();
 
-export const screenRecord = z.record(ScreenPath, SerializedScreen);
+export const screenRecord = z.record(ScreenKey, SerializedScreen);

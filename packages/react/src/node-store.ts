@@ -1,18 +1,8 @@
-import type { RemoteElementNode, RemoteNode } from "@tailorkit/sandbox-ui/protocol";
+import type { RemoteNode } from "@tailorkit/sandbox/protocol";
 
 type Listener = () => void;
 
 const childIds = (children: RemoteNode[]): string => children.map((c) => c.id).join(",");
-
-const slotIds = (slots: RemoteElementNode["slots"]): string => {
-  if (!slots) {
-    return "";
-  }
-  return Object.entries(slots)
-    .toSorted(([a]: [string, RemoteNode[]], [b]: [string, RemoteNode[]]) => a.localeCompare(b))
-    .map(([name, nodes]: [string, RemoteNode[]]) => `${name}:${nodes.map((n) => n.id).join(",")}`)
-    .join("|");
-};
 
 const nodeSignature = (node: RemoteNode): string => {
   if (node.kind === "text") {
@@ -21,10 +11,12 @@ const nodeSignature = (node: RemoteNode): string => {
   if (node.kind === "fragment") {
     return `frag:${childIds(node.children)}`;
   }
-  // For elements: type + key + child IDs + slot IDs + serialized props + event handler IDs
+  // For elements: type + child IDs + serialized props + event bindings
   const propsStr = JSON.stringify(node.props);
-  const eventsStr = (node.events ?? []).map((e) => `${e.event}:${e.handlerId}`).join(",");
-  return `elem:${node.type}|${String(node.key ?? "")}|${childIds(node.children)}|${slotIds(node.slots)}|${propsStr}|${eventsStr}`;
+  const eventsStr = (node.events ?? [])
+    .map((e) => `${e.event}:${String(e.capture ?? false)}`)
+    .join(",");
+  return `elem:${node.type}|${childIds(node.children)}|${propsStr}|${eventsStr}`;
 };
 
 const flattenTree = (node: RemoteNode, out: Map<string, RemoteNode>): void => {
@@ -34,13 +26,6 @@ const flattenTree = (node: RemoteNode, out: Map<string, RemoteNode>): void => {
   }
   for (const child of node.children) {
     flattenTree(child, out);
-  }
-  if (node.kind === "element" && node.slots) {
-    for (const slotNodes of Object.values(node.slots)) {
-      for (const child of slotNodes) {
-        flattenTree(child, out);
-      }
-    }
   }
 };
 
@@ -65,7 +50,6 @@ export class NodeStore {
       }
     }
 
-    // Remove stale entries
     for (const id of this.signatures.keys()) {
       if (!next.has(id)) {
         this.signatures.delete(id);
@@ -109,8 +93,8 @@ export class NodeStore {
     }
     subs.add(listener);
     return () => {
-      subs!.delete(listener);
-      if (subs!.size === 0) {
+      subs.delete(listener);
+      if (subs.size === 0) {
         this.nodeListeners.delete(id);
       }
     };

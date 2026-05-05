@@ -15,14 +15,13 @@ const explorer = cosmiconfig("tailorkit", {
 
 export const loadTailorKitConfig = async (
   configPath: string | undefined,
-  cwd?: string,
+  cwd = process.cwd(),
 ): Promise<LoadedTailorKitConfig> => {
-  const searchFrom = cwd !== undefined ? path.resolve(cwd) : process.cwd();
-
+  const searchFrom = path.resolve(cwd);
   const result =
-    configPath !== undefined
-      ? await explorer.load(path.resolve(searchFrom, configPath))
-      : await explorer.search(searchFrom);
+    configPath === undefined
+      ? await explorer.search(searchFrom)
+      : await explorer.load(path.resolve(searchFrom, configPath));
 
   if (result === null) {
     throw new Error(`Could not find tailorkit config from ${searchFrom}.`);

@@ -69,6 +69,10 @@ export interface ComponentDefinition<
   slots?: TSlots;
 }
 
+export interface ScreenDefinition<TContext extends Schema = Schema> {
+  context: TContext;
+}
+
 export type ComponentProps<TComponent> =
   TComponent extends ComponentDefinition<
     infer TFields,
@@ -91,15 +95,26 @@ export interface ResolvedComponentMetadata {
   slots: readonly string[];
 }
 
+export interface ResolvedScreenMetadata {
+  context: Schema;
+}
+
 export type SchemaSerializer = (schema: Schema) => Record<string, unknown> | undefined;
 
-export interface TailorKitSchema<TComponents extends Record<string, ComponentDefinition>> {
+export interface TailorKitSchema<
+  TComponents extends Record<string, ComponentDefinition>,
+  TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+> {
   $internal: {
     components: {
       [TName in keyof TComponents]: ResolvedComponentMetadata;
     };
+    screens: {
+      [TName in keyof TScreens]: ResolvedScreenMetadata;
+    };
   };
   components: TComponents;
+  screens: TScreens;
   serialize(schemaSerializer?: SchemaSerializer): TailorKitSchemaSpec;
 }
 
@@ -168,6 +183,12 @@ export function component<
   return definition;
 }
 
+export function screen<const TContext extends Schema>(
+  definition: ScreenDefinition<TContext>,
+): ScreenDefinition<TContext> {
+  return definition;
+}
+
 const resolveComponentMetadata = (
   name: string,
   definition: ComponentDefinition,
@@ -185,15 +206,25 @@ const resolveComponentMetadata = (
 
 export function defineSchema<
   const TComponents extends Record<string, ComponentDefinition>,
->(schema: { components: TComponents }): TailorKitSchema<TComponents> {
-  const components = {} as TailorKitSchema<TComponents>["$internal"]["components"];
+  const TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+>(schema: {
+  components: TComponents;
+  screens?: TScreens;
+}): TailorKitSchema<TComponents, TScreens> {
+  const components = {} as TailorKitSchema<TComponents, TScreens>["$internal"]["components"];
+  const screens = {} as TailorKitSchema<TComponents, TScreens>["$internal"]["screens"];
 
   for (const [name, definition] of Object.entries(schema.components)) {
     components[name as keyof TComponents] = resolveComponentMetadata(name, definition);
   }
 
+  for (const [name, definition] of Object.entries(schema.screens ?? {})) {
+    screens[name as keyof TScreens] = { context: definition.context };
+  }
+
   const serialize = (schemaSerializer?: SchemaSerializer): TailorKitSchemaSpec => {
     const serializedComponents: TailorKitSchemaSpec["components"] = {};
+    const serializedScreens: TailorKitSchemaSpec["screens"] = {};
 
     for (const [name, metadata] of Object.entries(components)) {
       const callbacks: TailorKitSchemaSpec["components"][string]["callbacks"] = {};
@@ -226,16 +257,24 @@ export function defineSchema<
       };
     }
 
+    for (const [name, metadata] of Object.entries(screens)) {
+      serializedScreens[name] = {
+        context:
+          schemaSerializer === undefined ? undefined : schemaSerializer(metadata.context),
+      };
+    }
+
     return {
       components: serializedComponents,
-      screens: {},
+      screens: serializedScreens,
       version: 1,
     };
   };
 
   return {
     components: schema.components,
+    screens: (schema.screens ?? {}) as TScreens,
     serialize,
-    $internal: { components },
+    $internal: { components, screens },
   };
 }

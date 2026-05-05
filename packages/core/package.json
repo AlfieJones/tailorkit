@@ -4,10 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./remote": "./src/remote/index.ts",
     "./schema": "./src/schema/index.ts",
     "./spec": "./src/spec/index.ts",
-    "./generator": "./src/generator/index.ts",
     "./layout": "./src/layout/index.ts",
     "./layout/zod": "./src/layout/zod.ts",
     "./layout/valibot": "./src/layout/valibot.ts",
@@ -20,7 +18,6 @@
   },
   "dependencies": {
     "@standard-schema/spec": "^1.1.0",
-    "liquidjs": "^10.25.7",
     "zod": "catalog:"
   },
   "devDependencies": {

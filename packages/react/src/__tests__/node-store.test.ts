@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { NodeStore } from "../node-store";
-import type { RemoteNode } from "@tailorkit/sandbox-ui/protocol";
+import type { RemoteNode } from "@tailorkit/sandbox/protocol";
 
 const textNode = (id: string, text: string): RemoteNode => ({ id, kind: "text", text });
 
@@ -9,12 +9,15 @@ const elemNode = (
   type: string,
   props: Record<string, unknown> = {},
   children: RemoteNode[] = [],
-): RemoteNode => ({
-  children,
-  id,
+): RemoteNode => ({ children, id, kind: "element", props, type });
+
+const elementWithEvent = (capture: boolean): RemoteNode => ({
+  children: [],
+  events: [{ capture, event: "click" }],
+  id: "n",
   kind: "element",
-  props,
-  type,
+  props: {},
+  type: "button",
 });
 
 describe("NodeStore", () => {
@@ -36,21 +39,6 @@ describe("NodeStore", () => {
       store.setSnapshot(tree);
 
       expect(store.getNode("text")).toMatchObject({ text: "hi" });
-    });
-
-    it("flattens slot nodes", () => {
-      const store = new NodeStore();
-      const tree: RemoteNode = {
-        children: [],
-        id: "root",
-        kind: "element",
-        props: {},
-        slots: { header: [textNode("slot-text", "title")] },
-        type: "div",
-      };
-      store.setSnapshot(tree);
-
-      expect(store.getNode("slot-text")).toMatchObject({ text: "title" });
     });
 
     it("tracks the root id", () => {
@@ -110,8 +98,7 @@ describe("NodeStore", () => {
 
     it("does not notify parent when only a child's props change", () => {
       const store = new NodeStore();
-      const child = textNode("child", "initial");
-      store.setSnapshot(elemNode("root", "div", {}, [child]));
+      store.setSnapshot(elemNode("root", "div", {}, [textNode("child", "initial")]));
 
       const rootListener = vi.fn();
       store.subscribe("root", rootListener);
@@ -205,22 +192,14 @@ describe("NodeStore", () => {
       expect(listener).toHaveBeenCalledTimes(1);
     });
 
-    it("detects event handler changes", () => {
+    it("detects event binding changes", () => {
       const store = new NodeStore();
-      const withEvents = (handlerId: string): RemoteNode => ({
-        children: [],
-        events: [{ event: "click", handlerId }],
-        id: "n",
-        kind: "element",
-        props: {},
-        type: "button",
-      });
 
-      store.setSnapshot(withEvents("handler-1"));
+      store.setSnapshot(elementWithEvent(false));
       const listener = vi.fn();
       store.subscribe("n", listener);
 
-      store.setSnapshot(withEvents("handler-2"));
+      store.setSnapshot(elementWithEvent(true));
       expect(listener).toHaveBeenCalledTimes(1);
     });
   });

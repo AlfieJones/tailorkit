@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentType } from "react";
-import { createWorkerUiClient } from "@tailorkit/sandbox-ui/host";
-import type { HostController, WorkerUiClient } from "@tailorkit/sandbox-ui/host";
-import type { WorkerRenderResult, WorkerUiMountOptions } from "@tailorkit/sandbox-ui/protocol";
+import { createWorkerUiHost } from "@tailorkit/sandbox/host";
+import type { HostToWorkerPayload } from "@tailorkit/sandbox/protocol";
 import { NodeStore } from "./node-store";
-import type { RemoteCallbackDefinitions } from "./render-utils";
-import type { RemoteViewContext } from "./remote-view";
-import { RemoteUIContext, UIRoot } from "./ui-context";
-import { createElement } from "react";
+import { RemoteUIContext } from "./remote-context";
+import type { RemoteViewContext } from "./remote-context";
+import { UIRoot } from "./ui-context";
 
 export interface UseRemoteUIOptions {
-  mount?: WorkerUiMountOptions;
-  worker: () => Worker;
+  appUrl: string | URL;
+  createWorker?: (url: URL, options: WorkerOptions) => Worker;
+  props?: Record<string, unknown>;
+  workerUrl?: string | URL;
 }
 
 export interface UseRemoteUIResult {
@@ -22,10 +22,9 @@ export interface UseRemoteUIResult {
 
 export function createUseRemoteUI(
   components: Record<string, unknown>,
-  callbackDefinitions: RemoteCallbackDefinitions,
 ): (options: UseRemoteUIOptions) => UseRemoteUIResult {
   return function useRemoteUI(options: UseRemoteUIOptions): UseRemoteUIResult {
-    const { worker: createWorker, mount: mountOptions } = options;
+    const { appUrl, createWorker, props, workerUrl } = options;
 
     const storeRef = useRef<NodeStore | null>(null);
     if (storeRef.current === null) {
@@ -33,21 +32,18 @@ export function createUseRemoteUI(
     }
     const store = storeRef.current;
 
-    const controllerRef = useRef<HostController | null>(null);
+    // Stable wrapper so the context object never changes reference
+    const dispatchRef = useRef<((payload: HostToWorkerPayload) => void) | null>(null);
 
     const [status, setStatus] = useState<UseRemoteUIResult["status"]>("starting");
     const [error, setError] = useState<Error | null>(null);
 
-    // Build a stable context object whose mutable properties are always current.
-    // We use a ref so the UI component closure never becomes stale.
     const ctxRef = useRef<RemoteViewContext>({
-      callbackDefinitions,
       components,
-      controller: controllerRef,
+      dispatch: (payload) => dispatchRef.current?.(payload),
       store,
     });
 
-    // The UI component is created once and reads from ctxRef — no remounting on re-renders.
     const UI = useMemo(() => {
       const ctx = ctxRef.current;
       return function TailorKitUI() {
@@ -60,65 +56,35 @@ export function createUseRemoteUI(
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
-      let active = true;
-
-      const handleResult = (result: WorkerRenderResult): void => {
-        if (!active) {
-          return;
-        }
-        if (result.type === "error") {
+      const host = createWorkerUiHost(appUrl, {
+        createWorker,
+        onError: (err) => {
           setStatus("error");
-          setError(new Error(result.message));
-          return;
-        }
-        store.setSnapshot(result.tree);
-        setStatus("ready");
-        setError(null);
-      };
-
-      const worker = createWorker();
-      const client: WorkerUiClient = createWorkerUiClient(worker);
-
-      const controller: HostController = {
-        async callFunction(handlerId, args) {
-          const result = await client.callFunction({ handlerId, args });
-          handleResult(result.render);
-          return result;
+          setError(err);
         },
-        async dispatchEvent(binding, event) {
-          const result = await client.dispatchEvent({ handlerId: binding.handlerId, event });
-          handleResult(result);
-          return result;
-        },
-        mount: (opts) => client.mount(opts),
-        unmount: () => client.unmount(),
-      };
+        props,
+        workerUrl,
+      });
 
-      controllerRef.current = controller;
+      dispatchRef.current = (payload) => host.dispatch(payload);
 
-      void (async () => {
-        try {
-          handleResult(await controller.mount(mountOptions));
-        } catch (error) {
-          if (active) {
-            setStatus("error");
-            setError(error instanceof Error ? error : new Error(String(error)));
-          }
+      const unsubscribe = host.subscribe(() => {
+        const tree = host.getSnapshot();
+        if (tree !== null) {
+          store.setSnapshot(tree);
+          setStatus("ready");
+          setError(null);
         }
-      })();
+      });
+
+      host.mount();
 
       return () => {
-        active = false;
-        controllerRef.current = null;
-        void (async () => {
-          try {
-            await controller.unmount();
-          } finally {
-            worker.terminate();
-          }
-        })();
+        unsubscribe();
+        dispatchRef.current = null;
+        host.worker.terminate();
       };
-    }, [createWorker, mountOptions, store]);
+    }, [appUrl, createWorker, props, workerUrl, store]);
 
     return { UI, error, status };
   };

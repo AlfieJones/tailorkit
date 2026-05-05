@@ -6,20 +6,16 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client/index.ts",
-    "./worker": "./src/worker.ts",
     "./config": "./src/config/index.ts",
-    "./builder": "./src/builder/index.ts",
-    "./render": "./src/render/index.ts",
-    "./generator": "./src/generator/index.ts"
+    "./config/loader": "./src/config/loader.ts",
+    "./builder": "./src/builder/index.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@tailorkit/core": "workspace:*",
-    "@tailorkit/sandbox": "workspace:*",
     "cosmiconfig": "^9.0.1",
-    "liquidjs": "^10.25.7",
     "vite": "^8.0.10",
     "zod": "catalog:"
   },

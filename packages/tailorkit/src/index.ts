@@ -1,1 +1,1 @@
-export { defineSchema } from "@tailorkit/core/schema";
+export { component, defineSchema, screen } from "@tailorkit/core/schema";

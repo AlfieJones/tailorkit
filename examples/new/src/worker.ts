@@ -1,26 +1,35 @@
 import { h } from "preact";
-import { useState } from "preact/hooks";
-import { createRemoteComponent, exposePreactWorker } from "@tailorkit/sandbox-ui/worker";
+import { useEffect, useState } from "preact/hooks";
 
-const Button = createRemoteComponent<{
-  onClick?: () => void;
-  variant?: "primary" | "secondary";
-}>("Button", { slots: ["default"] });
+const buttonTagName = "tailorkit-button";
 
-function App() {
+export default function App() {
   const [count, setCount] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSeconds((value) => value + 1);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   return h(
-    Button,
-    {
-      variant: "primary",
-      onClick: () => {
-        setCount((c) => c + 1);
+    "section",
+    { "aria-label": "Worker timer demo" },
+    h(
+      buttonTagName,
+      {
+        onClick: () => {
+          setCount((c) => c + 1);
+        },
+        variant: "primary",
       },
-    },
-    `Clicked ${count} time${count === 1 ? "" : "s"}`,
+      `Clicked ${count} time${count === 1 ? "" : "s"}`,
+    ),
+    h("p", null, `Timer: ${seconds} second${seconds === 1 ? "" : "s"}`),
   );
 }
-
-// biome-ignore lint/suspicious/noExplicitAny: self is DedicatedWorkerGlobalScope which is message-port-compatible
-exposePreactWorker(self as any, () => h(App, null));

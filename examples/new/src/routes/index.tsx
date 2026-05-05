@@ -5,12 +5,9 @@ import { tk } from "#/lib/tailorkit";
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
-  const worker = useMemo(
-    () => () => new Worker(new URL("../worker.ts", import.meta.url), { type: "module" }),
-    [],
-  );
+  const appUrl = useMemo(() => new URL("http://127.0.0.1:4174/client.js"), []);
 
-  const { UI, status, error } = tk.useRemoteUI({ worker });
+  const { UI, status, error } = tk.useRemoteUI({ appUrl });
 
   return (
     <div className="p-8">
