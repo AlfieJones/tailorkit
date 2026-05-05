@@ -10,47 +10,7 @@ import type { ReactNode } from "react";
 import type { RemoteElementNode } from "@tailorkit/sandbox/protocol";
 import { RemoteUIContext } from "./remote-context";
 import type { RemoteViewContext } from "./remote-context";
-import { sanitizeProps, toReactEventName, toReactProps } from "./render-utils";
-
-const defaultBlockedElements = new Set([
-  "applet",
-  "base",
-  "body",
-  "embed",
-  "form",
-  "frame",
-  "frameset",
-  "head",
-  "html",
-  "iframe",
-  "link",
-  "math",
-  "meta",
-  "object",
-  "param",
-  "script",
-  "style",
-  "svg",
-  "title",
-]);
-
-const renderError = (message: string): ReactNode =>
-  createElement(
-    "pre",
-    {
-      role: "alert",
-      style: {
-        background: "#fff1f0",
-        border: "1px solid #ffccc7",
-        borderRadius: 6,
-        color: "#8a1f11",
-        margin: 0,
-        padding: 12,
-        whiteSpace: "pre-wrap",
-      },
-    },
-    message,
-  );
+import { toReactEventName, toReactProps } from "./render-utils";
 
 interface RemoteElementViewProps {
   ctx: RemoteViewContext;
@@ -65,22 +25,10 @@ const RemoteElementView = memo(function RemoteElementView({
 
   const children = node.children.map((child) => <RemoteView key={child.id} nodeId={child.id} />);
 
-  const elementName = node.type.toLowerCase();
-  const isCustomComponent = elementName.includes("-") || elementName in components;
   const component = components[node.type];
 
-  if (component === undefined && defaultBlockedElements.has(elementName)) {
-    return renderError(`Blocked remote element "${elementName}".`);
-  }
-
-  // Native elements: sanitize props and block dangerous values
   if (component === undefined) {
-    const sanitized = sanitizeProps(node.props);
-    if (sanitized.error !== null) {
-      return renderError(sanitized.error);
-    }
-
-    const props: Record<string, unknown> = { ...toReactProps(sanitized.props) };
+    const props: Record<string, unknown> = { ...toReactProps(node.props) };
 
     for (const binding of node.events ?? []) {
       props[toReactEventName(binding.event)] = (event?: Event) => {
@@ -101,7 +49,6 @@ const RemoteElementView = memo(function RemoteElementView({
     return createElement(node.type, props, ...children);
   }
 
-  // Custom components: pass props through as-is (data only, no dangerous values in sandbox)
   const props: Record<string, unknown> = { ...node.props };
 
   for (const binding of node.events ?? []) {
@@ -120,7 +67,6 @@ const RemoteElementView = memo(function RemoteElementView({
     };
   }
 
-  void isCustomComponent;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return createElement(component as any, props, ...children);
 });
