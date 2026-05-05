@@ -94,6 +94,7 @@ export const cloneElement = runtime.cloneElement;
 export const createContext = runtime.createContext;
 export const createElement = runtime.createElement;
 export const createRef = runtime.createRef;
+export const createVNode = runtime.createVNode;
 export const h = runtime.h;
 export const hydrate = runtime.hydrate;
 export const isValidElement = runtime.isValidElement;
