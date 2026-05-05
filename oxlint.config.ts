@@ -29,5 +29,6 @@ export default defineConfig({
     "no-named-as-default": "off",
     "prefer-ternary": "off",
     "prefer-await-to-then": "off",
+    "no-plusplus": "off",
   },
 });

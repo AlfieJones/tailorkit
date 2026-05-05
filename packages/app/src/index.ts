@@ -1,13 +1,14 @@
-import type { ComponentChild } from "@tailorkit/sandbox-ui/worker";
+import type { ComponentChild } from "./worker";
 
+export * from "./app";
 export {
+  Fragment,
+  TAILORKIT_SLOT_TYPE,
   createRemoteComponent,
   createSlotComponent,
   exposePreactWorker,
-  Fragment,
-  TAILORKIT_SLOT_TYPE,
 } from "./worker";
-export type { RemoteHostEvent } from "./worker";
+export type { ComponentChild, RemoteHostEvent, WorkerUiMountOptions } from "./worker";
 
 // oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
 export interface TailorKitScreens {}

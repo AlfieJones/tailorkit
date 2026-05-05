@@ -12,16 +12,17 @@
   "dependencies": {
     "@orpc/client": "catalog:",
     "@orpc/server": "catalog:",
-    "@standard-schema/spec": "^1.1.0",
-    "preact": "^10.29.1"
+    "@standard-schema/spec": "^1.1.0"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
     "@types/react": "catalog:",
+    "preact": "^10.29.1",
     "react": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
+    "preact": "catalog:",
     "react": "catalog:"
   }
 }

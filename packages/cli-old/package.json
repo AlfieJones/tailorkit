@@ -1,0 +1,31 @@
+{
+  "name": "@tailorkit/cli-old",
+  "version": "0.0.0",
+  "private": true,
+  "bin": {
+    "tailorkit": "./src/index.ts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test:init": "rm -rf .sandbox-test && bun src/index.ts init .sandbox-test --name sandbox-test --force"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.2.0",
+    "@tailorkit/app": "workspace:*",
+    "@tailorkit/spec": "workspace:*",
+    "cac": "^6.7.14",
+    "hono": "^4.10.7",
+    "picocolors": "^1.1.1",
+    "vite": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailorkit/config": "workspace:*",
+    "@types/bun": "^1.3.13",
+    "typescript": "catalog:"
+  }
+}

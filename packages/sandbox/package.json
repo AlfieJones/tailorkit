@@ -1,0 +1,47 @@
+{
+  "name": "@tailorkit/sandbox",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract/index.ts",
+    "./node": "./src/node.ts",
+    "./host": "./src/host/index.ts",
+    "./protocol": "./src/protocol.ts",
+    "./react": "./src/react.ts",
+    "./worker": "./src/worker.ts",
+    "./sanitise": "./src/sanitise/sanitise.ts",
+    "./native/*": "./src/native-attributes/*"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@happy-dom/global-registrator": "^20.9.0",
+    "@orpc/contract": "^1.14.0",
+    "@tailorkit/core": "workspace:*",
+    "happy-dom": "^20.0.10",
+    "picomatch": "^4.0.4",
+    "preact": "^10.29.1",
+    "vite": "^8.0.10",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailorkit/config": "workspace:*",
+    "@types/picomatch": "^3.0.0",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "^4.0.15"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  }
+}

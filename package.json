@@ -1,13 +1,11 @@
 {
-  "name": "tailorkit",
   "private": true,
   "workspaces": {
     "packages": [
       "apps/*",
       "examples/*",
       "examples/apps/*",
-      "packages/*",
-      "packages/cli"
+      "packages/*"
     ],
     "catalog": {
       "@ai-sdk/react": "^3.0.170",
@@ -59,7 +57,7 @@
     "services:down": "docker compose down",
     "check": "ultracite check",
     "fix": "ultracite fix",
-    "tailorkit": "bun packages/cli/src/index.ts --internal-workspace-deps"
+    "tailorkit": "bun packages/tailorkit/src/cli/index.ts"
   },
   "dependencies": {
     "@tailorkit/env": "workspace:*",

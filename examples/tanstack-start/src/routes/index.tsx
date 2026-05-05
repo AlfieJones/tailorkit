@@ -1,8 +1,8 @@
-import { useWorkerUi } from "@tailorkit/sandbox-ui/react";
+import { useWorkerUi } from "@tailorkit/sandbox/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
-import { handlerDefinitions, tailorClient } from "../components";
+import { callbackDefinitions, tailorClient } from "../components";
 import { getDefaultContext, getScreenContext, screenLabels, screenPathSchema } from "../schema";
 import type { ScreenPath } from "../schema";
 
@@ -11,8 +11,6 @@ export const Route = createFileRoute("/")({
 });
 
 const screens = screenPathSchema.options;
-
-const createWorker = () => new Worker("http://localhost:4174/worker.js", { type: "module" });
 
 function Home() {
   const [currentScreen, setCurrentScreen] = useState<ScreenPath>("/");
@@ -25,10 +23,10 @@ function Home() {
     [currentScreen],
   );
   const { error, node, revision, status } = useWorkerUi({
-    callbackDefinitions: handlerDefinitions,
+    callbackDefinitions,
     components: tailorClient.components,
     mount,
-    worker: createWorker,
+    url: "http://localhost:4174/worker.js",
   });
 
   return (

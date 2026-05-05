@@ -520,7 +520,22 @@ const serializeRoot = (
 });
 
 const installPreactWorkerDom = (): void => {
-  globalThis.document = remoteDocument as unknown as Document;
+  // Chrome: document is not defined in workers, own-property definition works.
+  // Firefox: document is a non-configurable getter on globalThis itself, so we
+  // fall back to patching the prototype getter instead. Each worker has its own
+  // isolated realm so this doesn't bleed into other workers.
+  try {
+    Object.defineProperty(globalThis, "document", {
+      configurable: true,
+      value: remoteDocument,
+      writable: true,
+    });
+  } catch {
+    Object.defineProperty(Object.getPrototypeOf(globalThis), "document", {
+      configurable: true,
+      get: () => remoteDocument,
+    });
+  }
 };
 
 export type WorkerPreactApp = (options: WorkerUiMountOptions) => ComponentChild;
@@ -599,7 +614,7 @@ export const createWorkerPreactRuntime = (app: WorkerPreactApp) => {
     }
     const result = await handler(...(args as never[]));
     return {
-      render: createSnapshot(),
+      render: rerender(),
       result,
     };
   };

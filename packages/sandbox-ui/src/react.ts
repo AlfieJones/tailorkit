@@ -15,7 +15,7 @@ interface UseWorkerUiOptions {
   callbackDefinitions?: RemoteCallbackDefinitions;
   components?: Record<string, unknown>;
   mount?: WorkerUiMountOptions;
-  worker: Worker | (() => Worker);
+  worker: () => Worker;
 }
 
 interface UseWorkerUiResult {
@@ -60,7 +60,8 @@ const toReactNode = (
 };
 
 export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
-  const { callbackDefinitions, components, mount: mountOptions, worker: workerOption } = options;
+  console.log("[tailorkit] useWorkerUi hook called", options);
+  const { callbackDefinitions, components, mount: mountOptions, worker: createWorker } = options;
   const [result, setResult] = useState<UseWorkerUiResult>({
     error: null,
     node: null,
@@ -70,7 +71,9 @@ export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
 
   useEffect(() => {
     let active = true;
-    const worker = typeof workerOption === "function" ? workerOption() : workerOption;
+    console.log("[tailorkit] useEffect firing, createWorker=", createWorker);
+    const worker = createWorker();
+    console.log("[tailorkit] worker created:", worker);
     const client: WorkerUiClient = createWorkerUiClient(worker);
     const remoteHostRef: { current: RemoteUiHost<unknown> | null } = {
       current: null,
@@ -129,8 +132,11 @@ export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
 
     const mount = async (): Promise<void> => {
       try {
+        console.log("[tailorkit] calling mount...");
         setRenderResult(await controller.mount(mountOptions));
+        console.log("[tailorkit] mount complete");
       } catch (error) {
+        console.error("[tailorkit] mount error:", error);
         setError(error);
       }
     };
@@ -147,9 +153,9 @@ export const useWorkerUi = (options: UseWorkerUiOptions): UseWorkerUiResult => {
         }
       })();
     };
-  }, [callbackDefinitions, components, mountOptions, workerOption]);
+  }, [callbackDefinitions, components, mountOptions, createWorker]);
 
   return result;
 };
 
-export type { WorkerUiMountOptions };
+export type { RemoteCallbackDefinitions, WorkerUiMountOptions };

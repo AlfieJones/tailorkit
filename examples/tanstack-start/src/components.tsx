@@ -29,7 +29,7 @@ export const tailorClient = createReactClient(schema, {
   },
 });
 
-export const handlerDefinitions = Object.fromEntries(
+export const callbackDefinitions = Object.fromEntries(
   Object.entries(schema.$internal.metadata.components).map(([name, metadata]) => [
     name,
     metadata.callbacks,

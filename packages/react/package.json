@@ -7,19 +7,25 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@tailorkit/adapter-core": "workspace:*",
-    "@tailorkit/sdk": "workspace:*"
+    "@standard-schema/spec": "^1.1.0",
+    "@tailorkit/core": "workspace:*",
+    "@tailorkit/sandbox-ui": "workspace:*"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
+    "@testing-library/react": "^16.3.0",
     "@types/react": "catalog:",
+    "happy-dom": "^17.6.3",
     "react": "catalog:",
-    "typescript": "catalog:"
+    "react-dom": "^19.2.3",
+    "typescript": "catalog:",
+    "vitest": "^4.0.15"
   },
   "peerDependencies": {
-    "react": "catalog:"
+    "react": ">=19"
   }
 }

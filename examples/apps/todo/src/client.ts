@@ -1,8 +1,6 @@
-import { defineClient } from "@tailorkit/app";
+import { createClient } from "@tailorkit/app/client";
 import FallbackScreen from "./views/fallback";
 
-const client = defineClient({
+export default createClient({
   fallbackScreen: FallbackScreen,
 });
-
-export default client;
