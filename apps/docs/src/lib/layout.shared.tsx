@@ -9,5 +9,8 @@ export function baseOptions(): BaseLayoutProps {
       // JSX supported
       title: appName,
     },
+    // searchToggle: {
+    //   enabled: true,
+    // },
   };
 }
