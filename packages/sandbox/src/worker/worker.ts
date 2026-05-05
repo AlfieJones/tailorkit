@@ -1,5 +1,9 @@
+import * as preactRuntime from "preact";
 import { h, render } from "preact";
 import type { ComponentType } from "preact";
+import * as preactHooks from "preact/hooks";
+import { version as preactVersion } from "preact/package.json";
+import { assertSupportedPreactVersion } from "../preact-version.js";
 import { setAnimationPostMessage, fireAnimationFrame } from "../worker-dom/animation.js";
 import { DomEvent } from "../worker-dom/event.js";
 import { createWorkerDOM } from "../worker-dom/index.js";
@@ -13,6 +17,18 @@ let flushQueued = false;
 let suppressPatches = false;
 const pendingPatches: RemotePatch[] = [];
 let loadedAppUrl: string | null = null;
+const sandboxRuntimeKey = "__tailorkitSandboxRuntime";
+const sandboxPreactModules = createSandboxPreactModules();
+
+assertSupportedPreactVersion(preactVersion, "sandbox Preact");
+
+Object.assign(globalThis, {
+  [sandboxRuntimeKey]: {
+    hooks: preactHooks,
+    packageJson: { version: preactVersion },
+    preact: preactRuntime,
+  },
+});
 
 function send(payload: WorkerToHostPayload): void {
   // WorkerGlobalScope.postMessage does not accept a targetOrigin argument.
@@ -30,8 +46,9 @@ function sendError(error: unknown): void {
 }
 
 async function loadApp(appUrl: string, props: Record<string, unknown> = {}): Promise<void> {
-  const module = (await import(/* @vite-ignore */ appUrl)) as {
-    default?: ComponentType<Record<string, unknown>>;
+  const moduleUrl = await createSandboxedAppModuleUrl(appUrl);
+  const module = (await import(/* @vite-ignore */ moduleUrl)) as {
+    default?: ComponentType<Record<string, unknown>> | TailorKitAppClient;
     mount?: (context: {
       document: typeof worker.document;
       props: Record<string, unknown>;
@@ -39,6 +56,7 @@ async function loadApp(appUrl: string, props: Record<string, unknown> = {}): Pro
     }) => unknown | Promise<unknown>;
   };
   loadedAppUrl = appUrl;
+  assertAppPreactVersion(module.default);
 
   if (typeof module.mount === "function") {
     await module.mount({ document: worker.document, props, root: worker.root });
@@ -47,7 +65,84 @@ async function loadApp(appUrl: string, props: Record<string, unknown> = {}): Pro
 
   if (typeof module.default === "function") {
     render(h(module.default, props), worker.root);
+    return;
   }
+
+  if (isTailorKitAppClient(module.default)) {
+    renderTailorKitClient(module.default, props);
+  }
+}
+
+async function createSandboxedAppModuleUrl(appUrl: string): Promise<string> {
+  const response = await fetch(appUrl);
+
+  if (!response.ok) {
+    throw new Error(`Unable to load TailorKit app client from ${appUrl}.`);
+  }
+
+  const source = await response.text();
+  return createModuleUrl(rewritePreactImports(source));
+}
+
+function createSandboxPreactModules(): Record<string, string> {
+  return {
+    preact: createModuleUrl(`
+const runtime = globalThis["${sandboxRuntimeKey}"].preact;
+export const Component = runtime.Component;
+export const Fragment = runtime.Fragment;
+export const cloneElement = runtime.cloneElement;
+export const createContext = runtime.createContext;
+export const createElement = runtime.createElement;
+export const createRef = runtime.createRef;
+export const h = runtime.h;
+export const hydrate = runtime.hydrate;
+export const isValidElement = runtime.isValidElement;
+export const options = runtime.options;
+export const render = runtime.render;
+export const toChildArray = runtime.toChildArray;
+export default runtime;
+`),
+    "preact/hooks": createModuleUrl(`
+const hooks = globalThis["${sandboxRuntimeKey}"].hooks;
+export const useCallback = hooks.useCallback;
+export const useContext = hooks.useContext;
+export const useDebugValue = hooks.useDebugValue;
+export const useEffect = hooks.useEffect;
+export const useErrorBoundary = hooks.useErrorBoundary;
+export const useId = hooks.useId;
+export const useImperativeHandle = hooks.useImperativeHandle;
+export const useLayoutEffect = hooks.useLayoutEffect;
+export const useMemo = hooks.useMemo;
+export const useReducer = hooks.useReducer;
+export const useRef = hooks.useRef;
+export const useState = hooks.useState;
+export default hooks;
+`),
+    "preact/package.json": createModuleUrl(`
+const packageJson = globalThis["${sandboxRuntimeKey}"].packageJson;
+export const version = packageJson.version;
+export default packageJson;
+`),
+  };
+}
+
+function rewritePreactImports(source: string): string {
+  return source.replaceAll(
+    /(from\s*["']|import\s*["'])(preact(?:\/hooks|\/package\.json)?)(["'])/g,
+    (match, prefix: string, specifier: string, suffix: string) => {
+      const moduleUrl = sandboxPreactModules[specifier];
+
+      if (moduleUrl === undefined) {
+        return match;
+      }
+
+      return `${prefix}${moduleUrl}${suffix}`;
+    },
+  );
+}
+
+function createModuleUrl(source: string): string {
+  return `data:text/javascript;charset=utf-8,${encodeURIComponent(source)}`;
 }
 
 function sendSnapshot(): void {
@@ -144,3 +239,62 @@ self.addEventListener("message", (event) => {
 });
 
 send({ type: "ready" });
+
+interface TailorKitAppClient {
+  $meta?: {
+    preactVersion?: unknown;
+  };
+  $runtime?: {
+    h?: typeof h;
+    render?: typeof render;
+  };
+  screens?: Record<string, ComponentType<Record<string, unknown>>>;
+}
+
+function assertAppPreactVersion(
+  appExport: ComponentType<Record<string, unknown>> | TailorKitAppClient | undefined,
+): void {
+  if (!isTailorKitAppClient(appExport)) {
+    return;
+  }
+
+  const preactVersion = appExport.$meta?.preactVersion;
+
+  if (typeof preactVersion !== "string") {
+    throw new TypeError("TailorKit app metadata is missing $meta.preactVersion.");
+  }
+
+  assertSupportedPreactVersion(preactVersion, "app Preact");
+}
+
+function isTailorKitAppClient(value: unknown): value is TailorKitAppClient {
+  return typeof value === "object" && value !== null && "$meta" in value;
+}
+
+function renderTailorKitClient(client: TailorKitAppClient, props: Record<string, unknown>): void {
+  const screens = client.screens;
+  if (!screens) {
+    throw new Error("TailorKit app client is missing screens.");
+  }
+
+  let requestedScreen = Object.keys(screens)[0];
+  if (typeof props.screen === "string") {
+    requestedScreen = props.screen;
+  } else if (typeof props.path === "string") {
+    requestedScreen = props.path;
+  }
+
+  if (!requestedScreen) {
+    throw new Error("TailorKit app client does not define any screens.");
+  }
+
+  const Screen = screens[requestedScreen];
+  if (Screen === undefined) {
+    throw new Error(`TailorKit app client does not define screen "${requestedScreen}".`);
+  }
+
+  const appH = client.$runtime?.h ?? h;
+  const appRender = client.$runtime?.render ?? render;
+
+  appRender(appH(Screen, props), worker.root);
+}

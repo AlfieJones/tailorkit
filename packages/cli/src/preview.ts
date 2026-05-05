@@ -89,7 +89,7 @@ export const runExperimentalPreview = async (options: PreviewOptions): Promise<v
     options.outDir ?? loaded.config.build?.outDir ?? ".tailorkit",
   );
   const host = options.host ?? "127.0.0.1";
-  const port = options.port ?? 4174;
+  const port = options.port ?? 4175;
 
   const watcher = await buildApp({
     configPath: options.configPath,

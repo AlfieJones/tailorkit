@@ -72,4 +72,44 @@ describe("worker runtime", () => {
       });
     });
   });
+
+  it("reports an error when the app metadata declares an unsupported Preact version", async () => {
+    vi.stubGlobal("self", {
+      addEventListener(type: string, handler: (event: MessageEvent<unknown>) => void) {
+        listeners.push({ handler, type });
+      },
+      postMessage(message: unknown) {
+        messages.push(message);
+      },
+    });
+    const appUrl = `data:text/javascript,${encodeURIComponent(`
+      export default {
+        $meta: {
+          preactVersion: "9.0.0"
+        },
+        screens: {}
+      };
+    `)}`;
+
+    await import("./worker.js");
+    emitWorkerMessage({
+      data: {
+        appUrl,
+      },
+      type: "init",
+    });
+
+    await vi.waitFor(() => {
+      expect(messages).toContainEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            message: expect.stringContaining(
+              "TailorKit requires app Preact 10.0.0 or newer, but found 9.0.0.",
+            ),
+          }),
+          type: "error",
+        }),
+      );
+    });
+  });
 });

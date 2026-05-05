@@ -1,5 +1,7 @@
-import { h } from "preact";
-import type { ComponentChild } from "preact";
+import { h, render } from "preact";
+import type { ComponentChild, VNode } from "preact";
+import { version as preactVersion } from "preact/package.json";
+import { assertSupportedPreactVersion } from "./preact-version.js";
 
 // oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
 export interface TailorKitScreens {}
@@ -20,7 +22,32 @@ export interface TailorKitClient {
   screens: ScreenComponents;
 }
 
-export const createClient = (client: TailorKitClient): TailorKitClient => client;
+export interface TailorKitClientMeta {
+  preactVersion: string;
+}
+
+export interface TailorKitClientRuntime {
+  h: typeof h;
+  render: (vnode: VNode, parent: Element | Document | ShadowRoot | DocumentFragment) => void;
+}
+
+export type TailorKitClientWithMeta = TailorKitClient & {
+  $meta: TailorKitClientMeta;
+  $runtime: TailorKitClientRuntime;
+};
+
+assertSupportedPreactVersion(preactVersion);
+
+export const createClient = (client: TailorKitClient): TailorKitClientWithMeta => ({
+  ...client,
+  $meta: {
+    preactVersion,
+  },
+  $runtime: {
+    h,
+    render,
+  },
+});
 export const defineClient = createClient;
 
 const componentTagPrefix = "tailorkit-";
@@ -31,10 +58,7 @@ const toComponentTagName = (name: string): string =>
     .replaceAll(/[\s_]+/g, "-")
     .toLowerCase()}`;
 
-export const createRemoteComponent = <
-  TProps extends object,
-  TSlots extends readonly string[],
->(
+export const createRemoteComponent = <TProps extends object, TSlots extends readonly string[]>(
   name: string,
   _options: { slots: TSlots },
 ): View<TProps & { children?: ComponentChild }> => {

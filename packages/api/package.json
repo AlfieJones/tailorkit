@@ -12,7 +12,7 @@
   "scripts": {},
   "dependencies": {
     "@orpc/client": "catalog:",
-    "@orpc/experimental-ratelimit": "^1.14.0",
+    "@orpc/experimental-ratelimit": "^1.14.1",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
@@ -22,7 +22,7 @@
     "@tailorkit/kv": "workspace:*",
     "@types/pg": "catalog:",
     "@upstash/ratelimit": "^2.0.0",
-    "@vercel/functions": "^3.4.4",
+    "@vercel/functions": "^3.5.0",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"

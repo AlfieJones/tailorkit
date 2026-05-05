@@ -78,9 +78,16 @@ const clientLoader = browserCollections.docs.createClientLoader({
 
 function Page() {
   const { path, pageTree, markdownUrl } = useFumadocsLoader(Route.useLoaderData());
+  const { nav, ...base } = baseOptions();
 
   return (
-    <DocsLayout {...baseOptions()} tabMode="navbar" tree={pageTree}>
+    <DocsLayout
+      {...base}
+      sidebar={{ hidden: path === "index.mdx" ? true : undefined }}
+      nav={{ ...nav, mode: "top" }}
+      tabMode="navbar"
+      tree={pageTree}
+    >
       <Suspense>{clientLoader.useContent(path, { markdownUrl, path })}</Suspense>
     </DocsLayout>
   );

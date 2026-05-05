@@ -18,7 +18,7 @@
     "@tailorkit/config": "workspace:*",
     "@testing-library/react": "^16.3.0",
     "@types/react": "catalog:",
-    "happy-dom": "^17.6.3",
+    "happy-dom": "^20.9.0",
     "react": "catalog:",
     "react-dom": "^19.2.3",
     "typescript": "catalog:",

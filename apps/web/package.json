@@ -8,13 +8,13 @@
     "dev": "vite dev"
   },
   "dependencies": {
-    "@ai-sdk/devtools": "^0.0.2",
-    "@ai-sdk/google": "^3.0.1",
+    "@ai-sdk/devtools": "^0.0.17",
+    "@ai-sdk/google": "^3.0.67",
     "@ai-sdk/react": "catalog:",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
-    "@orpc/tanstack-query": "^1.13.14",
+    "@orpc/tanstack-query": "^1.14.1",
     "@orpc/zod": "catalog:",
     "@polar-sh/better-auth": "catalog:",
     "@rolldown/plugin-babel": "^0.2.3",
@@ -25,7 +25,7 @@
     "@tailorkit/ui": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-form": "^1.28.0",
-    "@tanstack/react-query": "^5.99.0",
+    "@tanstack/react-query": "^5.100.9",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-ssr-query": "^1.166.11",
     "@tanstack/react-start": "catalog:",
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
-    "@tanstack/react-query-devtools": "^5.91.1",
+    "@tanstack/react-query-devtools": "^5.100.9",
     "@tanstack/react-router-devtools": "catalog:",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
@@ -48,7 +48,6 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "^1.0.0",
-    "jsdom": "^29.0.2",
     "typescript": "catalog:",
     "vite": "catalog:",
     "web-vitals": "^5.2.0"

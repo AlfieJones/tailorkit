@@ -5,9 +5,23 @@ import { tk } from "#/lib/tailorkit";
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
-  const appUrl = useMemo(() => new URL("http://127.0.0.1:4174/client.js"), []);
+  const appUrl = useMemo(() => new URL("http://127.0.0.1:4175/client.js"), []);
+  const props = useMemo(
+    () => ({
+      context: {
+        page: {
+          title: "TailorKit client screen",
+        },
+        user: {
+          id: "user_example",
+          name: "Example user",
+        },
+      },
+    }),
+    [],
+  );
 
-  const { UI, status, error } = tk.useRemoteUI({ appUrl });
+  const { UI, status, error } = tk.useRemoteUI({ appUrl, props });
 
   return (
     <div className="p-8">
