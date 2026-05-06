@@ -31,7 +31,7 @@ export class Document extends Element {
     return element;
   }
 
-  createTextNode(text: string): Text {
+  createTextNode(text: unknown): Text {
     const node = new Text(text);
     node.ownerDocument = this;
     return node;

@@ -11,19 +11,26 @@ export interface PrimitiveComponentDefinition extends ComponentDefinition {
 }
 
 type Shape = Record<string, z.ZodTypeAny>;
+type NonEmptyStringArray = readonly [string, ...string[]];
 
-const overflow = z.enum(["visible", "hidden", "auto", "clip"]);
+const overflowOptions = ["visible", "hidden", "auto", "clip"] as const;
+const directionOptions = ["row", "column"] as const;
+const alignOptions = ["start", "center", "end", "stretch"] as const;
+const justifyOptions = ["start", "center", "end", "between"] as const;
+const columnOptions = [1, 2, 3, 4, 6, 12] as const;
+
+const overflow = z.enum(overflowOptions);
 const sizeValue = z.union([z.string(), z.number()]);
-const direction = z.enum(["row", "column"]);
-const align = z.enum(["start", "center", "end", "stretch"]);
-const justify = z.enum(["start", "center", "end", "between"]);
+const direction = z.enum(directionOptions);
+const align = z.enum(alignOptions);
+const justify = z.enum(justifyOptions);
 const columns = z.union([
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(6),
-  z.literal(12),
+  z.literal(columnOptions[0]),
+  z.literal(columnOptions[1]),
+  z.literal(columnOptions[2]),
+  z.literal(columnOptions[3]),
+  z.literal(columnOptions[4]),
+  z.literal(columnOptions[5]),
 ]);
 
 const tokenEnum = (tokens: Record<string, string> | undefined): z.ZodTypeAny => {
@@ -31,7 +38,7 @@ const tokenEnum = (tokens: Record<string, string> | undefined): z.ZodTypeAny => 
   if (keys.length === 0) {
     return z.never();
   }
-  return z.enum(Object.fromEntries(keys.map((key) => [key, key])) as Record<string, string>);
+  return z.enum(keys as unknown as NonEmptyStringArray);
 };
 
 const responsive = (schema: z.ZodTypeAny, theme: TailorKitTheme): z.ZodTypeAny => {

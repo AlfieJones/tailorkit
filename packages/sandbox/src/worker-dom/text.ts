@@ -5,9 +5,9 @@ import { Node } from "./node.js";
 export class Text extends Node {
   #data: string;
 
-  constructor(text: string) {
+  constructor(text: unknown) {
     super(NodeType.TEXT);
-    this.#data = text;
+    this.#data = String(text);
   }
 
   get data(): string {

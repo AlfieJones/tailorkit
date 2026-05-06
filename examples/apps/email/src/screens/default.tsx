@@ -1,3 +1,4 @@
+import { Box } from "#tailorkit";
 import { createScreen } from "@tailorkit/app";
 
 const screen = createScreen("/", {
@@ -5,9 +6,7 @@ const screen = createScreen("/", {
 });
 
 function ScreenComponent() {
-  const context = screen.useContext();
-
-  return <div>{context.user.name}</div>;
+  return <Box>Hello World</Box>;
 }
 
 export default screen;

@@ -152,6 +152,8 @@
     "examples/tanstack-start": {
       "name": "tanstack-start",
       "dependencies": {
+        "@examples/shared": "workspace:*",
+        "@tailorkit/core": "workspace:*",
         "@tailorkit/ui": "workspace:*",
         "@tailwindcss/vite": "catalog:",
         "@tanstack/react-router": "catalog:",
@@ -241,7 +243,7 @@
       "name": "@tailorkit/cli",
       "version": "0.0.0",
       "bin": {
-        "tailorkit": "./dist/index.js",
+        "tailorkit": "./src/index.ts",
       },
       "dependencies": {
         "@clack/prompts": "^1.3.0",

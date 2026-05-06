@@ -112,4 +112,103 @@ describe("worker runtime", () => {
       );
     });
   });
+
+  it("supports app bundles compiled against preact/jsx-runtime", async () => {
+    vi.stubGlobal("self", {
+      addEventListener(type: string, handler: (event: MessageEvent<unknown>) => void) {
+        listeners.push({ handler, type });
+      },
+      postMessage(message: unknown) {
+        messages.push(message);
+      },
+    });
+    const appUrl = `data:text/javascript,${encodeURIComponent(`
+      import { jsx as _jsx } from "preact/jsx-runtime";
+      export default function App() {
+        return _jsx("div", { children: "Rendered from jsx runtime" });
+      }
+    `)}`;
+
+    await import("./worker.js");
+    emitWorkerMessage({
+      data: {
+        appUrl,
+      },
+      type: "init",
+    });
+
+    await vi.waitFor(() => {
+      expect(messages).toContainEqual({
+        data: {
+          revision: 1,
+          tree: {
+            children: [
+              {
+                children: [{ id: "n:1", kind: "text", text: "Rendered from jsx runtime" }],
+                events: [],
+                id: "n:2",
+                kind: "element",
+                props: {},
+                type: "div",
+              },
+            ],
+            id: "n:3",
+            kind: "fragment",
+          },
+        },
+        type: "snapshot",
+      });
+    });
+  });
+
+  it("serializes numeric JSX children as text nodes", async () => {
+    vi.stubGlobal("self", {
+      addEventListener(type: string, handler: (event: MessageEvent<unknown>) => void) {
+        listeners.push({ handler, type });
+      },
+      postMessage(message: unknown) {
+        messages.push(message);
+      },
+    });
+    const appUrl = `data:text/javascript,${encodeURIComponent(`
+      import { jsxs as _jsxs } from "preact/jsx-runtime";
+      export default function App() {
+        return _jsxs("div", { children: ["Count: ", 4] });
+      }
+    `)}`;
+
+    await import("./worker.js");
+    emitWorkerMessage({
+      data: {
+        appUrl,
+      },
+      type: "init",
+    });
+
+    await vi.waitFor(() => {
+      expect(messages).toContainEqual({
+        data: {
+          revision: 1,
+          tree: {
+            children: [
+              {
+                children: [
+                  { id: "n:1", kind: "text", text: "Count: " },
+                  { id: "n:2", kind: "text", text: "4" },
+                ],
+                events: [],
+                id: "n:3",
+                kind: "element",
+                props: {},
+                type: "div",
+              },
+            ],
+            id: "n:4",
+            kind: "fragment",
+          },
+        },
+        type: "snapshot",
+      });
+    });
+  });
 });

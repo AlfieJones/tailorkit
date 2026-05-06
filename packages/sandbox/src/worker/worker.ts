@@ -119,6 +119,19 @@ export const useRef = hooks.useRef;
 export const useState = hooks.useState;
 export default hooks;
 `),
+    "preact/jsx-dev-runtime": createModuleUrl(`
+const runtime = globalThis["${sandboxRuntimeKey}"].preact;
+export const Fragment = runtime.Fragment;
+export const jsxDEV = runtime.createElement;
+export default { Fragment, jsxDEV };
+`),
+    "preact/jsx-runtime": createModuleUrl(`
+const runtime = globalThis["${sandboxRuntimeKey}"].preact;
+export const Fragment = runtime.Fragment;
+export const jsx = runtime.createElement;
+export const jsxs = runtime.createElement;
+export default { Fragment, jsx, jsxs };
+`),
     "preact/package.json": createModuleUrl(`
 const packageJson = globalThis["${sandboxRuntimeKey}"].packageJson;
 export const version = packageJson.version;
@@ -129,7 +142,7 @@ export default packageJson;
 
 function rewritePreactImports(source: string): string {
   return source.replaceAll(
-    /(from\s*["']|import\s*["'])(preact(?:\/hooks|\/package\.json)?)(["'])/g,
+    /(from\s*["']|import\s*["'])(preact(?:\/hooks|\/jsx-dev-runtime|\/jsx-runtime|\/package\.json)?)(["'])/g,
     (match, prefix: string, specifier: string, suffix: string) => {
       const moduleUrl = sandboxPreactModules[specifier];
 

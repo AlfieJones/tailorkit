@@ -11,9 +11,13 @@ import { createRemoteComponent } from "@tailorkit/app";
 
 export interface ScreenPropsByPath {
   "/": {
+    context: unknown;
+  };
+  "/users/:userId": {
     context: {
       user: {
-        name: string;
+        id: string;
+        name?: string;
       };
     };
   };
@@ -26,9 +30,340 @@ declare module "@tailorkit/app" {
 export type ScreenPath = keyof ScreenPropsByPath & string;
 export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
 
+export interface BoxProps {
+  background?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  border?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  borderColor?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  height?: string | number | {
+    base?: string | number;
+    sm?: string | number;
+    md?: string | number;
+    lg?: string | number;
+    xl?: string | number;
+    "2xl"?: string | number;
+  };
+  margin?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  overflow?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  padding?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  radius?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  width?: string | number | {
+    base?: string | number;
+    sm?: string | number;
+    md?: string | number;
+    lg?: string | number;
+    xl?: string | number;
+    "2xl"?: string | number;
+  };
+}
+
+export const Box = createRemoteComponent<BoxProps, readonly ["default"]>("Box", {
+  slots: ["default"] as const,
+});
+
+export interface FlexProps {
+  background?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  border?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  borderColor?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  height?: string | number | {
+    base?: string | number;
+    sm?: string | number;
+    md?: string | number;
+    lg?: string | number;
+    xl?: string | number;
+    "2xl"?: string | number;
+  };
+  margin?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  overflow?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  padding?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  radius?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  width?: string | number | {
+    base?: string | number;
+    sm?: string | number;
+    md?: string | number;
+    lg?: string | number;
+    xl?: string | number;
+    "2xl"?: string | number;
+  };
+  align?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  direction?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  gap?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  justify?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+}
+
+export const Flex = createRemoteComponent<FlexProps, readonly ["default"]>("Flex", {
+  slots: ["default"] as const,
+});
+
+export interface GridProps {
+  background?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  border?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  borderColor?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  height?: string | number | {
+    base?: string | number;
+    sm?: string | number;
+    md?: string | number;
+    lg?: string | number;
+    xl?: string | number;
+    "2xl"?: string | number;
+  };
+  margin?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  overflow?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  padding?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  radius?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  width?: string | number | {
+    base?: string | number;
+    sm?: string | number;
+    md?: string | number;
+    lg?: string | number;
+    xl?: string | number;
+    "2xl"?: string | number;
+  };
+  columns?: number | number | number | number | number | number | {
+    base?: number | number | number | number | number | number;
+    sm?: number | number | number | number | number | number;
+    md?: number | number | number | number | number | number;
+    lg?: number | number | number | number | number | number;
+    xl?: number | number | number | number | number | number;
+    "2xl"?: number | number | number | number | number | number;
+  };
+  gap?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+}
+
+export const Grid = createRemoteComponent<GridProps, readonly ["default"]>("Grid", {
+  slots: ["default"] as const,
+});
+
+export interface InlineProps {
+  background?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  borderColor?: unknown | {
+    base?: unknown;
+    sm?: unknown;
+    md?: unknown;
+    lg?: unknown;
+    xl?: unknown;
+    "2xl"?: unknown;
+  };
+  margin?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  padding?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+  radius?: string | {
+    base?: string;
+    sm?: string;
+    md?: string;
+    lg?: string;
+    xl?: string;
+    "2xl"?: string;
+  };
+}
+
+export const Inline = createRemoteComponent<InlineProps, readonly ["default"]>("Inline", {
+  slots: ["default"] as const,
+});
+
 export interface ButtonProps {
-  disabled?: unknown;
-  variant?: unknown;
+  variant?: string;
   onClick?: () => void;
 }
 
@@ -36,9 +371,16 @@ export const Button = createRemoteComponent<ButtonProps, readonly ["default"]>("
   slots: ["default"] as const,
 });
 
-export interface CardProps {
+export interface InputProps {
+  type?: string;
+  placeholder?: string;
+  value?: string;
+  disabled?: boolean;
+  onChange?: () => void;
+  onBlur?: () => void;
+  onFocus?: () => void;
 }
 
-export const Card = createRemoteComponent<CardProps, readonly ["header", "content", "footer"]>("Card", {
-  slots: ["header", "content", "footer"] as const,
+export const Input = createRemoteComponent<InputProps, readonly ["default"]>("Input", {
+  slots: ["default"] as const,
 });

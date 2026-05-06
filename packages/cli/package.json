@@ -3,14 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "bin": {
-    "tailorkit": "./dist/index.js"
+    "tailorkit": "./src/index.ts"
   },
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target node --minify",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --minify",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },

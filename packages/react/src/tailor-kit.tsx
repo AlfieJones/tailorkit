@@ -107,8 +107,8 @@ export interface TailorKitInstance<
   ) => ReactNode;
   getApp: (id: string) => TailorKitApp | undefined;
   getApps: () => TailorKitApp[];
-  schema: TailorKitSchema<TComponents, TScreens>;
   useApps: () => TailorKitAppsSnapshot;
+  $internal: { schema: TailorKitSchema<TComponents, TScreens> };
 }
 
 export function tailorKit<
@@ -225,8 +225,8 @@ export function tailorKit<
     ScreenMatch,
     getApp: store.getApp,
     getApps: store.getApps,
-    schema,
     useApps,
+    $internal: { schema },
   };
 }
 
@@ -273,7 +273,7 @@ function createTailorKitStore(baseUrlInput: string | URL) {
       appsSnapshot = { ...appsSnapshot, status: "loading" };
       emit();
 
-      fetchPromise = fetch(new URL("/apps", baseUrl))
+      fetchPromise = fetch(new URL("apps", baseUrl))
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`Unable to fetch TailorKit apps from ${baseUrl.toString()}.`);
@@ -333,5 +333,9 @@ function resolveAppUrl(app: TailorKitApp, baseUrl: URL): URL {
 }
 
 function toBaseUrl(value: string | URL): URL {
-  return value instanceof URL ? value : new URL(value);
+  const url = value instanceof URL ? new URL(value) : new URL(value);
+  if (!url.pathname.endsWith("/")) {
+    url.pathname = `${url.pathname}/`;
+  }
+  return url;
 }

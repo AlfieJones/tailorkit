@@ -1,9 +1,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { loadSchemaFromModule } from "../schema";
+
 interface JsonSchema {
   additionalProperties?: boolean | JsonSchema;
   anyOf?: JsonSchema[];
+  enum?: unknown[];
   items?: JsonSchema;
   properties?: Record<string, JsonSchema>;
   required?: string[];
@@ -35,6 +38,7 @@ export interface GenerateTypesOptions {
   cwd?: string;
   outFile?: string;
   schemaFile?: string;
+  experimentalSchemaFile?: string;
 }
 
 const generatedHeader = `/* eslint-disable */
@@ -60,9 +64,24 @@ const toPropertyKey = (value: string): string => {
   return quote(value);
 };
 
+const toLiteralType = (value: unknown): string => {
+  if (typeof value === "string") {
+    return quote(value);
+  }
+  if (typeof value === "number" || typeof value === "boolean" || value === null) {
+    return JSON.stringify(value);
+  }
+
+  return "unknown";
+};
+
 const toTypeScriptType = (schema: JsonSchema | undefined, depth = 0): string => {
   if (schema === undefined) {
     return "unknown";
+  }
+
+  if (schema.enum !== undefined && schema.enum.length > 0) {
+    return schema.enum.map(toLiteralType).join(" | ");
   }
 
   if (schema.anyOf !== undefined && schema.anyOf.length > 0) {
@@ -215,9 +234,19 @@ export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];`,
 
 export const generateTypes = async (options: GenerateTypesOptions = {}): Promise<string> => {
   const root = path.resolve(options.cwd ?? ".");
-  const schemaPath = path.resolve(root, options.schemaFile ?? "tailorkit.schema.json");
   const outPath = path.resolve(root, options.outFile ?? path.join("src", "tailorkit.gen.ts"));
-  const schema = JSON.parse(await readFile(schemaPath, "utf-8")) as TailorKitSchemaFile;
+
+  let schema: TailorKitSchemaFile;
+  if (options.experimentalSchemaFile) {
+    schema = (await loadSchemaFromModule({
+      cwd: root,
+      filePath: options.experimentalSchemaFile,
+    })) as TailorKitSchemaFile;
+  } else {
+    const schemaPath = path.resolve(root, options.schemaFile ?? "tailorkit.schema.json");
+    schema = JSON.parse(await readFile(schemaPath, "utf-8")) as TailorKitSchemaFile;
+  }
+
   const output = renderGeneratedTypes(schema);
 
   await mkdir(path.dirname(outPath), { recursive: true });

@@ -40,7 +40,8 @@ export function RemoteViewHost({
   const store = storeRef.current;
 
   const dispatchRef = useRef<((payload: HostToWorkerPayload) => void) | null>(null);
-  const [, setStatus] = useState<"error" | "ready" | "starting">("starting");
+  const [error, setError] = useState<Error | null>(null);
+  const [status, setStatus] = useState<"error" | "ready" | "starting">("starting");
 
   const ctxRef = useRef<RemoteViewContext>({
     components,
@@ -64,7 +65,9 @@ export function RemoteViewHost({
   useEffect(() => {
     const host = createWorkerUiHost(appUrl, {
       createWorker,
-      onError: () => {
+      onError: (error) => {
+        console.error("TailorKit remote app failed", error);
+        setError(error);
         setStatus("error");
       },
       props,
@@ -82,6 +85,7 @@ export function RemoteViewHost({
     });
 
     setStatus("starting");
+    setError(null);
     host.mount();
 
     return () => {
@@ -90,6 +94,17 @@ export function RemoteViewHost({
       host.worker.terminate();
     };
   }, [appUrl, createWorker, props, workerUrl, store]);
+
+  if (status === "error" && error) {
+    return createElement(
+      "div",
+      {
+        className:
+          "rounded-md border border-red-200 bg-red-50 p-3 font-mono text-red-800 text-xs whitespace-pre-wrap",
+      },
+      error.message,
+    );
+  }
 
   return ui;
 }

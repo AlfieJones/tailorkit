@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./server": "./src/server/index.ts",
     "./schema": "./src/schema/index.ts",
     "./spec": "./src/spec/index.ts",
     "./layout": "./src/layout/index.ts",

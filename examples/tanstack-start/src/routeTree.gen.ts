@@ -14,6 +14,7 @@ import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DealsDealIdRouteImport } from './routes/deals.$dealId'
 import { Route as CustomersCustomerIdRouteImport } from './routes/customers.$customerId'
+import { Route as ApiTailorkitSplatRouteImport } from './routes/api/tailorkit.$'
 
 const DealsRoute = DealsRouteImport.update({
   id: '/deals',
@@ -40,6 +41,11 @@ const CustomersCustomerIdRoute = CustomersCustomerIdRouteImport.update({
   path: '/$customerId',
   getParentRoute: () => CustomersRoute,
 } as any)
+const ApiTailorkitSplatRoute = ApiTailorkitSplatRouteImport.update({
+  id: '/api/tailorkit/$',
+  path: '/api/tailorkit/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/deals': typeof DealsRouteWithChildren
   '/customers/$customerId': typeof CustomersCustomerIdRoute
   '/deals/$dealId': typeof DealsDealIdRoute
+  '/api/tailorkit/$': typeof ApiTailorkitSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/deals': typeof DealsRouteWithChildren
   '/customers/$customerId': typeof CustomersCustomerIdRoute
   '/deals/$dealId': typeof DealsDealIdRoute
+  '/api/tailorkit/$': typeof ApiTailorkitSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/deals': typeof DealsRouteWithChildren
   '/customers/$customerId': typeof CustomersCustomerIdRoute
   '/deals/$dealId': typeof DealsDealIdRoute
+  '/api/tailorkit/$': typeof ApiTailorkitSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,6 +80,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/customers/$customerId'
     | '/deals/$dealId'
+    | '/api/tailorkit/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -78,6 +88,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/customers/$customerId'
     | '/deals/$dealId'
+    | '/api/tailorkit/$'
   id:
     | '__root__'
     | '/'
@@ -85,12 +96,14 @@ export interface FileRouteTypes {
     | '/deals'
     | '/customers/$customerId'
     | '/deals/$dealId'
+    | '/api/tailorkit/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CustomersRoute: typeof CustomersRouteWithChildren
   DealsRoute: typeof DealsRouteWithChildren
+  ApiTailorkitSplatRoute: typeof ApiTailorkitSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -130,6 +143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersCustomerIdRouteImport
       parentRoute: typeof CustomersRoute
     }
+    '/api/tailorkit/$': {
+      id: '/api/tailorkit/$'
+      path: '/api/tailorkit/$'
+      fullPath: '/api/tailorkit/$'
+      preLoaderRoute: typeof ApiTailorkitSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustomersRoute: CustomersRouteWithChildren,
   DealsRoute: DealsRouteWithChildren,
+  ApiTailorkitSplatRoute: ApiTailorkitSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,12 +1,12 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 import { intro, log, outro } from "@clack/prompts";
-import { buildApp } from "@tailorkit/app/builder";
 import { cac } from "cac";
 import pc from "picocolors";
 
 import { generateTypes } from "./generator/types";
 import { runInit } from "./init";
 import { runExperimentalPreview, toPreviewOptions } from "./preview";
+import { runExperimentalSchema } from "./schema";
 
 const cli = cac("tailorkit");
 
@@ -21,6 +21,7 @@ cli
   .action(async (options: Record<string, unknown>) => {
     intro(pc.bold("TailorKit"));
     try {
+      const { buildApp } = await import("@tailorkit/app/builder");
       await buildApp({
         configPath: options.config as string | undefined,
         cwd: String(options.cwd ?? "."),
@@ -54,14 +55,31 @@ cli
   });
 
 cli
+  .command("experimental-schema <path>", "Serialize and print the TailorKit schema from a module")
+  .action(async (filePath: string, options: Record<string, unknown>) => {
+    intro(pc.bold("TailorKit"));
+    try {
+      await runExperimentalSchema({
+        cwd: String(options.cwd ?? "."),
+        filePath,
+      });
+    } catch (error) {
+      log.error(error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
+
+cli
   .command("generate", "Generate TailorKit app bindings")
   .option("--schema <path>", "Path to tailorkit schema JSON")
   .option("--out <path>", "Generated TypeScript output file")
+  .option("--experimental-schema-file <path>", "Path to a TypeScript module that exports a TailorKit schema")
   .action(async (options: Record<string, unknown>) => {
     intro(pc.bold("TailorKit"));
     try {
       const outPath = await generateTypes({
         cwd: String(options.cwd ?? "."),
+        experimentalSchemaFile: options.experimentalSchemaFile as string | undefined,
         outFile: options.out as string | undefined,
         schemaFile: options.schema as string | undefined,
       });

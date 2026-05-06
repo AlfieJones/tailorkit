@@ -8,10 +8,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./react": "./src/react.ts"
+    "./react": "./src/react.ts",
+    "./server": "./src/server.ts"
   },
   "scripts": {
-    "build": "bun build ./src/cli.ts ./src/index.ts ./src/react.ts --outdir ./dist --target node --minify",
+    "build": "bun build ./src/cli.ts ./src/index.ts ./src/react.ts ./src/server.ts --outdir ./dist --target node --minify",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

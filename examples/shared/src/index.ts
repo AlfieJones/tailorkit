@@ -1,8 +1,20 @@
-import { component, defineSchema, screen } from "@tailorkit/core/schema";
+import { component, defineSchema, screen, primitives } from "@tailorkit/core/schema";
 import { z } from "zod";
 
 export const schema = defineSchema({
+  theme: {
+    tokens: {
+      background: {
+        muted: "var(--muted)",
+        surface: "var(--background)",
+      },
+      borderColor: {
+        default: "var(--border)",
+      },
+    },
+  },
   components: {
+    ...primitives,
     Button: component({
       fields: z.object({
         variant: z.enum(["primary", "secondary"]),
@@ -26,20 +38,27 @@ export const schema = defineSchema({
       },
       slots: ["default"],
     }),
+    Tabs: component({
+      fields: z.object({
+        tabs: z.array(
+          z.object({
+            label: z.string(),
+            value: z.string(),
+          }),
+        ),
+        value: z.string().optional(),
+        variant: z.enum(["default", "underline"]).optional(),
+      }),
+      callbacks: {
+        onChange: {},
+      },
+      slots: ["default"],
+    }),
   },
   screens: {
-    "/": screen({
-      context: z.object({
-        page: z.object({
-          title: z.string(),
-        }),
-      }),
-    }),
+    "/": screen({}),
     "/users/:userId": screen({
       context: z.object({
-        params: z.object({
-          userId: z.string(),
-        }),
         user: z.object({
           id: z.string(),
           name: z.string().optional(),
@@ -48,3 +67,5 @@ export const schema = defineSchema({
     }),
   },
 });
+
+export default schema;

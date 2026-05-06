@@ -3,7 +3,6 @@ import type { Server } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { log } from "@clack/prompts";
-import { buildApp } from "@tailorkit/app/builder";
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
 import pc from "picocolors";
 
@@ -126,6 +125,7 @@ export const runExperimentalPreview = async (options: PreviewOptions): Promise<v
   const host = options.host ?? "127.0.0.1";
   const port = options.port ?? 4175;
 
+  const { buildApp } = await import("@tailorkit/app/builder");
   const watcher = await buildApp({
     configPath: options.configPath,
     cwd: options.cwd,

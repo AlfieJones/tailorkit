@@ -93,6 +93,7 @@ describe("renderGeneratedTypes", () => {
           fields: {
             properties: {
               padding: {
+                enum: ["sm", "md", "lg"],
                 type: "string",
               },
             },
@@ -105,7 +106,7 @@ describe("renderGeneratedTypes", () => {
     });
 
     expect(output).toContain("export interface BoxProps");
-    expect(output).toContain("padding?: string;");
+    expect(output).toContain('padding?: "sm" | "md" | "lg";');
     expect(output).toContain('createRemoteComponent<BoxProps, readonly ["default"]>');
   });
 });

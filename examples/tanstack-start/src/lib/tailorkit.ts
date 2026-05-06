@@ -1,50 +1,78 @@
-import { createElement } from "react";
+import { createElement, useState } from "react";
 import type { ReactNode } from "react";
+import { schema } from "@examples/shared";
 import { primitives as reactPrimitives, tailorKit } from "tailorkit/react";
-import { component, defineSchema, primitives, screen } from "tailorkit";
-import { z } from "zod";
 
-export const schema = defineSchema({
-  theme: {
-    tokens: {
-      background: {
-        muted: "var(--muted)",
-        surface: "var(--background)",
+function TabsRenderer({
+  onChange,
+  tabs,
+  value,
+  variant = "default",
+  children,
+}: {
+  children?: ReactNode;
+  onChange: () => void;
+  tabs: { label: string; value: string }[];
+  value?: string;
+  variant?: "default" | "underline";
+}) {
+  const firstTabValue = tabs[0]?.value ?? "";
+  const [activeValue, setActiveValue] = useState(value ?? firstTabValue);
+  const selectedValue = value ?? activeValue;
+
+  return createElement(
+    "div",
+    { className: "flex flex-col gap-3" },
+    createElement(
+      "div",
+      {
+        "aria-label": "Tabs",
+        className:
+          variant === "underline"
+            ? "flex w-fit items-center gap-1 border-b border-gray-200"
+            : "flex w-fit items-center gap-1 rounded-lg bg-gray-100 p-1",
+        role: "tablist",
       },
-      borderColor: {
-        default: "var(--border)",
-      },
-    },
-  },
-  components: {
-    ...primitives,
-    Button: component({
-      fields: z.object({
-        variant: z.enum(["primary", "secondary"]),
+      tabs.map((tab) => {
+        const isSelected = tab.value === selectedValue;
+
+        return createElement(
+          "button",
+          {
+            "aria-selected": isSelected,
+            className:
+              variant === "underline"
+                ? `cursor-pointer border-b-2 px-3 py-2 text-sm font-medium ${
+                    isSelected
+                      ? "border-blue-500 text-gray-950"
+                      : "border-transparent text-gray-600 hover:text-gray-950"
+                  }`
+                : `cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium ${
+                    isSelected
+                      ? "bg-white text-gray-950 shadow-sm"
+                      : "text-gray-600 hover:text-gray-950"
+                  }`,
+            key: tab.value,
+            onClick: () => {
+              setActiveValue(tab.value);
+              onChange();
+            },
+            role: "tab",
+            type: "button",
+          },
+          tab.label,
+        );
       }),
-      callbacks: {
-        onClick: {},
-      },
-      slots: ["default"],
-    }),
-  },
-  screens: {
-    "/home": screen({
-      context: z.object({
-        page: z.object({
-          title: z.string(),
-        }),
-        user: z.object({
-          id: z.string(),
-          name: z.string().optional(),
-        }),
-      }),
-    }),
-  },
-});
+    ),
+    createElement("div", { role: "tabpanel" }, children),
+  );
+}
 
 export const tailor = tailorKit(schema, {
-  baseUrl: "http://127.0.0.1:4175",
+  baseUrl:
+    typeof window === "undefined"
+      ? "http://localhost/api/tailorkit/"
+      : new URL("/api/tailorkit/", window.location.origin),
   components: {
     ...reactPrimitives,
     Button: ({ props, slots }) =>
@@ -62,5 +90,36 @@ export const tailor = tailorKit(schema, {
         },
         slots.default as ReactNode,
       ),
+    Input: ({ props }) =>
+      createElement("input", {
+        className:
+          "h-9 rounded-md border bg-background px-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 focus:border-blue-500",
+        disabled: props.disabled,
+        onBlur: () => {
+          props.onBlur();
+        },
+        onChange: () => {
+          props.onChange();
+        },
+        onFocus: () => {
+          props.onFocus();
+        },
+        placeholder: props.placeholder,
+        type: props.type ?? "text",
+        value: props.value ?? "",
+      }),
+    Tabs: ({ props, slots }) =>
+      createElement(
+        TabsRenderer,
+        {
+          onChange: props.onChange,
+          tabs: props.tabs,
+          value: props.value,
+          variant: props.variant,
+        },
+        slots.default as ReactNode,
+      ),
   },
 });
+
+export default tailor;

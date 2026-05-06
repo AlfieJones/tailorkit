@@ -73,7 +73,7 @@ export interface ComponentDefinition<
 }
 
 export interface ScreenDefinition<TContext extends Schema = Schema> {
-  context: TContext;
+  context?: TContext;
 }
 
 export type ComponentProps<TComponent> =
@@ -99,7 +99,7 @@ export interface ResolvedComponentMetadata {
 }
 
 export interface ResolvedScreenMetadata {
-  context: Schema;
+  context?: Schema;
 }
 
 export type SchemaSerializer = (schema: Schema) => Record<string, unknown> | undefined;
@@ -269,7 +269,10 @@ export function defineSchema<
 
     for (const [name, metadata] of Object.entries(screens)) {
       serializedScreens[name] = {
-        context: schemaSerializer === undefined ? undefined : schemaSerializer(metadata.context),
+        context:
+          metadata.context === undefined || schemaSerializer === undefined
+            ? undefined
+            : schemaSerializer(metadata.context),
       };
     }
 

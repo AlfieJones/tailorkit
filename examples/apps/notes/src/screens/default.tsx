@@ -1,18 +1,33 @@
 import { createScreen } from "@tailorkit/app";
 import { useState } from "preact/hooks";
-import { Button } from "#tailorkit";
+import { Box, Button, Flex } from "#tailorkit";
+
+type View = "notes" | "tasks";
 
 interface Note {
   id: string;
   title: string;
-  content: string;
+  body: string;
 }
 
 interface Task {
   id: string;
   text: string;
-  completed: boolean;
+  done: boolean;
 }
+
+const starterNotes: Note[] = [
+  {
+    id: "note-welcome",
+    title: "Welcome note",
+    body: "A small place for notes and tasks.",
+  },
+];
+
+const starterTasks: Task[] = [
+  { id: "task-review", text: "Review today's notes", done: false },
+  { id: "task-plan", text: "Pick the next task", done: true },
+];
 
 const screen = createScreen("/", {
   component: ScreenComponent,
@@ -20,273 +35,199 @@ const screen = createScreen("/", {
 
 function ScreenComponent() {
   const context = screen.useContext();
-  const [activeTab, setActiveTab] = useState<"notes" | "tasks">("notes");
-
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [noteTitle, setNoteTitle] = useState("");
-  const [noteContent, setNoteContent] = useState("");
-
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [taskText, setTaskText] = useState("");
-
-  const addNote = () => {
-    if (!noteTitle.trim() && !noteContent.trim()) return;
-
-    setNotes((prev) => [
-      {
-        id: `${Date.now()}-${Math.random()}`,
-        title: noteTitle.trim() || "Untitled",
-        content: noteContent,
-      },
-      ...prev,
-    ]);
-    setNoteTitle("");
-    setNoteContent("");
-  };
-
-  const deleteNote = (id: string) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id));
-  };
-
-  const addTask = () => {
-    if (!taskText.trim()) return;
-
-    setTasks((prev) => [
-      {
-        id: `${Date.now()}-${Math.random()}`,
-        text: taskText.trim(),
-        completed: false,
-      },
-      ...prev,
-    ]);
-    setTaskText("");
-  };
-
-  const toggleTask = (id: string) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === id ? { ...task, completed: !task.completed } : task)),
-    );
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
-  };
+  const [view, setView] = useState<View>("notes");
+  const [notes, setNotes] = useState<Note[]>(starterNotes);
+  const [tasks, setTasks] = useState<Task[]>(starterTasks);
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        maxWidth: "600px",
-        margin: "0 auto",
-        fontFamily: "system-ui, sans-serif",
-      }}
-    >
-      <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "20px" }}>
-        {context.user.name}&apos;s Notes
-      </h1>
+    <Box background="#f7f8fa" padding="24px" width="100%">
+      <Flex direction="column" gap="20px">
+        <AppHeader name={"Acmes"} view={view} onViewChange={setView} />
 
-      <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
+        {view === "notes" ? (
+          <NotesPanel notes={notes} onAdd={addNote} onDelete={deleteNote} />
+        ) : (
+          <TasksPanel tasks={tasks} onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} />
+        )}
+      </Flex>
+    </Box>
+  );
+
+  function addNote() {
+    const count = notes.length + 1;
+
+    setNotes((current) => [
+      {
+        id: createId("note"),
+        title: `Note ${count}`,
+        body: "A quick note added from the example app.",
+      },
+      ...current,
+    ]);
+  }
+
+  function deleteNote(id: string) {
+    setNotes((current) => current.filter((note) => note.id !== id));
+  }
+
+  function addTask() {
+    const count = tasks.length + 1;
+
+    setTasks((current) => [
+      {
+        id: createId("task"),
+        text: `Task ${count}`,
+        done: false,
+      },
+      ...current,
+    ]);
+  }
+
+  function toggleTask(id: string) {
+    setTasks((current) =>
+      current.map((task) => (task.id === id ? { ...task, done: !task.done } : task)),
+    );
+  }
+
+  function deleteTask(id: string) {
+    setTasks((current) => current.filter((task) => task.id !== id));
+  }
+}
+
+function AppHeader({
+  name,
+  view,
+  onViewChange,
+}: {
+  name?: string;
+  view: View;
+  onViewChange: (view: View) => void;
+}) {
+  return (
+    <Flex direction="column" gap="12px">
+      <Flex direction="column" gap="4px">
+        <Box>{name ? `${name}'s workspace` : "Notes workspace"}</Box>
+        <Box>Simple notes and tasks</Box>
+      </Flex>
+
+      <Flex gap="8px">
         <Button
-          variant={activeTab === "notes" ? "default" : "outline"}
-          onClick={() => setActiveTab("notes")}
+          variant={view === "notes" ? "primary" : "secondary"}
+          onClick={() => onViewChange("notes")}
         >
           Notes
         </Button>
         <Button
-          variant={activeTab === "tasks" ? "default" : "outline"}
-          onClick={() => setActiveTab("tasks")}
+          variant={view === "tasks" ? "primary" : "secondary"}
+          onClick={() => onViewChange("tasks")}
         >
           Tasks
         </Button>
-      </div>
-
-      {activeTab === "notes" ? (
-        <div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-              marginBottom: "24px",
-            }}
-          >
-            <input
-              type="text"
-              placeholder="Note title"
-              value={noteTitle}
-              onInput={(e) => setNoteTitle(e.currentTarget.value)}
-              style={{
-                padding: "10px 14px",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb",
-                fontSize: "14px",
-                outline: "none",
-              }}
-            />
-            <textarea
-              placeholder="Write something..."
-              value={noteContent}
-              onInput={(e) => setNoteContent(e.currentTarget.value)}
-              rows={4}
-              style={{
-                padding: "10px 14px",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb",
-                fontSize: "14px",
-                resize: "vertical",
-                outline: "none",
-              }}
-            />
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button onClick={addNote} disabled={!noteTitle.trim() && !noteContent.trim()}>
-                Add Note
-              </Button>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {notes.length === 0 ? (
-              <p
-                style={{
-                  color: "#6b7280",
-                  textAlign: "center",
-                  padding: "32px",
-                }}
-              >
-                No notes yet. Jot down your first idea above.
-              </p>
-            ) : (
-              notes.map((note) => (
-                <div
-                  key={note.id}
-                  style={{
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    background: "#ffffff",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: "16px",
-                        fontWeight: 600,
-                        margin: 0,
-                      }}
-                    >
-                      {note.title}
-                    </h3>
-                    <Button variant="ghost" onClick={() => deleteNote(note.id)}>
-                      Delete
-                    </Button>
-                  </div>
-                  {note.content && (
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "14px",
-                        lineHeight: 1.5,
-                        color: "#374151",
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {note.content}
-                    </p>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      ) : (
-        <div>
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              marginBottom: "24px",
-            }}
-          >
-            <input
-              type="text"
-              placeholder="What needs to be done?"
-              value={taskText}
-              onInput={(e) => setTaskText(e.currentTarget.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") addTask();
-              }}
-              style={{
-                flex: 1,
-                padding: "10px 14px",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb",
-                fontSize: "14px",
-                outline: "none",
-              }}
-            />
-            <Button onClick={addTask} disabled={!taskText.trim()}>
-              Add Task
-            </Button>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {tasks.length === 0 ? (
-              <p
-                style={{
-                  color: "#6b7280",
-                  textAlign: "center",
-                  padding: "32px",
-                }}
-              >
-                No tasks yet. Add one above to get started.
-              </p>
-            ) : (
-              tasks.map((task) => (
-                <div
-                  key={task.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "12px 16px",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    background: "#ffffff",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={task.completed}
-                    onChange={() => toggleTask(task.id)}
-                  />
-                  <span
-                    style={{
-                      flex: 1,
-                      fontSize: "14px",
-                      textDecoration: task.completed ? "line-through" : "none",
-                      color: task.completed ? "#9ca3af" : "#111827",
-                    }}
-                  >
-                    {task.text}
-                  </span>
-                  <Button variant="ghost" onClick={() => deleteTask(task.id)}>
-                    Delete
-                  </Button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+      </Flex>
+    </Flex>
   );
+}
+
+function NotesPanel({
+  notes,
+  onAdd,
+  onDelete,
+}: {
+  notes: Note[];
+  onAdd: () => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <Flex direction="column" gap="12px">
+      <Flex justify="space-between" align="center" gap="12px">
+        <Box>{notes.length} notes</Box>
+        <Button variant="primary" onClick={onAdd}>
+          Add note
+        </Button>
+      </Flex>
+
+      <Flex direction="column" gap="10px">
+        {notes.map((note) => (
+          <NoteCard key={note.id} note={note} onDelete={onDelete} />
+        ))}
+      </Flex>
+    </Flex>
+  );
+}
+
+function NoteCard({ note, onDelete }: { note: Note; onDelete: (id: string) => void }) {
+  return (
+    <Box background="#ffffff" border="1px solid #e4e7ec" padding="14px" radius="8px">
+      <Flex direction="column" gap="10px">
+        <Flex justify="space-between" align="center" gap="12px">
+          <Box>{note.title}</Box>
+          <Button variant="secondary" onClick={() => onDelete(note.id)}>
+            Delete
+          </Button>
+        </Flex>
+        <Box>{note.body}</Box>
+      </Flex>
+    </Box>
+  );
+}
+
+function TasksPanel({
+  tasks,
+  onAdd,
+  onToggle,
+  onDelete,
+}: {
+  tasks: Task[];
+  onAdd: () => void;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <Flex direction="column" gap="12px">
+      <Flex justify="space-between" align="center" gap="12px">
+        <Box>{tasks.filter((task) => !task.done).length} open tasks</Box>
+        <Button variant="primary" onClick={onAdd}>
+          Add task
+        </Button>
+      </Flex>
+
+      <Flex direction="column" gap="10px">
+        {tasks.map((task) => (
+          <TaskRow key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} />
+        ))}
+      </Flex>
+    </Flex>
+  );
+}
+
+function TaskRow({
+  task,
+  onToggle,
+  onDelete,
+}: {
+  task: Task;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <Box background="#ffffff" border="1px solid #e4e7ec" padding="12px" radius="8px">
+      <Flex justify="space-between" align="center" gap="12px">
+        <Box>{task.done ? `Done: ${task.text}` : task.text}</Box>
+        <Flex gap="8px">
+          <Button variant="secondary" onClick={() => onToggle(task.id)}>
+            {task.done ? "Undo" : "Done"}
+          </Button>
+          <Button variant="secondary" onClick={() => onDelete(task.id)}>
+            Delete
+          </Button>
+        </Flex>
+      </Flex>
+    </Box>
+  );
+}
+
+function createId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 export default screen;

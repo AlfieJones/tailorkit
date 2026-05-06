@@ -97,7 +97,7 @@ describe("tailorKit React adapter", () => {
 
   it("fetches and caches apps", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json([{ id: "todo", name: "Todo" }]));
-    const tailor = tailorKit(schema, { baseUrl: "http://runtime.test" });
+    const tailor = tailorKit(schema, { baseUrl: "http://runtime.test/api/tailorkit" });
 
     function AppList() {
       const { apps, status } = tailor.useApps();
@@ -110,7 +110,9 @@ describe("tailorKit React adapter", () => {
       expect(screen.getAllByText("ready:todo")).toHaveLength(2);
     });
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-    expect(globalThis.fetch).toHaveBeenCalledWith(new URL("/apps", "http://runtime.test"));
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      new URL("apps", "http://runtime.test/api/tailorkit/"),
+    );
     expect(tailor.getApps()).toEqual([{ id: "todo", name: "Todo" }]);
     expect(tailor.getApp("todo")).toEqual({ id: "todo", name: "Todo" });
   });
