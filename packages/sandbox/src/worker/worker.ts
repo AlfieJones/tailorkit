@@ -249,7 +249,12 @@ interface TailorKitAppClient {
     h?: typeof h;
     render?: typeof render;
   };
-  screens?: Record<string, ComponentType<Record<string, unknown>>>;
+  screens?: Record<string, TailorKitScreenDefinition>;
+}
+
+interface TailorKitScreenDefinition {
+  component?: ComponentType<Record<string, unknown>>;
+  path?: string;
 }
 
 function assertAppPreactVersion(
@@ -289,9 +294,14 @@ function renderTailorKitClient(client: TailorKitAppClient, props: Record<string,
     throw new Error("TailorKit app client does not define any screens.");
   }
 
-  const Screen = screens[requestedScreen];
-  if (Screen === undefined) {
+  const screen = screens[requestedScreen];
+  if (screen === undefined) {
     throw new Error(`TailorKit app client does not define screen "${requestedScreen}".`);
+  }
+
+  const Screen = screen.component;
+  if (typeof Screen !== "function") {
+    throw new TypeError(`TailorKit app client screen "${requestedScreen}" is missing a component.`);
   }
 
   const appH = client.$runtime?.h ?? h;

@@ -1,0 +1,81 @@
+---
+title: What is TailorKit?
+description: TailorKit is a framework for building and managing embedded apps.
+---
+
+TailorKit helps a host product render embedded apps without giving those apps
+ownership of the whole page. Embedded apps can use the host's approved
+components, receive typed screen context, and run from separately built runtime
+bundles.
+
+## The Problem
+
+Modern products often need extension points: customer-specific workflows,
+internal tools, marketplace apps, or product areas that should evolve outside
+the main host release cycle.
+
+The hard part is keeping those extensions integrated with the host product:
+
+- They need access to route-specific context.
+- They should render with the host's design system.
+- They should not own the host router.
+- They should not require a full host deploy for every app change.
+
+TailorKit separates those responsibilities.
+
+## The Host Owns The Product
+
+The host app owns routing, authentication, data loading, and the decision about
+which TailorKit screen is active.
+
+```tsx
+<tailor.ScreenMatch
+  pattern="/users/:userId"
+  params={{ userId }}
+  screen="/user"
+  context={{ userId, user }}
+>
+  <UserPage />
+</tailor.ScreenMatch>
+```
+
+TailorKit treats this as a declaration from the host. It does not inspect
+`window.location` or try to match browser URLs.
+
+## Apps Own Their UI
+
+A TailorKit app is built separately and rendered at runtime. It targets screens
+from the host schema and uses generated component bindings.
+
+```tsx
+import { h } from "preact";
+import { Button } from "#tailorkit";
+import type { ScreenProps } from "#tailorkit";
+
+type HomeScreenProps = ScreenProps<"/home">;
+
+export default function HomeScreen({ context }: HomeScreenProps) {
+  return h(
+    Button,
+    {
+      onClick: () => {},
+      variant: "primary",
+    },
+    `Open ${context.page.title}`,
+  );
+}
+```
+
+## TailorKit Connects Them
+
+The React adapter fetches available apps from the runtime registry, tracks the
+current screen match, and renders the same active screen into one or more apps.
+
+```tsx
+const { apps } = tailor.useApps();
+
+return apps.map((app) => <tailor.Screen key={app.id} app={app} />);
+```
+
+The result is a host-controlled integration model: routes and data stay in the
+product, while embedded apps can ship independently against a typed contract.

@@ -65,8 +65,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tailorkit/config": "workspace:*",
     "@tailorkit/cli": "workspace:*",
+    "@tailorkit/config": "workspace:*",
     "@types/node": "^24.12.2",
     "lefthook": "latest",
     "oxfmt": "latest",

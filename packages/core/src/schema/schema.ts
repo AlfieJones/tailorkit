@@ -207,10 +207,7 @@ const resolveComponentMetadata = (
 export function defineSchema<
   const TComponents extends Record<string, ComponentDefinition>,
   const TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
->(schema: {
-  components: TComponents;
-  screens?: TScreens;
-}): TailorKitSchema<TComponents, TScreens> {
+>(schema: { components: TComponents; screens?: TScreens }): TailorKitSchema<TComponents, TScreens> {
   const components = {} as TailorKitSchema<TComponents, TScreens>["$internal"]["components"];
   const screens = {} as TailorKitSchema<TComponents, TScreens>["$internal"]["screens"];
 
@@ -259,8 +256,7 @@ export function defineSchema<
 
     for (const [name, metadata] of Object.entries(screens)) {
       serializedScreens[name] = {
-        context:
-          schemaSerializer === undefined ? undefined : schemaSerializer(metadata.context),
+        context: schemaSerializer === undefined ? undefined : schemaSerializer(metadata.context),
       };
     }
 

@@ -45,7 +45,7 @@ describe("generateApp", () => {
       "tailorkit.schema.json",
       ".gitignore",
       path.join("src", "client.ts"),
-      path.join("src", "views", "fallback.tsx"),
+      path.join("src", "screens", "default.tsx"),
       path.join("src", "tailorkit.gen.ts"),
     ];
 
@@ -191,25 +191,37 @@ describe("generateApp", () => {
     expect(content).toContain("defineTailorKitConfig");
   });
 
-  it("generates a valid fallback screen", async () => {
+  it("generates a default screen for the default schema", async () => {
     const targetDirectory = await createTempDir();
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(
-      path.join(targetDirectory, "src", "views", "fallback.tsx"),
+      path.join(targetDirectory, "src", "screens", "default.tsx"),
       "utf-8",
     );
-    expect(content).toContain('import type { DefaultScreenProps } from "#tailorkit"');
-    expect(content).toContain("FallbackScreen");
+    expect(content).toContain('createScreen("/", {');
+    expect(content).toContain("context.user.name");
   });
 
-  it("generates a valid client entry", async () => {
+  it("generates a client entry with the default screen", async () => {
     const targetDirectory = await createTempDir();
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(path.join(targetDirectory, "src", "client.ts"), "utf-8");
     expect(content).toContain('import { defineClient } from "@tailorkit/app"');
+    expect(content).toContain('import defaultScreen from "./screens/default"');
     expect(content).toContain("defineClient");
+    expect(content).toContain('"/": defaultScreen');
+    expect(content).not.toContain("fallbackScreen");
+  });
+
+  it("does not generate fallback screen props for the default schema", async () => {
+    const targetDirectory = await createTempDir();
+    await generateApp({ ...defaultOptions, targetDirectory });
+
+    const content = await readFile(path.join(targetDirectory, "src", "tailorkit.gen.ts"), "utf-8");
+    expect(content).not.toContain("FallbackScreenProps");
+    expect(content).not.toContain("DefaultScreenProps");
   });
 
   it("generates a valid schema file", async () => {
@@ -221,6 +233,9 @@ describe("generateApp", () => {
     expect(schema.version).toBe(1);
     expect(schema.components).toHaveProperty("Button");
     expect(schema.components).toHaveProperty("Card");
+    expect(schema.screens["/"].context.properties.user.properties.name.type).toBe("string");
+    expect(schema.screens["/"].context.required).toEqual(["user"]);
+    expect(schema.screens["/"].context.properties.user.required).toEqual(["name"]);
   });
 
   it("generates a valid generated types file", async () => {
@@ -229,6 +244,9 @@ describe("generateApp", () => {
 
     const content = await readFile(path.join(targetDirectory, "src", "tailorkit.gen.ts"), "utf-8");
     expect(content).toContain('import { createRemoteComponent } from "@tailorkit/app"');
+    expect(content).toContain('"/": {');
+    expect(content).toContain("user: {");
+    expect(content).toContain("name: string;");
     expect(content).toContain("export const Button");
     expect(content).toContain("export const Card");
   });

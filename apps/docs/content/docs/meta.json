@@ -1,7 +1,10 @@
 {
   "pages": [
-    "sdk",
-    "platform",
-    "apps"
+    "---[Rocket]Getting Started---",
+    "...(getting-started)",
+    "---[Blocks]Integrating---",
+    "...(intergrating)",
+    "---[PencilRuler]Writing Apps---",
+    "...(writing-apps)"
   ]
 }

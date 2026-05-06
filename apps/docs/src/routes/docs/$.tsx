@@ -2,7 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import browserCollections from "collections/browser";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
-import { DocsLayout } from "fumadocs-ui/layouts/notebook";
+import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import {
   DocsBody,
   DocsDescription,
@@ -10,7 +10,7 @@ import {
   DocsTitle,
   MarkdownCopyButton,
   ViewOptionsPopover,
-} from "fumadocs-ui/layouts/notebook/page";
+} from "fumadocs-ui/layouts/docs/page";
 import { Suspense } from "react";
 
 import { useMDXComponents } from "@/components/mdx";
@@ -78,16 +78,9 @@ const clientLoader = browserCollections.docs.createClientLoader({
 
 function Page() {
   const { path, pageTree, markdownUrl } = useFumadocsLoader(Route.useLoaderData());
-  const { nav, ...base } = baseOptions();
 
   return (
-    <DocsLayout
-      {...base}
-      sidebar={{ hidden: path === "index.mdx" ? true : undefined }}
-      nav={{ ...nav, mode: "top" }}
-      tabMode="navbar"
-      tree={pageTree}
-    >
+    <DocsLayout {...baseOptions()} tree={pageTree}>
       <Suspense>{clientLoader.useContent(path, { markdownUrl, path })}</Suspense>
     </DocsLayout>
   );

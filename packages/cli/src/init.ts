@@ -38,15 +38,7 @@ const abortIfCancelled = <T>(value: T | symbol): T => {
   return value as T;
 };
 
-const promptDirectory = async (given: string | undefined, cwd: string): Promise<string> => {
-  if (given !== undefined) {
-    return path.resolve(cwd, given);
-  }
-  const answer = abortIfCancelled(
-    await text({ message: "Where should we create your app?", placeholder: "." }),
-  );
-  return path.resolve(cwd, answer || ".");
-};
+const promptDirectory = async (given: string | undefined, cwd: string): Promise<string> => path.resolve(cwd, given ?? ".");
 
 const promptPackageName = async (given: string | undefined, baseDir: string): Promise<string> => {
   const defaultName = normalizePackageName(path.basename(baseDir)) || "tailorkit-app";

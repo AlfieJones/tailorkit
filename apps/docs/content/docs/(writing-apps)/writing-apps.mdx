@@ -1,0 +1,99 @@
+---
+title: Writing Apps
+description: Build TailorKit runtime apps that target host screens and components.
+---
+
+A TailorKit app is the embedded side of the integration. It is built separately
+from the host app, served as a runtime client bundle, and rendered by the host
+with `tailor.Screen`.
+
+## App Shape
+
+TailorKit apps export a client with screens. Each screen corresponds to a screen
+key from the host schema.
+
+```ts
+import { createClient } from "@tailorkit/app";
+import HomeScreen from "./screens/home";
+
+const client = createClient({
+  screens: {
+    "/home": HomeScreen,
+  },
+});
+
+export default client;
+```
+
+The host chooses which screen is active. The app only implements the screens it
+supports.
+
+## Generated Bindings
+
+Generated bindings expose host components and screen props to the app.
+
+```tsx
+import { h } from "preact";
+import { Button } from "#tailorkit";
+import type { ScreenProps } from "#tailorkit";
+
+type HomeScreenProps = ScreenProps<"/home">;
+
+export default function HomeScreen({ context }: HomeScreenProps) {
+  return h(
+    Button,
+    {
+      onClick: () => {},
+      variant: "primary",
+    },
+    `Open ${context.page.title}`,
+  );
+}
+```
+
+`ScreenProps<"/home">` is generated from the host schema, so app code receives
+the same typed context the host provides through `ScreenMatch`.
+
+## Components
+
+Components imported from `#tailorkit` render through the host's React adapter
+component renderers.
+
+```tsx
+export const tailor = tailorKit(schema, {
+  baseUrl: "http://127.0.0.1:4175",
+  components: {
+    Button: ({ props, slots }) => (
+      <button type="button" onClick={props.onClick}>
+        {slots.default}
+      </button>
+    ),
+  },
+});
+```
+
+The app calls `Button`; the host decides how `Button` is rendered.
+
+## Build And Preview
+
+Run the TailorKit preview server while developing an app.
+
+```bash
+tailorkit experimental-preview --cwd examples/apps/todo
+```
+
+The preview server builds the app client and exposes an app registry:
+
+```txt
+GET /apps
+GET /client.js
+```
+
+The host React app points its `tailorKit({ baseUrl })` configuration at that
+preview server.
+
+## Keep Apps Focused
+
+TailorKit apps should not own host routing or fetch host route data directly.
+Use the context supplied by the host screen match, then render UI using the
+generated component bindings.

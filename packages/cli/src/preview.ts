@@ -49,10 +49,26 @@ export const toPreviewOptions = (options: Record<string, unknown>): PreviewOptio
   port: parsePort(options.port),
 });
 
-const createStaticServer = (root: string): Server =>
+interface AppRegistryItem {
+  clientPath: string;
+  description?: string;
+  id: string;
+  name?: string;
+}
+
+const createStaticServer = (root: string, apps: readonly AppRegistryItem[]): Server =>
   createServer(async (request, response) => {
     try {
       const url = new URL(request.url ?? "/", "http://localhost");
+      if (url.pathname === "/apps") {
+        response.writeHead(200, {
+          "access-control-allow-origin": "*",
+          "content-type": "application/json; charset=utf-8",
+        });
+        response.end(JSON.stringify(apps));
+        return;
+      }
+
       const pathname = decodeURIComponent(url.pathname);
       const relativePath = pathname === "/" ? "client.js" : pathname.slice(1);
       const filepath = path.resolve(root, relativePath);
@@ -82,6 +98,25 @@ const createStaticServer = (root: string): Server =>
     }
   });
 
+const loadAppRegistry = async (root: string): Promise<AppRegistryItem[]> => {
+  const packageJsonPath = path.join(root, "package.json");
+  const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8")) as {
+    description?: unknown;
+    name?: unknown;
+  };
+  const id = typeof packageJson.name === "string" ? packageJson.name : path.basename(root);
+
+  return [
+    {
+      clientPath: "/client.js",
+      description:
+        typeof packageJson.description === "string" ? packageJson.description : undefined,
+      id,
+      name: typeof packageJson.name === "string" ? packageJson.name : undefined,
+    },
+  ];
+};
+
 export const runExperimentalPreview = async (options: PreviewOptions): Promise<void> => {
   const loaded = await loadTailorKitConfig(options.configPath, options.cwd);
   const outDir = path.resolve(
@@ -106,7 +141,7 @@ export const runExperimentalPreview = async (options: PreviewOptions): Promise<v
     }
   };
 
-  const server = createStaticServer(outDir);
+  const server = createStaticServer(outDir, await loadAppRegistry(loaded.root));
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, host, resolve);

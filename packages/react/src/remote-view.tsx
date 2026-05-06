@@ -4,13 +4,111 @@ import {
   memo,
   useCallback,
   useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
   useSyncExternalStore,
 } from "react";
 import type { ReactNode } from "react";
-import type { RemoteElementNode } from "@tailorkit/sandbox/protocol";
+import { createWorkerUiHost } from "@tailorkit/sandbox/host";
+import type { HostToWorkerPayload, RemoteElementNode } from "@tailorkit/sandbox/protocol";
+import { NodeStore } from "./node-store";
 import { RemoteUIContext } from "./remote-context";
 import type { RemoteViewContext } from "./remote-context";
 import { toReactEventName, toReactProps } from "./render-utils";
+
+interface RemoteViewHostProps {
+  appUrl: string | URL;
+  components: Record<string, unknown>;
+  createWorker?: (url: URL, options: WorkerOptions) => Worker;
+  props?: Record<string, unknown>;
+  workerUrl?: string | URL;
+}
+
+export function RemoteViewHost({
+  appUrl,
+  components,
+  createWorker,
+  props,
+  workerUrl,
+}: RemoteViewHostProps): ReactNode {
+  const storeRef = useRef<NodeStore | null>(null);
+  if (storeRef.current === null) {
+    storeRef.current = new NodeStore();
+  }
+  const store = storeRef.current;
+
+  const dispatchRef = useRef<((payload: HostToWorkerPayload) => void) | null>(null);
+  const [, setStatus] = useState<"error" | "ready" | "starting">("starting");
+
+  const ctxRef = useRef<RemoteViewContext>({
+    components,
+    dispatch: (payload) => dispatchRef.current?.(payload),
+    store,
+  });
+
+  useEffect(() => {
+    ctxRef.current.components = components;
+  }, [components]);
+
+  const ui = useMemo(() => {
+    const ctx = ctxRef.current;
+    return createElement(
+      RemoteUIContext.Provider,
+      { value: ctx },
+      createElement(RemoteRoot, { store: ctx.store }),
+    );
+  }, []);
+
+  useEffect(() => {
+    const host = createWorkerUiHost(appUrl, {
+      createWorker,
+      onError: () => {
+        setStatus("error");
+      },
+      props,
+      workerUrl,
+    });
+
+    dispatchRef.current = (payload) => host.dispatch(payload);
+
+    const unsubscribe = host.subscribe(() => {
+      const tree = host.getSnapshot();
+      if (tree !== null) {
+        store.setSnapshot(tree);
+        setStatus("ready");
+      }
+    });
+
+    setStatus("starting");
+    host.mount();
+
+    return () => {
+      unsubscribe();
+      dispatchRef.current = null;
+      host.worker.terminate();
+    };
+  }, [appUrl, createWorker, props, workerUrl, store]);
+
+  return ui;
+}
+
+interface RemoteRootProps {
+  store: RemoteViewContext["store"];
+}
+
+function RemoteRoot({ store }: RemoteRootProps): ReactNode {
+  const subscribe = useCallback((listener: () => void) => store.subscribeRoot(listener), [store]);
+  const getSnapshot = useCallback(() => store.getRootId(), [store]);
+
+  const rootId = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  if (rootId === null) {
+    return null;
+  }
+
+  return <RemoteView nodeId={rootId} />;
+}
 
 interface RemoteElementViewProps {
   ctx: RemoteViewContext;

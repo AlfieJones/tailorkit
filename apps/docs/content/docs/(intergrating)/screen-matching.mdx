@@ -1,0 +1,175 @@
+---
+title: Screen Matching
+description: Connect host-owned routes to TailorKit screens with typed context.
+---
+
+Screen matching is how a host app tells TailorKit which screen is active.
+TailorKit consumes mounted `ScreenMatch` components; it does not own routing,
+read `window.location`, or mutate browser history.
+
+## Declare A Match
+
+Place `tailor.ScreenMatch` inside the host route that owns the active data and
+params. `pattern` is metadata for identity and debugging. `params` are explicit
+route params from your router.
+
+```tsx
+<tailor.ScreenMatch
+  pattern="/users/:userId"
+  params={{ userId }}
+  screen="/user"
+  context={{ userId, user }}
+>
+  {children}
+</tailor.ScreenMatch>
+```
+
+## Typed Context
+
+`screen` is typed from `schema.screens`, and `context` is typed from the
+selected screen's context schema.
+
+```ts
+const schema = defineSchema({
+  components: {},
+  screens: {
+    "/user": screen({
+      context: z.object({
+        userId: z.string(),
+        user: z.object({
+          id: z.string(),
+          name: z.string(),
+        }),
+      }),
+    }),
+  },
+});
+```
+
+This match type-checks:
+
+```tsx
+<tailor.ScreenMatch
+  pattern="/users/:userId"
+  params={{ userId }}
+  screen="/user"
+  context={{
+    userId,
+    user,
+  }}
+/>
+```
+
+Invalid screen names or missing context fields fail at compile time.
+
+## Loading Without Stale Context
+
+Use `isLoading` when the route is mounted but its data is not ready. Loading
+matches can omit `context`.
+
+```tsx
+<tailor.ScreenMatch
+  pattern="/users/:userId"
+  params={{ userId }}
+  screen="/user"
+  isLoading={isLoading}
+  context={isLoading ? undefined : { userId, user }}
+>
+  {children}
+</tailor.ScreenMatch>
+```
+
+The API is intentionally strict:
+
+- `isLoading: true` allows `context` to be omitted.
+- `isLoading?: false` requires the full typed `context`.
+
+This prevents a previous route's context from being reused while the next route
+is still loading.
+
+## Nested Matches
+
+When multiple matches are mounted, the deepest mounted match wins.
+
+```tsx
+<tailor.ScreenMatch pattern="/projects/:projectId" screen="/project" context={projectContext}>
+  <ProjectLayout>
+    <tailor.ScreenMatch
+      pattern="/projects/:projectId/issues/:issueId"
+      params={{ issueId, projectId }}
+      screen="issue"
+      context={issueContext}
+    >
+      <IssuePage />
+    </tailor.ScreenMatch>
+  </ProjectLayout>
+</tailor.ScreenMatch>
+```
+
+When the nested issue route unmounts, TailorKit falls back to the parent project
+match.
+
+## Render The Current Match
+
+`tailor.Screen` renders the selected match into a TailorKit app.
+
+```tsx
+const { apps } = tailor.useApps();
+
+return (
+  <tailor.ScreenMatch pattern="/" screen="/home" context={context}>
+    {apps.map((app) => (
+      <tailor.Screen key={app.id} app={app} />
+    ))}
+  </tailor.ScreenMatch>
+);
+```
+
+Multiple apps can render the same current match.
+
+## Registry State
+
+The same `tailor` instance caches the app registry. Use `useApps()` in React and
+`getApps()` or `getApp(id)` when you need to read the cached values outside a
+render path.
+
+```tsx
+const { apps, error, status } = tailor.useApps();
+const todoApp = tailor.getApp("todo");
+```
+
+## App URL Resolution
+
+`tailor.Screen` resolves an app client URL from the app registry item.
+
+```ts
+app.clientUrl ?? new URL(app.clientPath ?? `/${app.id}/client.js`, baseUrl);
+```
+
+Pass an app directly to bypass registry lookup:
+
+```tsx
+<tailor.Screen
+  app={{
+    id: "todo",
+    clientUrl: "https://example.com/tailorkit/todo/client.js",
+  }}
+/>
+```
+
+## Responsibilities
+
+The host app owns:
+
+- routing.
+- route params.
+- loading state.
+- data fetching.
+- choosing the active TailorKit screen.
+
+TailorKit owns:
+
+- fetching and caching the app registry.
+- tracking mounted `ScreenMatch` entries.
+- selecting the deepest active match.
+- rendering that match into one or more TailorKit apps.

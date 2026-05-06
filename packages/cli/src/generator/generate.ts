@@ -5,7 +5,7 @@ import path from "node:path";
 
 import {
   clientTemplate,
-  fallbackTemplate,
+  defaultScreenTemplate,
   genTemplate,
   gitignoreTemplate,
   oxfmtConfigTemplate,
@@ -87,7 +87,7 @@ export const generateApp = async (options: GenerateAppOptions): Promise<void> =>
     typescriptVersion: packageVersions.typescript,
   };
 
-  await ensureDirectory(path.join(targetDirectory, "src", "views"));
+  await ensureDirectory(path.join(targetDirectory, "src", "screens"));
 
   const files: { template: string; dest: string; condition?: boolean }[] = [
     { template: packageJsonTemplate, dest: "package.json" },
@@ -98,7 +98,7 @@ export const generateApp = async (options: GenerateAppOptions): Promise<void> =>
     { template: oxlintConfigTemplate, dest: "oxlint.config.ts", condition: linting },
     { template: oxfmtConfigTemplate, dest: "oxfmt.config.ts", condition: formatting },
     { template: clientTemplate, dest: path.join("src", "client.ts") },
-    { template: fallbackTemplate, dest: path.join("src", "views", "fallback.tsx") },
+    { template: defaultScreenTemplate, dest: path.join("src", "screens", "default.tsx") },
     { template: genTemplate, dest: path.join("src", "tailorkit.gen.ts") },
   ];
 

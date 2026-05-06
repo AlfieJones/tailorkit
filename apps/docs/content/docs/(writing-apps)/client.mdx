@@ -1,0 +1,57 @@
+---
+title: App Client
+description: Register TailorKit app screens with createClient.
+---
+
+The app client is the runtime entry point for a TailorKit app. It maps screen
+keys to Preact components and is loaded by the host through the sandbox worker.
+
+## Create A Client
+
+```ts
+import { createClient } from "@tailorkit/app";
+import HomeScreen from "./screens/home";
+
+const client = createClient({
+  screens: {
+    "/home": HomeScreen,
+  },
+});
+
+export default client;
+```
+
+Each key in `screens` must match a screen path from the generated TailorKit
+types and start with `/`.
+
+## Screen Components
+
+Screen components receive props generated from the host schema.
+
+```tsx
+import { h } from "preact";
+import type { ScreenProps } from "#tailorkit";
+
+type HomeScreenProps = ScreenProps<"/home">;
+
+export default function HomeScreen({ context }: HomeScreenProps) {
+  return h("h1", null, context.page.title);
+}
+```
+
+The host passes `{ screen, context, isLoading }` when rendering the app. The app
+client selects the matching screen and renders it with those props.
+
+## Runtime Behavior
+
+When a host renders:
+
+```tsx
+<tailor.Screen app={app} />
+```
+
+TailorKit resolves the app's client URL, loads the client in the worker, and
+renders the current screen match into the app.
+
+If the selected screen is not implemented by the app client, the worker reports
+an error for that app.

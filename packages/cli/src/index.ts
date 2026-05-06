@@ -4,6 +4,7 @@ import { buildApp } from "@tailorkit/app/builder";
 import { cac } from "cac";
 import pc from "picocolors";
 
+import { generateTypes } from "./generator/types";
 import { runInit } from "./init";
 import { runExperimentalPreview, toPreviewOptions } from "./preview";
 
@@ -46,6 +47,25 @@ cli
     intro(pc.bold("TailorKit"));
     try {
       await runExperimentalPreview(toPreviewOptions(options));
+    } catch (error) {
+      log.error(error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
+
+cli
+  .command("generate", "Generate TailorKit app bindings")
+  .option("--schema <path>", "Path to tailorkit schema JSON")
+  .option("--out <path>", "Generated TypeScript output file")
+  .action(async (options: Record<string, unknown>) => {
+    intro(pc.bold("TailorKit"));
+    try {
+      const outPath = await generateTypes({
+        cwd: String(options.cwd ?? "."),
+        outFile: options.out as string | undefined,
+        schemaFile: options.schema as string | undefined,
+      });
+      outro(`Generated ${pc.cyan(outPath)}.`);
     } catch (error) {
       log.error(error instanceof Error ? error.message : String(error));
       process.exit(1);

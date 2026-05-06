@@ -1,2 +1,11 @@
-export { createClient } from "./client";
-export type { ScreenComponent, ScreenPath, ScreenProps, TailorKitClient } from "./client";
+export { createClient, createScreen } from "./client";
+export type {
+  AppScreenPath,
+  ScreenComponent,
+  ScreenContext,
+  ScreenDefinition,
+  ScreenPath,
+  ScreenProps,
+  ScreenPropsForPath,
+  TailorKitClient,
+} from "./client";

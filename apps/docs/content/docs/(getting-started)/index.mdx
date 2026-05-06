@@ -1,0 +1,99 @@
+---
+title: Overview
+description: Build host apps that render TailorKit runtime apps with typed screens.
+---
+
+TailorKit is a framework for embedding runtime apps into a host React product.
+The host app keeps ownership of routing, data loading, and user context.
+TailorKit supplies the contract between the host and embedded apps: typed
+components, typed screens, app registry loading, and screen rendering.
+
+## How It Works
+
+TailorKit has four moving parts:
+
+- A host app defines a schema for the components and screens it supports.
+- A TailorKit app imports generated types and renders host components.
+- A runtime registry lists available TailorKit apps.
+- The React adapter renders the active host screen into one or more apps.
+
+The host declares the active TailorKit screen with `tailor.ScreenMatch`.
+
+```tsx
+<tailor.ScreenMatch pattern="/" screen="/home" context={context}>
+  {apps.map((app) => (
+    <tailor.Screen key={app.id} app={app} />
+  ))}
+</tailor.ScreenMatch>
+```
+
+The `pattern` is metadata. TailorKit does not read the browser URL or decide
+which route is active.
+
+## Host Schema
+
+The schema describes what embedded apps can render and what screen context they
+receive.
+
+```ts
+const schema = defineSchema({
+  components: {
+    Button: component({
+      callbacks: {
+        onClick: {},
+      },
+      slots: ["default"],
+    }),
+  },
+  screens: {
+    "/home": screen({
+      context: z.object({
+        user: z.object({
+          id: z.string(),
+        }),
+      }),
+    }),
+  },
+});
+```
+
+## Runtime Apps
+
+TailorKit apps are listed by the runtime registry at `GET /apps`.
+
+```ts
+type TailorKitApp = {
+  id: string;
+  name?: string;
+  description?: string;
+  clientUrl?: string;
+  clientPath?: string;
+};
+```
+
+The React adapter fetches this registry with `tailor.useApps()`.
+
+## Screen Matching
+
+The host route declares the current TailorKit screen and context. If matches are
+nested, the deepest mounted match wins.
+
+```tsx
+<tailor.ScreenMatch
+  pattern="/users/:userId"
+  params={{ userId }}
+  screen="/user"
+  context={{ userId, user }}
+>
+  {children}
+</tailor.ScreenMatch>
+```
+
+## Where To Go Next
+
+- Read [What is TailorKit?](/docs/what-is-tailorkit) for the mental model.
+- Follow the [Quickstart](/docs/quickstart) to wire a host route to a runtime
+  app.
+- Use [Screen Matching](/docs/screen-matching) when working with nested routes,
+  loading states, or multiple TailorKit apps on the same page.
+- Read [Writing Apps](/docs/writing-apps) when building the embedded app side.
