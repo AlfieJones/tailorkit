@@ -1,5 +1,8 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { TailorKitSchemaSpec } from "../spec";
+import { isPrimitiveComponentDefinition, resolvePrimitiveFields } from "../primitives/schema";
+import type { TailorKitTheme } from "../primitives/theme";
+import { resolveTheme } from "../primitives/theme";
 
 export type Schema = StandardSchemaV1;
 export type CallbackMap = Record<string, CallbackDefinition | undefined>;
@@ -115,6 +118,7 @@ export interface TailorKitSchema<
   };
   components: TComponents;
   screens: TScreens;
+  theme: TailorKitTheme;
   serialize(schemaSerializer?: SchemaSerializer): TailorKitSchemaSpec;
 }
 
@@ -192,14 +196,18 @@ export function screen<const TContext extends Schema>(
 const resolveComponentMetadata = (
   name: string,
   definition: ComponentDefinition,
+  theme: TailorKitTheme,
 ): ResolvedComponentMetadata => {
-  const fieldKeys = definition.fields ? getObjectKeys(definition.fields) : [];
+  const fields = isPrimitiveComponentDefinition(definition)
+    ? resolvePrimitiveFields(definition, theme)
+    : definition.fields;
+  const fieldKeys = fields ? getObjectKeys(fields) : [];
   const callbackKeys = Object.keys(definition.callbacks ?? {});
   assertNoLocalFieldCallbackConflicts(name, fieldKeys, callbackKeys);
 
   return {
     callbacks: definition.callbacks ?? {},
-    fields: definition.fields,
+    fields,
     slots: [...(definition.slots ?? [])],
   };
 };
@@ -207,12 +215,17 @@ const resolveComponentMetadata = (
 export function defineSchema<
   const TComponents extends Record<string, ComponentDefinition>,
   const TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
->(schema: { components: TComponents; screens?: TScreens }): TailorKitSchema<TComponents, TScreens> {
+>(schema: {
+  components: TComponents;
+  screens?: TScreens;
+  theme?: TailorKitTheme;
+}): TailorKitSchema<TComponents, TScreens> {
+  const theme = resolveTheme(schema.theme);
   const components = {} as TailorKitSchema<TComponents, TScreens>["$internal"]["components"];
   const screens = {} as TailorKitSchema<TComponents, TScreens>["$internal"]["screens"];
 
   for (const [name, definition] of Object.entries(schema.components)) {
-    components[name as keyof TComponents] = resolveComponentMetadata(name, definition);
+    components[name as keyof TComponents] = resolveComponentMetadata(name, definition, theme);
   }
 
   for (const [name, definition] of Object.entries(schema.screens ?? {})) {
@@ -263,6 +276,7 @@ export function defineSchema<
     return {
       components: serializedComponents,
       screens: serializedScreens,
+      theme,
       version: 1,
     };
   };
@@ -270,6 +284,7 @@ export function defineSchema<
   return {
     components: schema.components,
     screens: (schema.screens ?? {}) as TScreens,
+    theme,
     serialize,
     $internal: { components, screens },
   };

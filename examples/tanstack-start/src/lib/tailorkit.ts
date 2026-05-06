@@ -1,11 +1,23 @@
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { tailorKit } from "tailorkit/react";
-import { component, defineSchema, screen } from "tailorkit";
+import { primitives as reactPrimitives, tailorKit } from "tailorkit/react";
+import { component, defineSchema, primitives, screen } from "tailorkit";
 import { z } from "zod";
 
 export const schema = defineSchema({
+  theme: {
+    tokens: {
+      background: {
+        muted: "var(--muted)",
+        surface: "var(--background)",
+      },
+      borderColor: {
+        default: "var(--border)",
+      },
+    },
+  },
   components: {
+    ...primitives,
     Button: component({
       fields: z.object({
         variant: z.enum(["primary", "secondary"]),
@@ -34,6 +46,7 @@ export const schema = defineSchema({
 export const tailor = tailorKit(schema, {
   baseUrl: "http://127.0.0.1:4175",
   components: {
+    ...reactPrimitives,
     Button: ({ props, slots }) =>
       createElement(
         "button",

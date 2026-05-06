@@ -1,0 +1,73 @@
+import { render, screen } from "@testing-library/react";
+import { createElement } from "react";
+import { describe, expect, it } from "vitest";
+import { buildThemeCss, PrimitiveThemeContext, primitives } from "../primitives";
+
+const theme = {
+  breakpoints: {
+    base: null,
+    lg: "1024px",
+    sm: "640px",
+  },
+  tokens: {
+    background: {
+      surface: "var(--background)",
+    },
+    borderColor: {
+      default: "var(--border)",
+    },
+    radius: {
+      md: "8px",
+    },
+    space: {
+      lg: "16px",
+      md: "8px",
+    },
+  },
+};
+
+describe("react primitives", () => {
+  it("builds screen-scoped theme variables", () => {
+    const css = buildThemeCss("screen-1", theme);
+    expect(css).toContain('[data-tailorkit-screen="screen-1"]');
+    expect(css).toContain("--tailorkit-space-md: 8px;");
+    expect(css).toContain("--tailorkit-background-surface: var(--background);");
+  });
+
+  it("renders a scoped primitive style with responsive rules", () => {
+    render(
+      <PrimitiveThemeContext.Provider value={{ screenId: "screen-1", theme }}>
+        {primitives.Flex({
+          props: {
+            direction: { base: "column", lg: "row" },
+            gap: "md",
+            padding: { base: "md", lg: "lg" },
+          },
+          slots: { default: createElement("span", null, "Content") },
+        })}
+      </PrimitiveThemeContext.Provider>,
+    );
+
+    const content = screen.getByText("Content");
+    const node = content.parentElement;
+    const style = node?.querySelector("style");
+    expect(node?.tagName).toBe("DIV");
+    expect(style?.textContent).toContain("display: flex;");
+    expect(style?.textContent).toContain("padding: var(--tailorkit-space-md);");
+    expect(style?.textContent).toContain("@media (min-width: 1024px)");
+    expect(style?.textContent).toContain("flex-direction: row;");
+  });
+
+  it("renders inline as a span", () => {
+    render(
+      <PrimitiveThemeContext.Provider value={{ screenId: "screen-2", theme }}>
+        {primitives.Inline({
+          props: { padding: "md" },
+          slots: { default: "Label" },
+        })}
+      </PrimitiveThemeContext.Provider>,
+    );
+
+    expect(screen.getByText("Label").tagName).toBe("SPAN");
+  });
+});

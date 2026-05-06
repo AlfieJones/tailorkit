@@ -84,6 +84,30 @@ describe("renderGeneratedTypes", () => {
 
     expect(output).toContain("variant?: unknown;");
   });
+
+  it("generates primitive component props from serialized fields", () => {
+    const output = renderGeneratedTypes({
+      components: {
+        Box: {
+          callbacks: {},
+          fields: {
+            properties: {
+              padding: {
+                type: "string",
+              },
+            },
+            type: "object",
+          },
+          slots: ["default"],
+        },
+      },
+      screens: {},
+    });
+
+    expect(output).toContain("export interface BoxProps");
+    expect(output).toContain("padding?: string;");
+    expect(output).toContain('createRemoteComponent<BoxProps, readonly ["default"]>');
+  });
 });
 
 describe("generateTypes", () => {

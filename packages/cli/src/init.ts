@@ -38,7 +38,8 @@ const abortIfCancelled = <T>(value: T | symbol): T => {
   return value as T;
 };
 
-const promptDirectory = async (given: string | undefined, cwd: string): Promise<string> => path.resolve(cwd, given ?? ".");
+const promptDirectory = (given: string | undefined, cwd: string): string =>
+  path.resolve(cwd, given ?? ".");
 
 const promptPackageName = async (given: string | undefined, baseDir: string): Promise<string> => {
   const defaultName = normalizePackageName(path.basename(baseDir)) || "tailorkit-app";
@@ -143,7 +144,7 @@ const runFormat = async (targetDir: string, packageManager: PackageManager): Pro
 };
 
 export const runInit = async (options: InitOptions): Promise<string> => {
-  const baseDir = await promptDirectory(options.directory, options.cwd);
+  const baseDir = promptDirectory(options.directory, options.cwd);
   const packageName = await promptPackageName(options.name, baseDir);
   const targetDirectory = path.join(baseDir, packageName);
 

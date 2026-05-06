@@ -1,11 +1,4 @@
-import {
-  createContext,
-  createElement,
-  useContext,
-  useEffect,
-  useMemo,
-  useSyncExternalStore,
-} from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type {
@@ -15,6 +8,7 @@ import type {
   ScreenDefinition,
   TailorKitSchema,
 } from "@tailorkit/core/schema";
+import { buildThemeCss, PrimitiveThemeContext } from "./primitives";
 import { RemoteViewHost } from "./remote-view";
 
 type ComponentRenderer<TComponent extends ComponentDefinition> = (args: {
@@ -185,10 +179,13 @@ export function tailorKit<
       };
     }, [context, depth, id, isLoading, params, pattern, screen]);
 
-    return createElement(ScreenMatchDepthContext.Provider, { value: depth }, children);
+    return (
+      <ScreenMatchDepthContext.Provider value={depth}>{children}</ScreenMatchDepthContext.Provider>
+    );
   };
 
   const Screen = ({ app, createWorker, workerUrl }: ScreenProps): ReactNode => {
+    const reactId = useId();
     const match = useSyncExternalStore(
       store.subscribe,
       store.getCurrentMatch,
@@ -199,17 +196,28 @@ export function tailorKit<
       return null;
     }
 
-    return createElement(RemoteViewHost, {
-      appUrl: resolveAppUrl(app, store.baseUrl),
-      components: wrappedComponents,
-      createWorker,
-      props: {
-        context: match.context,
-        isLoading: match.isLoading,
-        screen: match.screen,
-      },
-      workerUrl,
-    });
+    const screenId = `tailorkit-screen-${reactId.replaceAll(":", "")}`;
+
+    return (
+      <PrimitiveThemeContext.Provider value={{ screenId, theme: schema.theme }}>
+        <div data-tailorkit-screen={screenId}>
+          <style data-tailorkit-theme-style={screenId}>
+            {buildThemeCss(screenId, schema.theme)}
+          </style>
+          <RemoteViewHost
+            appUrl={resolveAppUrl(app, store.baseUrl)}
+            components={wrappedComponents}
+            createWorker={createWorker}
+            props={{
+              context: match.context,
+              isLoading: match.isLoading,
+              screen: match.screen,
+            }}
+            workerUrl={workerUrl}
+          />
+        </div>
+      </PrimitiveThemeContext.Provider>
+    );
   };
 
   return {
