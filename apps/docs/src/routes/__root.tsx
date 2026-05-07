@@ -2,6 +2,8 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import { Banner } from "fumadocs-ui/components/banner";
 
+import { LazyMotion, domMax } from "motion/react";
+
 import appCss from "@/styles/app.css?url";
 
 export const Route = createRootRoute({
@@ -37,20 +39,22 @@ function RootComponent() {
         <HeadContent />
       </head>
       <body className="flex flex-col min-h-screen">
-        <Banner>
-          Private beta. We&apos;re working directly with early teams.{" "}
-          <a
-            className="ml-2 text-primary"
-            href="https://cal.com/alfiejones"
-            rel="noopener noreferrer"
-          >
-            Talk to a founder
-          </a>
-        </Banner>
-        <RootProvider>
-          <Outlet />
-        </RootProvider>
-        <Scripts />
+        <LazyMotion features={domMax}>
+          <Banner>
+            Private beta. We&apos;re working directly with early teams.{" "}
+            <a
+              className="ml-2 text-primary"
+              href="https://cal.com/alfiejones"
+              rel="noopener noreferrer"
+            >
+              Talk to a founder
+            </a>
+          </Banner>
+          <RootProvider>
+            <Outlet />
+          </RootProvider>
+          <Scripts />
+        </LazyMotion>
       </body>
     </html>
   );

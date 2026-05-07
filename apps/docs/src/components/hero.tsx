@@ -1,15 +1,10 @@
 import { clsx } from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import { Container } from "./container";
-import { StaticMeshGradient } from "@paper-design/shaders-react";
 import { Button } from "@tailorkit/ui/button";
 import { Link } from "@tanstack/react-router";
-
-function Demo() {
-  return (
-    <div className="bg-background absolute inset-12 rounded-4xl border border-border">Hello</div>
-  );
-}
+import { FileText, Workflow, Table, LayoutDashboard } from "lucide-react";
+import { BrowserDemo } from "./browser-demo";
 
 export function Hero({
   eyebrow,
@@ -48,22 +43,14 @@ export function Hero({
               />
             </div>
           </div>
-          <div className="rounded-4xl overflow-hidden relative">
-            <StaticMeshGradient
-              width={1280}
-              height={720}
-              colors={["#000000", "#082400", "#b1aa91", "#8e8c15"]}
-              positions={42}
-              waveX={0.45}
-              waveXShift={0}
-              waveY={1}
-              waveYShift={0}
-              mixing={0}
-              grainMixer={0.37}
-              grainOverlay={0.78}
-            />
-            <Demo />
-          </div>
+          <BrowserDemo
+            tabs={[
+              { label: "Document", icon: FileText },
+              { label: "Workflow", icon: Workflow },
+              { label: "Sheet", icon: Table },
+              { label: "Dashboard", icon: LayoutDashboard },
+            ]}
+          />
         </div>
         {footer}
       </Container>
