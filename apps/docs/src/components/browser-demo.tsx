@@ -4,6 +4,7 @@ import { StaticMeshGradient } from "@paper-design/shaders-react";
 import type { FileText } from "lucide-react";
 import * as m from "motion/react-m";
 import { AnimatePresence } from "motion/react";
+import { Tabs } from "@base-ui/react/tabs";
 
 const TAB_INTERVAL = 5000;
 
@@ -61,53 +62,58 @@ export function BrowserDemo({
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center h-full z-0">
-            {tabs.map((tab, i) => {
-              const Icon = tab.icon;
-              const isActive = tab.label === activeTab;
-              return (
-                <button
-                  key={tab.label}
-                  type="button"
-                  onClick={() => handleTabClick(tab.label)}
-                  className={clsx(
-                    "relative flex cursor-pointer hover:bg-accent items-center gap-2 px-4 h-full text-sm overflow-hidden transition duration-300",
-                    i === 0 && "border-l border-border",
-                    isActive
-                      ? "text-foreground bg-accent border-r border-border"
-                      : "text-muted-foreground border-r border-border hover:text-foreground",
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-
-                  <AnimatePresence>
-                    {/* Active progress indicator */}
-                    {isActive && (
-                      <m.span
-                        key={timerKey}
-                        className="absolute bottom-0 z-10 h-0.5 bg-primary pointer-events-none"
-                        initial={{ width: "0%", left: "0%" }}
-                        animate={{
-                          width: ["0%", "100%"],
-                          left: ["0%", "0%"],
-                        }}
-                        exit={{
-                          width: [null, "100%", "0%"],
-                          left: [null, "0%", "100%"],
-                          transition: { duration: 0.5, times: [0, 0.3, 1], ease: "easeInOut" },
-                        }}
-                        transition={{
-                          duration: 5,
-                          ease: "linear",
-                        }}
-                      />
+          <Tabs.Root
+            value={activeTab}
+            onValueChange={handleTabClick}
+            className="flex items-center h-full"
+          >
+            <Tabs.List className="flex items-center h-full">
+              {tabs.map((tab, i) => {
+                const Icon = tab.icon;
+                const isActive = tab.label === activeTab;
+                return (
+                  <Tabs.Tab
+                    key={tab.label}
+                    value={tab.label}
+                    className={clsx(
+                      "relative flex cursor-pointer hover:bg-accent items-center gap-2 px-4 h-full text-sm overflow-hidden transition duration-300",
+                      i === 0 && "border-l border-border",
+                      isActive
+                        ? "text-foreground bg-accent border-r border-border"
+                        : "text-muted-foreground border-r border-border hover:text-foreground",
                     )}
-                  </AnimatePresence>
-                </button>
-              );
-            })}
-          </div>
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{tab.label}</span>
+
+                    <AnimatePresence>
+                      {/* Active progress indicator */}
+                      {isActive && (
+                        <m.span
+                          key={timerKey}
+                          className="absolute bottom-0 z-10 h-0.5 bg-primary pointer-events-none"
+                          initial={{ width: "0%", left: "0%" }}
+                          animate={{
+                            width: ["0%", "100%"],
+                            left: ["0%", "0%"],
+                          }}
+                          exit={{
+                            width: [null, "100%", "0%"],
+                            left: [null, "0%", "100%"],
+                            transition: { duration: 0.5, times: [0, 0.3, 1], ease: "easeInOut" },
+                          }}
+                          transition={{
+                            duration: 5,
+                            ease: "linear",
+                          }}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </Tabs.Tab>
+                );
+              })}
+            </Tabs.List>
+          </Tabs.Root>
         </div>
 
         {/* Content area */}
