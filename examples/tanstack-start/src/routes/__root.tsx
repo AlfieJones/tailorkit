@@ -2,7 +2,7 @@ import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/r
 import { BarChart3, Building2, Handshake, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-import tailor from "#/lib/tailorkit";
+import tailorClient from "#/lib/tailorkit";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -38,7 +38,7 @@ const navItems = [
 
 function AppShell() {
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
-  const appsSnapshot = tailor.useApps();
+  const appsSnapshot = tailorClient.useApps();
   const apps = appsSnapshot.apps;
   const activeApp = useMemo(
     () => apps.find((app) => app.id === activeAppId) ?? null,
@@ -52,7 +52,7 @@ function AppShell() {
   }, [activeAppId, apps]);
 
   return (
-    <tailor.ScreenMatch context={{}} pattern="/" screen="/">
+    <tailorClient.ScreenMatch context={{}} pattern="/" screen="/">
       <div className="min-h-screen bg-muted/28">
         <aside className="fixed inset-y-0 left-0 hidden w-64 border-r bg-background lg:block">
           <div className="flex h-16 items-center gap-2 border-b px-5">
@@ -114,7 +114,7 @@ function AppShell() {
         />
         {activeApp ? <AppPanel app={activeApp} onClose={() => setActiveAppId(null)} /> : null}
       </div>
-    </tailor.ScreenMatch>
+    </tailorClient.ScreenMatch>
   );
 }
 
@@ -126,7 +126,7 @@ function AppRail({
   onSelectApp,
 }: {
   activeAppId: string | null;
-  apps: ReturnType<typeof tailor.getApps>;
+  apps: ReturnType<typeof tailorClient.getApps>;
   errorMessage?: string;
   status: "error" | "idle" | "loading" | "ready";
   onSelectApp: (appId: string) => void;
@@ -192,7 +192,7 @@ function AppPanel({
   app,
   onClose,
 }: {
-  app: ReturnType<typeof tailor.getApps>[number];
+  app: ReturnType<typeof tailorClient.getApps>[number];
   onClose: () => void;
 }) {
   const label = app.name ?? app.id;
@@ -215,8 +215,8 @@ function AppPanel({
           <X className="size-4" aria-hidden="true" />
         </button>
       </header>
-      <div className="min-h-0 flex-1 overflow-auto bg-muted/28">
-        <tailor.Screen app={app} />
+      <div className="min-h-0 flex-1 overflow-auto bg-muted/28 p-4">
+        <tailorClient.Screen app={app} />
       </div>
     </aside>
   );

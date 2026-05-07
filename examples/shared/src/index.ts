@@ -1,71 +1,39 @@
-import { component, defineSchema, screen, primitives } from "@tailorkit/core/schema";
+import { component, defineSchema, screen, primitives, tailorKit } from "tailorkit";
 import { z } from "zod";
 
+const Button = component({
+  fields: z.object({
+    variant: z.enum(["default", "secondary"]),
+  }),
+  callbacks: {
+    onClick: {},
+  },
+  slots: ["default"],
+});
+
+// This is the contract between the your platform and apps
+// Try to avoid breaking changes as this can break any apps which rely on the schema
 export const schema = defineSchema({
   theme: {
+    // See https://tailorkit.dev/docs/styling#theme
     tokens: {
-      background: {
-        muted: "var(--muted)",
-        surface: "var(--background)",
-      },
       borderColor: {
         default: "var(--border)",
+      },
+      textColor: {
+        default: "var(--text)",
       },
     },
   },
   components: {
     ...primitives,
-    Button: component({
-      fields: z.object({
-        variant: z.enum(["primary", "secondary"]),
-      }),
-      callbacks: {
-        onClick: {},
-      },
-      slots: ["default"],
-    }),
-    Input: component({
-      fields: z.object({
-        type: z.enum(["text", "email", "password"]).optional(),
-        placeholder: z.string().optional(),
-        value: z.string().optional(),
-        disabled: z.boolean().optional(),
-      }),
-      callbacks: {
-        onChange: {},
-        onBlur: {},
-        onFocus: {},
-      },
-      slots: ["default"],
-    }),
-    Tabs: component({
-      fields: z.object({
-        tabs: z.array(
-          z.object({
-            label: z.string(),
-            value: z.string(),
-          }),
-        ),
-        value: z.string().optional(),
-        variant: z.enum(["default", "underline"]).optional(),
-      }),
-      callbacks: {
-        onChange: {},
-      },
-      slots: ["default"],
-    }),
+    Button,
   },
   screens: {
     "/": screen({}),
-    "/users/:userId": screen({
-      context: z.object({
-        user: z.object({
-          id: z.string(),
-          name: z.string().optional(),
-        }),
-      }),
-    }),
   },
 });
 
-export default schema;
+export const tailor = tailorKit({
+  schema,
+});

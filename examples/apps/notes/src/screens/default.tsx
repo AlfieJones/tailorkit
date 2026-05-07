@@ -1,6 +1,6 @@
 import { createScreen } from "@tailorkit/app";
 import { useState } from "preact/hooks";
-import { Box, Button, Flex } from "#tailorkit";
+import { Box, Button, Flex, Tabs, TabsList, TabsPanel, TabsTab } from "#tailorkit";
 
 type View = "notes" | "tasks";
 
@@ -34,21 +34,39 @@ const screen = createScreen("/", {
 });
 
 function ScreenComponent() {
-  const context = screen.useContext();
   const [view, setView] = useState<View>("notes");
   const [notes, setNotes] = useState<Note[]>(starterNotes);
   const [tasks, setTasks] = useState<Task[]>(starterTasks);
 
   return (
-    <Box background="#f7f8fa" padding="24px" width="100%">
-      <Flex direction="column" gap="20px">
-        <AppHeader name={"Acmes"} view={view} onViewChange={setView} />
+    <Box background="muted" padding="lg" width="full">
+      <Flex direction="column" gap="lg">
+        <AppHeader name="Acmes" />
 
-        {view === "notes" ? (
-          <NotesPanel notes={notes} onAdd={addNote} onDelete={deleteNote} />
-        ) : (
-          <TasksPanel tasks={tasks} onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} />
-        )}
+        <Tabs value={view} onValueChange={(nextView) => setView(nextView as View)}>
+          <Flex justify="between" align="center" gap="md">
+            <TabsList variant="underline">
+              <TabsTab value="notes">Notes</TabsTab>
+              <TabsTab value="tasks">Tasks</TabsTab>
+            </TabsList>
+            {view === "notes" ? (
+              <Button variant="default" onClick={addNote}>
+                Add note
+              </Button>
+            ) : (
+              <Button variant="default" onClick={addTask}>
+                Add task
+              </Button>
+            )}
+          </Flex>
+
+          <TabsPanel value="notes">
+            <NotesPanel notes={notes} onDelete={deleteNote} />
+          </TabsPanel>
+          <TabsPanel value="tasks">
+            <TasksPanel tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} />
+          </TabsPanel>
+        </Tabs>
       </Flex>
     </Box>
   );
@@ -94,59 +112,25 @@ function ScreenComponent() {
   }
 }
 
-function AppHeader({
-  name,
-  view,
-  onViewChange,
-}: {
-  name?: string;
-  view: View;
-  onViewChange: (view: View) => void;
-}) {
+function AppHeader({ name }: { name?: string }) {
   return (
-    <Flex direction="column" gap="12px">
-      <Flex direction="column" gap="4px">
+    <Flex direction="column" gap="xs">
+      <Flex direction="column" gap="2xs">
         <Box>{name ? `${name}'s workspace` : "Notes workspace"}</Box>
         <Box>Simple notes and tasks</Box>
-      </Flex>
-
-      <Flex gap="8px">
-        <Button
-          variant={view === "notes" ? "primary" : "secondary"}
-          onClick={() => onViewChange("notes")}
-        >
-          Notes
-        </Button>
-        <Button
-          variant={view === "tasks" ? "primary" : "secondary"}
-          onClick={() => onViewChange("tasks")}
-        >
-          Tasks
-        </Button>
       </Flex>
     </Flex>
   );
 }
 
-function NotesPanel({
-  notes,
-  onAdd,
-  onDelete,
-}: {
-  notes: Note[];
-  onAdd: () => void;
-  onDelete: (id: string) => void;
-}) {
+function NotesPanel({ notes, onDelete }: { notes: Note[]; onDelete: (id: string) => void }) {
   return (
-    <Flex direction="column" gap="12px">
-      <Flex justify="space-between" align="center" gap="12px">
+    <Flex direction="column" gap="md">
+      <Flex justify="between" align="center" gap="md">
         <Box>{notes.length} notes</Box>
-        <Button variant="primary" onClick={onAdd}>
-          Add note
-        </Button>
       </Flex>
 
-      <Flex direction="column" gap="10px">
+      <Flex direction="column" gap="sm">
         {notes.map((note) => (
           <NoteCard key={note.id} note={note} onDelete={onDelete} />
         ))}
@@ -157,11 +141,11 @@ function NotesPanel({
 
 function NoteCard({ note, onDelete }: { note: Note; onDelete: (id: string) => void }) {
   return (
-    <Box background="#ffffff" border="1px solid #e4e7ec" padding="14px" radius="8px">
-      <Flex direction="column" gap="10px">
-        <Flex justify="space-between" align="center" gap="12px">
+    <Box background="surface" border="solid" borderColor="default" padding="md" radius="md">
+      <Flex direction="column" gap="sm">
+        <Flex justify="between" align="center" gap="md">
           <Box>{note.title}</Box>
-          <Button variant="secondary" onClick={() => onDelete(note.id)}>
+          <Button variant="destructive" onClick={() => onDelete(note.id)}>
             Delete
           </Button>
         </Flex>
@@ -173,25 +157,20 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: (id: string) => vo
 
 function TasksPanel({
   tasks,
-  onAdd,
   onToggle,
   onDelete,
 }: {
   tasks: Task[];
-  onAdd: () => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
   return (
-    <Flex direction="column" gap="12px">
-      <Flex justify="space-between" align="center" gap="12px">
+    <Flex direction="column" gap="md">
+      <Flex justify="between" align="center" gap="md">
         <Box>{tasks.filter((task) => !task.done).length} open tasks</Box>
-        <Button variant="primary" onClick={onAdd}>
-          Add task
-        </Button>
       </Flex>
 
-      <Flex direction="column" gap="10px">
+      <Flex direction="column" gap="sm">
         {tasks.map((task) => (
           <TaskRow key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} />
         ))}
@@ -210,14 +189,14 @@ function TaskRow({
   onDelete: (id: string) => void;
 }) {
   return (
-    <Box background="#ffffff" border="1px solid #e4e7ec" padding="12px" radius="8px">
-      <Flex justify="space-between" align="center" gap="12px">
+    <Box background="surface" border="solid" borderColor="default" padding="md" radius="md">
+      <Flex justify="between" align="center" gap="md">
         <Box>{task.done ? `Done: ${task.text}` : task.text}</Box>
-        <Flex gap="8px">
-          <Button variant="secondary" onClick={() => onToggle(task.id)}>
+        <Flex gap="sm">
+          <Button variant="default" onClick={() => onToggle(task.id)}>
             {task.done ? "Undo" : "Done"}
           </Button>
-          <Button variant="secondary" onClick={() => onDelete(task.id)}>
+          <Button variant="destructive" onClick={() => onDelete(task.id)}>
             Delete
           </Button>
         </Flex>
