@@ -107,7 +107,7 @@ export type SchemaSerializer = (schema: Schema) => Record<string, unknown> | und
 
 export interface TailorKitSchema<
   TComponents extends Record<string, ComponentDefinition>,
-  TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+  TScreens extends Record<string, ScreenDefinition>,
 > {
   $internal: {
     components: {

@@ -252,8 +252,6 @@ export function createTailorKitClient<
   };
 }
 
-export const tailorKit = createTailorKitClient;
-
 function createTailorKitStore(baseUrlInput: string | URL) {
   const baseUrl = toBaseUrl(baseUrlInput);
   const listeners = new Set<() => void>();

@@ -1,213 +1,104 @@
 ---
 title: How apps work
-description: Apps are small sandboxed extensions that build upon your platform.
+description: Apps are sandboxed extensions that render through your platform.
 ---
 
-TailorKit apps are sandboxed extensions that plug into screens your product
-already owns. The host keeps control of routing, data, and native components.
+TailorKit lets your product load small runtime apps without giving those apps
+control of the whole page. Your product stays the host. The app supplies UI for
+specific places inside it.
 
-## Overview
+## The Model
 
-### The Short Version
+A TailorKit integration has four parts:
 
-- The host app decides which screen is active.
-- The host app provides the screen context.
-- The TailorKit app renders UI for that screen.
-- The sandbox keeps the app code contained.
-- The host renders the final UI with approved native components.
+- **Host app:** your React product. It owns routes, auth, data loading,
+  permissions, and the final UI.
+- **Schema:** the contract that says which screens, components, props,
+  callbacks, slots, and tokens apps can use.
+- **Runtime app:** an independently built app bundle that targets the schema.
+- **Sandbox:** the worker boundary that runs app code away from the host page.
+
+The host decides where apps can appear. Apps can only render the screens and
+components the host exposes.
 
 ```mermaid
 flowchart LR
-
-  subgraph APP["Your App"]
-    direction TB
-    UI["Your UI"]
-    SCREEN["Rendered Screen"]
-  end
-
-  subgraph SANDBOX["Worker Sandbox"]
-    direction TB
-    CODE["App Code"]
-  end
-
-  UI <--> |<div class="bg-card">Native<br/>Components</div>| SCREEN
-
-  SCREEN -->|Events| CODE
-  CODE -->|Proxied UI| SCREEN
+  Host["Host app"] --> Schema["Typed schema"]
+  Schema --> App["Runtime app"]
+  Host --> Registry["App registry"]
+  Registry --> Sandbox["Worker sandbox"]
+  App --> Sandbox
+  Sandbox --> Host
 ```
 
-### Host And App
+## What The Host Owns
 
-Every TailorKit integration has two sides.
+The host is the source of truth. It chooses the active screen, passes screen
+context, renders approved components, and handles sensitive work through host
+callbacks.
 
-- The **host** owns routing, auth, data loading, layout, and native components.
-- The **app** is built separately, loaded at runtime, and rendered inside a
-  screen chosen by the host.
+For example, the host can say: "this part of the user route is the `/user`
+screen, and here is the current user context." Read [Screens](/docs/screens)
+for the full pattern.
 
-### App Registry
+## What Apps Own
 
-The host also asks the TailorKit registry which apps are available:
+Apps are built separately from the host. They import generated bindings from the
+schema, implement one or more screens, and describe UI using host-approved
+components.
+
+An app can ask for a `Button`, but the host decides which real React component
+renders that button. Read [Writing apps](/docs/writing-apps) and
+[Components](/docs/components) for the app-side and host-side details.
+
+## How Apps Load
+
+At runtime, the host reads the app registry. Each registry entry points to an
+app client bundle and metadata.
 
 ```tsx
-const { apps, error, status } = tailor.useApps();
+const { apps } = tailor.useApps();
 ```
 
-Each registry item includes the app id, client URL, and any metadata the host
-needs.
-
-## Components
-
-Components let apps feel native without direct access to product internals.
-
-### Host Renderers
-
-The host defines the real component renderers:
+The host can render one app or many apps for the current screen:
 
 ```tsx
-export const tailor = tailorKit(schema, {
-  baseUrl: "http://127.0.0.1:4175",
-  components: {
-    Button: ({ props, slots }) => (
-      <button type="button" onClick={props.onClick}>
-        {slots.default}
-      </button>
-    ),
-  },
-});
+return apps.map((app) => <tailor.Screen key={app.id} app={app} />);
 ```
 
-### App Bindings
+In development, app bundles usually come from the TailorKit preview server. In
+production, they come from wherever you publish your app registry and bundles.
+Read [Installation](/docs/installation) for host setup.
 
-The app imports generated bindings for those components:
+## What The Sandbox Does
 
-```tsx
-import { h } from "preact";
-import { Button } from "#tailorkit";
+App code runs in a worker sandbox. It receives screen context, returns a
+description of the UI, and responds to events. The host renders the real UI and
+keeps direct access to routing, data, secrets, and browser APIs.
 
-export function SaveButton() {
-  return h(
-    Button,
-    {
-      onClick: () => {},
-      variant: "primary",
-    },
-    "Save changes",
-  );
-}
-```
+Events move through TailorKit. A user clicks a host-rendered component, the
+callback is forwarded to the app sandbox, and the app can update its rendered
+output.
 
-The app asks for `Button`; the host decides what `Button` actually means.
+For production guidance, read
+[Deploying to production](/docs/deploying-to-production).
 
-<details>
-  <summary>The technical stuff</summary>
+## Why This Works
 
-Components are declared in your TailorKit schema. Their fields, callbacks, and
-slots become generated types for app authors. The sandbox sends component
-requests to the host as a proxied UI tree, and the host renders them with the
-React components you configured.
+TailorKit keeps the platform boundary small:
 
-</details>
+- Product state stays in the host.
+- Extension code ships independently as runtime apps.
+- UI stays consistent through host components and theme tokens.
+- The schema gives both sides a typed contract.
+- The sandbox limits what app code can touch directly.
 
-## Screens
+The result is an extension model where customers can add apps without those
+apps becoming part of your core product codebase.
 
-### Host Match
+## Next
 
-The host wraps part of a route in `ScreenMatch` to tell TailorKit which screen
-is active.
-
-```tsx
-<tailor.ScreenMatch
-  pattern="/users/:userId"
-  params={{ userId }}
-  screen="/user"
-  context={{ userId, user }}
->
-  <UserPage />
-</tailor.ScreenMatch>
-```
-
-TailorKit does not inspect the browser URL and guess. Your router already knows
-where the user is, so the host passes that knowledge in directly.
-
-### App Screen
-
-The app implements the same screen key using generated screen props:
-
-```tsx
-import { h } from "preact";
-import { Button } from "#tailorkit";
-import type { ScreenProps } from "#tailorkit";
-
-type UserScreenProps = ScreenProps<"/user">;
-
-export default function UserScreen({ context }: UserScreenProps) {
-  return h(
-    Button,
-    {
-      onClick: () => {},
-      variant: "primary",
-    },
-    `Open ${context.user.name}`,
-  );
-}
-```
-
-Screens connect product context to app UI. The host provides the `/user`
-context; the app renders the `/user` screen.
-
-<details>
-  <summary>The technical stuff</summary>
-
-`pattern` and `params` identify the route match. `screen` must be one of the
-screens defined in your TailorKit schema. `context` is typed from that screen's
-schema, so missing fields or invalid screen names fail during development
-instead of turning into mystery runtime behavior.
-
-</details>
-
-## Sandboxing
-
-### Running The App
-
-When the host renders a TailorKit app, the app code runs inside a worker
-sandbox. That code can receive screen context and respond to events, but it does
-not get direct ownership of the host page.
-
-```tsx
-{
-  apps.map((app) => <tailor.Screen key={app.id} app={app} />);
-}
-```
-
-### Message Passing
-
-App code can describe UI and handle callbacks, while the host controls the page,
-components, and route data.
-
-### App Bundles
-
-In local development, sandboxed app clients usually come from the TailorKit
-preview server. In production, they can come from wherever you publish app
-metadata and client bundles.
-
-<details>
-  <summary>The technical stuff</summary>
-
-App screens are compiled into a runtime client bundle. The sandbox executes
-that bundle and sends a proxied UI description back to the host. Events travel
-the other way: a user clicks a host-rendered component, TailorKit forwards the
-callback to the sandbox, and the app can update its rendered output.
-
-</details>
-
-## Why This Shape Works
-
-TailorKit keeps the busy parts in the places that already understand them:
-
-- Routes stay in the host.
-- Product data stays in the host.
-- Design system components stay in the host.
-- Extension code ships as runtime apps.
-- App rendering happens through a typed schema contract.
-
-The result is a small boundary between a product and the apps extending it.
+- Start with [Installation](/docs/installation) to wire TailorKit into a host.
+- Use [Styling apps](/docs/styling-apps) to expose safe theme tokens.
+- Use [Actions](/docs/actions) when apps need to trigger host-owned work.
+- Use [Client](/docs/client) when implementing an app entry point.

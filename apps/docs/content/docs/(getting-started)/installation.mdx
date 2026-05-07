@@ -1,16 +1,17 @@
 ---
 title: Installation
-description: Learn how to configure TailorKit in your project.
+description: Install TailorKit and wire it into your host app.
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
 import { Step, Steps } from "fumadocs-ui/components/steps";
+
+Set up TailorKit in the app that will host and render TailorKit apps.
 
 <Steps>
 <Step>
 
 ### Install TailorKit
-
-Install TailorKit in the app that will host and render TailorKit apps.
 
 ```npm
 npm install tailorkit
@@ -19,84 +20,288 @@ npm install tailorkit
 </Step>
 <Step>
 
-### Create The TailorKit Instance
+### Create TailorKit instance
 
-Create a file named `tailor.ts` in one of these locations:
+Create `tailor.ts` in your project root, `lib/`, `utils/`, `src/lib/`, or
+`app/lib/`.
 
-- Project root
-- `lib/` folder
-- `utils/` folder
+This file defines the screens, components, and theme tokens TailorKit apps can
+use.
 
-You can also nest any of these folders under a `src/`, `app/`, or `server/`
-folder. For example, `src/lib/tailor.ts` and `app/lib/tailor.ts` are both valid.
-
-In this file, import TailorKit and create your TailorKit instance. Export the
-instance with the variable name `tailor`, or export it as the default export.
-
-```ts title="tailor.ts"
-import { component, defineSchema, screen } from "tailorkit";
-import { tailorKit } from "tailorkit/react";
+```ts title="./src/lib/tailor.ts" tab="Zod"
+import { component, defineSchema, primitives, screen, tailorKit } from "tailorkit";
 import { z } from "zod";
 
+const Button = component({
+  fields: z.object({
+    variant: z.enum(["primary", "secondary"]),
+  }),
+  callbacks: {
+    onClick: {},
+  },
+  slots: ["default"],
+});
+
 export const schema = defineSchema({
+  theme: {
+    tokens: {
+      borderColor: {
+        default: "var(--border)",
+      },
+      textColor: {
+        default: "var(--text)",
+      },
+    },
+  },
   components: {
-    // Add your platform components here.
+    ...primitives,
+    Button,
   },
   screens: {
-    // Add the screens TailorKit apps can render into here.
+    "/": screen({}),
   },
 });
 
-export const tailor = tailorKit(schema, {
-  baseUrl: "/api/tailorkit",
-  components: {
-    // Map schema components to your real React components here.
-  },
+export const tailor = tailorKit({
+  schema,
 });
 ```
 
-TailorKit looks for either a named `schema` export or a TailorKit instance
-export. Keeping the instance named `tailor` makes it easy to import throughout
-your host app.
+```ts title="./src/lib/tailor.ts" tab="Valibot"
+import { component, defineSchema, primitives, screen, tailorKit } from "tailorkit";
+import * as v from "valibot";
+
+const Button = component({
+  fields: v.object({
+    variant: v.picklist(["primary", "secondary"]),
+  }),
+  callbacks: {
+    onClick: {},
+  },
+  slots: ["default"],
+});
+
+export const schema = defineSchema({
+  theme: {
+    tokens: {
+      borderColor: {
+        default: "var(--border)",
+      },
+      textColor: {
+        default: "var(--text)",
+      },
+    },
+  },
+  components: {
+    ...primitives,
+    Button,
+  },
+  screens: {
+    "/": screen({}),
+  },
+});
+
+export const tailor = tailorKit({
+  schema,
+});
+```
+
+```ts title="./src/lib/tailor.ts" tab="ArkType"
+import { component, defineSchema, primitives, screen, tailorKit } from "tailorkit";
+import { type } from "arktype";
+
+const Button = component({
+  fields: type({
+    variant: "'primary' | 'secondary'",
+  }),
+  callbacks: {
+    onClick: {},
+  },
+  slots: ["default"],
+});
+
+export const schema = defineSchema({
+  theme: {
+    tokens: {
+      borderColor: {
+        default: "var(--border)",
+      },
+      textColor: {
+        default: "var(--text)",
+      },
+    },
+  },
+  components: {
+    ...primitives,
+    Button,
+  },
+  screens: {
+    "/": screen({}),
+  },
+});
+
+export const tailor = tailorKit({
+  schema,
+});
+```
+
+<Callout title="Treat The Schema As Public API" type="warn">
+  TailorKit apps are built against the schema you export. Removing screens, components, fields,
+  callbacks, slots, or tokens can break existing apps.
+</Callout>
 
 </Step>
 <Step>
 
-### Add Components To The Schema
+### Add the API handler
 
-Your schema is the contract between your platform and the apps that run inside
-it. It describes which components apps can render, what props they can receive,
-which callbacks they can call, and which screens they are allowed to target.
+Mount the handler at your TailorKit base path. The default is `/api/tailorkit`.
 
-```ts title="tailor.ts"
-export const schema = defineSchema({
-  components: {
-    Button: component({
-      fields: z.object({
-        variant: z.enum(["primary", "secondary"]),
-      }),
-      callbacks: {
-        onClick: {},
-      },
-      slots: ["default"],
-    }),
-  },
-  screens: {
-    "/home": screen({
-      context: z.object({
-        user: z.object({
-          id: z.string(),
-          name: z.string().optional(),
-        }),
-      }),
-    }),
+<Callout title="Framework Support">
+  TailorKit works with any JavaScript framework that uses standard `Request` and `Response` objects.
+  Pass the incoming request to `tailor.handler(request)` and return the response.
+</Callout>
+
+```ts title="app/api/tailorkit/[...tailorkit]/route.ts" tab="Next.js"
+import { tailor } from "@/lib/tailor";
+
+export function GET(request: Request) {
+  return tailor.handler(request);
+}
+```
+
+```ts title="routes/api/tailorkit.$.ts" tab="TanStack Start"
+import { createFileRoute } from "@tanstack/react-router";
+import { tailor } from "@/lib/tailor";
+
+export const Route = createFileRoute("/api/tailorkit/$")({
+  server: {
+    handlers: {
+      GET: ({ request }) => tailor.handler(request),
+    },
   },
 });
 ```
 
-Apps can only use the components and screens you expose here. This keeps the
-host in control of routing, data, styling, and platform behavior while still
-letting apps render native UI.
+```ts title="server/api/tailorkit/[...].ts" tab="Nitro"
+import { tailor } from "~/lib/tailor";
+import { toWebRequest } from "h3";
+
+export default defineEventHandler((event) => {
+  return tailor.handler(toWebRequest(event));
+});
+```
+
+```ts title="src/index.ts" tab="Hono"
+import { Hono } from "hono";
+import { tailor } from "./lib/tailor";
+
+const app = new Hono();
+
+app.get("/api/tailorkit/*", (c) => {
+  return tailor.handler(c.req.raw);
+});
+
+export default app;
+```
+
+```ts title="src/index.ts" tab="Express"
+import express from "express";
+import { tailor } from "./lib/tailor";
+
+const app = express();
+
+app.use("/api/tailorkit", async (req, res) => {
+  const response = await tailor.handler(
+    new Request(`${req.protocol}://${req.get("host")}${req.originalUrl}`, {
+      headers: req.headers as HeadersInit,
+      method: req.method,
+    }),
+  );
+
+  response.headers.forEach((value, key) => {
+    res.setHeader(key, value);
+  });
+
+  res.status(response.status).send(Buffer.from(await response.arrayBuffer()));
+});
+
+export default app;
+```
+
+```ts title="src/index.ts" tab="Fastify"
+import Fastify from "fastify";
+import { tailor } from "./lib/tailor";
+
+const fastify = Fastify();
+
+fastify.route({
+  method: ["GET"],
+  url: "/api/tailorkit/*",
+  handler: async (request, reply) => {
+    const response = await tailor.handler(
+      new Request(`${request.protocol}://${request.headers.host}${request.url}`, {
+        headers: request.headers as HeadersInit,
+        method: request.method,
+      }),
+    );
+
+    response.headers.forEach((value, key) => {
+      reply.header(key, value);
+    });
+
+    reply.status(response.status);
+    return Buffer.from(await response.arrayBuffer());
+  },
+});
+
+export default fastify;
+```
+
+</Step>
+<Step>
+
+### Create the client
+
+Create `tailorkit-client.ts` near `tailor.ts`.
+
+Map schema components to the React components in your host app.
+
+```tsx title="./src/lib/tailorkit-client.ts" tab="React"
+import { Button } from "@/components/button";
+import { createTailorKitClient, primitives } from "tailorkit/react";
+import { schema } from "./tailor";
+
+export const tailorClient = createTailorKitClient(schema, {
+  baseUrl: "/api/tailorkit",
+  components: {
+    ...primitives,
+
+    Button: ({ props, slots }) => (
+      <Button variant={props.variant} onClick={props.onClick}>
+        {slots.default}
+      </Button>
+    ),
+  },
+});
+
+export default tailorClient;
+```
+
+<Callout title="Custom Base Paths">
+  If your API handler uses a different base path, pass the full URL including the path. For example,
+  `http://localhost:3000/custom-path/tailorkit`.
+</Callout>
+
+</Step>
+<Step>
+
+### Finish
+
+Deploy the host app after `tailor.ts`, the API handler, and the React client are
+in place.
+
+🎉 TailorKit is installed.
 
 </Step>
 </Steps>

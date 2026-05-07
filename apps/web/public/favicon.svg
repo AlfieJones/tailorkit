@@ -1,13 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2" viewBox="0 0 24 24">
-  <style>
-    .bg { fill: #ffffff; }
-    .fg { fill: #262626; }
-    @media (prefers-color-scheme: dark) {
-      .bg { fill: #111111; }
-      .fg { fill: #f5f5f5; }
-    }
-  </style>
-  <path class="bg" d="M0 0h24v24H0z"/>
-  <path class="fg" d="M3 6h6v6H3z" transform="translate(11 -2)"/>
-  <path class="fg" d="M2 6v12h12v-6H8V6z" transform="translate(2 2)"/>
+  <path d="M3 6h6v6H3z" style="fill:#a191f1" transform="translate(9 -10)scale(1.6667)"/>
+  <path d="M2 6v12h12v-6H8V6z" style="fill:#a191f1" transform="translate(-3.167 -4.5)scale(1.5833)"/>
 </svg>

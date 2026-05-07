@@ -1,0 +1,165 @@
+---
+title: Deploying to production
+description: Treat TailorKit apps as untrusted code and validate every boundary before production.
+---
+
+TailorKit apps run in a sandbox, but the sandbox is not the only security
+boundary. Your host app still accepts fields, callback bindings, rendered UI,
+links, and event payloads from code you do not control. Treat every value from a
+TailorKit app as untrusted before using it in production.
+
+## Threat Model
+
+Plan for embedded apps to be malicious, compromised, or simply wrong. Common
+risks include:
+
+- unsafe links that execute script instead of navigating to a page.
+- callbacks that trigger privileged host behavior.
+- fields that are rendered into HTML, URLs, styles, or attributes without
+  validation.
+- visual overlays that imitate host UI and mislead users.
+- unexpected payloads that are forwarded to your APIs.
+
+The host app must validate inputs, own sensitive side effects, and keep trusted
+UI clearly under host control.
+
+## Keep Callbacks UI-only
+
+Use callbacks for UI-related events such as `onClick`, `onOpenChange`, or
+`onValueChange`. Do not use callbacks as a generic RPC layer.
+
+Callbacks should not directly:
+
+- call your APIs.
+- mutate database records.
+- start billing, auth, invite, or permission flows.
+- accept arbitrary payloads and forward them to server code.
+
+For trusted work, expose a host-owned action instead. Actions keep
+authorization, validation, side effects, and auditing in your application.
+
+Read [Actions](/docs/actions) for the basic pattern.
+
+## Validate Fields
+
+Fields are data from an untrusted app. Do not accept broad strings when the host
+will use the value in a sensitive place such as `href`, `src`, inline content,
+CSS, or API input.
+
+For links, do not accept `href: string` and pass it to an anchor. A value such
+as `javascript:alert(document.cookie)` can execute script in the user's browser
+when clicked. In environments with WebView bridges or privileged browser APIs,
+script execution can become remote code execution against the surrounding app.
+
+Validate URL fields as HTTP or HTTPS URLs.
+
+```ts title="./src/lib/tailor.ts" tab="Zod"
+import { component } from "tailorkit";
+import { z } from "zod";
+
+const httpUrl = z
+  .string()
+  .url()
+  .refine((value) => {
+    const protocol = new URL(value).protocol;
+    return protocol === "http:" || protocol === "https:";
+  }, "Expected an HTTP or HTTPS URL");
+
+const Link = component({
+  fields: z.object({
+    href: httpUrl,
+    label: z.string().min(1).max(120),
+  }),
+  callbacks: {
+    onClick: {},
+  },
+});
+```
+
+```ts title="./src/lib/tailor.ts" tab="Valibot"
+import { component } from "tailorkit";
+import * as v from "valibot";
+
+const httpUrl = v.pipe(
+  v.string(),
+  v.url(),
+  v.check((value) => {
+    const protocol = new URL(value).protocol;
+    return protocol === "http:" || protocol === "https:";
+  }, "Expected an HTTP or HTTPS URL"),
+);
+
+const Link = component({
+  fields: v.object({
+    href: httpUrl,
+    label: v.pipe(v.string(), v.minLength(1), v.maxLength(120)),
+  }),
+  callbacks: {
+    onClick: {},
+  },
+});
+```
+
+```ts title="./src/lib/tailor.ts" tab="ArkType"
+import { type } from "arktype";
+import { component } from "tailorkit";
+
+const httpUrl = type("string.url").narrow((value, ctx) => {
+  const protocol = new URL(value).protocol;
+
+  if (protocol !== "http:" && protocol !== "https:") {
+    return ctx.mustBe("an HTTP or HTTPS URL");
+  }
+
+  return true;
+});
+
+const Link = component({
+  fields: type({
+    href: httpUrl,
+    label: "string >= 1 <= 120",
+  }),
+  callbacks: {
+    onClick: {},
+  },
+});
+```
+
+Use the same approach for other fields:
+
+- use enums or picklists for variants, sizes, icons, and modes.
+- use numbers with explicit min and max values.
+- use booleans for toggles.
+- use structured objects instead of encoded strings.
+- reject unknown keys when your schema library supports it.
+
+## Keep Styling Constrained
+
+Do not give TailorKit apps direct access to arbitrary `style` objects or
+class names. Styling is a trust boundary.
+
+Untrusted styling can:
+
+- add overlays that hide or imitate trusted host UI.
+- place controls over destructive actions.
+- make text unreadable or misleading.
+- visually drift away from your platform as your app design evolves.
+
+Prefer TailorKit primitives and theme tokens instead of raw styling fields.
+Primitives keep layout and appearance inside a controlled vocabulary, and theme
+tokens let embedded apps continue to match your product when your platform
+styles change.
+
+Read [Styling apps](/docs/styling-apps) for the styling model.
+
+## Production Checklist
+
+Before deploying:
+
+- validate every component field with the narrowest practical schema.
+- validate links as `http:` or `https:` URLs before rendering them.
+- keep callbacks limited to UI events.
+- use actions for API calls, mutations, and privileged side effects.
+- avoid exposing arbitrary styles, class names, or HTML.
+- keep destructive, billing, auth, and permission UI owned by the host app.
+- log and monitor rejected fields, invalid payloads, and failed actions.

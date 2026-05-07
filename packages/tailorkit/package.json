@@ -8,10 +8,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./react": "./src/react.ts"
+    "./react": "./src/react.ts",
+    "./zod": "./src/zod.ts",
+    "./valibot": "./src/valibot.ts",
+    "./arktype": "./src/arktype.ts"
   },
   "scripts": {
-    "build": "bun build ./src/cli.ts ./src/index.ts ./src/react.ts --outdir ./dist --target node --minify",
+    "build": "bun build ./src/cli.ts ./src/index.ts ./src/react.ts ./src/zod.ts ./src/valibot.ts ./src/arktype.ts --outdir ./dist --target node --minify",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -23,5 +26,21 @@
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "arktype": ">=2.1.0",
+    "valibot": ">=1.0.0",
+    "zod": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "arktype": {
+      "optional": true
+    },
+    "valibot": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
   }
 }

@@ -1,0 +1,11 @@
+---
+title: Actions
+description: Use actions for host-owned work such as API calls, mutations, and other trusted side effects.
+---
+
+Actions are the boundary for work that must run in your application, not inside
+an embedded TailorKit app. Use them for API calls, database writes, permission
+checks, payments, navigation that changes trusted state, and any other side
+effect that should stay under host control.
+
+Callbacks are for UI events. Actions are for trusted work.

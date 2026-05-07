@@ -1,16 +1,96 @@
 export interface TailorKitTheme {
+  /**
+   * Responsive breakpoint names used by responsive primitive props.
+   *
+   * The `base` breakpoint should be `null`; every other value is used as a
+   * CSS `min-width` media query.
+   *
+   * Defaults: `base: null`, `sm: "640px"`, `md: "768px"`,
+   * `lg: "1024px"`, `xl: "1280px"`, `2xl: "1536px"`.
+   */
   breakpoints?: Record<string, string | null>;
   tokens?: {
+    /**
+     * Background color tokens used by the `background` primitive prop.
+     *
+     * These values are emitted as CSS custom properties and can reference
+     * application theme variables.
+     *
+     * Defaults: none.
+     */
     background?: Record<string, string>;
+    /**
+     * Border style tokens used by the `border` primitive prop.
+     *
+     * Defaults: `solid`, `dashed`, `dotted`, `double`.
+     */
     border?: Record<string, string>;
+    /**
+     * Border color tokens used by the `borderColor` primitive prop.
+     *
+     * These values are emitted as CSS custom properties and can reference
+     * application theme variables.
+     *
+     * Defaults: none.
+     */
     borderColor?: Record<string, string>;
+    /**
+     * Overflow behavior tokens used by the `overflow` primitive prop.
+     *
+     * Defaults: `visible`, `hidden`, `clip`, `scroll`, `auto`.
+     */
     overflow?: Record<string, string>;
+    /**
+     * Text wrapping tokens used by the `overflowWrap` primitive prop.
+     *
+     * Defaults: `normal`, `breakWord`, `anywhere`.
+     */
     overflowWrap?: Record<string, string>;
+    /**
+     * Corner radius tokens used by the `radius` primitive prop.
+     *
+     * Defaults: `none`, `2xs`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl`.
+     */
     radius?: Record<string, string>;
+    /**
+     * Width and height tokens used by the `width` and `height` primitive props.
+     *
+     * Defaults: `0`, fractions from `1/2` through `11/12`, `full`, `min`,
+     * `max`, and `fit`.
+     */
     size?: Record<string, string>;
+    /**
+     * Spacing tokens used by the `padding`, `margin`, and `gap` primitive props.
+     *
+     * Defaults: `none`, `2xs`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl`.
+     */
     space?: Record<string, string>;
+    /**
+     * Text alignment tokens used by the `textAlign` primitive prop.
+     *
+     * Defaults: `left`, `right`, `start`, `end`, `center`, `justify`.
+     */
     textAlign?: Record<string, string>;
+    /**
+     * Text color tokens used by the `textColor` primitive prop.
+     *
+     * These values are emitted as CSS custom properties and can reference
+     * application theme variables.
+     *
+     * Defaults: none.
+     */
+    textColor?: Record<string, string>;
+    /**
+     * Text overflow tokens used by the `textOverflow` primitive prop.
+     *
+     * Defaults: `clip`, `ellipsis`.
+     */
     textOverflow?: Record<string, string>;
+    /**
+     * Text transform tokens used by the `textTransform` primitive prop.
+     *
+     * Defaults: `capitalize`, `uppercase`, `lowercase`, `none`.
+     */
     textTransform?: Record<string, string>;
   };
 }

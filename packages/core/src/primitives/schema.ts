@@ -1,41 +1,30 @@
 import { z } from "zod";
 import type { ComponentDefinition } from "../schema";
+import { primitiveDefinitions, primitiveNames } from "./definition";
+import type { PrimitiveName, PrimitivePropDefinition } from "./definition";
 import type { TailorKitTheme } from "./theme";
 
 const primitiveMarker = Symbol.for("tailorkit.primitive");
-
-export type PrimitiveName = "Box" | "Flex" | "Grid" | "Inline";
 
 export interface PrimitiveComponentDefinition extends ComponentDefinition {
   [primitiveMarker]: PrimitiveName;
 }
 
 type Shape = Record<string, z.ZodTypeAny>;
-type NonEmptyStringArray = readonly [string, ...string[]];
-
-const directionOptions = ["row", "column"] as const;
-const alignOptions = ["start", "center", "end", "stretch"] as const;
-const justifyOptions = ["start", "center", "end", "between"] as const;
-const columnOptions = [1, 2, 3, 4, 6, 12] as const;
-
-const direction = z.enum(directionOptions);
-const align = z.enum(alignOptions);
-const justify = z.enum(justifyOptions);
-const columns = z.union([
-  z.literal(columnOptions[0]),
-  z.literal(columnOptions[1]),
-  z.literal(columnOptions[2]),
-  z.literal(columnOptions[3]),
-  z.literal(columnOptions[4]),
-  z.literal(columnOptions[5]),
-]);
-
 const tokenEnum = (tokens: Record<string, string> | undefined): z.ZodTypeAny => {
   const keys = Object.keys(tokens ?? {});
   if (keys.length === 0) {
     return z.never();
   }
-  return z.enum(keys as unknown as NonEmptyStringArray);
+  return z.enum(keys as [string, ...string[]]);
+};
+
+const valueEnum = (values: readonly (number | string)[]): z.ZodTypeAny => {
+  const [first, ...rest] = values;
+  if (first === undefined) {
+    return z.never();
+  }
+  return z.union([z.literal(first), ...rest.map((value) => z.literal(value))]);
 };
 
 const responsive = (schema: z.ZodTypeAny, theme: TailorKitTheme): z.ZodTypeAny => {
@@ -49,33 +38,21 @@ const responsive = (schema: z.ZodTypeAny, theme: TailorKitTheme): z.ZodTypeAny =
 const optionalResponsive = (schema: z.ZodTypeAny, theme: TailorKitTheme): z.ZodTypeAny =>
   responsive(schema, theme).optional();
 
-const boxShape = (theme: TailorKitTheme): Shape => ({
-  background: optionalResponsive(tokenEnum(theme.tokens?.background), theme),
-  border: optionalResponsive(tokenEnum(theme.tokens?.border), theme),
-  borderColor: optionalResponsive(tokenEnum(theme.tokens?.borderColor), theme),
-  height: optionalResponsive(tokenEnum(theme.tokens?.size), theme),
-  margin: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
-  overflow: optionalResponsive(tokenEnum(theme.tokens?.overflow), theme),
-  overflowWrap: optionalResponsive(tokenEnum(theme.tokens?.overflowWrap), theme),
-  padding: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
-  radius: optionalResponsive(tokenEnum(theme.tokens?.radius), theme),
-  textAlign: optionalResponsive(tokenEnum(theme.tokens?.textAlign), theme),
-  textOverflow: optionalResponsive(tokenEnum(theme.tokens?.textOverflow), theme),
-  textTransform: optionalResponsive(tokenEnum(theme.tokens?.textTransform), theme),
-  width: optionalResponsive(tokenEnum(theme.tokens?.size), theme),
-});
+const propSchema = (definition: PrimitivePropDefinition, theme: TailorKitTheme): z.ZodTypeAny => {
+  const schema =
+    definition.kind === "token"
+      ? tokenEnum(theme.tokens?.[definition.token])
+      : valueEnum(definition.values);
+  return definition.responsive === false ? schema.optional() : optionalResponsive(schema, theme);
+};
 
-const inlineShape = (theme: TailorKitTheme): Shape => ({
-  background: optionalResponsive(tokenEnum(theme.tokens?.background), theme),
-  borderColor: optionalResponsive(tokenEnum(theme.tokens?.borderColor), theme),
-  margin: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
-  overflowWrap: optionalResponsive(tokenEnum(theme.tokens?.overflowWrap), theme),
-  padding: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
-  radius: optionalResponsive(tokenEnum(theme.tokens?.radius), theme),
-  textAlign: optionalResponsive(tokenEnum(theme.tokens?.textAlign), theme),
-  textOverflow: optionalResponsive(tokenEnum(theme.tokens?.textOverflow), theme),
-  textTransform: optionalResponsive(tokenEnum(theme.tokens?.textTransform), theme),
-});
+const primitiveShape = (name: PrimitiveName, theme: TailorKitTheme): Shape =>
+  Object.fromEntries(
+    Object.entries(primitiveDefinitions[name]).map(([propName, definition]) => [
+      propName,
+      propSchema(definition, theme),
+    ]),
+  );
 
 const primitive = (name: PrimitiveName): PrimitiveComponentDefinition =>
   ({
@@ -85,12 +62,9 @@ const primitive = (name: PrimitiveName): PrimitiveComponentDefinition =>
     [primitiveMarker]: name,
   }) as PrimitiveComponentDefinition;
 
-export const primitives = {
-  Box: primitive("Box"),
-  Flex: primitive("Flex"),
-  Grid: primitive("Grid"),
-  Inline: primitive("Inline"),
-} as const;
+export const primitives = Object.fromEntries(
+  primitiveNames.map((name) => [name, primitive(name)]),
+) as Readonly<Record<PrimitiveName, PrimitiveComponentDefinition>>;
 
 export const isPrimitiveComponentDefinition = (
   definition: ComponentDefinition,
@@ -99,30 +73,4 @@ export const isPrimitiveComponentDefinition = (
 export const resolvePrimitiveFields = (
   definition: PrimitiveComponentDefinition,
   theme: TailorKitTheme,
-): z.ZodObject<Shape> => {
-  const name = definition[primitiveMarker];
-  if (name === "Inline") {
-    return z.object(inlineShape(theme));
-  }
-
-  const shape = boxShape(theme);
-  if (name === "Flex") {
-    return z.object({
-      ...shape,
-      align: optionalResponsive(align, theme),
-      direction: optionalResponsive(direction, theme),
-      gap: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
-      justify: optionalResponsive(justify, theme),
-    });
-  }
-
-  if (name === "Grid") {
-    return z.object({
-      ...shape,
-      columns: optionalResponsive(columns, theme),
-      gap: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
-    });
-  }
-
-  return z.object(shape);
-};
+): z.ZodObject<Shape> => z.object(primitiveShape(definition[primitiveMarker], theme));

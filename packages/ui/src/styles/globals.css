@@ -164,7 +164,7 @@
   --card-foreground: hsl(0, 0%, 3.9%);
   --popover: hsl(0, 0%, 98%);
   --popover-foreground: hsl(0, 0%, 15.1%);
-  --primary: hsl(0, 0%, 9%);
+  --primary: hsl(252, 70%, 55%);
   --primary-foreground: hsl(0, 0%, 98%);
   --secondary: hsl(0, 0%, 93.1%);
   --secondary-foreground: hsl(0, 0%, 9%);
@@ -182,10 +182,10 @@
   --warning-foreground: hsl(0, 0%, 9%);
   --border: hsla(0, 0%, 80%, 50%);
   --input: hsl(0, 0%, 98%);
-  --ring: hsl(0, 0%, 9%);
+  --ring: hsl(252, 70%, 55%);
   --sidebar: hsl(0, 0%, 94.7%);
   --sidebar-foreground: hsl(0, 0%, 3.9%);
-  --sidebar-primary: hsl(0, 0%, 9%);
+  --sidebar-primary: hsl(252, 70%, 55%);
   --sidebar-primary-foreground: hsl(0, 0%, 98%);
   --sidebar-accent: hsla(0, 0%, 82%, 50%);
   --sidebar-accent-foreground: hsl(0, 0%, 9%);
@@ -200,7 +200,7 @@
   --card-foreground: hsl(0, 0%, 98%);
   --popover: hsl(0, 0%, 11.6%);
   --popover-foreground: hsl(0, 0%, 86.9%);
-  --primary: hsl(0, 0%, 98%);
+  --primary: #a191f1;
   --primary-foreground: hsl(0, 0%, 9%);
   --secondary: hsl(0, 0%, 12.9%);
   --secondary-foreground: hsl(0, 0%, 92%);
@@ -218,11 +218,11 @@
   --warning-foreground: hsl(0, 0%, 9%);
   --border: hsla(0, 0%, 40%, 20%);
   --input: hsl(0, 0%, 9.8%);
-  --ring: hsl(0, 0%, 98%);
+  --ring: #a191f1;
   --sidebar: hsl(0, 0%, 7.04%);
   --sidebar-foreground: hsl(0, 0%, 92%);
-  --sidebar-primary: hsl(0, 0%, 98%);
-  --sidebar-primary-foreground: hsl(0, 0%, 98%);
+  --sidebar-primary: #a191f1;
+  --sidebar-primary-foreground: hsl(0, 0%, 9%);
   --sidebar-accent: hsla(0, 0%, 40.9%, 30%);
   --sidebar-accent-foreground: hsl(0, 0%, 90%);
   --sidebar-border: hsla(0, 0%, 40%, 20%);

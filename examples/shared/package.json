@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "tailorkit": "workspace:*",
+    "valibot": "^1.4.0",
     "zod": "catalog:"
   },
   "devDependencies": {

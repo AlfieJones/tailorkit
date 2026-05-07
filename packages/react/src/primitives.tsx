@@ -13,7 +13,14 @@ interface PrimitiveThemeContextValue {
 
 export const PrimitiveThemeContext = createContext<PrimitiveThemeContextValue | null>(null);
 
-const tokenGroups = ["space", "radius", "background", "border", "borderColor"] as const;
+const tokenGroups = [
+  "space",
+  "radius",
+  "background",
+  "border",
+  "borderColor",
+  "textColor",
+] as const;
 
 const cssEscape = (value: string): string => {
   const css = (globalThis as { CSS?: { escape?: (input: string) => string } }).CSS;
@@ -57,6 +64,9 @@ const declarationsForProp = (prop: string, value: PrimitiveValue): string[] => {
   }
   if (prop === "borderColor") {
     return [`border-color: ${toCssValue("borderColor", value)};`];
+  }
+  if (prop === "textColor") {
+    return [`color: ${toCssValue("textColor", value)};`];
   }
   if (prop === "columns") {
     return [`grid-template-columns: repeat(${String(value)}, minmax(0, 1fr));`];

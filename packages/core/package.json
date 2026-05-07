@@ -10,7 +10,10 @@
     "./layout": "./src/layout/index.ts",
     "./layout/zod": "./src/layout/zod.ts",
     "./layout/valibot": "./src/layout/valibot.ts",
-    "./layout/arktype": "./src/layout/arktype.ts"
+    "./layout/arktype": "./src/layout/arktype.ts",
+    "./primitives/zod": "./src/primitives/zod.ts",
+    "./primitives/valibot": "./src/primitives/valibot.ts",
+    "./primitives/arktype": "./src/primitives/arktype.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

@@ -1,3 +1,5 @@
+import type { ComponentDefinition, ScreenDefinition, TailorKitSchema } from "../schema";
+
 export interface TailorKitServerApp {
   clientPath?: string;
   clientUrl?: string;
@@ -6,7 +8,11 @@ export interface TailorKitServerApp {
   name?: string;
 }
 
-export interface TailorKitServerOptions {
+export interface TailorKitServerOptions<
+  TComponents extends Record<string, ComponentDefinition>,
+  TScreens extends Record<string, ScreenDefinition>,
+> {
+  schema: TailorKitSchema<TComponents, TScreens>;
   apps?: TailorKitServerApp[] | (() => Promise<TailorKitServerApp[]> | TailorKitServerApp[]);
   basePath?: string;
 }
@@ -23,7 +29,10 @@ interface PublicTailorKitApp {
   name?: string;
 }
 
-export function createTailorKitServer(options: TailorKitServerOptions = {}): TailorKitServer {
+export function createTailorKitServer<
+  TComponents extends Record<string, ComponentDefinition>,
+  TScreens extends Record<string, ScreenDefinition>,
+>(options: TailorKitServerOptions<TComponents, TScreens>): TailorKitServer {
   const basePath = normalizeBasePath(options.basePath ?? "/api/tailorkit");
 
   return {

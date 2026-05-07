@@ -16,6 +16,10 @@ const theme = {
     borderColor: {
       default: "var(--border)",
     },
+    textColor: {
+      foreground: "var(--foreground)",
+      muted: "var(--muted-foreground)",
+    },
     radius: {
       md: "8px",
     },
@@ -32,6 +36,7 @@ describe("react primitives", () => {
     expect(css).toContain('[data-tailorkit-screen="screen-1"]');
     expect(css).toContain("--tailorkit-space-md: 8px;");
     expect(css).toContain("--tailorkit-background-surface: var(--background);");
+    expect(css).toContain("--tailorkit-textColor-muted: var(--muted-foreground);");
   });
 
   it("renders a scoped primitive style with responsive rules", () => {
@@ -42,6 +47,7 @@ describe("react primitives", () => {
             direction: { base: "column", lg: "row" },
             gap: "md",
             padding: { base: "md", lg: "lg" },
+            textColor: { base: "muted", lg: "foreground" },
           },
           slots: { default: createElement("span", null, "Content") },
         })}
@@ -54,7 +60,9 @@ describe("react primitives", () => {
     expect(node?.tagName).toBe("DIV");
     expect(style?.textContent).toContain("display: flex;");
     expect(style?.textContent).toContain("padding: var(--tailorkit-space-md);");
+    expect(style?.textContent).toContain("color: var(--tailorkit-textColor-muted);");
     expect(style?.textContent).toContain("@media (min-width: 1024px)");
+    expect(style?.textContent).toContain("color: var(--tailorkit-textColor-foreground);");
     expect(style?.textContent).toContain("flex-direction: row;");
   });
 
