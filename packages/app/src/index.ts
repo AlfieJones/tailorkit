@@ -1,5 +1,5 @@
 import { createContext, h, render } from "preact";
-import type { ComponentChild, ComponentType, VNode } from "preact";
+import type { ComponentChild, ComponentChildren, ComponentType, VNode } from "preact";
 import { useContext } from "preact/hooks";
 import { version as preactVersion } from "preact/package.json";
 import { assertSupportedPreactVersion } from "./preact-version.js";
@@ -135,13 +135,39 @@ const toComponentTagName = (name: string): string =>
     .replaceAll(/[\s_]+/g, "-")
     .toLowerCase()}`;
 
+const toCallbackEventName = (name: string): string =>
+  `tailorkitcallback${name.replaceAll(/[^A-Za-z0-9_$]/g, "").toLowerCase()}`;
+
+const toEventProp = (event: string): string => `on${event}`;
+
 export const createRemoteComponent = <TProps extends object, TSlots extends readonly string[]>(
   name: string,
-  _options: { slots: TSlots },
-): View<TProps & { children?: ComponentChild }> => {
+  options: { callbacks?: Record<string, number>; slots: TSlots },
+): View<TProps & { children?: ComponentChildren }> => {
   const tagName = toComponentTagName(name);
 
   return function RemoteComponent({ children, ...props }) {
-    return h(tagName, props, children);
+    const nextProps = { ...props } as Record<string, unknown>;
+    const callbackMap: Record<string, { callback: string; inputCount: number }> = {};
+
+    for (const [key, inputCount] of Object.entries(options.callbacks ?? {})) {
+      const callback = nextProps[key];
+      Reflect.deleteProperty(nextProps, key);
+      if (typeof callback !== "function") {
+        continue;
+      }
+
+      const eventName = toCallbackEventName(key);
+      callbackMap[eventName] = { callback: key, inputCount };
+      nextProps[toEventProp(eventName)] = (event: { detail?: unknown[] }) => {
+        callback(...(event.detail ?? []).slice(0, inputCount));
+      };
+    }
+
+    if (Object.keys(callbackMap).length > 0) {
+      nextProps["data-tailorkit-callbacks"] = JSON.stringify(callbackMap);
+    }
+
+    return h(tagName, nextProps, children);
   };
 };

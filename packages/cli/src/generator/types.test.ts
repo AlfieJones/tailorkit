@@ -44,6 +44,9 @@ describe("renderGeneratedTypes", () => {
         Button: {
           callbacks: {
             onClick: {},
+            onValueChange: {
+              input: [{ type: "string" }],
+            },
           },
           fields: {
             additionalProperties: false,
@@ -67,7 +70,9 @@ describe("renderGeneratedTypes", () => {
     expect(output).toContain("disabled?: boolean;");
     expect(output).toContain("label?: string;");
     expect(output).toContain("onClick?: () => void;");
+    expect(output).toContain("onValueChange?: (value1: string) => void;");
     expect(output).toContain('createRemoteComponent<ButtonProps, readonly ["default"]>');
+    expect(output).toContain('callbacks: { "onClick": 0, "onValueChange": 1 }');
   });
 
   it("supports fieldKeys from older schema files", () => {
@@ -108,6 +113,87 @@ describe("renderGeneratedTypes", () => {
     expect(output).toContain("export interface BoxProps");
     expect(output).toContain('padding?: "sm" | "md" | "lg";');
     expect(output).toContain('createRemoteComponent<BoxProps, readonly ["default"]>');
+  });
+
+  it("generates literal responsive primitive token props", () => {
+    const output = renderGeneratedTypes({
+      components: {
+        Box: {
+          callbacks: {},
+          fields: {
+            properties: {
+              margin: {
+                anyOf: [
+                  {
+                    enum: ["lg", "xl"],
+                    type: "string",
+                  },
+                  {
+                    additionalProperties: false,
+                    properties: {
+                      base: {
+                        enum: ["lg", "xl"],
+                        type: "string",
+                      },
+                      md: {
+                        enum: ["lg", "xl"],
+                        type: "string",
+                      },
+                    },
+                    type: "object",
+                  },
+                ],
+              },
+            },
+            type: "object",
+          },
+          slots: ["default"],
+        },
+      },
+      screens: {},
+    });
+
+    expect(output).toContain('margin?: "lg" | "xl" | {');
+    expect(output).toContain('base?: "lg" | "xl";');
+    expect(output).toContain('md?: "lg" | "xl";');
+  });
+
+  it("generates never for primitive props with no configured tokens", () => {
+    const output = renderGeneratedTypes({
+      components: {
+        Box: {
+          callbacks: {},
+          fields: {
+            properties: {
+              background: {
+                anyOf: [
+                  {
+                    not: {},
+                  },
+                  {
+                    additionalProperties: false,
+                    properties: {
+                      base: {
+                        not: {},
+                      },
+                      md: {
+                        not: {},
+                      },
+                    },
+                    type: "object",
+                  },
+                ],
+              },
+            },
+            type: "object",
+          },
+          slots: ["default"],
+        },
+      },
+      screens: {},
+    });
+
+    expect(output).toContain("background?: never;");
   });
 });
 

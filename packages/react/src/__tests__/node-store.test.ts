@@ -11,13 +11,13 @@ const elemNode = (
   children: RemoteNode[] = [],
 ): RemoteNode => ({ children, id, kind: "element", props, type });
 
-const elementWithEvent = (capture: boolean): RemoteNode => ({
+const elementWithCallback = (event: string): RemoteNode => ({
+  callbacks: [{ callback: "onSelect", inputCount: 1, event }],
   children: [],
-  events: [{ capture, event: "click" }],
   id: "n",
   kind: "element",
   props: {},
-  type: "button",
+  type: "tailorkit-button",
 });
 
 describe("NodeStore", () => {
@@ -192,14 +192,14 @@ describe("NodeStore", () => {
       expect(listener).toHaveBeenCalledTimes(1);
     });
 
-    it("detects event binding changes", () => {
+    it("detects callback binding changes", () => {
       const store = new NodeStore();
 
-      store.setSnapshot(elementWithEvent(false));
+      store.setSnapshot(elementWithCallback("tailorkitcallbackonselect"));
       const listener = vi.fn();
       store.subscribe("n", listener);
 
-      store.setSnapshot(elementWithEvent(true));
+      store.setSnapshot(elementWithCallback("tailorkitcallbackonchange"));
       expect(listener).toHaveBeenCalledTimes(1);
     });
   });

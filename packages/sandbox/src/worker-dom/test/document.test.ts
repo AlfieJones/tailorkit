@@ -74,16 +74,6 @@ describe("createDocument", () => {
     expect(doc.defaultView["document"]).toBe(doc);
   });
 
-  it("SVGElement maps to Element on defaultView", () => {
-    const doc = createDocument();
-    expect(doc.defaultView["SVGElement"]).toBe(Element);
-  });
-
-  it("HTMLElement maps to Element on defaultView", () => {
-    const doc = createDocument();
-    expect(doc.defaultView["HTMLElement"]).toBe(Element);
-  });
-
   it("matches happy-dom: documentElement is an element node", () => {
     const doc = createDocument();
     expect(doc.documentElement?.nodeType).toBe(happyDoc.documentElement.nodeType);

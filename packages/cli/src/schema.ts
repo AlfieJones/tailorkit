@@ -9,7 +9,9 @@ export interface ExperimentalSchemaOptions {
 
 interface SchemaLike {
   $internal: { components: unknown; screens: unknown };
-  serialize: (schemaSerializer?: (schema: unknown) => Record<string, unknown> | undefined) => unknown;
+  serialize: (
+    schemaSerializer?: (schema: unknown) => Record<string, unknown> | undefined,
+  ) => unknown;
 }
 
 interface TailorKitInstanceLike {
@@ -34,7 +36,9 @@ const isTailorKitInstanceLike = (value: unknown): value is TailorKitInstanceLike
   "schema" in ((value as Record<string, unknown>).$internal as Record<string, unknown>) &&
   isSchemaLike(((value as Record<string, unknown>).$internal as Record<string, unknown>).schema);
 
-const hasToJSONSchema = (schema: unknown): schema is { toJSONSchema: () => Record<string, unknown> } =>
+const hasToJSONSchema = (
+  schema: unknown,
+): schema is { toJSONSchema: () => Record<string, unknown> } =>
   schema !== null &&
   typeof schema === "object" &&
   "toJSONSchema" in schema &&
@@ -74,7 +78,10 @@ export interface TailorKitSchemaFile {
   screens?: Record<string, unknown>;
 }
 
-export const loadSchemaFromModule = async (options: { cwd: string; filePath: string }): Promise<TailorKitSchemaFile> => {
+export const loadSchemaFromModule = async (options: {
+  cwd: string;
+  filePath: string;
+}): Promise<TailorKitSchemaFile> => {
   const { cwd, filePath } = options;
   const absoluteCwd = path.resolve(cwd);
   const resolvedPath = new URL(filePath, `file://${absoluteCwd}/`).href;
@@ -85,6 +92,7 @@ export const loadSchemaFromModule = async (options: { cwd: string; filePath: str
   } catch (error) {
     throw new Error(
       `Unable to load module at ${filePath}.\n${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 

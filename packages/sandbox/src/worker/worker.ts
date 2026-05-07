@@ -230,17 +230,16 @@ self.addEventListener("message", (event) => {
         fireAnimationFrame(payload.data.timestamp);
         break;
       }
-      case "dispatchEvent": {
+      case "dispatchCallback": {
         const target = findElementByRemoteId(worker.root, payload.data.nodeId);
         if (!target) {
-          throw new Error(`Cannot dispatch event to unknown node "${payload.data.nodeId}".`);
+          throw new Error(`Cannot dispatch callback to unknown node "${payload.data.nodeId}".`);
         }
-        target.value = payload.data.value ?? target.value;
-        target.checked = payload.data.checked ?? target.checked;
         target.dispatchEvent(
-          new DomEvent(payload.data.type, {
-            bubbles: payload.data.bubbles ?? true,
-            cancelable: payload.data.cancelable ?? true,
+          new DomEvent(payload.data.event, {
+            bubbles: false,
+            cancelable: true,
+            detail: payload.data.args ?? [],
           }),
         );
         break;

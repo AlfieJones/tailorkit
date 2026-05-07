@@ -11,12 +11,12 @@ const nodeSignature = (node: RemoteNode): string => {
   if (node.kind === "fragment") {
     return `frag:${childIds(node.children)}`;
   }
-  // For elements: type + child IDs + serialized props + event bindings
+  // For elements: type + child IDs + serialized props + callback bindings
   const propsStr = JSON.stringify(node.props);
-  const eventsStr = (node.events ?? [])
-    .map((e) => `${e.event}:${String(e.capture ?? false)}`)
+  const callbacksStr = (node.callbacks ?? [])
+    .map((binding) => `${binding.callback}:${binding.event}`)
     .join(",");
-  return `elem:${node.type}|${childIds(node.children)}|${propsStr}|${eventsStr}`;
+  return `elem:${node.type}|${childIds(node.children)}|${propsStr}|${callbacksStr}`;
 };
 
 const flattenTree = (node: RemoteNode, out: Map<string, RemoteNode>): void => {

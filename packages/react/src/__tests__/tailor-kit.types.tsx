@@ -1,6 +1,7 @@
 import { component, defineSchema, screen } from "@tailorkit/core/schema";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
-import { tailorKit } from "../tailor-kit";
+import type { ReactNode } from "react";
+import { components, createTailorKitClient } from "../tailor-kit";
 
 const typedSchema = <TValue,>(): StandardSchemaV1<unknown, TValue> =>
   ({
@@ -25,7 +26,57 @@ const schema = defineSchema({
   },
 });
 
-const tailor = tailorKit(schema, { baseUrl: "http://runtime.test" });
+const tailor = createTailorKitClient(schema, { baseUrl: "http://runtime.test" });
+
+const slotsSchema = defineSchema({
+  components: {
+    Button: component({
+      slots: ["default"] as const,
+    }),
+  },
+});
+
+createTailorKitClient(slotsSchema, {
+  baseUrl: "http://runtime.test",
+  components: {
+    Button: ({ slots }) => {
+      const slot: ReactNode = slots.default;
+      return slot;
+    },
+  },
+});
+
+components(slotsSchema, {
+  Button: ({ props, slots }) => {
+    const typedProps = props satisfies Record<string, never>;
+    const typedSlot: ReactNode = slots.default;
+    void typedProps;
+    void typedSlot;
+    return null;
+  },
+});
+
+const callbackSchema = defineSchema({
+  components: {
+    Button: component({
+      fields: typedSchema<{ variant?: "default" | "secondary" }>(),
+      callbacks: {
+        onClick: {},
+      },
+      slots: ["default"] as const,
+    }),
+  },
+});
+
+components(callbackSchema, {
+  Button: ({ props }) => {
+    const variant: "default" | "secondary" | undefined = props.variant;
+    const onClick: (() => void) | undefined = props.onClick;
+    void variant;
+    void onClick;
+    return null;
+  },
+});
 
 <tailor.ScreenMatch
   pattern="/"

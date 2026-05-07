@@ -11,17 +11,8 @@ export function isElement(node: Node): node is Element {
 }
 
 export class Element extends Node {
-  #checked = false;
-  #value = "";
   attributes: Attribute[];
   __handlers: Record<string, EventHandler[]>;
-  onchange: EventHandler | null = null;
-  onclick: EventHandler | null = null;
-  oninput: EventHandler | null = null;
-  onkeydown: EventHandler | null = null;
-  onkeyup: EventHandler | null = null;
-  onmousedown: EventHandler | null = null;
-  onmouseup: EventHandler | null = null;
   style: Record<string, string> & {
     cssText: string;
     setProperty(name: string, value: string | number | null | undefined): void;
@@ -48,14 +39,6 @@ export class Element extends Node {
     return this.nodeName.toLowerCase();
   }
 
-  get className(): string | null {
-    return this.getAttribute("class");
-  }
-
-  set className(val: string) {
-    this.setAttribute("class", val);
-  }
-
   get cssText(): string | null {
     return this.style.cssText || null;
   }
@@ -66,29 +49,6 @@ export class Element extends Node {
 
   get children(): Element[] {
     return this.childNodes.filter(isElement);
-  }
-
-  get checked(): boolean {
-    return this.#checked;
-  }
-
-  set checked(value: boolean) {
-    this.#checked = Boolean(value);
-    emitMutation(this, {
-      type: "setProperty",
-      element: this,
-      name: "checked",
-      value: this.#checked,
-    });
-  }
-
-  get value(): string {
-    return this.#value;
-  }
-
-  set value(value: string) {
-    this.#value = String(value);
-    emitMutation(this, { type: "setProperty", element: this, name: "value", value: this.#value });
   }
 
   setAttribute(key: string, value: string): void {

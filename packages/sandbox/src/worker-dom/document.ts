@@ -50,8 +50,6 @@ export function createDocument(): Document {
     Node,
     Text,
     Element,
-    HTMLElement: Element,
-    SVGElement: Element,
     Event: DomEvent,
     requestAnimationFrame,
     cancelAnimationFrame,

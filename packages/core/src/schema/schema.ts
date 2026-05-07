@@ -6,6 +6,7 @@ import { resolveTheme } from "../primitives/theme";
 
 export type Schema = StandardSchemaV1;
 export type CallbackMap = Record<string, CallbackDefinition | undefined>;
+type EmptyCallbackMap = Record<never, never>;
 
 type EmptyObject = Record<string, never>;
 type VoidResult = ReturnType<() => void>;
@@ -64,7 +65,7 @@ export interface CallbackDefinition<
 
 export interface ComponentDefinition<
   TFields extends Schema | undefined = Schema | undefined,
-  TCallbacks extends CallbackMap = CallbackMap,
+  TCallbacks extends CallbackMap = EmptyCallbackMap,
   TSlots extends readonly string[] | undefined = readonly string[] | undefined,
 > {
   callbacks?: TCallbacks;
@@ -125,7 +126,9 @@ export interface TailorKitSchema<
 type FieldCallbackConflictKeys<TFields, TCallbacks> = Extract<
   string extends keyof InferSchema<TFields>
     ? never
-    : Extract<keyof InferSchema<TFields>, keyof TCallbacks>,
+    : string extends keyof TCallbacks
+      ? never
+      : Extract<keyof InferSchema<TFields>, keyof TCallbacks>,
   string
 >;
 
@@ -175,7 +178,7 @@ const assertNoLocalFieldCallbackConflicts = (
 
 export function component<
   const TFields extends Schema | undefined = undefined,
-  const TCallbacks extends CallbackMap = Record<string, never>,
+  const TCallbacks extends CallbackMap = EmptyCallbackMap,
   const TSlots extends readonly string[] | undefined = undefined,
 >(
   definition: {

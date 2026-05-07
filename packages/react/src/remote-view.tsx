@@ -16,7 +16,6 @@ import type { HostToWorkerPayload, RemoteElementNode } from "@tailorkit/sandbox/
 import { NodeStore } from "./node-store";
 import { RemoteUIContext } from "./remote-context";
 import type { RemoteViewContext } from "./remote-context";
-import { toReactEventName, toReactProps } from "./render-utils";
 
 interface RemoteViewHostProps {
   appUrl: string | URL;
@@ -141,41 +140,20 @@ const RemoteElementView = memo(function RemoteElementView({
   const component = components[node.type];
 
   if (component === undefined) {
-    const props: Record<string, unknown> = { ...toReactProps(node.props) };
-
-    for (const binding of node.events ?? []) {
-      props[toReactEventName(binding.event)] = (event?: Event) => {
-        const target = event?.target as HTMLInputElement | null | undefined;
-        dispatch({
-          data: {
-            checked: target?.checked,
-            key: event && "key" in event ? String(event.key) : undefined,
-            nodeId: node.id,
-            type: binding.event,
-            value: target?.value,
-          },
-          type: "dispatchEvent",
-        });
-      };
-    }
-
-    return createElement(node.type, props, ...children);
+    throw new Error(`TailorKit component "${node.type}" is not registered.`);
   }
 
   const props: Record<string, unknown> = { ...node.props };
 
-  for (const binding of node.events ?? []) {
-    props[toReactEventName(binding.event)] = (event?: Event) => {
-      const target = event?.target as HTMLInputElement | null | undefined;
+  for (const binding of node.callbacks ?? []) {
+    props[binding.callback] = (...args: unknown[]) => {
       dispatch({
         data: {
-          checked: target?.checked,
-          key: event && "key" in event ? String(event.key) : undefined,
+          args: args.slice(0, binding.inputCount),
+          event: binding.event,
           nodeId: node.id,
-          type: binding.event,
-          value: target?.value,
         },
-        type: "dispatchEvent",
+        type: "dispatchCallback",
       });
     };
   }

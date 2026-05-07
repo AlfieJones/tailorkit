@@ -1,23 +1,10 @@
-import type {
-  RemoteElementNode,
-  RemoteFragmentNode,
-  RemoteNode,
-  RemotePatch,
-  WorkerToHostPayload,
-} from "../protocol.js";
-
-export interface HostRenderer<TRenderedNode> {
-  renderElement(node: RemoteElementNode, children: TRenderedNode[]): TRenderedNode;
-  renderFragment(node: RemoteFragmentNode, children: TRenderedNode[]): TRenderedNode;
-  renderText(text: string): TRenderedNode;
-}
+import type { RemoteNode, RemotePatch, WorkerToHostPayload } from "../protocol.js";
 
 export interface RemoteUiStore {
   applyPatches(patches: readonly RemotePatch[]): void;
   getRevision(): number;
   getSnapshot(): RemoteNode | null;
   handleWorkerMessage(message: WorkerToHostPayload): void;
-  render<TRenderedNode>(renderer: HostRenderer<TRenderedNode>): TRenderedNode | null;
   setSnapshot(tree: RemoteNode, revision: number): void;
   subscribe(listener: () => void): () => void;
 }
@@ -74,9 +61,6 @@ export function createRemoteUiStore(): RemoteUiStore {
         }
       }
     },
-    render(renderer) {
-      return snapshot ? renderNode(snapshot, renderer) : null;
-    },
     setSnapshot(tree, nextRevision) {
       snapshot = cloneNode(tree);
       revision = nextRevision;
@@ -89,20 +73,6 @@ export function createRemoteUiStore(): RemoteUiStore {
       };
     },
   };
-}
-
-function renderNode<TRenderedNode>(
-  node: RemoteNode,
-  renderer: HostRenderer<TRenderedNode>,
-): TRenderedNode {
-  if (node.kind === "text") {
-    return renderer.renderText(node.text);
-  }
-  const children = node.children.map((child) => renderNode(child, renderer));
-  if (node.kind === "fragment") {
-    return renderer.renderFragment(node, children);
-  }
-  return renderer.renderElement(node, children);
 }
 
 function applyPatch(root: RemoteNode, patch: RemotePatch): void {
@@ -147,10 +117,10 @@ function applyPatch(root: RemoteNode, patch: RemotePatch): void {
       }
       break;
     }
-    case "setEvents": {
+    case "setCallbacks": {
       const node = findNode(root, patch.nodeId);
       if (node?.kind === "element") {
-        node.events = patch.events;
+        node.callbacks = patch.callbacks;
       }
       break;
     }

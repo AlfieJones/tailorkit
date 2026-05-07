@@ -18,6 +18,7 @@ export interface DomEventLike {
   bubbles: boolean;
   cancelable: boolean;
   defaultPrevented: boolean;
+  detail?: unknown[];
   _stop: boolean;
   _end: boolean;
   target: unknown;

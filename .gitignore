@@ -23,6 +23,8 @@ build
 *.swo
 *~
 .DS_Store
+.claude/worktrees
+.claude/launch.json
 
 # Logs
 logs

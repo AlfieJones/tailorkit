@@ -33,8 +33,6 @@ type WorkerGlobalKey =
   | "Node"
   | "Text"
   | "Element"
-  | "HTMLElement"
-  | "SVGElement"
   | "Event"
   | "requestAnimationFrame"
   | "cancelAnimationFrame"

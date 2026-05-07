@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createTailorKitServer } from "tailorkit/server";
+import { tailorKit } from "tailorkit";
 
-const tailorkit = createTailorKitServer({
+const tailor = tailorKit({
   apps: [
     {
       id: "some-id",
@@ -15,7 +15,7 @@ const tailorkit = createTailorKitServer({
 export const Route = createFileRoute("/api/tailorkit/$")({
   server: {
     handlers: {
-      GET: ({ request }) => tailorkit.handler(request),
+      GET: ({ request }) => tailor.handler(request),
     },
   },
 });

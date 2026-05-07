@@ -100,29 +100,6 @@ describe("Element", () => {
     });
   });
 
-  describe("className", () => {
-    it("getter returns null when no class set", () => {
-      expect(makeElement().className).toBeNull();
-    });
-
-    it("setter sets the class attribute", () => {
-      const el = makeElement();
-      el.className = "foo bar";
-      expect(el.getAttribute("class")).toBe("foo bar");
-      expect(el.className).toBe("foo bar");
-    });
-
-    it("matches happy-dom: className round-trip", () => {
-      const happyEl = happyDoc.createElement("div");
-      happyEl.className = "a b";
-
-      const el = makeElement();
-      el.className = "a b";
-
-      expect(el.className).toBe(happyEl.className);
-    });
-  });
-
   describe("cssText", () => {
     it("getter returns null when no style attribute", () => {
       expect(makeElement().cssText).toBeNull();
@@ -158,26 +135,26 @@ describe("Element", () => {
     it("registers and removes a handler", () => {
       const el = makeElement();
       const handler = vi.fn();
-      el.addEventListener("click", handler);
-      expect(el.__handlers["click"]).toContain(handler);
-      el.removeEventListener("click", handler);
-      expect(el.__handlers["click"]).not.toContain(handler);
+      el.addEventListener("tailorkitcallbackonselect", handler);
+      expect(el.__handlers["tailorkitcallbackonselect"]).toContain(handler);
+      el.removeEventListener("tailorkitcallbackonselect", handler);
+      expect(el.__handlers["tailorkitcallbackonselect"]).not.toContain(handler);
     });
 
     it("normalises event type to lowercase", () => {
       const el = makeElement();
       const handler = vi.fn();
-      el.addEventListener("Click", handler);
-      expect(el.__handlers["click"]).toContain(handler);
+      el.addEventListener("TailorKitCallbackOnSelect", handler);
+      expect(el.__handlers["tailorkitcallbackonselect"]).toContain(handler);
     });
 
     it("supports multiple handlers for the same event", () => {
       const el = makeElement();
       const h1 = vi.fn();
       const h2 = vi.fn();
-      el.addEventListener("click", h1);
-      el.addEventListener("click", h2);
-      expect(el.__handlers["click"]).toHaveLength(2);
+      el.addEventListener("tailorkitcallbackonselect", h1);
+      el.addEventListener("tailorkitcallbackonselect", h2);
+      expect(el.__handlers["tailorkitcallbackonselect"]).toHaveLength(2);
     });
   });
 
@@ -186,11 +163,11 @@ describe("Element", () => {
       const el = makeElement();
       let capturedTarget: unknown;
       let capturedCurrentTarget: unknown;
-      el.addEventListener("click", (ev) => {
+      el.addEventListener("tailorkitcallbackonselect", (ev) => {
         capturedTarget = ev.target;
         capturedCurrentTarget = ev.currentTarget;
       });
-      const ev = new DomEvent("click");
+      const ev = new DomEvent("tailorkitcallbackonselect");
       el.dispatchEvent(ev);
       expect(capturedTarget).toBe(el);
       expect(capturedCurrentTarget).toBe(el);
@@ -198,40 +175,40 @@ describe("Element", () => {
 
     it("returns true when the event was not canceled", () => {
       const el = makeElement();
-      el.addEventListener("click", () => {});
-      expect(el.dispatchEvent(new DomEvent("click"))).toBe(true);
+      el.addEventListener("tailorkitcallbackonselect", () => {});
+      expect(el.dispatchEvent(new DomEvent("tailorkitcallbackonselect"))).toBe(true);
     });
 
     it("returns true when no handlers exist for the event type", () => {
       const el = makeElement();
-      expect(el.dispatchEvent(new DomEvent("click"))).toBe(true);
+      expect(el.dispatchEvent(new DomEvent("tailorkitcallbackonselect"))).toBe(true);
     });
 
     it("invokes handlers in registration order", () => {
       const el = makeElement();
       const order: number[] = [];
-      el.addEventListener("click", () => {
+      el.addEventListener("tailorkitcallbackonselect", () => {
         order.push(1);
       });
-      el.addEventListener("click", () => {
+      el.addEventListener("tailorkitcallbackonselect", () => {
         order.push(2);
       });
-      el.dispatchEvent(new DomEvent("click"));
+      el.dispatchEvent(new DomEvent("tailorkitcallbackonselect"));
       expect(order).toEqual([1, 2]);
     });
 
     it("sets defaultPrevented when handler returns false and event is cancelable", () => {
       const el = makeElement();
-      el.addEventListener("click", () => false);
-      const ev = new DomEvent("click", { cancelable: true });
+      el.addEventListener("tailorkitcallbackonselect", () => false);
+      const ev = new DomEvent("tailorkitcallbackonselect", { cancelable: true });
       el.dispatchEvent(ev);
       expect(ev.defaultPrevented).toBe(true);
     });
 
     it("does NOT set defaultPrevented when event is not cancelable", () => {
       const el = makeElement();
-      el.addEventListener("click", () => false);
-      const ev = new DomEvent("click", { cancelable: false });
+      el.addEventListener("tailorkitcallbackonselect", () => false);
+      const ev = new DomEvent("tailorkitcallbackonselect", { cancelable: false });
       el.dispatchEvent(ev);
       expect(ev.defaultPrevented).toBe(false);
     });
@@ -243,9 +220,9 @@ describe("Element", () => {
         parent.append(child);
 
         const parentHandler = vi.fn();
-        parent.addEventListener("click", parentHandler);
+        parent.addEventListener("tailorkitcallbackonselect", parentHandler);
 
-        child.dispatchEvent(new DomEvent("click", { bubbles: true }));
+        child.dispatchEvent(new DomEvent("tailorkitcallbackonselect", { bubbles: true }));
         expect(parentHandler).toHaveBeenCalledOnce();
       });
 
@@ -255,9 +232,9 @@ describe("Element", () => {
         parent.append(child);
 
         const parentHandler = vi.fn();
-        parent.addEventListener("click", parentHandler);
+        parent.addEventListener("tailorkitcallbackonselect", parentHandler);
 
-        child.dispatchEvent(new DomEvent("click", { bubbles: false }));
+        child.dispatchEvent(new DomEvent("tailorkitcallbackonselect", { bubbles: false }));
         expect(parentHandler).not.toHaveBeenCalled();
       });
 
@@ -272,10 +249,12 @@ describe("Element", () => {
           ev.stopPropagation();
         });
         const grandparentHandler = vi.fn();
-        parent.addEventListener("click", parentHandler);
-        grandparent.addEventListener("click", grandparentHandler);
+        parent.addEventListener("tailorkitcallbackonselect", parentHandler);
+        grandparent.addEventListener("tailorkitcallbackonselect", grandparentHandler);
 
-        child.dispatchEvent(new DomEvent("click", { bubbles: true, cancelable: true }));
+        child.dispatchEvent(
+          new DomEvent("tailorkitcallbackonselect", { bubbles: true, cancelable: true }),
+        );
 
         expect(parentHandler).toHaveBeenCalledOnce();
         expect(grandparentHandler).not.toHaveBeenCalled();
@@ -292,10 +271,12 @@ describe("Element", () => {
           ev.stopPropagation();
         });
         const grandparentHandler = vi.fn();
-        parent.addEventListener("click", parentHandler);
-        grandparent.addEventListener("click", grandparentHandler);
+        parent.addEventListener("tailorkitcallbackonselect", parentHandler);
+        grandparent.addEventListener("tailorkitcallbackonselect", grandparentHandler);
 
-        child.dispatchEvent(new DomEvent("click", { bubbles: true, cancelable: false }));
+        child.dispatchEvent(
+          new DomEvent("tailorkitcallbackonselect", { bubbles: true, cancelable: false }),
+        );
 
         expect(grandparentHandler).not.toHaveBeenCalled();
       });
@@ -306,14 +287,14 @@ describe("Element", () => {
         parent.append(child);
 
         const order: string[] = [];
-        child.addEventListener("click", () => {
+        child.addEventListener("tailorkitcallbackonselect", () => {
           order.push("child");
         });
-        parent.addEventListener("click", () => {
+        parent.addEventListener("tailorkitcallbackonselect", () => {
           order.push("parent");
         });
 
-        child.dispatchEvent(new DomEvent("click", { bubbles: true }));
+        child.dispatchEvent(new DomEvent("tailorkitcallbackonselect", { bubbles: true }));
         expect(order).toEqual(["child", "parent"]);
       });
     });

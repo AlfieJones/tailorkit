@@ -13,14 +13,11 @@ export interface PrimitiveComponentDefinition extends ComponentDefinition {
 type Shape = Record<string, z.ZodTypeAny>;
 type NonEmptyStringArray = readonly [string, ...string[]];
 
-const overflowOptions = ["visible", "hidden", "auto", "clip"] as const;
 const directionOptions = ["row", "column"] as const;
 const alignOptions = ["start", "center", "end", "stretch"] as const;
 const justifyOptions = ["start", "center", "end", "between"] as const;
 const columnOptions = [1, 2, 3, 4, 6, 12] as const;
 
-const overflow = z.enum(overflowOptions);
-const sizeValue = z.union([z.string(), z.number()]);
 const direction = z.enum(directionOptions);
 const align = z.enum(alignOptions);
 const justify = z.enum(justifyOptions);
@@ -56,20 +53,28 @@ const boxShape = (theme: TailorKitTheme): Shape => ({
   background: optionalResponsive(tokenEnum(theme.tokens?.background), theme),
   border: optionalResponsive(tokenEnum(theme.tokens?.border), theme),
   borderColor: optionalResponsive(tokenEnum(theme.tokens?.borderColor), theme),
-  height: optionalResponsive(sizeValue, theme),
+  height: optionalResponsive(tokenEnum(theme.tokens?.size), theme),
   margin: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
-  overflow: optionalResponsive(overflow, theme),
+  overflow: optionalResponsive(tokenEnum(theme.tokens?.overflow), theme),
+  overflowWrap: optionalResponsive(tokenEnum(theme.tokens?.overflowWrap), theme),
   padding: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
   radius: optionalResponsive(tokenEnum(theme.tokens?.radius), theme),
-  width: optionalResponsive(sizeValue, theme),
+  textAlign: optionalResponsive(tokenEnum(theme.tokens?.textAlign), theme),
+  textOverflow: optionalResponsive(tokenEnum(theme.tokens?.textOverflow), theme),
+  textTransform: optionalResponsive(tokenEnum(theme.tokens?.textTransform), theme),
+  width: optionalResponsive(tokenEnum(theme.tokens?.size), theme),
 });
 
 const inlineShape = (theme: TailorKitTheme): Shape => ({
   background: optionalResponsive(tokenEnum(theme.tokens?.background), theme),
   borderColor: optionalResponsive(tokenEnum(theme.tokens?.borderColor), theme),
   margin: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
+  overflowWrap: optionalResponsive(tokenEnum(theme.tokens?.overflowWrap), theme),
   padding: optionalResponsive(tokenEnum(theme.tokens?.space), theme),
   radius: optionalResponsive(tokenEnum(theme.tokens?.radius), theme),
+  textAlign: optionalResponsive(tokenEnum(theme.tokens?.textAlign), theme),
+  textOverflow: optionalResponsive(tokenEnum(theme.tokens?.textOverflow), theme),
+  textTransform: optionalResponsive(tokenEnum(theme.tokens?.textTransform), theme),
 });
 
 const primitive = (name: PrimitiveName): PrimitiveComponentDefinition =>

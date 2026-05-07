@@ -31,77 +31,109 @@ export type ScreenPath = keyof ScreenPropsByPath & string;
 export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
 
 export interface BoxProps {
-  background?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  background?: "muted" | "surface" | {
+    base?: "muted" | "surface";
+    sm?: "muted" | "surface";
+    md?: "muted" | "surface";
+    lg?: "muted" | "surface";
+    xl?: "muted" | "surface";
+    "2xl"?: "muted" | "surface";
   };
-  border?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  border?: "solid" | "dashed" | "dotted" | "double" | {
+    base?: "solid" | "dashed" | "dotted" | "double";
+    sm?: "solid" | "dashed" | "dotted" | "double";
+    md?: "solid" | "dashed" | "dotted" | "double";
+    lg?: "solid" | "dashed" | "dotted" | "double";
+    xl?: "solid" | "dashed" | "dotted" | "double";
+    "2xl"?: "solid" | "dashed" | "dotted" | "double";
   };
-  borderColor?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  borderColor?: "default" | {
+    base?: "default";
+    sm?: "default";
+    md?: "default";
+    lg?: "default";
+    xl?: "default";
+    "2xl"?: "default";
   };
-  height?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
+  height?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit" | {
+    base?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    sm?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    md?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    lg?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    xl?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    "2xl"?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
   };
-  margin?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  margin?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
-  overflow?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  overflow?: "visible" | "hidden" | "clip" | "scroll" | "auto" | {
+    base?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    sm?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    md?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    lg?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    xl?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    "2xl"?: "visible" | "hidden" | "clip" | "scroll" | "auto";
   };
-  padding?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  overflowWrap?: "normal" | "breakWord" | "anywhere" | {
+    base?: "normal" | "breakWord" | "anywhere";
+    sm?: "normal" | "breakWord" | "anywhere";
+    md?: "normal" | "breakWord" | "anywhere";
+    lg?: "normal" | "breakWord" | "anywhere";
+    xl?: "normal" | "breakWord" | "anywhere";
+    "2xl"?: "normal" | "breakWord" | "anywhere";
   };
-  radius?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  padding?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
-  width?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
+  radius?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  };
+  textAlign?: "left" | "right" | "start" | "end" | "center" | "justify" | {
+    base?: "left" | "right" | "start" | "end" | "center" | "justify";
+    sm?: "left" | "right" | "start" | "end" | "center" | "justify";
+    md?: "left" | "right" | "start" | "end" | "center" | "justify";
+    lg?: "left" | "right" | "start" | "end" | "center" | "justify";
+    xl?: "left" | "right" | "start" | "end" | "center" | "justify";
+    "2xl"?: "left" | "right" | "start" | "end" | "center" | "justify";
+  };
+  textOverflow?: "clip" | "ellipsis" | {
+    base?: "clip" | "ellipsis";
+    sm?: "clip" | "ellipsis";
+    md?: "clip" | "ellipsis";
+    lg?: "clip" | "ellipsis";
+    xl?: "clip" | "ellipsis";
+    "2xl"?: "clip" | "ellipsis";
+  };
+  textTransform?: "capitalize" | "uppercase" | "lowercase" | "none" | {
+    base?: "capitalize" | "uppercase" | "lowercase" | "none";
+    sm?: "capitalize" | "uppercase" | "lowercase" | "none";
+    md?: "capitalize" | "uppercase" | "lowercase" | "none";
+    lg?: "capitalize" | "uppercase" | "lowercase" | "none";
+    xl?: "capitalize" | "uppercase" | "lowercase" | "none";
+    "2xl"?: "capitalize" | "uppercase" | "lowercase" | "none";
+  };
+  width?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit" | {
+    base?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    sm?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    md?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    lg?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    xl?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    "2xl"?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
   };
 }
 
@@ -110,109 +142,141 @@ export const Box = createRemoteComponent<BoxProps, readonly ["default"]>("Box", 
 });
 
 export interface FlexProps {
-  background?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  background?: "muted" | "surface" | {
+    base?: "muted" | "surface";
+    sm?: "muted" | "surface";
+    md?: "muted" | "surface";
+    lg?: "muted" | "surface";
+    xl?: "muted" | "surface";
+    "2xl"?: "muted" | "surface";
   };
-  border?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  border?: "solid" | "dashed" | "dotted" | "double" | {
+    base?: "solid" | "dashed" | "dotted" | "double";
+    sm?: "solid" | "dashed" | "dotted" | "double";
+    md?: "solid" | "dashed" | "dotted" | "double";
+    lg?: "solid" | "dashed" | "dotted" | "double";
+    xl?: "solid" | "dashed" | "dotted" | "double";
+    "2xl"?: "solid" | "dashed" | "dotted" | "double";
   };
-  borderColor?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  borderColor?: "default" | {
+    base?: "default";
+    sm?: "default";
+    md?: "default";
+    lg?: "default";
+    xl?: "default";
+    "2xl"?: "default";
   };
-  height?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
+  height?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit" | {
+    base?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    sm?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    md?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    lg?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    xl?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    "2xl"?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
   };
-  margin?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  margin?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
-  overflow?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  overflow?: "visible" | "hidden" | "clip" | "scroll" | "auto" | {
+    base?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    sm?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    md?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    lg?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    xl?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    "2xl"?: "visible" | "hidden" | "clip" | "scroll" | "auto";
   };
-  padding?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  overflowWrap?: "normal" | "breakWord" | "anywhere" | {
+    base?: "normal" | "breakWord" | "anywhere";
+    sm?: "normal" | "breakWord" | "anywhere";
+    md?: "normal" | "breakWord" | "anywhere";
+    lg?: "normal" | "breakWord" | "anywhere";
+    xl?: "normal" | "breakWord" | "anywhere";
+    "2xl"?: "normal" | "breakWord" | "anywhere";
   };
-  radius?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  padding?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
-  width?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
+  radius?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
-  align?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  textAlign?: "left" | "right" | "start" | "end" | "center" | "justify" | {
+    base?: "left" | "right" | "start" | "end" | "center" | "justify";
+    sm?: "left" | "right" | "start" | "end" | "center" | "justify";
+    md?: "left" | "right" | "start" | "end" | "center" | "justify";
+    lg?: "left" | "right" | "start" | "end" | "center" | "justify";
+    xl?: "left" | "right" | "start" | "end" | "center" | "justify";
+    "2xl"?: "left" | "right" | "start" | "end" | "center" | "justify";
   };
-  direction?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  textOverflow?: "clip" | "ellipsis" | {
+    base?: "clip" | "ellipsis";
+    sm?: "clip" | "ellipsis";
+    md?: "clip" | "ellipsis";
+    lg?: "clip" | "ellipsis";
+    xl?: "clip" | "ellipsis";
+    "2xl"?: "clip" | "ellipsis";
   };
-  gap?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  textTransform?: "capitalize" | "uppercase" | "lowercase" | "none" | {
+    base?: "capitalize" | "uppercase" | "lowercase" | "none";
+    sm?: "capitalize" | "uppercase" | "lowercase" | "none";
+    md?: "capitalize" | "uppercase" | "lowercase" | "none";
+    lg?: "capitalize" | "uppercase" | "lowercase" | "none";
+    xl?: "capitalize" | "uppercase" | "lowercase" | "none";
+    "2xl"?: "capitalize" | "uppercase" | "lowercase" | "none";
   };
-  justify?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  width?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit" | {
+    base?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    sm?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    md?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    lg?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    xl?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    "2xl"?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+  };
+  align?: "start" | "center" | "end" | "stretch" | {
+    base?: "start" | "center" | "end" | "stretch";
+    sm?: "start" | "center" | "end" | "stretch";
+    md?: "start" | "center" | "end" | "stretch";
+    lg?: "start" | "center" | "end" | "stretch";
+    xl?: "start" | "center" | "end" | "stretch";
+    "2xl"?: "start" | "center" | "end" | "stretch";
+  };
+  direction?: "row" | "column" | {
+    base?: "row" | "column";
+    sm?: "row" | "column";
+    md?: "row" | "column";
+    lg?: "row" | "column";
+    xl?: "row" | "column";
+    "2xl"?: "row" | "column";
+  };
+  gap?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  };
+  justify?: "start" | "center" | "end" | "between" | {
+    base?: "start" | "center" | "end" | "between";
+    sm?: "start" | "center" | "end" | "between";
+    md?: "start" | "center" | "end" | "between";
+    lg?: "start" | "center" | "end" | "between";
+    xl?: "start" | "center" | "end" | "between";
+    "2xl"?: "start" | "center" | "end" | "between";
   };
 }
 
@@ -221,93 +285,125 @@ export const Flex = createRemoteComponent<FlexProps, readonly ["default"]>("Flex
 });
 
 export interface GridProps {
-  background?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  background?: "muted" | "surface" | {
+    base?: "muted" | "surface";
+    sm?: "muted" | "surface";
+    md?: "muted" | "surface";
+    lg?: "muted" | "surface";
+    xl?: "muted" | "surface";
+    "2xl"?: "muted" | "surface";
   };
-  border?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  border?: "solid" | "dashed" | "dotted" | "double" | {
+    base?: "solid" | "dashed" | "dotted" | "double";
+    sm?: "solid" | "dashed" | "dotted" | "double";
+    md?: "solid" | "dashed" | "dotted" | "double";
+    lg?: "solid" | "dashed" | "dotted" | "double";
+    xl?: "solid" | "dashed" | "dotted" | "double";
+    "2xl"?: "solid" | "dashed" | "dotted" | "double";
   };
-  borderColor?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  borderColor?: "default" | {
+    base?: "default";
+    sm?: "default";
+    md?: "default";
+    lg?: "default";
+    xl?: "default";
+    "2xl"?: "default";
   };
-  height?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
+  height?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit" | {
+    base?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    sm?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    md?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    lg?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    xl?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    "2xl"?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
   };
-  margin?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  margin?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
-  overflow?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  overflow?: "visible" | "hidden" | "clip" | "scroll" | "auto" | {
+    base?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    sm?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    md?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    lg?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    xl?: "visible" | "hidden" | "clip" | "scroll" | "auto";
+    "2xl"?: "visible" | "hidden" | "clip" | "scroll" | "auto";
   };
-  padding?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  overflowWrap?: "normal" | "breakWord" | "anywhere" | {
+    base?: "normal" | "breakWord" | "anywhere";
+    sm?: "normal" | "breakWord" | "anywhere";
+    md?: "normal" | "breakWord" | "anywhere";
+    lg?: "normal" | "breakWord" | "anywhere";
+    xl?: "normal" | "breakWord" | "anywhere";
+    "2xl"?: "normal" | "breakWord" | "anywhere";
   };
-  radius?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  padding?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
-  width?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
+  radius?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
-  columns?: number | number | number | number | number | number | {
-    base?: number | number | number | number | number | number;
-    sm?: number | number | number | number | number | number;
-    md?: number | number | number | number | number | number;
-    lg?: number | number | number | number | number | number;
-    xl?: number | number | number | number | number | number;
-    "2xl"?: number | number | number | number | number | number;
+  textAlign?: "left" | "right" | "start" | "end" | "center" | "justify" | {
+    base?: "left" | "right" | "start" | "end" | "center" | "justify";
+    sm?: "left" | "right" | "start" | "end" | "center" | "justify";
+    md?: "left" | "right" | "start" | "end" | "center" | "justify";
+    lg?: "left" | "right" | "start" | "end" | "center" | "justify";
+    xl?: "left" | "right" | "start" | "end" | "center" | "justify";
+    "2xl"?: "left" | "right" | "start" | "end" | "center" | "justify";
   };
-  gap?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  textOverflow?: "clip" | "ellipsis" | {
+    base?: "clip" | "ellipsis";
+    sm?: "clip" | "ellipsis";
+    md?: "clip" | "ellipsis";
+    lg?: "clip" | "ellipsis";
+    xl?: "clip" | "ellipsis";
+    "2xl"?: "clip" | "ellipsis";
+  };
+  textTransform?: "capitalize" | "uppercase" | "lowercase" | "none" | {
+    base?: "capitalize" | "uppercase" | "lowercase" | "none";
+    sm?: "capitalize" | "uppercase" | "lowercase" | "none";
+    md?: "capitalize" | "uppercase" | "lowercase" | "none";
+    lg?: "capitalize" | "uppercase" | "lowercase" | "none";
+    xl?: "capitalize" | "uppercase" | "lowercase" | "none";
+    "2xl"?: "capitalize" | "uppercase" | "lowercase" | "none";
+  };
+  width?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit" | {
+    base?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    sm?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    md?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    lg?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    xl?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+    "2xl"?: "0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit";
+  };
+  columns?: number | {
+    base?: number;
+    sm?: number;
+    md?: number;
+    lg?: number;
+    xl?: number;
+    "2xl"?: number;
+  };
+  gap?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
 }
 
@@ -316,45 +412,77 @@ export const Grid = createRemoteComponent<GridProps, readonly ["default"]>("Grid
 });
 
 export interface InlineProps {
-  background?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  background?: "muted" | "surface" | {
+    base?: "muted" | "surface";
+    sm?: "muted" | "surface";
+    md?: "muted" | "surface";
+    lg?: "muted" | "surface";
+    xl?: "muted" | "surface";
+    "2xl"?: "muted" | "surface";
   };
-  borderColor?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
+  borderColor?: "default" | {
+    base?: "default";
+    sm?: "default";
+    md?: "default";
+    lg?: "default";
+    xl?: "default";
+    "2xl"?: "default";
   };
-  margin?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  margin?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   };
-  padding?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  overflowWrap?: "normal" | "breakWord" | "anywhere" | {
+    base?: "normal" | "breakWord" | "anywhere";
+    sm?: "normal" | "breakWord" | "anywhere";
+    md?: "normal" | "breakWord" | "anywhere";
+    lg?: "normal" | "breakWord" | "anywhere";
+    xl?: "normal" | "breakWord" | "anywhere";
+    "2xl"?: "normal" | "breakWord" | "anywhere";
   };
-  radius?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
+  padding?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  };
+  radius?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | {
+    base?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    sm?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    md?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    lg?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    xl?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+    "2xl"?: "none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  };
+  textAlign?: "left" | "right" | "start" | "end" | "center" | "justify" | {
+    base?: "left" | "right" | "start" | "end" | "center" | "justify";
+    sm?: "left" | "right" | "start" | "end" | "center" | "justify";
+    md?: "left" | "right" | "start" | "end" | "center" | "justify";
+    lg?: "left" | "right" | "start" | "end" | "center" | "justify";
+    xl?: "left" | "right" | "start" | "end" | "center" | "justify";
+    "2xl"?: "left" | "right" | "start" | "end" | "center" | "justify";
+  };
+  textOverflow?: "clip" | "ellipsis" | {
+    base?: "clip" | "ellipsis";
+    sm?: "clip" | "ellipsis";
+    md?: "clip" | "ellipsis";
+    lg?: "clip" | "ellipsis";
+    xl?: "clip" | "ellipsis";
+    "2xl"?: "clip" | "ellipsis";
+  };
+  textTransform?: "capitalize" | "uppercase" | "lowercase" | "none" | {
+    base?: "capitalize" | "uppercase" | "lowercase" | "none";
+    sm?: "capitalize" | "uppercase" | "lowercase" | "none";
+    md?: "capitalize" | "uppercase" | "lowercase" | "none";
+    lg?: "capitalize" | "uppercase" | "lowercase" | "none";
+    xl?: "capitalize" | "uppercase" | "lowercase" | "none";
+    "2xl"?: "capitalize" | "uppercase" | "lowercase" | "none";
   };
 }
 
@@ -363,16 +491,25 @@ export const Inline = createRemoteComponent<InlineProps, readonly ["default"]>("
 });
 
 export interface ButtonProps {
-  variant?: string;
+  variant?: "default" | "secondary" | "outline" | "ghost" | "destructive";
   onClick?: () => void;
 }
 
 export const Button = createRemoteComponent<ButtonProps, readonly ["default"]>("Button", {
   slots: ["default"] as const,
+  callbacks: { "onClick": 0 },
+});
+
+export interface LinkProps {
+  href?: string;
+}
+
+export const Link = createRemoteComponent<LinkProps, readonly ["default"]>("Link", {
+  slots: ["default"] as const,
 });
 
 export interface InputProps {
-  type?: string;
+  type?: "text" | "email" | "password";
   placeholder?: string;
   value?: string;
   disabled?: boolean;
@@ -382,5 +519,41 @@ export interface InputProps {
 }
 
 export const Input = createRemoteComponent<InputProps, readonly ["default"]>("Input", {
+  slots: ["default"] as const,
+  callbacks: { "onChange": 0, "onBlur": 0, "onFocus": 0 },
+});
+
+export interface TabsProps {
+  defaultValue?: string;
+  value?: string;
+  onValueChange?: (value1: string) => void;
+}
+
+export const Tabs = createRemoteComponent<TabsProps, readonly ["default"]>("Tabs", {
+  slots: ["default"] as const,
+  callbacks: { "onValueChange": 1 },
+});
+
+export interface TabsListProps {
+  variant?: "default" | "underline";
+}
+
+export const TabsList = createRemoteComponent<TabsListProps, readonly ["default"]>("TabsList", {
+  slots: ["default"] as const,
+});
+
+export interface TabsTabProps {
+  value?: string;
+}
+
+export const TabsTab = createRemoteComponent<TabsTabProps, readonly ["default"]>("TabsTab", {
+  slots: ["default"] as const,
+});
+
+export interface TabsPanelProps {
+  value?: string;
+}
+
+export const TabsPanel = createRemoteComponent<TabsPanelProps, readonly ["default"]>("TabsPanel", {
   slots: ["default"] as const,
 });

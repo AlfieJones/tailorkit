@@ -210,7 +210,7 @@ describe("remove mutation", () => {
 describe("setAttribute mutation", () => {
   it("fires with correct fields", () => {
     const { doc, handler } = setup();
-    const el = doc.createElement("button");
+    const el = doc.createElement("tailorkit-button");
     doc.body?.append(el);
     handler.mockClear();
 
@@ -229,7 +229,7 @@ describe("setAttribute mutation", () => {
 
   it("fires for setAttributeNS", () => {
     const { doc, handler } = setup();
-    const el = doc.createElement("use");
+    const el = doc.createElement("tailorkit-icon-use");
     doc.body?.append(el);
     handler.mockClear();
 
@@ -249,7 +249,7 @@ describe("setAttribute mutation", () => {
 
   it("does not fire on elements not yet in the tree", () => {
     const { handler } = setup();
-    const detached = new Element(null, "DIV");
+    const detached = new Element(null, "TAILORKIT-BOX");
     detached.setAttribute("id", "x");
     expect(handler).not.toHaveBeenCalled();
   });
@@ -258,7 +258,7 @@ describe("setAttribute mutation", () => {
 describe("removeAttribute mutation", () => {
   it("fires with correct fields", () => {
     const { doc, handler } = setup();
-    const el = doc.createElement("input");
+    const el = doc.createElement("tailorkit-input");
     el.setAttribute("disabled", "");
     doc.body?.append(el);
     handler.mockClear();

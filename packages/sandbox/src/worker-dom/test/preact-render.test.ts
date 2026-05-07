@@ -5,16 +5,21 @@ import { createWorkerDOM } from "../index.js";
 import { Text } from "../text.js";
 
 describe("Preact rendering", () => {
-  it("renders basic element trees into the worker DOM", () => {
+  it("renders basic custom element trees into the worker DOM", () => {
     const worker = createWorkerDOM();
 
     render(
-      h("section", { className: "panel" }, h("h1", null, "Title"), h("p", null, "Copy")),
+      h(
+        "tailorkit-panel",
+        null,
+        h("tailorkit-title", null, "Title"),
+        h("tailorkit-copy", null, "Copy"),
+      ),
       worker.root,
     );
 
     expect(worker.html()).toBe(
-      '<div id="root"><section class="panel"><h1>Title</h1><p>Copy</p></section></div>',
+      '<div id="root"><tailorkit-panel><tailorkit-title>Title</tailorkit-title><tailorkit-copy>Copy</tailorkit-copy></tailorkit-panel></div>',
     );
     worker.cleanup();
   });

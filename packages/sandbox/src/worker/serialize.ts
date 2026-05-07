@@ -6,13 +6,11 @@ import type { Text } from "../worker-dom/text.js";
 import type { EventHandler } from "../worker-dom/types.js";
 import { NodeType } from "../worker-dom/types.js";
 import type {
+  RemoteCallbackBinding,
   RemoteElementNode,
-  RemoteEventBinding,
-  RemoteEventName,
   RemoteNode,
   RemotePatch,
 } from "../protocol.js";
-import { RemoteEventNameSchema } from "../protocol.js";
 
 const nodeIds = new WeakMap<Node, string>();
 let nextNodeId = 1;
@@ -101,9 +99,9 @@ export function mutationToPatch(record: MutationRecord): RemotePatch {
     }
     case "setEventListeners": {
       return {
-        events: readEvents(record.element),
+        callbacks: readCallbacks(record.element),
         nodeId: getRemoteNodeId(record.element),
-        op: "setEvents",
+        op: "setCallbacks",
       };
     }
     default: {
@@ -128,7 +126,7 @@ export function findElementByRemoteId(root: Node, nodeId: string): Element | nul
 function serializeElement(element: Element): RemoteElementNode {
   return {
     children: element.childNodes.map(serializeNode),
-    events: readEvents(element),
+    callbacks: readCallbacks(element),
     id: getRemoteNodeId(element),
     kind: "element",
     props: readProps(element),
@@ -136,27 +134,70 @@ function serializeElement(element: Element): RemoteElementNode {
   };
 }
 
-function readEvents(element: Element): RemoteEventBinding[] {
-  const events: RemoteEventBinding[] = [];
+function readCallbacks(element: Element): RemoteCallbackBinding[] {
+  const callbackMap = readCallbackMap(element);
+  const callbacks: RemoteCallbackBinding[] = [];
   for (const [event, handlers] of Object.entries(element.__handlers)) {
-    if (handlers.length === 0 || !RemoteEventNameSchema.safeParse(event).success) {
+    const binding = callbackMap[event];
+    if (handlers.length === 0 || binding === undefined) {
       continue;
     }
-    events.push({ event: event as RemoteEventName });
+    callbacks.push({ ...binding, event });
   }
-  return events;
+  return callbacks;
+}
+
+function readCallbackMap(
+  element: Element,
+): Record<string, { callback: string; inputCount: number }> {
+  const attribute = element.attributes.find(
+    ({ name }) => name.toLowerCase() === "data-tailorkit-callbacks",
+  );
+  if (attribute === undefined) {
+    return {};
+  }
+
+  try {
+    const value = JSON.parse(attribute.value) as unknown;
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+      return {};
+    }
+
+    return Object.fromEntries(Object.entries(value).flatMap(toCallbackMapEntry));
+  } catch {
+    return {};
+  }
+}
+
+function toCallbackMapEntry(
+  entry: [string, unknown],
+): [string, { callback: string; inputCount: number }][] {
+  const [event, config] = entry;
+
+  if (typeof config === "string") {
+    return [[event, { callback: config, inputCount: 0 }]];
+  }
+
+  if (config === null || typeof config !== "object" || Array.isArray(config)) {
+    return [];
+  }
+
+  const callback = (config as { callback?: unknown }).callback;
+  const inputCount = (config as { inputCount?: unknown }).inputCount;
+  if (typeof callback !== "string" || typeof inputCount !== "number") {
+    return [];
+  }
+
+  return [[event, { callback, inputCount }]];
 }
 
 function readProps(element: Element): Record<string, unknown> {
   const props: Record<string, unknown> = {};
   for (const attribute of element.attributes) {
+    if (attribute.name.toLowerCase() === "data-tailorkit-callbacks") {
+      continue;
+    }
     props[attribute.name] = attribute.value;
-  }
-  if (element.checked) {
-    props.checked = element.checked;
-  }
-  if (element.value) {
-    props.value = element.value;
   }
   return props;
 }

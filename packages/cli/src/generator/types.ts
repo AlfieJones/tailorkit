@@ -8,6 +8,7 @@ interface JsonSchema {
   anyOf?: JsonSchema[];
   enum?: unknown[];
   items?: JsonSchema;
+  not?: JsonSchema;
   properties?: Record<string, JsonSchema>;
   required?: string[];
   type?: string | string[];
@@ -80,12 +81,26 @@ const toTypeScriptType = (schema: JsonSchema | undefined, depth = 0): string => 
     return "unknown";
   }
 
+  if (isNeverSchema(schema)) {
+    return "never";
+  }
+
   if (schema.enum !== undefined && schema.enum.length > 0) {
     return schema.enum.map(toLiteralType).join(" | ");
   }
 
   if (schema.anyOf !== undefined && schema.anyOf.length > 0) {
-    return schema.anyOf.map((option) => toTypeScriptType(option, depth)).join(" | ");
+    const options = schema.anyOf
+      .filter((option) => !isNeverSchema(option))
+      .map((option) => toTypeScriptType(option, depth))
+      .filter((option) => option !== "never");
+
+    if (options.length === 0) {
+      return "never";
+    }
+
+    const uniqueOptions = [...new Set(options)];
+    return uniqueOptions.join(" | ");
   }
 
   const schemaType = Array.isArray(schema.type) ? schema.type[0] : schema.type;
@@ -109,9 +124,27 @@ const toTypeScriptType = (schema: JsonSchema | undefined, depth = 0): string => 
   return "unknown";
 };
 
+const isNeverSchema = (schema: JsonSchema): boolean =>
+  schema.not !== undefined && Object.keys(schema.not).length === 0;
+
+const isNeverOnlyObject = (schema: JsonSchema): boolean => {
+  const properties = schema.properties ?? {};
+  const propertyEntries = Object.values(properties);
+
+  return (
+    (Array.isArray(schema.type) ? schema.type.includes("object") : schema.type === "object") &&
+    propertyEntries.length > 0 &&
+    propertyEntries.every(isNeverSchema)
+  );
+};
+
 const toObjectType = (schema: JsonSchema, depth: number): string => {
   const properties = schema.properties ?? {};
   const propertyEntries = Object.entries(properties);
+
+  if (isNeverOnlyObject(schema)) {
+    return "never";
+  }
 
   if (propertyEntries.length === 0) {
     return fallbackObjectType;
@@ -194,8 +227,11 @@ const renderComponent = (name: string, component: SerializedComponent): string =
     lines.push(`  ${toPropertyKey(key)}?: ${toTypeScriptType(schema, 2)};`);
   }
 
-  for (const key of Object.keys(callbacks)) {
-    lines.push(`  ${toPropertyKey(key)}?: () => void;`);
+  for (const [key, callback] of Object.entries(callbacks)) {
+    const parameters = (callback.input ?? [])
+      .map((schema, index) => `value${index + 1}: ${toTypeScriptType(schema, 2)}`)
+      .join(", ");
+    lines.push(`  ${toPropertyKey(key)}?: (${parameters}) => void;`);
   }
 
   lines.push("}");
@@ -203,11 +239,16 @@ const renderComponent = (name: string, component: SerializedComponent): string =
 
   const slotsType = `readonly [${slots.map(quote).join(", ")}]`;
   const slotsValue = `[${slots.map(quote).join(", ")}] as const`;
+  const callbackEntries = Object.entries(callbacks).map(
+    ([key, callback]) => `${quote(key)}: ${callback.input?.length ?? 0}`,
+  );
+  const callbackOptions =
+    callbackEntries.length > 0 ? `,\n  callbacks: { ${callbackEntries.join(", ")} }` : "";
 
   lines.push(
     `export const ${toIdentifier(name)} = createRemoteComponent<${propsName}, ${slotsType}>(${quote(name)}, {`,
   );
-  lines.push(`  slots: ${slotsValue},`);
+  lines.push(`  slots: ${slotsValue}${callbackOptions},`);
   lines.push("});");
 
   return lines.join("\n");

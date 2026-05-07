@@ -34,7 +34,7 @@ describe("worker runtime", () => {
       },
     });
     const appUrl = `data:text/javascript,${encodeURIComponent(`
-      const button = document.createElement("button");
+      const button = document.createElement("tailorkit-button");
       button.setAttribute("data-kind", "primary");
       button.appendChild(document.createTextNode("Save"));
       document.body.firstChild.appendChild(button);
@@ -57,11 +57,11 @@ describe("worker runtime", () => {
             children: [
               {
                 children: [{ id: "n:1", kind: "text", text: "Save" }],
-                events: [],
+                callbacks: [],
                 id: "n:2",
                 kind: "element",
                 props: { "data-kind": "primary" },
-                type: "button",
+                type: "tailorkit-button",
               },
             ],
             id: "n:3",
@@ -145,7 +145,7 @@ describe("worker runtime", () => {
             children: [
               {
                 children: [{ id: "n:1", kind: "text", text: "Rendered from jsx runtime" }],
-                events: [],
+                callbacks: [],
                 id: "n:2",
                 kind: "element",
                 props: {},
@@ -196,7 +196,7 @@ describe("worker runtime", () => {
                   { id: "n:1", kind: "text", text: "Count: " },
                   { id: "n:2", kind: "text", text: "4" },
                 ],
-                events: [],
+                callbacks: [],
                 id: "n:3",
                 kind: "element",
                 props: {},

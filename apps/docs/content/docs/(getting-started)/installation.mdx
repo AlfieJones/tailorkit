@@ -1,0 +1,102 @@
+---
+title: Installation
+description: Learn how to configure TailorKit in your project.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+<Steps>
+<Step>
+
+### Install TailorKit
+
+Install TailorKit in the app that will host and render TailorKit apps.
+
+```npm
+npm install tailorkit
+```
+
+</Step>
+<Step>
+
+### Create The TailorKit Instance
+
+Create a file named `tailor.ts` in one of these locations:
+
+- Project root
+- `lib/` folder
+- `utils/` folder
+
+You can also nest any of these folders under a `src/`, `app/`, or `server/`
+folder. For example, `src/lib/tailor.ts` and `app/lib/tailor.ts` are both valid.
+
+In this file, import TailorKit and create your TailorKit instance. Export the
+instance with the variable name `tailor`, or export it as the default export.
+
+```ts title="tailor.ts"
+import { component, defineSchema, screen } from "tailorkit";
+import { tailorKit } from "tailorkit/react";
+import { z } from "zod";
+
+export const schema = defineSchema({
+  components: {
+    // Add your platform components here.
+  },
+  screens: {
+    // Add the screens TailorKit apps can render into here.
+  },
+});
+
+export const tailor = tailorKit(schema, {
+  baseUrl: "/api/tailorkit",
+  components: {
+    // Map schema components to your real React components here.
+  },
+});
+```
+
+TailorKit looks for either a named `schema` export or a TailorKit instance
+export. Keeping the instance named `tailor` makes it easy to import throughout
+your host app.
+
+</Step>
+<Step>
+
+### Add Components To The Schema
+
+Your schema is the contract between your platform and the apps that run inside
+it. It describes which components apps can render, what props they can receive,
+which callbacks they can call, and which screens they are allowed to target.
+
+```ts title="tailor.ts"
+export const schema = defineSchema({
+  components: {
+    Button: component({
+      fields: z.object({
+        variant: z.enum(["primary", "secondary"]),
+      }),
+      callbacks: {
+        onClick: {},
+      },
+      slots: ["default"],
+    }),
+  },
+  screens: {
+    "/home": screen({
+      context: z.object({
+        user: z.object({
+          id: z.string(),
+          name: z.string().optional(),
+        }),
+      }),
+    }),
+  },
+});
+```
+
+Apps can only use the components and screens you expose here. This keeps the
+host in control of routing, data, styling, and platform behavior while still
+letting apps render native UI.
+
+</Step>
+</Steps>

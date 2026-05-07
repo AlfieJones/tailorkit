@@ -1,7 +1,7 @@
 import { HostToWorkerPayload, WorkerToHostPayload } from "../protocol.js";
 import type { HostToWorkerPayload as HostToWorkerPayloadType } from "../protocol.js";
 import { createRemoteUiStore } from "./store.js";
-import type { HostRenderer, RemoteUiStore } from "./store.js";
+import type { RemoteUiStore } from "./store.js";
 
 export interface WorkerUiHost extends RemoteUiStore {
   dispatch(payload: HostToWorkerPayloadType): void;
@@ -73,7 +73,5 @@ function toUrl(value: string | URL): URL {
   return value instanceof URL ? value : new URL(value, globalThis.location?.href);
 }
 
-export { createElementHostRenderer } from "./render.js";
 export { createRemoteUiStore };
-export type { CreateElement, ElementHostRendererOptions } from "./render.js";
-export type { HostRenderer, RemoteUiStore };
+export type { RemoteUiStore };

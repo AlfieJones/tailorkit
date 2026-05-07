@@ -6,11 +6,11 @@ const tree = {
   children: [
     {
       children: [{ id: "text", kind: "text", text: "Save" }],
-      events: [{ event: "click" }],
-      id: "button",
+      callbacks: [{ callback: "onClick", inputCount: 0, event: "tailorkitcallbackonclick" }],
+      id: "tailorkit-button",
       kind: "element",
       props: { disabled: false },
-      type: "button",
+      type: "tailorkit-button",
     },
   ],
   id: "root",
@@ -18,7 +18,7 @@ const tree = {
 } satisfies RemoteNode;
 
 describe("createRemoteUiStore", () => {
-  it("stores snapshots and renders through a framework-neutral renderer", () => {
+  it("stores snapshots", () => {
     const store = createRemoteUiStore();
 
     store.handleWorkerMessage({
@@ -26,19 +26,7 @@ describe("createRemoteUiStore", () => {
       type: "snapshot",
     });
 
-    expect(
-      store.render({
-        renderElement(node, children) {
-          return `${node.type}[${children.join("")}]`;
-        },
-        renderFragment(_node, children) {
-          return children.join("");
-        },
-        renderText(text) {
-          return text;
-        },
-      }),
-    ).toBe("button[Save]");
+    expect(store.getSnapshot()).toMatchObject(tree);
   });
 
   it("applies patch batches without replacing the entire remote tree over the wire", () => {
@@ -51,8 +39,8 @@ describe("createRemoteUiStore", () => {
       data: {
         patches: [
           { nodeId: "text", op: "setText", text: "Saved" },
-          { name: "disabled", nodeId: "button", op: "setProp", value: true },
-          { events: [], nodeId: "button", op: "setEvents" },
+          { name: "disabled", nodeId: "tailorkit-button", op: "setProp", value: true },
+          { callbacks: [], nodeId: "tailorkit-button", op: "setCallbacks" },
         ],
         revision: 2,
       },
@@ -63,7 +51,7 @@ describe("createRemoteUiStore", () => {
     expect(store.getSnapshot()).toMatchObject({
       children: [
         {
-          events: [],
+          callbacks: [],
           props: { disabled: true },
           children: [{ text: "Saved" }],
         },
@@ -80,7 +68,7 @@ describe("createRemoteUiStore", () => {
       {
         node: { id: "suffix", kind: "text", text: "!" },
         op: "insert",
-        parentId: "button",
+        parentId: "tailorkit-button",
       },
       {
         nodeId: "text",

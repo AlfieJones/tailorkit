@@ -9,7 +9,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@tailorkit/core": "workspace:*",
+    "tailorkit": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

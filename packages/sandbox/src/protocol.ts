@@ -15,8 +15,8 @@ export interface RemoteFragmentNode {
 }
 
 export interface RemoteElementNode {
+  callbacks?: RemoteCallbackBinding[];
   children: RemoteNode[];
-  events?: RemoteEventBinding[];
   id: string;
   kind: "element";
   props: RemoteProps;
@@ -25,32 +25,10 @@ export interface RemoteElementNode {
 
 export type RemoteProps = Record<string, unknown>;
 
-export interface RemoteEventBinding {
-  capture?: boolean;
-  event: RemoteEventName;
-}
-
-export type RemoteEventName =
-  | "blur"
-  | "change"
-  | "click"
-  | "focus"
-  | "input"
-  | "keydown"
-  | "keyup"
-  | "mousedown"
-  | "mouseup"
-  | "pointerdown"
-  | "pointerup"
-  | "submit";
-
-export interface RemoteHostEvent {
-  bubbles?: boolean;
-  cancelable?: boolean;
-  checked?: boolean;
-  key?: string;
-  type: RemoteEventName;
-  value?: string;
+export interface RemoteCallbackBinding {
+  callback: string;
+  inputCount: number;
+  event: string;
 }
 
 export type RemotePatch =
@@ -81,30 +59,15 @@ export type RemotePatch =
       text: string;
     }
   | {
-      events: RemoteEventBinding[];
+      callbacks: RemoteCallbackBinding[];
       nodeId: string;
-      op: "setEvents";
+      op: "setCallbacks";
     };
 
 export interface WorkerUiMountOptions {
   appUrl: string;
   props?: Record<string, unknown>;
 }
-
-export const RemoteEventNameSchema = z.enum([
-  "blur",
-  "change",
-  "click",
-  "focus",
-  "input",
-  "keydown",
-  "keyup",
-  "mousedown",
-  "mouseup",
-  "pointerdown",
-  "pointerup",
-  "submit",
-]);
 
 export const HostToWorkerPayload = z.discriminatedUnion("type", [
   z.object({
@@ -116,15 +79,11 @@ export const HostToWorkerPayload = z.discriminatedUnion("type", [
   }),
   z.object({
     data: z.object({
-      bubbles: z.boolean().optional(),
-      cancelable: z.boolean().optional(),
-      checked: z.boolean().optional(),
-      key: z.string().optional(),
+      args: z.array(z.unknown()).optional(),
+      event: z.string(),
       nodeId: z.string(),
-      type: RemoteEventNameSchema,
-      value: z.string().optional(),
     }),
-    type: z.literal("dispatchEvent"),
+    type: z.literal("dispatchCallback"),
   }),
   z.object({
     data: z.object({
@@ -135,9 +94,10 @@ export const HostToWorkerPayload = z.discriminatedUnion("type", [
 ]);
 export type HostToWorkerPayload = z.output<typeof HostToWorkerPayload>;
 
-const RemoteEventBindingSchema = z.object({
-  capture: z.boolean().optional(),
-  event: RemoteEventNameSchema,
+const RemoteCallbackBindingSchema = z.object({
+  callback: z.string(),
+  inputCount: z.number(),
+  event: z.string(),
 });
 
 type RemoteNodeSchemaType = z.ZodType<RemoteNode>;
@@ -154,8 +114,8 @@ const RemoteNodeSchema: RemoteNodeSchemaType = z.lazy(() =>
       kind: z.literal("fragment"),
     }),
     z.object({
+      callbacks: z.array(RemoteCallbackBindingSchema).optional(),
       children: z.array(RemoteNodeSchema),
-      events: z.array(RemoteEventBindingSchema).optional(),
       id: z.string(),
       kind: z.literal("element"),
       props: z.record(z.string(), z.unknown()),
@@ -192,9 +152,9 @@ const RemotePatchSchema: z.ZodType<RemotePatch> = z.discriminatedUnion("op", [
     text: z.string(),
   }),
   z.object({
-    events: z.array(RemoteEventBindingSchema),
+    callbacks: z.array(RemoteCallbackBindingSchema),
     nodeId: z.string(),
-    op: z.literal("setEvents"),
+    op: z.literal("setCallbacks"),
   }),
 ]);
 

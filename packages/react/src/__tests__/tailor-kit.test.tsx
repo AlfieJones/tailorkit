@@ -1,10 +1,11 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { createElement } from "react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { component, defineSchema, screen as defineScreen } from "@tailorkit/core/schema";
 import type { WorkerUiHost } from "@tailorkit/sandbox/host";
 import type { HostToWorkerPayload, RemoteNode } from "@tailorkit/sandbox/protocol";
-import { tailorKit } from "../tailor-kit";
+import { createTailorKitClient } from "../tailor-kit";
 
 const hostRecords: { appUrl: string; props: Record<string, unknown> | undefined }[] = [];
 
@@ -20,7 +21,7 @@ vi.mock("@tailorkit/sandbox/host", () => ({
       id: `root-${hostRecords.length}`,
       kind: "element",
       props: {},
-      type: "div",
+      type: "Button",
     };
     let listener: (() => void) | null = null;
 
@@ -65,12 +66,17 @@ const schema = defineSchema({
   },
 });
 
+const components = {
+  Button: ({ slots }: { slots: { default?: ReactNode } }) =>
+    createElement("button", null, slots.default),
+};
+
 function ScreenMatchHost({
   nested,
   tailor,
 }: {
   nested: boolean;
-  tailor: ReturnType<typeof tailorKit<typeof schema.components, typeof schema.screens>>;
+  tailor: ReturnType<typeof createTailorKitClient<typeof schema.components, typeof schema.screens>>;
 }) {
   return (
     <tailor.ScreenMatch pattern="/" screen="/home" context={{ page: "home" }}>
@@ -89,7 +95,7 @@ function ScreenMatchHost({
   );
 }
 
-describe("tailorKit React adapter", () => {
+describe("createTailorKitClient React adapter", () => {
   beforeEach(() => {
     hostRecords.length = 0;
     vi.restoreAllMocks();
@@ -97,7 +103,10 @@ describe("tailorKit React adapter", () => {
 
   it("fetches and caches apps", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json([{ id: "todo", name: "Todo" }]));
-    const tailor = tailorKit(schema, { baseUrl: "http://runtime.test/api/tailorkit" });
+    const tailor = createTailorKitClient(schema, {
+      baseUrl: "http://runtime.test/api/tailorkit",
+      components,
+    });
 
     function AppList() {
       const { apps, status } = tailor.useApps();
@@ -118,7 +127,7 @@ describe("tailorKit React adapter", () => {
   });
 
   it("selects the deepest mounted ScreenMatch and restores the parent on unmount", async () => {
-    const tailor = tailorKit(schema, { baseUrl: "http://runtime.test" });
+    const tailor = createTailorKitClient(schema, { baseUrl: "http://runtime.test", components });
 
     const view = render(<ScreenMatchHost nested tailor={tailor} />);
 
@@ -144,7 +153,7 @@ describe("tailorKit React adapter", () => {
   });
 
   it("renders the current match for multiple direct app props", async () => {
-    const tailor = tailorKit(schema, { baseUrl: "http://runtime.test" });
+    const tailor = createTailorKitClient(schema, { baseUrl: "http://runtime.test", components });
 
     render(
       <tailor.ScreenMatch pattern="/" screen="/home" context={{ page: "home" }}>

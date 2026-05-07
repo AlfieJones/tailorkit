@@ -73,7 +73,10 @@ cli
   .command("generate", "Generate TailorKit app bindings")
   .option("--schema <path>", "Path to tailorkit schema JSON")
   .option("--out <path>", "Generated TypeScript output file")
-  .option("--experimental-schema-file <path>", "Path to a TypeScript module that exports a TailorKit schema")
+  .option(
+    "--experimental-schema-file <path>",
+    "Path to a TypeScript module that exports a TailorKit schema",
+  )
   .action(async (options: Record<string, unknown>) => {
     intro(pc.bold("TailorKit"));
     try {

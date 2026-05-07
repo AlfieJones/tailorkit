@@ -11,9 +11,13 @@ import type {
 import { buildThemeCss, PrimitiveThemeContext } from "./primitives";
 import { RemoteViewHost } from "./remote-view";
 
+type ReactComponentSlots<TComponent> = {
+  [TSlot in keyof ComponentSlots<TComponent>]: ReactNode;
+};
+
 type ComponentRenderer<TComponent extends ComponentDefinition> = (args: {
   props: ComponentProps<TComponent>;
-  slots: ComponentSlots<TComponent>;
+  slots: ReactComponentSlots<TComponent>;
 }) => ReactNode;
 
 type ComponentRenderers<TComponents extends Record<string, ComponentDefinition>> = {
@@ -111,7 +115,25 @@ export interface TailorKitInstance<
   $internal: { schema: TailorKitSchema<TComponents, TScreens> };
 }
 
-export function tailorKit<
+type PrimitiveRenderers = typeof import("./primitives").primitives;
+
+type CustomComponentRenderers<TComponents extends Record<string, ComponentDefinition>> = {
+  [TName in Exclude<keyof TComponents, keyof PrimitiveRenderers>]?: ComponentRenderer<
+    TComponents[TName]
+  >;
+};
+
+export function components<
+  TComponents extends Record<string, ComponentDefinition>,
+  TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+>(
+  _schema: TailorKitSchema<TComponents, TScreens>,
+  customComponents: CustomComponentRenderers<TComponents>,
+): ComponentRenderers<TComponents> {
+  return customComponents as ComponentRenderers<TComponents>;
+}
+
+export function createTailorKitClient<
   TComponents extends Record<string, ComponentDefinition>,
   TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
 >(
@@ -129,7 +151,7 @@ export function tailorKit<
       }: Record<string, unknown> & { children?: ReactNode }) {
         return (renderer as ComponentRenderer<ComponentDefinition>)({
           props: props as ComponentProps<ComponentDefinition>,
-          slots: { default: children } as ComponentSlots<ComponentDefinition>,
+          slots: { default: children } as ReactComponentSlots<ComponentDefinition>,
         });
       };
       wrappedComponents[name] = TailorKitComponent;
@@ -229,6 +251,8 @@ export function tailorKit<
     $internal: { schema },
   };
 }
+
+export const tailorKit = createTailorKitClient;
 
 function createTailorKitStore(baseUrlInput: string | URL) {
   const baseUrl = toBaseUrl(baseUrlInput);
