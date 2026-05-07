@@ -61,7 +61,7 @@ export function BrowserDemo({
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center h-full">
+          <div className="flex items-center h-full z-0">
             {tabs.map((tab, i) => {
               const Icon = tab.icon;
               const isActive = tab.label === activeTab;
@@ -71,7 +71,7 @@ export function BrowserDemo({
                   type="button"
                   onClick={() => handleTabClick(tab.label)}
                   className={clsx(
-                    "relative flex cursor-pointer hover:bg-accent items-center gap-2 px-4 h-full text-sm overflow-hidden transition duration-500",
+                    "relative flex cursor-pointer hover:bg-accent items-center gap-2 px-4 h-full text-sm overflow-hidden transition duration-300",
                     i === 0 && "border-l border-border",
                     isActive
                       ? "text-foreground bg-accent border-r border-border"
@@ -85,18 +85,17 @@ export function BrowserDemo({
                     {/* Active progress indicator */}
                     {isActive && (
                       <m.span
-                        layout
                         key={timerKey}
-                        className="absolute bottom-0 h-0.5 bg-primary pointer-events-none"
+                        className="absolute bottom-0 z-10 h-0.5 bg-primary pointer-events-none"
                         initial={{ width: "0%", left: "0%" }}
                         animate={{
                           width: ["0%", "100%"],
                           left: ["0%", "0%"],
                         }}
                         exit={{
-                          width: "0%",
-                          left: "100%",
-                          transition: { duration: 0.75, ease: "anticipate" },
+                          width: [null, "100%", "0%"],
+                          left: [null, "0%", "100%"],
+                          transition: { duration: 0.5, times: [0, 0.3, 1], ease: "easeInOut" },
                         }}
                         transition={{
                           duration: 5,

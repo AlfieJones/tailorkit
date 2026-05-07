@@ -26,6 +26,7 @@
       "name": "docs",
       "dependencies": {
         "@ai-sdk/react": "catalog:",
+        "@base-ui/react": "^1.4.1",
         "@openrouter/ai-sdk-provider": "^2.9.0",
         "@paper-design/shaders-react": "^0.0.76",
         "@radix-ui/react-presence": "^1.1.5",

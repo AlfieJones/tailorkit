@@ -38,23 +38,25 @@ function RootComponent() {
       <head>
         <HeadContent />
       </head>
-      <body className="flex flex-col min-h-screen">
-        <LazyMotion features={domMax}>
-          <Banner>
-            Private beta. We&apos;re working directly with early teams.{" "}
-            <a
-              className="ml-2 text-primary"
-              href="https://cal.com/alfiejones"
-              rel="noopener noreferrer"
-            >
-              Talk to a founder
-            </a>
-          </Banner>
-          <RootProvider>
-            <Outlet />
-          </RootProvider>
-          <Scripts />
-        </LazyMotion>
+      <body className="flex flex-col min-h-screen relative">
+        <div className="isolate">
+          <LazyMotion features={domMax}>
+            <Banner>
+              Private beta. We&apos;re working directly with early teams.{" "}
+              <a
+                className="ml-2 text-primary"
+                href="https://cal.com/alfiejones"
+                rel="noopener noreferrer"
+              >
+                Talk to a founder
+              </a>
+            </Banner>
+            <RootProvider>
+              <Outlet />
+            </RootProvider>
+            <Scripts />
+          </LazyMotion>
+        </div>
       </body>
     </html>
   );
