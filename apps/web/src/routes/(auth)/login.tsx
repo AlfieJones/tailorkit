@@ -16,7 +16,7 @@ import { toastManager } from "@tailorkit/ui/components/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
 import { useAppForm } from "@tailorkit/ui/form";
 import { ArrowLeftIcon } from "lucide-react";
-import { clsx } from "clsx/lite";
+import { clsx } from "clsx";
 import { useState } from "react";
 import { z } from "zod";
 

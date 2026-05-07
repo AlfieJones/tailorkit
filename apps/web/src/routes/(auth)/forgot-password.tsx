@@ -2,7 +2,7 @@
 
 import { ChevronLeftIcon } from "lucide-react";
 import { Fragment, useRef, useState } from "react";
-import { clsx } from "clsx/lite";
+import { clsx } from "clsx";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,

@@ -1,4 +1,4 @@
-import { clsx } from "clsx/lite";
+import { clsx } from "clsx";
 import type { ComponentProps } from "react";
 
 export function Container({ children, className, ...props }: ComponentProps<"div">) {

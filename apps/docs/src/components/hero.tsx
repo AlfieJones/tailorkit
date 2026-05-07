@@ -1,4 +1,4 @@
-import { clsx } from "clsx/lite";
+import { clsx } from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import { Container } from "./container";
 import { StaticMeshGradient } from "@paper-design/shaders-react";
