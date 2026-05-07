@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { StaticMeshGradient } from "@paper-design/shaders-react";
 import type { FileText } from "lucide-react";
 import * as m from "motion/react-m";
+import { AnimatePresence } from "motion/react";
 
 const TAB_INTERVAL = 5000;
 
@@ -67,9 +68,10 @@ export function BrowserDemo({
               return (
                 <button
                   key={tab.label}
+                  type="button"
                   onClick={() => handleTabClick(tab.label)}
                   className={clsx(
-                    "relative flex items-center gap-2 px-4 h-full text-sm overflow-hidden",
+                    "relative flex cursor-pointer hover:bg-accent items-center gap-2 px-4 h-full text-sm overflow-hidden transition duration-500",
                     i === 0 && "border-l border-border",
                     isActive
                       ? "text-foreground bg-accent border-r border-border"
@@ -79,19 +81,30 @@ export function BrowserDemo({
                   <Icon className="w-4 h-4" />
                   <span>{tab.label}</span>
 
-                  {/* Active progress indicator */}
-                  {isActive && (
-                    <m.span
-                      key={timerKey}
-                      className="absolute bottom-0 left-0 h-0.5 bg-primary pointer-events-none"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{
-                        duration: TAB_INTERVAL / 1000,
-                        ease: "linear",
-                      }}
-                    />
-                  )}
+                  <AnimatePresence>
+                    {/* Active progress indicator */}
+                    {isActive && (
+                      <m.span
+                        layout
+                        key={timerKey}
+                        className="absolute bottom-0 h-0.5 bg-primary pointer-events-none"
+                        initial={{ width: "0%", left: "0%" }}
+                        animate={{
+                          width: ["0%", "100%"],
+                          left: ["0%", "0%"],
+                        }}
+                        exit={{
+                          width: "0%",
+                          left: "100%",
+                          transition: { duration: 0.75, ease: "anticipate" },
+                        }}
+                        transition={{
+                          duration: 5,
+                          ease: "linear",
+                        }}
+                      />
+                    )}
+                  </AnimatePresence>
                 </button>
               );
             })}
