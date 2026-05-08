@@ -14,12 +14,12 @@ function Home() {
         <Hero
           headline="Let users build the features they want"
           subheadline=<span>
-            TailorKit provides the infrastructure for an{" "}
-            <span className="text-forground">app ecosystem</span>, from{" "}
-            <span className="text-foreground">hosting</span> and{" "}
-            <span className="text-foreground">sandboxing</span> to{" "}
-            <span className="text-foreground">agentic builders</span>, all using your{" "}
-            <span className="text-foreground">design system.</span>
+            TailorKit gives your SaaS an <span className="text-foreground">app ecosystem</span>,
+            with <span className="text-foreground">hosting</span>,{" "}
+            <span className="text-foreground">sandboxing</span>, and{" "}
+            <span className="text-foreground">agentic builders</span> so customers and partners can
+            easily extend your product using your{" "}
+            <span className="text-foreground">design system</span>.
           </span>
         />
       </main>
