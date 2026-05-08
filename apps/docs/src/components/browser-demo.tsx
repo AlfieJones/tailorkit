@@ -23,6 +23,7 @@ import {
   useMotionValue,
 } from "motion/react";
 import { FeaturesDemo } from "./features-demo";
+import { PagesDemo } from "./pages-demo";
 
 const TAB_INTERVAL = 5000;
 
@@ -80,6 +81,7 @@ export function BrowserDemo({
   className,
 }: {
   tabs: {
+    description?: string;
     label: string;
     icon: typeof FileText;
   }[];
@@ -101,6 +103,7 @@ export function BrowserDemo({
   tabOrderRef.current = tabOrder;
 
   const [activeTab, setActiveTab] = useState(initialTabs[0]?.label ?? "");
+  const activeTabDescription = tabOrder.find((tab) => tab.label === activeTab)?.description;
   const [isDraggingTab, setIsDraggingTab] = useState(false);
   const isReorderingRef = useRef(false);
 
@@ -127,6 +130,7 @@ export function BrowserDemo({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tabStartTimeRef = useRef(Date.now());
   const pauseStartTimeRef = useRef<number | null>(null);
+  const windowRef = useRef<HTMLDivElement>(null);
 
   const scheduleAdvance = (delayMs: number) => {
     if (timeoutRef.current) {
@@ -174,6 +178,11 @@ export function BrowserDemo({
     progressValueRef.current = 0;
     startProgress(0, TAB_INTERVAL);
     scheduleAdvance(TAB_INTERVAL);
+    requestAnimationFrame(() => {
+      if (windowRef.current?.matches(":hover")) {
+        handleContentMouseEnter();
+      }
+    });
     return () => {
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
@@ -237,7 +246,7 @@ export function BrowserDemo({
     <div
       ref={containerRef}
       className={clsx(
-        "overflow-hidden relative aspect-video w-full rounded-2xl lg:rounded-4xl min-h-52",
+        "overflow-hidden relative w-full rounded-2xl lg:rounded-4xl min-h-52 max-md:mx-auto max-md:aspect-[9/8] max-md:max-w-[430px] md:aspect-video",
         className,
       )}
     >
@@ -267,7 +276,7 @@ export function BrowserDemo({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 1, duration: 1 }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[11px] font-semibold text-white/50 select-none pointer-events-none tracking-wide hidden md:block"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[11px] font-semibold text-white/75 select-none pointer-events-none tracking-wide hidden md:block"
           >
             psst, try the window controls
           </m.p>
@@ -434,6 +443,7 @@ export function BrowserDemo({
         {(windowState === "normal" || windowState === "fullscreen") && (
           <m.div
             key="window"
+            ref={windowRef}
             style={{
               x: windowX,
               y: windowY,
@@ -461,7 +471,7 @@ export function BrowserDemo({
             transition={{ duration: 0.2 }}
             className={clsx(
               "absolute overflow-hidden border border-border bg-card flex flex-col rounded-2xl lg:rounded-4xl",
-              windowState === "fullscreen" ? "inset-0" : "inset-4 lg:inset-12",
+              windowState === "fullscreen" ? "inset-0" : "inset-2 md:inset-4 lg:inset-12",
             )}
             drag={windowState === "normal"}
             dragControls={dragControls}
@@ -469,6 +479,8 @@ export function BrowserDemo({
             dragConstraints={containerRef}
             dragElastic={0.1}
             dragMomentum={false}
+            onMouseEnter={handleContentMouseEnter}
+            onMouseLeave={handleContentMouseLeave}
           >
             {/* Title bar */}
             <div
@@ -592,14 +604,19 @@ export function BrowserDemo({
               )}
             </div>
 
-            {/* Tab content — hover pauses auto-advance */}
-            <div
-              className="flex-1 overflow-hidden"
-              onMouseEnter={handleContentMouseEnter}
-              onMouseLeave={handleContentMouseLeave}
-            >
+            {activeTabDescription && (
+              <div className="border-b border-border bg-muted/25 px-3 py-2 md:px-4">
+                <p className="truncate text-[11px] font-medium text-muted-foreground md:text-xs">
+                  {activeTabDescription}
+                </p>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-hidden">
               {initialTabs[0] && activeTab === initialTabs[0].label ? (
                 <FeaturesDemo isMobile={isMobile} />
+              ) : initialTabs[1] && activeTab === initialTabs[1].label ? (
+                <PagesDemo isMobile={isMobile} />
               ) : (
                 <div className="h-full bg-card" />
               )}

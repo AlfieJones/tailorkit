@@ -46,10 +46,29 @@ export function Hero({
           <div className="w-full max-md:-mx-4 max-md:w-[calc(100%+2rem)]">
             <BrowserDemo
               tabs={[
-                { label: "Features", icon: Layers },
-                { label: "Pages", icon: Globe },
-                { label: "Builder", icon: Wand2 },
-                { label: "Marketplace", icon: ShoppingBag },
+                {
+                  label: "Features",
+                  icon: Layers,
+                  description: "Installed apps add focused workflows directly inside your product.",
+                },
+                {
+                  label: "Pages",
+                  icon: Globe,
+                  description:
+                    "Hosted pages extend your product without shipping a full app release.",
+                },
+                {
+                  label: "Builder",
+                  icon: Wand2,
+                  description:
+                    "Agents can generate and refine app experiences from your existing system.",
+                },
+                {
+                  label: "Marketplace",
+                  icon: ShoppingBag,
+                  description:
+                    "Users discover, install, and manage extensions from one familiar place.",
+                },
               ]}
             />
           </div>

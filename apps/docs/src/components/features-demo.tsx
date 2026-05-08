@@ -24,6 +24,7 @@ const DEMO_APPS = [
     iconBg: "bg-yellow-100 border-yellow-200 dark:bg-yellow-900/40 dark:border-yellow-700/40",
     iconColor: "text-yellow-600 dark:text-yellow-400",
     headerBg: "bg-yellow-500 dark:bg-yellow-600",
+    logoBg: "bg-yellow-600 dark:bg-yellow-500",
     annotation: "Third-party data embedded natively — no context switch needed",
   },
   {
@@ -33,6 +34,7 @@ const DEMO_APPS = [
     iconBg: "bg-green-100 border-green-200 dark:bg-green-900/40 dark:border-green-700/40",
     iconColor: "text-green-600 dark:text-green-500",
     headerBg: "bg-green-500 dark:bg-green-600",
+    logoBg: "bg-green-600 dark:bg-green-500",
     annotation: "New pages & dashboards built on your existing API data",
   },
   {
@@ -42,6 +44,7 @@ const DEMO_APPS = [
     iconBg: "bg-orange-100 border-orange-200 dark:bg-orange-900/40 dark:border-orange-700/40",
     iconColor: "text-orange-500 dark:text-orange-400",
     headerBg: "bg-orange-500 dark:bg-orange-600",
+    logoBg: "bg-orange-600 dark:bg-orange-500",
     annotation: "Ship features your app doesn't support yet",
   },
 ];
@@ -53,47 +56,64 @@ const NAV_ITEMS = [
   { label: "Settings", icon: Settings },
 ];
 
-const COMMENT_ANCHORS = {
-  ecosystem: {
-    label: "Switch between added features",
-  },
-  featurePanel: {
-    cardClass: "right-[288px] top-[calc(46%-18px)] w-[180px]",
-  },
-} as const;
-
 const FEATURE_COMMENT_COPY: Record<ActiveApp, string> = {
-  billing: "Pull data from other platforms",
-  analytics: "Display app data in new ways",
-  email: "Let users add niche features",
+  billing: "Customer-specific billing platform",
+  analytics: "Product metrics built from your API data",
+  email: "Extra workflows users can install themselves",
 };
 
 // ─── Panels ───────────────────────────────────────────────────────────────────
 
-function PanelHeader({ app, onClose }: { app: (typeof DEMO_APPS)[number]; onClose: () => void }) {
+function PanelHeader({
+  app,
+  note,
+  onClose,
+}: {
+  app: (typeof DEMO_APPS)[number];
+  note?: string;
+  onClose: () => void;
+}) {
   const Icon = app.icon;
   return (
-    <div
-      className={clsx(
-        "flex items-center justify-between px-4 py-2.5 text-white shrink-0",
-        app.headerBg,
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <Icon className="w-3.5 h-3.5" />
-        <span className="text-xs font-semibold">{app.label}</span>
+    <>
+      <div
+        className={clsx(
+          "flex items-center justify-between px-4 py-2.5 text-white shrink-0",
+          app.headerBg,
+        )}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span
+            className={clsx(
+              "flex h-6 w-6 shrink-0 items-center justify-center rounded-md shadow-sm shadow-black/10 ring-1 ring-white/25",
+              app.logoBg,
+            )}
+          >
+            <Icon className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
+          </span>
+          <span className="text-xs font-semibold truncate">{app.label}</span>
+        </div>
+        <button
+          aria-label={`Close ${app.label}`}
+          onClick={onClose}
+          className="cursor-pointer opacity-70 hover:opacity-100"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
-      <button onClick={onClose} className="cursor-pointer opacity-70 hover:opacity-100">
-        <X className="w-3.5 h-3.5" />
-      </button>
-    </div>
+      {note && (
+        <div className="border-b border-border bg-muted/30 px-4 py-2.5 shrink-0">
+          <p className="text-[11px] font-medium leading-snug text-muted-foreground">{note}</p>
+        </div>
+      )}
+    </>
   );
 }
 
-function BillingPanel({ onClose }: { onClose: () => void }) {
+function BillingPanel({ note, onClose }: { note?: string; onClose: () => void }) {
   return (
     <div className="flex flex-col h-full">
-      <PanelHeader app={DEMO_APPS[0]} onClose={onClose} />
+      <PanelHeader app={DEMO_APPS[0]} note={note} onClose={onClose} />
       <div className="flex-1 p-3 bg-card flex flex-col gap-3 overflow-hidden">
         <div className="border border-border rounded-lg p-3">
           <div className="flex justify-between items-center mb-2">
@@ -128,11 +148,11 @@ function BillingPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-function AnalyticsPanel({ onClose }: { onClose: () => void }) {
+function AnalyticsPanel({ note, onClose }: { note?: string; onClose: () => void }) {
   const bars = [40, 65, 45, 80, 55, 90, 70];
   return (
     <div className="flex flex-col h-full">
-      <PanelHeader app={DEMO_APPS[1]} onClose={onClose} />
+      <PanelHeader app={DEMO_APPS[1]} note={note} onClose={onClose} />
       <div className="flex-1 p-3 bg-card flex flex-col gap-3 overflow-hidden">
         <div className="grid grid-cols-2 gap-2">
           <div className="border border-border rounded-lg p-3">
@@ -177,10 +197,10 @@ function AnalyticsPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-function EmailPanel({ onClose }: { onClose: () => void }) {
+function EmailPanel({ note, onClose }: { note?: string; onClose: () => void }) {
   return (
     <div className="flex flex-col h-full">
-      <PanelHeader app={DEMO_APPS[2]} onClose={onClose} />
+      <PanelHeader app={DEMO_APPS[2]} note={note} onClose={onClose} />
       <div className="flex-1 p-3 bg-card flex flex-col gap-3 overflow-hidden">
         <div className="border border-border rounded-lg p-3">
           <p className="text-[11px] text-muted-foreground mb-1">To</p>
@@ -204,64 +224,32 @@ function EmailPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-function FeatureComment({
-  label,
-  cardClass,
-  pointer = "right",
-  pointerClass,
-}: {
-  label: string;
-  cardClass: string;
-  pointer?: "right" | "top";
-  pointerClass?: string;
-}) {
-  return (
-    <m.div
-      className={clsx(
-        "absolute z-10 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-xl shadow-black/12 pointer-events-auto",
-        pointer === "right" &&
-          "after:absolute after:top-4 after:-right-2 after:h-4 after:w-4 after:rotate-45 after:border-t after:border-r after:border-border after:bg-popover",
-        pointer === "top" &&
-          clsx(
-            "after:absolute after:-top-2 after:h-4 after:w-4 after:rotate-45 after:border-l after:border-t after:border-border after:bg-popover",
-            pointerClass ?? "after:left-1/2 after:-translate-x-1/2",
-          ),
-        cardClass,
-      )}
-      initial={{
-        opacity: 0,
-        x: pointer === "right" ? 8 : 0,
-        y: pointer === "top" ? 8 : 0,
-        scale: 0.98,
-      }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{
-        opacity: 0,
-        x: pointer === "right" ? 8 : 0,
-        y: pointer === "top" ? 8 : 0,
-        scale: 0.98,
-      }}
-      transition={{ duration: 0.16 }}
-    >
-      <p className="text-xs font-semibold leading-snug text-muted-foreground">{label}</p>
-    </m.div>
-  );
-}
-
 // ─── Main demo ────────────────────────────────────────────────────────────────
 
 export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
   const [activeApp, setActiveApp] = useState<ActiveApp | null>("billing");
   const toggleApp = (id: ActiveApp) => setActiveApp((prev) => (prev === id ? null : id));
-  const panelWidth = isMobile ? 200 : 260;
+  const panelWidth = 260;
   const featureCommentCopy = activeApp ? FEATURE_COMMENT_COPY[activeApp] : null;
 
   return (
     <div className="relative flex h-full overflow-hidden">
+      <AnimatePresence>
+        {activeApp && (
+          <m.div
+            className="absolute inset-0 z-10 bg-background/15 backdrop-blur-[1.5px] pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.16 }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <div
         className={clsx(
-          "border-r border-border bg-card flex flex-col shrink-0",
+          "border-r border-border bg-card flex flex-col shrink-0 relative z-0",
           isMobile ? "w-12" : "w-44",
         )}
       >
@@ -324,7 +312,7 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
           </div>
 
           {/* App icon pill */}
-          <div className="relative flex items-center gap-0.5 border border-border rounded-xl px-1 py-1 shrink-0 z-40">
+          <div className="relative flex items-center shrink-0 z-40">
             {DEMO_APPS.map((app) => {
               const Icon = app.icon;
               const isActive = activeApp === app.id;
@@ -333,37 +321,35 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
                   key={app.id}
                   onClick={() => toggleApp(app.id)}
                   className={clsx(
-                    "w-6 h-6 rounded-full flex items-center justify-center cursor-pointer shrink-0 border transition-all",
-                    app.iconBg,
+                    "-ml-2 first:ml-0 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer shrink-0 border-2 border-border bg-muted shadow-sm transition-[box-shadow]",
                     app.iconColor,
-                    isActive && "brightness-105",
+                    isActive && "shadow-md",
                   )}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.94 }}
+                  transition={{ type: "spring", stiffness: 520, damping: 24 }}
                   title={app.label}
                 >
                   <Icon className="w-3 h-3" />
                 </m.button>
               );
             })}
-            <div className="w-px h-4 bg-border mx-0.5" />
+            <div className="mx-1.5 h-5 w-px bg-border" />
             {/* Add app button with tooltip */}
-            <div className="relative group/add">
-              <button className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+            <div className="relative group/add shrink-0">
+              <m.button
+                className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer shrink-0 border border-border bg-card text-muted-foreground shadow-sm hover:text-foreground hover:bg-accent transition-colors"
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: "spring", stiffness: 520, damping: 24 }}
+              >
                 <LayoutGrid className="w-3 h-3" />
-              </button>
+              </m.button>
               <div className="absolute top-full right-0 mt-2 px-2 py-1 bg-popover border border-border rounded-md text-[11px] text-popover-foreground whitespace-nowrap opacity-0 group-hover/add:opacity-100 transition-opacity pointer-events-none shadow-sm z-50">
                 Add new app
               </div>
             </div>
-            {!isMobile && (
-              <FeatureComment
-                {...COMMENT_ANCHORS.ecosystem}
-                cardClass="left-[calc(50%-108px)] top-full mt-3 w-[136px]"
-                pointer="top"
-                pointerClass="after:right-8"
-              />
-            )}
+            {!isMobile && <span className="sr-only">Switch between installed apps</span>}
           </div>
         </div>
 
@@ -408,50 +394,90 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
       </div>
 
       {/* Side panel */}
-      <m.div
-        className="overflow-hidden shrink-0"
-        initial={false}
-        animate={{ width: activeApp ? panelWidth : 0 }}
-        transition={{ type: "spring", damping: 28, stiffness: 320 }}
-      >
-        <div style={{ width: panelWidth }} className="h-full border-l border-border">
-          <AnimatePresence mode="wait">
-            {activeApp && (
-              <m.div
-                key={activeApp}
-                initial={false}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.12 }}
-                className="h-full"
-              >
-                {activeApp === "billing" && <BillingPanel onClose={() => setActiveApp(null)} />}
-                {activeApp === "analytics" && <AnalyticsPanel onClose={() => setActiveApp(null)} />}
-                {activeApp === "email" && <EmailPanel onClose={() => setActiveApp(null)} />}
-              </m.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </m.div>
-
-      {/* Annotations overlay */}
-      {!isMobile && (
-        <div className="absolute inset-0 pointer-events-none z-30">
-          <AnimatePresence mode="wait">
-            {featureCommentCopy && (
-              <m.div
-                key={activeApp}
-                className="absolute inset-0"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.16 }}
-              >
-                <FeatureComment {...COMMENT_ANCHORS.featurePanel} label={featureCommentCopy} />
-              </m.div>
-            )}
-          </AnimatePresence>
-        </div>
+      {isMobile ? (
+        <AnimatePresence>
+          {activeApp && (
+            <m.div
+              key="mobile-panel"
+              className="absolute inset-y-0 right-0 z-50 w-[calc(100%-3rem)] max-w-[300px] overflow-hidden border-l border-border bg-card shadow-2xl shadow-black/15"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            >
+              <AnimatePresence mode="wait">
+                <m.div
+                  key={activeApp}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  className="h-full"
+                >
+                  {activeApp === "billing" && (
+                    <BillingPanel
+                      note={featureCommentCopy ?? undefined}
+                      onClose={() => setActiveApp(null)}
+                    />
+                  )}
+                  {activeApp === "analytics" && (
+                    <AnalyticsPanel
+                      note={featureCommentCopy ?? undefined}
+                      onClose={() => setActiveApp(null)}
+                    />
+                  )}
+                  {activeApp === "email" && (
+                    <EmailPanel
+                      note={featureCommentCopy ?? undefined}
+                      onClose={() => setActiveApp(null)}
+                    />
+                  )}
+                </m.div>
+              </AnimatePresence>
+            </m.div>
+          )}
+        </AnimatePresence>
+      ) : (
+        <m.div
+          className="relative z-30 overflow-hidden shrink-0"
+          initial={false}
+          animate={{ width: activeApp ? panelWidth : 0 }}
+          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+        >
+          <div style={{ width: panelWidth }} className="h-full border-l border-border">
+            <AnimatePresence mode="wait">
+              {activeApp && (
+                <m.div
+                  key={activeApp}
+                  initial={false}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  className="h-full"
+                >
+                  {activeApp === "billing" && (
+                    <BillingPanel
+                      note={featureCommentCopy ?? undefined}
+                      onClose={() => setActiveApp(null)}
+                    />
+                  )}
+                  {activeApp === "analytics" && (
+                    <AnalyticsPanel
+                      note={featureCommentCopy ?? undefined}
+                      onClose={() => setActiveApp(null)}
+                    />
+                  )}
+                  {activeApp === "email" && (
+                    <EmailPanel
+                      note={featureCommentCopy ?? undefined}
+                      onClose={() => setActiveApp(null)}
+                    />
+                  )}
+                </m.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </m.div>
       )}
     </div>
   );
