@@ -21,6 +21,7 @@ export function BrowserDemo({
 
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [timerKey, setTimerKey] = useState(0);
+  const [isDraggingTab, setIsDraggingTab] = useState(false);
   const isReorderingRef = useRef(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval>>(null);
@@ -126,8 +127,13 @@ export function BrowserDemo({
                   onClick={() => handleTabClick(tab.label)}
                   onDragStart={() => {
                     isReorderingRef.current = true;
+                    setIsDraggingTab(true);
+                    setActiveTab(tab.label);
                   }}
                   onDragEnd={() => {
+                    setIsDraggingTab(false);
+                    setTimerKey((k) => k + 1);
+                    startAutoAdvance();
                     setTimeout(() => {
                       isReorderingRef.current = false;
                     }, 50);
@@ -136,22 +142,31 @@ export function BrowserDemo({
                   <Icon className="w-4 h-4" />
                   <span>{tab.label}</span>
 
-                  <AnimatePresence>
+                  <AnimatePresence custom={isDraggingTab}>
                     {/* Active progress indicator */}
-                    {isActive && (
+                    {isActive && !isDraggingTab && (
                       <m.span
                         key={timerKey}
+                        custom={isDraggingTab}
                         className="absolute bottom-0 z-10 h-0.5 bg-primary pointer-events-none"
                         initial={{ width: "0%", left: "0%" }}
                         animate={{
                           width: ["0%", "100%"],
                           left: ["0%", "0%"],
                         }}
-                        exit={{
-                          width: [null, "100%", "0%"],
-                          left: [null, "0%", "100%"],
-                          transition: { duration: 0.5, times: [0, 0.3, 1], ease: "easeInOut" },
-                        }}
+                        exit={(dragging: boolean) =>
+                          dragging
+                            ? { transition: { duration: 0 } }
+                            : {
+                                width: [null, "100%", "0%"],
+                                left: [null, "0%", "100%"],
+                                transition: {
+                                  duration: 0.5,
+                                  times: [0, 0.3, 1],
+                                  ease: "easeInOut",
+                                },
+                              }
+                        }
                         transition={{
                           duration: 5,
                           ease: "linear",

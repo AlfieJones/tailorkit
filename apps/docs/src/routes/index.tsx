@@ -13,7 +13,14 @@ function Home() {
       <main className="flex flex-col">
         <Hero
           headline="Let users build the features they want"
-          subheadline="TailorKit provides the infrastructure for an app ecosystem, from hosting and sandboxing to agentic builders, all using your existing components."
+          subheadline=<span>
+            TailorKit provides the infrastructure for an{" "}
+            <span className="text-forground">app ecosystem</span>, from{" "}
+            <span className="text-foreground">hosting</span> and{" "}
+            <span className="text-foreground">sandboxing</span> to{" "}
+            <span className="text-foreground">agentic builders</span>, all using your{" "}
+            <span className="text-foreground">design system.</span>
+          </span>
         />
       </main>
     </HomeLayout>
