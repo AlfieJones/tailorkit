@@ -15,7 +15,14 @@ import { StaticMeshGradient } from "@paper-design/shaders-react";
 import type { FileText } from "lucide-react";
 import { Trash2 } from "lucide-react";
 import * as m from "motion/react-m";
-import { animate, AnimatePresence, Reorder, useDragControls, useMotionValue } from "motion/react";
+import {
+  animate,
+  AnimatePresence,
+  Reorder,
+  useDragControls,
+  useInView,
+  useMotionValue,
+} from "motion/react";
 
 const TAB_INTERVAL = 5000;
 
@@ -63,6 +70,14 @@ export function BrowserDemo({
   const [windowState, setWindowState] = useState<WindowState>("normal");
   const [dockDialog, setDockDialog] = useState<DockDialog>(null);
   const [showCloseAlert, setShowCloseAlert] = useState(false);
+  const [showRickroll, setShowRickroll] = useState(false);
+  const rickrollRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if (!showRickroll && rickrollRef.current) {
+      rickrollRef.current.src = "";
+    }
+  }, [showRickroll]);
 
   const windowX = useMotionValue(0);
   const windowY = useMotionValue(0);
@@ -102,6 +117,7 @@ export function BrowserDemo({
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, amount: 0.5 });
   const dragControls = useDragControls();
 
   const handleFullscreen = () => {
@@ -127,6 +143,22 @@ export function BrowserDemo({
       />
 
       {/* Closed state */}
+      {/* Easter egg hint */}
+      <AnimatePresence>
+        {windowState === "normal" && isInView && (
+          <m.p
+            key="hint"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ delay: 1, duration: 1 }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[11px] font-semibold text-white/50 select-none pointer-events-none tracking-wide"
+          >
+            psst, try the window controls
+          </m.p>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {windowState === "closed" && showCloseAlert && (
           <m.div
@@ -162,11 +194,12 @@ export function BrowserDemo({
                 windowX.set(0);
                 windowY.set(0);
                 setDockDialog(null);
+                setShowRickroll(false);
                 setShowCloseAlert(false);
                 setWindowState("normal");
               }}
               className="group flex cursor-pointer flex-col items-center gap-1.5"
-              whileHover={{ scale: 1.2 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
@@ -174,7 +207,7 @@ export function BrowserDemo({
                 <Logo className="w-6 h-6 text-foreground" />
               </div>
               <span className="text-[10px] text-white/60 transition-colors group-hover:text-white">
-                TailorKit
+                Showcase
               </span>
             </m.button>
 
@@ -187,12 +220,14 @@ export function BrowserDemo({
                 onClick={() => {
                   setShowCloseAlert(false);
                   if (app.action === "rickroll") {
-                    window.open("https://www.youtube.com/watch?v=Aq5WXmQQooo", "_blank");
+                    setDockDialog(null);
+                    setShowRickroll((v) => !v);
                   } else {
-                    setDockDialog(app.action);
+                    setShowRickroll(false);
+                    setDockDialog((v) => (v === app.action ? null : app.action));
                   }
                 }}
-                whileHover={{ scale: 1.2 }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
@@ -244,6 +279,40 @@ export function BrowserDemo({
         )}
       </AnimatePresence>
 
+      {/* Rickroll */}
+      <AnimatePresence>
+        {showRickroll && (
+          <m.div
+            key="rickroll"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          >
+            <m.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="pointer-events-auto w-[480px] max-w-full"
+            >
+              <Card className="overflow-hidden">
+                <div className="aspect-video">
+                  <iframe
+                    ref={rickrollRef}
+                    className="h-full w-full"
+                    src="https://www.youtube.com/embed/Aq5WXmQQooo?autoplay=1"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                  />
+                </div>
+              </Card>
+            </m.div>
+          </m.div>
+        )}
+      </AnimatePresence>
+
       {/* Window */}
       <AnimatePresence custom={windowState}>
         {(windowState === "normal" || windowState === "fullscreen") && (
@@ -275,8 +344,8 @@ export function BrowserDemo({
             }
             transition={{ duration: 0.2 }}
             className={clsx(
-              "absolute overflow-hidden border border-border bg-card flex flex-col",
-              windowState === "fullscreen" ? "inset-0" : "inset-12 rounded-4xl",
+              "absolute overflow-hidden border border-border bg-card flex flex-col rounded-4xl",
+              windowState === "fullscreen" ? "inset-0" : "inset-12",
             )}
             drag={windowState === "normal"}
             dragControls={dragControls}
@@ -313,18 +382,18 @@ export function BrowserDemo({
                 onPointerDown={(e) => e.stopPropagation()}
               >
                 <button
-                  className="h-3 w-3 cursor-pointer rounded-full bg-[#ff5f57] transition-[filter] hover:brightness-110 active:brightness-75"
+                  className="relative h-3 w-3 cursor-pointer rounded-full bg-[#ff5f57] transition-[filter] hover:brightness-110 active:brightness-75 before:absolute before:-inset-2 before:content-['']"
                   onClick={() => {
                     setWindowState("closed");
                     setShowCloseAlert(true);
                   }}
                 />
                 <button
-                  className="h-3 w-3 cursor-pointer rounded-full bg-[#febc2e] transition-[filter] hover:brightness-110 active:brightness-75"
+                  className="relative h-3 w-3 cursor-pointer rounded-full bg-[#febc2e] transition-[filter] hover:brightness-110 active:brightness-75 before:absolute before:-inset-2 before:content-['']"
                   onClick={() => setWindowState("minimized")}
                 />
                 <button
-                  className="h-3 w-3 cursor-pointer rounded-full bg-[#28c840] transition-[filter] hover:brightness-110 active:brightness-75"
+                  className="relative h-3 w-3 cursor-pointer rounded-full bg-[#28c840] transition-[filter] hover:brightness-110 active:brightness-75 before:absolute before:-inset-2 before:content-['']"
                   onClick={handleFullscreen}
                 />
               </div>
