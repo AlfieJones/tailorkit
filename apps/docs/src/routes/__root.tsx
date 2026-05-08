@@ -16,6 +16,10 @@ export const Route = createRootRoute({
         rel: "icon",
         type: "image/svg+xml",
       },
+      {
+        href: "https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap",
+        rel: "stylesheet",
+      },
     ],
     meta: [
       {

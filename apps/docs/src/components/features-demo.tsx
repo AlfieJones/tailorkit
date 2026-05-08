@@ -21,25 +21,28 @@ const DEMO_APPS = [
     id: "billing" as const,
     icon: CreditCard,
     label: "Billing",
-    iconBg: "bg-blue-100 border-blue-200 dark:bg-blue-950/60 dark:border-blue-800/60",
-    iconColor: "text-blue-500 dark:text-blue-400",
-    headerBg: "bg-blue-500 dark:bg-blue-600",
+    iconBg: "bg-yellow-100 border-yellow-200 dark:bg-yellow-900/40 dark:border-yellow-700/40",
+    iconColor: "text-yellow-600 dark:text-yellow-400",
+    headerBg: "bg-yellow-500 dark:bg-yellow-600",
+    annotation: "Third-party data embedded natively — no context switch needed",
   },
   {
     id: "analytics" as const,
     icon: TrendingUp,
     label: "Analytics",
-    iconBg: "bg-violet-100 border-violet-200 dark:bg-violet-950/60 dark:border-violet-800/60",
-    iconColor: "text-violet-500 dark:text-violet-400",
-    headerBg: "bg-violet-500 dark:bg-violet-600",
+    iconBg: "bg-green-100 border-green-200 dark:bg-green-900/40 dark:border-green-700/40",
+    iconColor: "text-green-600 dark:text-green-500",
+    headerBg: "bg-green-500 dark:bg-green-600",
+    annotation: "New pages & dashboards built on your existing API data",
   },
   {
     id: "email" as const,
     icon: Mail,
     label: "Email",
-    iconBg: "bg-emerald-100 border-emerald-200 dark:bg-emerald-950/60 dark:border-emerald-800/60",
-    iconColor: "text-emerald-500 dark:text-emerald-400",
-    headerBg: "bg-emerald-500 dark:bg-emerald-600",
+    iconBg: "bg-orange-100 border-orange-200 dark:bg-orange-900/40 dark:border-orange-700/40",
+    iconColor: "text-orange-500 dark:text-orange-400",
+    headerBg: "bg-orange-500 dark:bg-orange-600",
+    annotation: "Ship features your app doesn't support yet",
   },
 ];
 
@@ -81,9 +84,6 @@ function BillingPanel({ onClose }: { onClose: () => void }) {
           <div className="flex justify-between items-center mb-2">
             <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium">
               Current Plan
-            </span>
-            <span className="text-[11px] text-emerald-600 border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 rounded-full font-medium">
-              Active
             </span>
           </div>
           <p className="text-foreground font-bold text-base leading-none">Pro</p>
@@ -135,7 +135,7 @@ function AnalyticsPanel({ onClose }: { onClose: () => void }) {
             {bars.map((h, i) => (
               <div
                 key={i}
-                className="flex-1 bg-violet-400/50 rounded-sm"
+                className="flex-1 bg-green-400/50 rounded-sm"
                 style={{ height: `${h}%` }}
               />
             ))}
@@ -197,7 +197,7 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
   const panelWidth = isMobile ? 200 : 260;
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="relative flex h-full overflow-hidden">
       {/* Sidebar */}
       <div
         className={clsx(
@@ -273,7 +273,7 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
                   key={app.id}
                   onClick={() => toggleApp(app.id)}
                   className={clsx(
-                    "w-6 h-6 rounded-md flex items-center justify-center cursor-pointer shrink-0 border transition-all",
+                    "w-6 h-6 rounded-full flex items-center justify-center cursor-pointer shrink-0 border transition-all",
                     app.iconBg,
                     app.iconColor,
                     isActive && "ring-1 ring-primary/50 ring-offset-1 ring-offset-card",
@@ -289,10 +289,10 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
             <div className="w-px h-4 bg-border mx-0.5" />
             {/* Add app button with tooltip */}
             <div className="relative group/add">
-              <button className="w-6 h-6 rounded-md flex items-center justify-center cursor-pointer text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+              <button className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                 <LayoutGrid className="w-3 h-3" />
               </button>
-              <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-popover border border-border rounded-md text-[11px] text-popover-foreground whitespace-nowrap opacity-0 group-hover/add:opacity-100 transition-opacity pointer-events-none shadow-sm z-50">
+              <div className="absolute top-full right-0 mt-2 px-2 py-1 bg-popover border border-border rounded-md text-[11px] text-popover-foreground whitespace-nowrap opacity-0 group-hover/add:opacity-100 transition-opacity pointer-events-none shadow-sm z-50">
                 Add new app
               </div>
             </div>
@@ -314,9 +314,6 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
                 alfred@acmecorp.com · Pro Plan
               </p>
             </div>
-            <span className="shrink-0 text-xs text-emerald-600 border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 rounded-full font-medium">
-              Active
-            </span>
           </div>
 
           {/* Activity table */}
@@ -342,7 +339,7 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
         </div>
       </div>
 
-      {/* Side panel — initial={false} so it's open immediately on mount */}
+      {/* Side panel */}
       <m.div
         className="overflow-hidden shrink-0"
         initial={false}
@@ -368,6 +365,120 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
           </AnimatePresence>
         </div>
       </m.div>
+
+      {/* Annotations overlay */}
+      {!isMobile && (
+        <div className="absolute inset-0 pointer-events-none z-30">
+          {/* SVG arrows — preserveAspectRatio="none" maps coords to % of container */}
+          <svg
+            className="absolute inset-0 w-full h-full"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            fill="none"
+            aria-hidden="true"
+          >
+            {/* Arrow 1: from text (~48,18) curving to the app pill (~70,10) */}
+            <path
+              d="M 48 18 C 52 22, 62 16, 68 10"
+              stroke="currentColor"
+              strokeWidth="0.85"
+              strokeLinecap="round"
+              opacity="0.45"
+              className="text-foreground"
+              fill="none"
+            />
+            {/* Arrowhead 1 — manual fork at (68,10), tangent ~(5,-4) */}
+            <path
+              d="M 65.6 10.6 L 68 10 L 66.9 12.2"
+              stroke="currentColor"
+              strokeWidth="0.85"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.45"
+              className="text-foreground"
+              fill="none"
+            />
+
+            {/* Arrow 2 + arrowhead, shown per active app */}
+            <AnimatePresence>
+              {activeApp && (
+                <m.g
+                  key={activeApp}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {/* Arrow from text (~43,62) curving to panel (~77,50) */}
+                  <path
+                    d="M 43 62 C 52 60, 66 55, 76 50"
+                    stroke="currentColor"
+                    strokeWidth="0.85"
+                    strokeLinecap="round"
+                    opacity="0.45"
+                    className="text-foreground"
+                    fill="none"
+                  />
+                  {/* Arrowhead 2 — manual fork at (76,50), tangent ~(8,-4) */}
+                  <path
+                    d="M 73.5 50.1 L 76 50 L 74.5 52"
+                    stroke="currentColor"
+                    strokeWidth="0.85"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity="0.45"
+                    className="text-foreground"
+                    fill="none"
+                  />
+                </m.g>
+              )}
+            </AnimatePresence>
+          </svg>
+
+          {/* Annotation 1: app selector pill */}
+          <m.div
+            className="absolute"
+            style={{
+              top: "4%",
+              left: "28%",
+              transform: "rotate(-3deg)",
+              fontFamily: "'Caveat', cursive",
+            }}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+          >
+            <p className="text-[17px] leading-tight text-foreground/65">Your app ecosystem</p>
+            <p className="text-[14px] leading-tight text-foreground/45">
+              same design · safe sandbox
+            </p>
+          </m.div>
+
+          {/* Annotation 2: side panel, changes per active app */}
+          <AnimatePresence mode="wait">
+            {activeApp && (
+              <m.div
+                key={activeApp}
+                className="absolute"
+                style={{
+                  top: "46%",
+                  left: "18%",
+                  transform: "rotate(2deg)",
+                  fontFamily: "'Caveat', cursive",
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <p className="text-[16px] leading-snug text-foreground/65 max-w-[150px]">
+                  {DEMO_APPS.find((a) => a.id === activeApp)?.annotation}
+                </p>
+              </m.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
