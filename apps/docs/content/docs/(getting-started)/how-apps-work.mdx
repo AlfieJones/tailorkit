@@ -3,32 +3,36 @@ title: How apps work
 description: Apps are sandboxed extensions that render through your platform.
 ---
 
-TailorKit lets your product load small runtime apps without giving those apps
-control of the whole page. Your product stays the host. The app supplies UI for
-specific places inside it.
+TailorKit lets your product host runtime apps in specific parts of the UI while
+keeping control of the page, data, and platform behavior.
 
 ## The Model
 
-A TailorKit integration has four parts:
+A TailorKit integration has two sides:
 
-- **Host app:** your React product. It owns routes, auth, data loading,
-  permissions, and the final UI.
-- **Schema:** the contract that says which screens, components, props,
-  callbacks, slots, and tokens apps can use.
-- **Runtime app:** an independently built app bundle that targets the schema.
-- **Sandbox:** the worker boundary that runs app code away from the host page.
+- **Host product:** your product owns the page, routes, auth, data,
+  permissions, and final rendering.
+- **App code:** independently built code runs in a sandbox and describes the
+  app UI it wants to show.
 
-The host decides where apps can appear. Apps can only render the screens and
-components the host exposes.
+TailorKit builds a contract between your host app and custom apps. That
+contract defines which UI components are available, which actions apps can
+perform, and which theme tokens they can use to match your product.
 
 ```mermaid
 flowchart LR
-  Host["Host app"] --> Schema["Typed schema"]
-  Schema --> App["Runtime app"]
-  Host --> Registry["App registry"]
-  Registry --> Sandbox["Worker sandbox"]
-  App --> Sandbox
-  Sandbox --> Host
+  subgraph Host["Host product"]
+    ProductUi["Your UI"]
+    AppUi["App UI"]
+    ProductUi <-->|"<div class='bg-card'>Shared<br />UI kit</div>"| AppUi
+  end
+
+  subgraph Sandbox["Sandbox"]
+    AppCode["App code"]
+  end
+
+  AppUi -->|"Events"| AppCode
+  AppCode -->|"Serialized UI"| AppUi
 ```
 
 ## What The Host Owns
@@ -47,58 +51,39 @@ Apps are built separately from the host. They import generated bindings from the
 schema, implement one or more screens, and describe UI using host-approved
 components.
 
-An app can ask for a `Button`, but the host decides which real React component
-renders that button. Read [Writing apps](/docs/writing-apps) and
-[Components](/docs/components) for the app-side and host-side details.
+Read [Writing apps](/docs/writing-apps) and [Components](/docs/components) for
+the app-side and host-side details.
 
-## How Apps Load
-
-At runtime, the host reads the app registry. Each registry entry points to an
-app client bundle and metadata.
-
-```tsx
-const { apps } = tailor.useApps();
-```
-
-The host can render one app or many apps for the current screen:
-
-```tsx
-return apps.map((app) => <tailor.Screen key={app.id} app={app} />);
-```
-
-In development, app bundles usually come from the TailorKit preview server. In
-production, they come from wherever you publish your app registry and bundles.
-Read [Installation](/docs/installation) for host setup.
-
-## What The Sandbox Does
+## Sandbox And Security
 
 App code runs in a worker sandbox. It receives screen context, returns a
 description of the UI, and responds to events. The host renders the real UI and
 keeps direct access to routing, data, secrets, and browser APIs.
 
+### Isolated Runtime
+
+TailorKit treats app code as untrusted by default. Apps do not run on the main
+thread and do not get direct access to the DOM. They describe UI instead of
+mutating the page, and can only render through the screens, components, props,
+callbacks, slots, and tokens your host exposes.
+
+### Event Boundary
+
 Events move through TailorKit. A user clicks a host-rendered component, the
 callback is forwarded to the app sandbox, and the app can update its rendered
 output.
 
-For production guidance, read
+The host keeps control of sensitive work such as loading data, checking
+permissions, changing pages, and rendering the final interface. App events are
+forwarded through TailorKit, so the host can validate payloads and decide which
+callbacks or actions are allowed.
+
+### Narrow Capabilities
+
+That lets you grant narrow capabilities without opening the whole browser
+environment. For example, you can expose a host-owned copy-to-clipboard action
+while still preventing app code from reading local storage, cookies, or other
+page-level state directly.
+
+For the production checklist, read
 [Deploying to production](/docs/deploying-to-production).
-
-## Why This Works
-
-TailorKit keeps the platform boundary small:
-
-- Product state stays in the host.
-- Extension code ships independently as runtime apps.
-- UI stays consistent through host components and theme tokens.
-- The schema gives both sides a typed contract.
-- The sandbox limits what app code can touch directly.
-
-The result is an extension model where customers can add apps without those
-apps becoming part of your core product codebase.
-
-## Next
-
-- Start with [Installation](/docs/installation) to wire TailorKit into a host.
-- Use [Styling apps](/docs/styling-apps) to expose safe theme tokens.
-- Use [Actions](/docs/actions) when apps need to trigger host-owned work.
-- Use [Client](/docs/client) when implementing an app entry point.

@@ -21,11 +21,11 @@
     "@types/react": "catalog:",
     "happy-dom": "^20.9.0",
     "react": "catalog:",
-    "react-dom": "^19.2.3",
+    "react-dom": "^19.2.6",
     "typescript": "catalog:",
     "vitest": "^4.0.15"
   },
   "peerDependencies": {
-    "react": ">=19"
+    "react": ">=19.2.6"
   }
 }

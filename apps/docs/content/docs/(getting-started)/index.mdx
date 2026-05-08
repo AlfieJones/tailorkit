@@ -1,99 +1,83 @@
 ---
 title: Overview
-description: Build host apps that render TailorKit runtime apps with typed screens.
+description: Build app ecosystems inside your product without handing over routing, data, or design.
 ---
 
-TailorKit is a framework for embedding runtime apps into a host React product.
-The host app keeps ownership of routing, data loading, and user context.
-TailorKit supplies the contract between the host and embedded apps: typed
-components, typed screens, app registry loading, and screen rendering.
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { BoxesIcon, CodeIcon, PlugIcon, WrenchIcon } from "lucide-react";
 
-## How It Works
+TailorKit lets you add an app ecosystem directly into your product. We handle
+the infrastructure, sandboxing, distribution, and more, so users can build
+features for themselves and organizations can unblock their own workflows.
 
-TailorKit has four moving parts:
+## Start Here
 
-- A host app defines a schema for the components and screens it supports.
-- A TailorKit app imports generated types and renders host components.
-- A runtime registry lists available TailorKit apps.
-- The React adapter renders the active host screen into one or more apps.
+<Cards>
+  <Card href="/docs/installation" icon={<WrenchIcon />} title="Installation">
+    Install TailorKit and wire it into the host app that will render apps.
+  </Card>
+  <Card href="/docs/how-apps-work" icon={<BoxesIcon />} title="How apps work">
+    Understand the host, app, registry, and runtime pieces.
+  </Card>
+  <Card href="/docs/writing-apps" icon={<CodeIcon />} title="Writing apps">
+    Build a TailorKit app that targets host screens and components.
+  </Card>
+  <Card href="/docs/components" icon={<PlugIcon />} title="Components">
+    Decide what embedded apps can render from your design system.
+  </Card>
+</Cards>
 
-The host declares the active TailorKit screen with `tailor.ScreenMatch`.
+## Features
 
-```tsx
-<tailor.ScreenMatch pattern="/" screen="/home" context={context}>
-  {apps.map((app) => (
-    <tailor.Screen key={app.id} app={app} />
-  ))}
-</tailor.ScreenMatch>
-```
+- Secure sandboxing for running apps inside your product.
+- Proxied UI rendering, so apps can use your existing components and feel
+  native.
+- Agentic app builder, so users can create apps from a prompt.
+- TypeScript app development with support for external data fetching and npm
+  packages.
+- Managed infrastructure for advanced apps, including backend functionality,
+  databases, secret storage, email services, and more.
 
-The `pattern` is metadata. TailorKit does not read the browser URL or decide
-which route is active.
+## Terminology
 
-## Host Schema
+**Host app**: Your product. It owns routing, data loading, permissions, actions,
+and the design system.
 
-The schema describes what embedded apps can render and what screen context they
-receive.
+**TailorKit app**: A lightweight runtime app that renders inside the host app
+through the components and screens the host exposes.
 
-```ts
-const schema = defineSchema({
-  components: {
-    Button: component({
-      callbacks: {
-        onClick: {},
-      },
-      slots: ["default"],
-    }),
-  },
-  screens: {
-    "/home": screen({
-      context: z.object({
-        user: z.object({
-          id: z.string(),
-        }),
-      }),
-    }),
-  },
-});
-```
+**Schema**: The typed contract that describes the components, screens, context,
+actions, and theme tokens available to TailorKit apps.
 
-## Runtime Apps
+**Registry**: The list of TailorKit apps the host can load for an environment,
+workspace, customer, or user.
 
-TailorKit apps are listed by the runtime registry at `GET /apps`.
+**Screen**: A host-owned surface where one or more TailorKit apps can render.
 
-```ts
-type TailorKitApp = {
-  id: string;
-  name?: string;
-  description?: string;
-  clientUrl?: string;
-  clientPath?: string;
-};
-```
+## FAQ
 
-The React adapter fetches this registry with `tailor.useApps()`.
+### How is TailorKit secure?
 
-## Screen Matching
+TailorKit keeps the host app in control. Apps only see the screens, components,
+theme tokens, context, and actions you expose. In production, treat apps as
+untrusted code and validate the registry, permissions, actions, and component
+surface area before loading them.
 
-The host route declares the current TailorKit screen and context. If matches are
-nested, the deepest mounted match wins.
+### How do apps interact with external data?
 
-```tsx
-<tailor.ScreenMatch
-  pattern="/users/:userId"
-  params={{ userId }}
-  screen="/user"
-  context={{ userId, user }}
->
-  {children}
-</tailor.ScreenMatch>
-```
+Apps should use explicit host actions or their own external APIs. They should
+not reach directly into host route data, databases, or private internals. The
+host decides what context is passed into each screen and which actions an app
+can call.
 
-## Where To Go Next
+### How do apps use our design system?
 
-- Read [What is TailorKit?](/docs/what-is-tailorkit) for the mental model.
-- Follow the [Quickstart](/docs/quickstart) to wire a host route to a runtime
-  app.
-- Use [Screen Matching](/docs/screen-matching) when working with nested routes,
-  loading states, or multiple TailorKit apps on the same page.
-- Read [Writing Apps](/docs/writing-apps) when building the embedded app side.
+The host publishes a typed schema of allowed components, fields, slots, actions,
+and theme tokens. Apps render through that schema, so they can feel native while
+still staying inside the UI surface you support.
+
+### How do you code apps?
+
+TailorKit apps are lightweight runtime apps. We auto-generate typed components
+from the schema you provide, so app developers can compose your approved UI,
+define screens, and run the preview server while building.

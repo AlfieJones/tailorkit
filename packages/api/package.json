@@ -12,7 +12,7 @@
   "scripts": {},
   "dependencies": {
     "@orpc/client": "catalog:",
-    "@orpc/experimental-ratelimit": "^1.14.1",
+    "@orpc/experimental-ratelimit": "^1.14.2",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",

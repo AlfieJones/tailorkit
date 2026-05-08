@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Container } from "./container";
 import { Button } from "@tailorkit/ui/button";
 import { Link } from "@tanstack/react-router";
-import { FileText, Workflow, Table, LayoutDashboard } from "lucide-react";
+import { Layers, Globe, Wand2, ShoppingBag } from "lucide-react";
 import { BrowserDemo } from "./browser-demo";
 
 export function Hero({
@@ -46,10 +46,10 @@ export function Hero({
           <div className="w-full max-md:-mx-4 max-md:w-[calc(100%+2rem)]">
             <BrowserDemo
               tabs={[
-                { label: "Document", icon: FileText },
-                { label: "Workflow", icon: Workflow },
-                { label: "Sheet", icon: Table },
-                { label: "Dashboard", icon: LayoutDashboard },
+                { label: "Features", icon: Layers },
+                { label: "Pages", icon: Globe },
+                { label: "Builder", icon: Wand2 },
+                { label: "Marketplace", icon: ShoppingBag },
               ]}
             />
           </div>

@@ -1,5 +1,14 @@
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import { remarkMdxMermaid } from "fumadocs-core/mdx-plugins";
+import {
+  createFileSystemGeneratorCache,
+  createGenerator,
+  remarkAutoTypeTable,
+} from "fumadocs-typescript";
+
+const generator = createGenerator({
+  cache: createFileSystemGeneratorCache(".fumadocs-typescript"),
+});
 
 export const docs = defineDocs({
   dir: "content/docs",
@@ -12,6 +21,6 @@ export const docs = defineDocs({
 
 export default defineConfig({
   mdxOptions: {
-    remarkPlugins: [remarkMdxMermaid],
+    remarkPlugins: [remarkMdxMermaid, [remarkAutoTypeTable, { generator }]],
   },
 });

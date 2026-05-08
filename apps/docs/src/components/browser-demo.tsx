@@ -9,7 +9,7 @@ import {
 } from "@tailorkit/ui/components/card";
 import { Logo } from "@tailorkit/ui/components/logo";
 import { clsx } from "clsx";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { StaticMeshGradient } from "@paper-design/shaders-react";
 import type { FileText } from "lucide-react";
 import { Trash2 } from "lucide-react";
@@ -22,15 +22,16 @@ import {
   useInView,
   useMotionValue,
 } from "motion/react";
+import { FeaturesDemo } from "./features-demo";
 
-const TAB_INTERVAL = 5000;
+const TAB_INTERVAL = 10_000;
 
 type WindowState = "normal" | "minimized" | "closed" | "fullscreen";
 type DockDialog = "not-found" | "nice-try" | null;
 
 const DOCK_APPS = [
   { name: "evil_plan.docx", emoji: "📄", action: "not-found" as const },
-  { name: "babe.mp4", emoji: "🎬", action: "rickroll" as const },
+  { name: "bae.mp4", emoji: "🎬", action: "rickroll" as const },
   { name: "passwords.txt", emoji: "🔐", action: "nice-try" as const },
 ];
 
@@ -75,10 +76,10 @@ export function BrowserDemo({
   const tabOrderRef = useRef(tabOrder);
   tabOrderRef.current = tabOrder;
 
-  const [activeTab, setActiveTab] = useState("Dashboard");
-  const [timerKey, setTimerKey] = useState(0);
+  const [activeTab, setActiveTab] = useState(initialTabs[0]?.label ?? "");
   const [isDraggingTab, setIsDraggingTab] = useState(false);
   const isReorderingRef = useRef(false);
+
   const [windowState, setWindowState] = useState<WindowState>("normal");
   const [dockDialog, setDockDialog] = useState<DockDialog>(null);
   const [showCloseAlert, setShowCloseAlert] = useState(false);
@@ -94,38 +95,103 @@ export function BrowserDemo({
   const windowX = useMotionValue(0);
   const windowY = useMotionValue(0);
 
-  const intervalRef = useRef<ReturnType<typeof setInterval>>(null);
+  // ── Progress bar + timer ──────────────────────────────────────────────────
+  // Pure RAF animation — no motion machinery, complete pause/resume control.
+  const progressBarRef = useRef<HTMLSpanElement>(null);
+  const progressValueRef = useRef(0); // current scaleX 0→1
+  const rafRef = useRef<number | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tabStartTimeRef = useRef(Date.now());
+  const pauseStartTimeRef = useRef<number | null>(null);
 
-  const startAutoAdvance = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+  const scheduleAdvance = (delayMs: number) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-    intervalRef.current = setInterval(() => {
+    timeoutRef.current = setTimeout(() => {
       setActiveTab((current) => {
-        const currentIndex = tabOrderRef.current.findIndex((t) => t.label === current);
-        const nextIndex = (currentIndex + 1) % tabOrderRef.current.length;
-        return tabOrderRef.current[nextIndex]!.label;
+        const idx = tabOrderRef.current.findIndex((t) => t.label === current);
+        const next = (idx + 1) % tabOrderRef.current.length;
+        return tabOrderRef.current[next]?.label ?? current;
       });
-      setTimerKey((k) => k + 1);
-    }, TAB_INTERVAL);
-  }, []);
+    }, delayMs);
+  };
 
-  useEffect(() => {
-    startAutoAdvance();
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+  const startProgress = (fromValue: number, durationMs: number) => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    const startTime = performance.now();
+    const tick = () => {
+      const elapsed = performance.now() - startTime;
+      const next = Math.min(fromValue + (elapsed / durationMs) * (1 - fromValue), 1);
+      progressValueRef.current = next;
+      if (progressBarRef.current) {
+        progressBarRef.current.style.transform = `scaleX(${next})`;
+      }
+      if (next < 1) {
+        rafRef.current = requestAnimationFrame(tick);
       }
     };
-  }, [startAutoAdvance]);
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  // Set initial transform synchronously before paint so React never resets it
+  useLayoutEffect(() => {
+    if (progressBarRef.current) {
+      progressBarRef.current.style.transform = "scaleX(0)";
+    }
+  }, [activeTab]);
+
+  // Each time activeTab changes, start a fresh full cycle
+  useEffect(() => {
+    tabStartTimeRef.current = Date.now();
+    pauseStartTimeRef.current = null;
+    progressValueRef.current = 0;
+    startProgress(0, TAB_INTERVAL);
+    scheduleAdvance(TAB_INTERVAL);
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const handleTabClick = (label: string) => {
     if (isReorderingRef.current) {
       return;
     }
     setActiveTab(label);
-    setTimerKey((k) => k + 1);
-    startAutoAdvance();
+  };
+
+  const handleContentMouseEnter = () => {
+    if (pauseStartTimeRef.current !== null) {
+      return;
+    }
+    pauseStartTimeRef.current = Date.now();
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const handleContentMouseLeave = () => {
+    if (pauseStartTimeRef.current === null) {
+      return;
+    }
+    const pauseDuration = Date.now() - pauseStartTimeRef.current;
+    pauseStartTimeRef.current = null;
+    tabStartTimeRef.current += pauseDuration;
+    const elapsed = Date.now() - tabStartTimeRef.current;
+    const remaining = Math.max(TAB_INTERVAL - elapsed, 0);
+    startProgress(progressValueRef.current, remaining);
+    scheduleAdvance(remaining);
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -163,7 +229,6 @@ export function BrowserDemo({
         />
       </div>
 
-      {/* Closed state */}
       {/* Easter egg hint */}
       <AnimatePresence>
         {windowState === "normal" && isInView && (
@@ -322,6 +387,7 @@ export function BrowserDemo({
                 <div className="aspect-video">
                   <iframe
                     ref={rickrollRef}
+                    title="bae.mp4"
                     className="h-full w-full"
                     src="https://www.youtube.com/embed/Aq5WXmQQooo?autoplay=1"
                     allow="autoplay; encrypted-media"
@@ -375,6 +441,7 @@ export function BrowserDemo({
             dragElastic={0.1}
             dragMomentum={false}
           >
+            {/* Title bar */}
             <div
               className={clsx(
                 "flex h-12 shrink-0 select-none items-center border-b border-border bg-card",
@@ -439,26 +506,12 @@ export function BrowserDemo({
                       >
                         <Icon className="w-3 h-3 shrink-0" />
                         <span>{tab.label}</span>
-                        <AnimatePresence>
-                          {isActive && (
-                            <m.span
-                              key={timerKey}
-                              className="absolute bottom-0 z-10 h-0.5 bg-primary pointer-events-none"
-                              initial={{ width: "0%", left: "0%" }}
-                              animate={{ width: ["0%", "100%"] }}
-                              exit={{
-                                width: [null, "100%", "0%"],
-                                left: [null, "0%", "100%"],
-                                transition: {
-                                  duration: 0.5,
-                                  times: [0, 0.3, 1],
-                                  ease: "easeInOut",
-                                },
-                              }}
-                              transition={{ duration: 5, ease: "linear" }}
-                            />
-                          )}
-                        </AnimatePresence>
+                        {isActive && (
+                          <span
+                            ref={progressBarRef}
+                            className="absolute bottom-0 left-0 z-10 h-0.5 bg-primary pointer-events-none w-full origin-left"
+                          />
+                        )}
                       </button>
                     );
                   })}
@@ -494,8 +547,6 @@ export function BrowserDemo({
                         }}
                         onDragEnd={() => {
                           setIsDraggingTab(false);
-                          setTimerKey((k) => k + 1);
-                          startAutoAdvance();
                           setTimeout(() => {
                             isReorderingRef.current = false;
                           }, 50);
@@ -503,31 +554,12 @@ export function BrowserDemo({
                       >
                         <Icon className="w-4 h-4" />
                         <span>{tab.label}</span>
-                        <AnimatePresence custom={isDraggingTab}>
-                          {isActive && !isDraggingTab && (
-                            <m.span
-                              key={timerKey}
-                              className="absolute bottom-0 z-10 h-0.5 bg-primary pointer-events-none"
-                              initial={{ width: "0%", left: "0%" }}
-                              animate={{ width: ["0%", "100%"] }}
-                              exit={
-                                ((dragging: boolean) =>
-                                  dragging
-                                    ? { transition: { duration: 0 } }
-                                    : {
-                                        width: [null, "100%", "0%"],
-                                        left: [null, "0%", "100%"],
-                                        transition: {
-                                          duration: 0.5,
-                                          times: [0, 0.3, 1],
-                                          ease: "easeInOut",
-                                        },
-                                      }) as never
-                              }
-                              transition={{ duration: 5, ease: "linear" }}
-                            />
-                          )}
-                        </AnimatePresence>
+                        {isActive && !isDraggingTab && (
+                          <span
+                            ref={progressBarRef}
+                            className="absolute bottom-0 left-0 z-10 h-0.5 bg-primary pointer-events-none w-full origin-left"
+                          />
+                        )}
                       </Reorder.Item>
                     );
                   })}
@@ -535,7 +567,18 @@ export function BrowserDemo({
               )}
             </div>
 
-            <div className="flex-1 bg-card" />
+            {/* Tab content — hover pauses auto-advance */}
+            <div
+              className="flex-1 overflow-hidden"
+              onMouseEnter={handleContentMouseEnter}
+              onMouseLeave={handleContentMouseLeave}
+            >
+              {initialTabs[0] && activeTab === initialTabs[0].label ? (
+                <FeaturesDemo isMobile={isMobile} />
+              ) : (
+                <div className="h-full bg-card" />
+              )}
+            </div>
           </m.div>
         )}
       </AnimatePresence>
