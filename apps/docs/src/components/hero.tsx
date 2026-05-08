@@ -20,18 +20,18 @@ export function Hero({
   footer?: ReactNode;
 } & ComponentProps<"section">) {
   return (
-    <section className={clsx("py-16", className)} {...props}>
+    <section className={clsx("py-10 sm:py-16", className)} {...props}>
       <Container className="flex flex-col gap-16">
-        <div className="flex flex-col items-center gap-32">
-          <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-12 sm:gap-20 lg:gap-32">
+          <div className="flex flex-col items-center gap-5 sm:gap-6">
             {eyebrow}
-            <h1 className="font-display text-foreground text-5xl/12 tracking-tight text-balance sm:text-[5rem]/20 max-w-5xl text-center">
+            <h1 className="font-display text-foreground text-4xl leading-tight tracking-tight text-balance sm:text-5xl sm:leading-[1.05] lg:text-[5rem] lg:leading-[1.05] max-w-5xl text-center">
               {headline}
             </h1>
-            <p className="flex max-w-3xl text-lg/8 flex-col gap-4 text-center text-muted-foreground">
+            <p className="flex max-w-2xl text-base/7 sm:text-lg/8 flex-col gap-4 text-center text-muted-foreground">
               {subheadline}
             </p>
-            <div className="space-x-4">
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
               <Button variant={"secondary"} render={<Link to="/docs/$">Read our docs</Link>} />
               <Button
                 variant={"default"}
@@ -43,14 +43,16 @@ export function Hero({
               />
             </div>
           </div>
-          <BrowserDemo
-            tabs={[
-              { label: "Document", icon: FileText },
-              { label: "Workflow", icon: Workflow },
-              { label: "Sheet", icon: Table },
-              { label: "Dashboard", icon: LayoutDashboard },
-            ]}
-          />
+          <div className="w-full max-md:-mx-4 max-md:w-[calc(100%+2rem)]">
+            <BrowserDemo
+              tabs={[
+                { label: "Document", icon: FileText },
+                { label: "Workflow", icon: Workflow },
+                { label: "Sheet", icon: Table },
+                { label: "Dashboard", icon: LayoutDashboard },
+              ]}
+            />
+          </div>
         </div>
         {footer}
       </Container>

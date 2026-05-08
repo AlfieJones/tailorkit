@@ -16,5 +16,12 @@ export function baseOptions(): BaseLayoutProps {
         </span>
       ),
     },
+    links: [
+      {
+        text: "Docs",
+        url: "/docs",
+        type: "main",
+      },
+    ],
   };
 }

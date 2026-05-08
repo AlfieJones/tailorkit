@@ -1,11 +1,10 @@
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "@tailorkit/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@tailorkit/ui/alert";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
 } from "@tailorkit/ui/components/card";
 import { Logo } from "@tailorkit/ui/components/logo";
@@ -53,12 +52,25 @@ const DOCK_DIALOGS: Record<
 
 export function BrowserDemo({
   tabs: initialTabs,
+  className,
 }: {
   tabs: {
     label: string;
     icon: typeof FileText;
   }[];
+  className?: string;
 }) {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
   const [tabOrder, setTabOrder] = useState(initialTabs);
   const tabOrderRef = useRef(tabOrder);
   tabOrderRef.current = tabOrder;
@@ -127,20 +139,29 @@ export function BrowserDemo({
   };
 
   return (
-    <div ref={containerRef} className="rounded-4xl overflow-hidden relative">
-      <StaticMeshGradient
-        width={1280}
-        height={720}
-        colors={["#000000", "#082400", "#b1aa91", "#8e8c15"]}
-        positions={42}
-        waveX={0.45}
-        waveXShift={0}
-        waveY={1}
-        waveYShift={0}
-        mixing={0}
-        grainMixer={0.37}
-        grainOverlay={0.78}
-      />
+    <div
+      ref={containerRef}
+      className={clsx(
+        "overflow-hidden relative aspect-video w-full rounded-2xl lg:rounded-4xl min-h-52",
+        className,
+      )}
+    >
+      <div className="absolute inset-0">
+        <StaticMeshGradient
+          width={1280}
+          height={720}
+          style={{ width: "100%", height: "100%" }}
+          colors={["#000000", "#082400", "#b1aa91", "#8e8c15"]}
+          positions={42}
+          waveX={0.45}
+          waveXShift={0}
+          waveY={1}
+          waveYShift={0}
+          mixing={0}
+          grainMixer={0.37}
+          grainOverlay={0.78}
+        />
+      </div>
 
       {/* Closed state */}
       {/* Easter egg hint */}
@@ -152,7 +173,7 @@ export function BrowserDemo({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 1, duration: 1 }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[11px] font-semibold text-white/50 select-none pointer-events-none tracking-wide"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[11px] font-semibold text-white/50 select-none pointer-events-none tracking-wide hidden md:block"
           >
             psst, try the window controls
           </m.p>
@@ -344,8 +365,8 @@ export function BrowserDemo({
             }
             transition={{ duration: 0.2 }}
             className={clsx(
-              "absolute overflow-hidden border border-border bg-card flex flex-col rounded-4xl",
-              windowState === "fullscreen" ? "inset-0" : "inset-12",
+              "absolute overflow-hidden border border-border bg-card flex flex-col rounded-2xl lg:rounded-4xl",
+              windowState === "fullscreen" ? "inset-0" : "inset-4 lg:inset-12",
             )}
             drag={windowState === "normal"}
             dragControls={dragControls}
@@ -378,7 +399,7 @@ export function BrowserDemo({
               }}
             >
               <div
-                className="flex items-center gap-2 px-4"
+                className="hidden md:flex items-center gap-2 px-4"
                 onPointerDown={(e) => e.stopPropagation()}
               >
                 <button
@@ -398,75 +419,120 @@ export function BrowserDemo({
                 />
               </div>
 
-              <Reorder.Group
-                axis="x"
-                values={tabOrder}
-                onReorder={setTabOrder}
-                className="flex h-full items-center"
-              >
-                {tabOrder.map((tab, i) => {
-                  const Icon = tab.icon;
-                  const isActive = tab.label === activeTab;
-                  return (
-                    <Reorder.Item
-                      key={tab.label}
-                      value={tab}
-                      layoutDependency={tabOrder}
-                      data-tab-item
-                      className={clsx(
-                        "relative flex cursor-pointer hover:bg-accent items-center gap-2 px-4 h-full text-sm overflow-hidden transition-colors duration-300 list-none",
-                        i === 0 && "border-l border-border",
-                        isActive
-                          ? "text-foreground bg-accent border-r border-border"
-                          : "text-muted-foreground border-r border-border hover:text-foreground",
-                      )}
-                      onClick={() => handleTabClick(tab.label)}
-                      onDragStart={() => {
-                        isReorderingRef.current = true;
-                        setIsDraggingTab(true);
-                        setActiveTab(tab.label);
-                      }}
-                      onDragEnd={() => {
-                        setIsDraggingTab(false);
-                        setTimerKey((k) => k + 1);
-                        startAutoAdvance();
-                        setTimeout(() => {
-                          isReorderingRef.current = false;
-                        }, 50);
-                      }}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{tab.label}</span>
-
-                      <AnimatePresence custom={isDraggingTab}>
-                        {isActive && !isDraggingTab && (
-                          <m.span
-                            key={timerKey}
-                            className="absolute bottom-0 z-10 h-0.5 bg-primary pointer-events-none"
-                            initial={{ width: "0%", left: "0%" }}
-                            animate={{ width: ["0%", "100%"] }}
-                            exit={
-                              ((dragging: boolean) =>
-                                dragging
-                                  ? { transition: { duration: 0 } }
-                                  : {
-                                      width: [null, "100%", "0%"],
-                                      left: [null, "0%", "100%"],
-                                      transition: {
-                                        duration: 0.5,
-                                        times: [0, 0.3, 1],
-                                        ease: "easeInOut",
-                                      },
-                                    }) as never
-                            }
-                            transition={{ duration: 5, ease: "linear" }}
-                          />
+              {isMobile ? (
+                <div className="flex h-full items-center flex-1 overflow-x-auto">
+                  {tabOrder.map((tab, i) => {
+                    const Icon = tab.icon;
+                    const isActive = tab.label === activeTab;
+                    return (
+                      <button
+                        key={tab.label}
+                        data-tab-item
+                        className={clsx(
+                          "relative flex cursor-pointer hover:bg-accent items-center gap-1.5 px-2.5 h-full text-xs overflow-hidden transition-colors duration-300 shrink-0",
+                          i === 0 && "border-l border-border",
+                          isActive
+                            ? "text-foreground bg-accent border-r border-border"
+                            : "text-muted-foreground border-r border-border hover:text-foreground",
                         )}
-                      </AnimatePresence>
-                    </Reorder.Item>
-                  );
-                })}
-              </Reorder.Group>
+                        onClick={() => handleTabClick(tab.label)}
+                      >
+                        <Icon className="w-3 h-3 shrink-0" />
+                        <span>{tab.label}</span>
+                        <AnimatePresence>
+                          {isActive && (
+                            <m.span
+                              key={timerKey}
+                              className="absolute bottom-0 z-10 h-0.5 bg-primary pointer-events-none"
+                              initial={{ width: "0%", left: "0%" }}
+                              animate={{ width: ["0%", "100%"] }}
+                              exit={{
+                                width: [null, "100%", "0%"],
+                                left: [null, "0%", "100%"],
+                                transition: {
+                                  duration: 0.5,
+                                  times: [0, 0.3, 1],
+                                  ease: "easeInOut",
+                                },
+                              }}
+                              transition={{ duration: 5, ease: "linear" }}
+                            />
+                          )}
+                        </AnimatePresence>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <Reorder.Group
+                  axis="x"
+                  values={tabOrder}
+                  onReorder={setTabOrder}
+                  className="flex h-full items-center flex-1 overflow-x-auto"
+                >
+                  {tabOrder.map((tab, i) => {
+                    const Icon = tab.icon;
+                    const isActive = tab.label === activeTab;
+                    return (
+                      <Reorder.Item
+                        key={tab.label}
+                        value={tab}
+                        layoutDependency={tabOrder}
+                        data-tab-item
+                        className={clsx(
+                          "relative flex cursor-pointer hover:bg-accent items-center gap-2 px-4 h-full text-sm overflow-hidden transition-colors duration-300 list-none",
+                          i === 0 && "border-l border-border",
+                          isActive
+                            ? "text-foreground bg-accent border-r border-border"
+                            : "text-muted-foreground border-r border-border hover:text-foreground",
+                        )}
+                        onClick={() => handleTabClick(tab.label)}
+                        onDragStart={() => {
+                          isReorderingRef.current = true;
+                          setIsDraggingTab(true);
+                          setActiveTab(tab.label);
+                        }}
+                        onDragEnd={() => {
+                          setIsDraggingTab(false);
+                          setTimerKey((k) => k + 1);
+                          startAutoAdvance();
+                          setTimeout(() => {
+                            isReorderingRef.current = false;
+                          }, 50);
+                        }}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{tab.label}</span>
+                        <AnimatePresence custom={isDraggingTab}>
+                          {isActive && !isDraggingTab && (
+                            <m.span
+                              key={timerKey}
+                              className="absolute bottom-0 z-10 h-0.5 bg-primary pointer-events-none"
+                              initial={{ width: "0%", left: "0%" }}
+                              animate={{ width: ["0%", "100%"] }}
+                              exit={
+                                ((dragging: boolean) =>
+                                  dragging
+                                    ? { transition: { duration: 0 } }
+                                    : {
+                                        width: [null, "100%", "0%"],
+                                        left: [null, "0%", "100%"],
+                                        transition: {
+                                          duration: 0.5,
+                                          times: [0, 0.3, 1],
+                                          ease: "easeInOut",
+                                        },
+                                      }) as never
+                              }
+                              transition={{ duration: 5, ease: "linear" }}
+                            />
+                          )}
+                        </AnimatePresence>
+                      </Reorder.Item>
+                    );
+                  })}
+                </Reorder.Group>
+              )}
             </div>
 
             <div className="flex-1 bg-card" />

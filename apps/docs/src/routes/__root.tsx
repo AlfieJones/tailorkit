@@ -42,14 +42,16 @@ function RootComponent() {
         <div className="isolate">
           <LazyMotion features={domMax}>
             <Banner>
-              Private beta. We&apos;re working directly with early teams.{" "}
-              <a
-                className="ml-2 text-primary"
-                href="https://cal.com/alfiejones"
-                rel="noopener noreferrer"
-              >
-                Talk to a founder
-              </a>
+              <span>
+                Private beta. We&apos;re working directly with early teams.{" "}
+                <a
+                  className="text-primary"
+                  href="https://cal.com/alfiejones"
+                  rel="noopener noreferrer"
+                >
+                  Talk to a founder
+                </a>
+              </span>
             </Banner>
             <RootProvider>
               <Outlet />
