@@ -24,7 +24,7 @@ import {
 } from "motion/react";
 import { FeaturesDemo } from "./features-demo";
 
-const TAB_INTERVAL = 10_000;
+const TAB_INTERVAL = 5000;
 
 type WindowState = "normal" | "minimized" | "closed" | "fullscreen";
 type DockDialog = "not-found" | "nice-try" | null;
@@ -50,6 +50,30 @@ const DOCK_DIALOGS: Record<
     button: "Dammit",
   },
 };
+
+function TabProgressIndicator({
+  isActive,
+  progressBarRef,
+}: {
+  isActive: boolean;
+  progressBarRef: (node: HTMLSpanElement | null) => void;
+}) {
+  return (
+    <AnimatePresence initial={false}>
+      {isActive && (
+        <m.span
+          className="absolute bottom-0 left-0 z-10 h-0.5 w-full overflow-hidden pointer-events-none"
+          initial={{ clipPath: "inset(0 100% 0 0)" }}
+          animate={{ clipPath: "inset(0 0% 0 0)" }}
+          exit={{ clipPath: "inset(0 0 0 100%)" }}
+          transition={{ duration: 0.24, ease: "easeInOut" }}
+        >
+          <span ref={progressBarRef} className="block h-full w-full origin-left bg-primary" />
+        </m.span>
+      )}
+    </AnimatePresence>
+  );
+}
 
 export function BrowserDemo({
   tabs: initialTabs,
@@ -158,7 +182,6 @@ export function BrowserDemo({
         clearTimeout(timeoutRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const handleTabClick = (label: string) => {
@@ -192,6 +215,12 @@ export function BrowserDemo({
     const remaining = Math.max(TAB_INTERVAL - elapsed, 0);
     startProgress(progressValueRef.current, remaining);
     scheduleAdvance(remaining);
+  };
+
+  const setProgressBarElement = (node: HTMLSpanElement | null) => {
+    if (node) {
+      progressBarRef.current = node;
+    }
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -506,12 +535,10 @@ export function BrowserDemo({
                       >
                         <Icon className="w-3 h-3 shrink-0" />
                         <span>{tab.label}</span>
-                        {isActive && (
-                          <span
-                            ref={progressBarRef}
-                            className="absolute bottom-0 left-0 z-10 h-0.5 bg-primary pointer-events-none w-full origin-left"
-                          />
-                        )}
+                        <TabProgressIndicator
+                          isActive={isActive}
+                          progressBarRef={setProgressBarElement}
+                        />
                       </button>
                     );
                   })}
@@ -554,12 +581,10 @@ export function BrowserDemo({
                       >
                         <Icon className="w-4 h-4" />
                         <span>{tab.label}</span>
-                        {isActive && !isDraggingTab && (
-                          <span
-                            ref={progressBarRef}
-                            className="absolute bottom-0 left-0 z-10 h-0.5 bg-primary pointer-events-none w-full origin-left"
-                          />
-                        )}
+                        <TabProgressIndicator
+                          isActive={isActive && !isDraggingTab}
+                          progressBarRef={setProgressBarElement}
+                        />
                       </Reorder.Item>
                     );
                   })}

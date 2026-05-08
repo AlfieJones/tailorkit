@@ -53,6 +53,21 @@ const NAV_ITEMS = [
   { label: "Settings", icon: Settings },
 ];
 
+const COMMENT_ANCHORS = {
+  ecosystem: {
+    label: "Switch between added features",
+  },
+  featurePanel: {
+    cardClass: "right-[288px] top-[calc(46%-18px)] w-[180px]",
+  },
+} as const;
+
+const FEATURE_COMMENT_COPY: Record<ActiveApp, string> = {
+  billing: "Pull data from other platforms",
+  analytics: "Display app data in new ways",
+  email: "Let users add niche features",
+};
+
 // ─── Panels ───────────────────────────────────────────────────────────────────
 
 function PanelHeader({ app, onClose }: { app: (typeof DEMO_APPS)[number]; onClose: () => void }) {
@@ -189,12 +204,57 @@ function EmailPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+function FeatureComment({
+  label,
+  cardClass,
+  pointer = "right",
+  pointerClass,
+}: {
+  label: string;
+  cardClass: string;
+  pointer?: "right" | "top";
+  pointerClass?: string;
+}) {
+  return (
+    <m.div
+      className={clsx(
+        "absolute z-10 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-xl shadow-black/12 pointer-events-auto",
+        pointer === "right" &&
+          "after:absolute after:top-4 after:-right-2 after:h-4 after:w-4 after:rotate-45 after:border-t after:border-r after:border-border after:bg-popover",
+        pointer === "top" &&
+          clsx(
+            "after:absolute after:-top-2 after:h-4 after:w-4 after:rotate-45 after:border-l after:border-t after:border-border after:bg-popover",
+            pointerClass ?? "after:left-1/2 after:-translate-x-1/2",
+          ),
+        cardClass,
+      )}
+      initial={{
+        opacity: 0,
+        x: pointer === "right" ? 8 : 0,
+        y: pointer === "top" ? 8 : 0,
+        scale: 0.98,
+      }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{
+        opacity: 0,
+        x: pointer === "right" ? 8 : 0,
+        y: pointer === "top" ? 8 : 0,
+        scale: 0.98,
+      }}
+      transition={{ duration: 0.16 }}
+    >
+      <p className="text-xs font-semibold leading-snug text-muted-foreground">{label}</p>
+    </m.div>
+  );
+}
+
 // ─── Main demo ────────────────────────────────────────────────────────────────
 
 export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
   const [activeApp, setActiveApp] = useState<ActiveApp | null>("billing");
   const toggleApp = (id: ActiveApp) => setActiveApp((prev) => (prev === id ? null : id));
   const panelWidth = isMobile ? 200 : 260;
+  const featureCommentCopy = activeApp ? FEATURE_COMMENT_COPY[activeApp] : null;
 
   return (
     <div className="relative flex h-full overflow-hidden">
@@ -264,7 +324,7 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
           </div>
 
           {/* App icon pill */}
-          <div className="flex items-center gap-0.5 border border-border rounded-xl px-1 py-1 shrink-0">
+          <div className="relative flex items-center gap-0.5 border border-border rounded-xl px-1 py-1 shrink-0 z-40">
             {DEMO_APPS.map((app) => {
               const Icon = app.icon;
               const isActive = activeApp === app.id;
@@ -276,7 +336,7 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
                     "w-6 h-6 rounded-full flex items-center justify-center cursor-pointer shrink-0 border transition-all",
                     app.iconBg,
                     app.iconColor,
-                    isActive && "ring-1 ring-primary/50 ring-offset-1 ring-offset-card",
+                    isActive && "brightness-105",
                   )}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -296,6 +356,14 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
                 Add new app
               </div>
             </div>
+            {!isMobile && (
+              <FeatureComment
+                {...COMMENT_ANCHORS.ecosystem}
+                cardClass="left-[calc(50%-108px)] top-full mt-3 w-[136px]"
+                pointer="top"
+                pointerClass="after:right-8"
+              />
+            )}
           </div>
         </div>
 
@@ -369,111 +437,17 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
       {/* Annotations overlay */}
       {!isMobile && (
         <div className="absolute inset-0 pointer-events-none z-30">
-          {/* SVG arrows — preserveAspectRatio="none" maps coords to % of container */}
-          <svg
-            className="absolute inset-0 w-full h-full"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            fill="none"
-            aria-hidden="true"
-          >
-            {/* Arrow 1: from text (~48,18) curving to the app pill (~70,10) */}
-            <path
-              d="M 48 18 C 52 22, 62 16, 68 10"
-              stroke="currentColor"
-              strokeWidth="0.85"
-              strokeLinecap="round"
-              opacity="0.45"
-              className="text-foreground"
-              fill="none"
-            />
-            {/* Arrowhead 1 — manual fork at (68,10), tangent ~(5,-4) */}
-            <path
-              d="M 65.6 10.6 L 68 10 L 66.9 12.2"
-              stroke="currentColor"
-              strokeWidth="0.85"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.45"
-              className="text-foreground"
-              fill="none"
-            />
-
-            {/* Arrow 2 + arrowhead, shown per active app */}
-            <AnimatePresence>
-              {activeApp && (
-                <m.g
-                  key={activeApp}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {/* Arrow from text (~43,62) curving to panel (~77,50) */}
-                  <path
-                    d="M 43 62 C 52 60, 66 55, 76 50"
-                    stroke="currentColor"
-                    strokeWidth="0.85"
-                    strokeLinecap="round"
-                    opacity="0.45"
-                    className="text-foreground"
-                    fill="none"
-                  />
-                  {/* Arrowhead 2 — manual fork at (76,50), tangent ~(8,-4) */}
-                  <path
-                    d="M 73.5 50.1 L 76 50 L 74.5 52"
-                    stroke="currentColor"
-                    strokeWidth="0.85"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity="0.45"
-                    className="text-foreground"
-                    fill="none"
-                  />
-                </m.g>
-              )}
-            </AnimatePresence>
-          </svg>
-
-          {/* Annotation 1: app selector pill */}
-          <m.div
-            className="absolute"
-            style={{
-              top: "4%",
-              left: "28%",
-              transform: "rotate(-3deg)",
-              fontFamily: "'Caveat', cursive",
-            }}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
-          >
-            <p className="text-[17px] leading-tight text-foreground/65">Your app ecosystem</p>
-            <p className="text-[14px] leading-tight text-foreground/45">
-              same design · safe sandbox
-            </p>
-          </m.div>
-
-          {/* Annotation 2: side panel, changes per active app */}
           <AnimatePresence mode="wait">
-            {activeApp && (
+            {featureCommentCopy && (
               <m.div
                 key={activeApp}
-                className="absolute"
-                style={{
-                  top: "46%",
-                  left: "18%",
-                  transform: "rotate(2deg)",
-                  fontFamily: "'Caveat', cursive",
-                }}
+                className="absolute inset-0"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.16 }}
               >
-                <p className="text-[16px] leading-snug text-foreground/65 max-w-[150px]">
-                  {DEMO_APPS.find((a) => a.id === activeApp)?.annotation}
-                </p>
+                <FeatureComment {...COMMENT_ANCHORS.featurePanel} label={featureCommentCopy} />
               </m.div>
             )}
           </AnimatePresence>
