@@ -47,18 +47,18 @@ export function Hero({
             <BrowserDemo
               tabs={[
                 {
-                  label: "Features",
+                  label: "Build Features",
                   icon: Layers,
                   description: "Installed apps add focused workflows directly inside your product.",
                 },
                 {
-                  label: "Pages",
+                  label: "Add Pages",
                   icon: Globe,
                   description:
                     "Hosted pages extend your product without shipping a full app release.",
                 },
                 {
-                  label: "Builder",
+                  label: "AI Builder",
                   icon: Wand2,
                   description:
                     "Agents can generate and refine app experiences from your existing system.",

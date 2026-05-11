@@ -146,37 +146,39 @@ export function PagesDemo({ isMobile }: { isMobile: boolean }) {
         )}
       >
         <div className="flex flex-1 flex-col gap-0.5 p-2">
-          {CORE_NAV_ITEMS.map(({ label, icon: Icon }, i) => (
-            <div
-              key={label}
-              className={clsx(
-                "flex items-center gap-2.5 rounded-md px-2 py-2",
-                i === 0 ? "bg-accent" : "hover:bg-accent/50",
-              )}
-            >
-              <Icon
+          <div className="flex flex-col gap-0.5 opacity-55 blur-[1.5px] transition-[filter,opacity]">
+            {CORE_NAV_ITEMS.map(({ label, icon: Icon }, i) => (
+              <div
+                key={label}
                 className={clsx(
-                  "h-3.5 w-3.5 shrink-0",
-                  i === 0 ? "text-foreground" : "text-muted-foreground",
+                  "flex items-center gap-2.5 rounded-md px-2 py-2",
+                  i === 0 ? "bg-accent" : "hover:bg-accent/50",
                 )}
-              />
-              {!isMobile && (
-                <span
+              >
+                <Icon
                   className={clsx(
-                    "truncate text-xs",
-                    i === 0 ? "font-medium text-foreground" : "text-muted-foreground",
+                    "h-3.5 w-3.5 shrink-0",
+                    i === 0 ? "text-foreground" : "text-muted-foreground",
                   )}
-                >
-                  {label}
-                </span>
-              )}
-            </div>
-          ))}
+                />
+                {!isMobile && (
+                  <span
+                    className={clsx(
+                      "truncate text-xs",
+                      i === 0 ? "font-medium text-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    {label}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
 
-          <div className="my-2 border-t border-border" />
+          <div className="my-2 border-t border-border/70" />
 
           {!isMobile && (
-            <p className="px-2 pb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+            <p className="px-2 pb-1 text-[10px] font-medium uppercase tracking-wide text-foreground/65">
               Extensions
             </p>
           )}
@@ -204,7 +206,7 @@ export function PagesDemo({ isMobile }: { isMobile: boolean }) {
             );
           })}
         </div>
-        <div className="border-t border-border p-2.5">
+        <div className="border-t border-border p-2.5 opacity-45 blur-[1.5px] transition-[filter,opacity]">
           <div className="flex items-center gap-2 px-1">
             <div className="h-5 w-5 shrink-0 rounded-full border border-border bg-muted" />
             {!isMobile && <span className="text-xs text-muted-foreground">Admin</span>}

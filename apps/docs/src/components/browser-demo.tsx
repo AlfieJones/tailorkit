@@ -23,6 +23,7 @@ import {
   useMotionValue,
 } from "motion/react";
 import { FeaturesDemo } from "./features-demo";
+import { MarketplaceDemo } from "./marketplace-demo";
 import { PagesDemo } from "./pages-demo";
 
 const TAB_INTERVAL = 5000;
@@ -122,10 +123,8 @@ export function BrowserDemo({
   const windowX = useMotionValue(0);
   const windowY = useMotionValue(0);
 
-  // ── Progress bar + timer ──────────────────────────────────────────────────
-  // Pure RAF animation — no motion machinery, complete pause/resume control.
   const progressBarRef = useRef<HTMLSpanElement>(null);
-  const progressValueRef = useRef(0); // current scaleX 0→1
+  const progressValueRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tabStartTimeRef = useRef(Date.now());
@@ -164,14 +163,12 @@ export function BrowserDemo({
     rafRef.current = requestAnimationFrame(tick);
   };
 
-  // Set initial transform synchronously before paint so React never resets it
   useLayoutEffect(() => {
     if (progressBarRef.current) {
       progressBarRef.current.style.transform = "scaleX(0)";
     }
   }, [activeTab]);
 
-  // Each time activeTab changes, start a fresh full cycle
   useEffect(() => {
     tabStartTimeRef.current = Date.now();
     pauseStartTimeRef.current = null;
@@ -606,7 +603,7 @@ export function BrowserDemo({
 
             {activeTabDescription && (
               <div className="border-b border-border bg-muted/25 px-3 py-2 md:px-4">
-                <p className="truncate text-[11px] font-medium text-muted-foreground md:text-xs">
+                <p className="truncate text-xs font-medium text-muted-foreground md:text-sm">
                   {activeTabDescription}
                 </p>
               </div>
@@ -617,6 +614,8 @@ export function BrowserDemo({
                 <FeaturesDemo isMobile={isMobile} />
               ) : initialTabs[1] && activeTab === initialTabs[1].label ? (
                 <PagesDemo isMobile={isMobile} />
+              ) : initialTabs[3] && activeTab === initialTabs[3].label ? (
+                <MarketplaceDemo isMobile={isMobile} />
               ) : (
                 <div className="h-full bg-card" />
               )}
