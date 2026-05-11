@@ -14,7 +14,10 @@ import { StaticMeshGradient } from "@paper-design/shaders-react";
 import { Trash2 } from "lucide-react";
 import * as m from "motion/react-m";
 import { animate, AnimatePresence, useDragControls, useInView, useMotionValue } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import demoDark from "../assets/demo-showcase-dark.png?format=webp&quality=85";
+import demoLight from "../assets/demo-showcase-light.png?format=webp&quality=85";
 
 type WindowState = "normal" | "minimized" | "closed" | "fullscreen";
 type DockDialog = "not-found" | "nice-try" | null;
@@ -55,6 +58,12 @@ export function BrowserDemo({ className }: { className?: string }) {
   const isInView = useInView(containerRef, { once: true, amount: 0.5 });
   const dragControls = useDragControls();
   const windowRef = useRef<HTMLDivElement>(null);
+
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const demoSrc = mounted && resolvedTheme === "light" ? demoLight : demoDark;
 
   const handleFullscreen = () => {
     windowX.set(0);
@@ -366,10 +375,10 @@ export function BrowserDemo({ className }: { className?: string }) {
               </div>
             </div>
 
-            {/* SVG content */}
+            {/* Demo image */}
             <div className="flex-1 overflow-hidden">
               <img
-                src="/demo-showcase-3.png"
+                src={demoSrc}
                 alt="TailorKit demo showcase"
                 className="h-full w-full object-cover object-top"
                 draggable={false}
