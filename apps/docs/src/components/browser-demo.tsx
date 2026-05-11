@@ -9,24 +9,12 @@ import {
 } from "@tailorkit/ui/components/card";
 import { Logo } from "@tailorkit/ui/components/logo";
 import { clsx } from "clsx";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { StaticMeshGradient } from "@paper-design/shaders-react";
-import type { FileText } from "lucide-react";
 import { Trash2 } from "lucide-react";
 import * as m from "motion/react-m";
-import {
-  animate,
-  AnimatePresence,
-  Reorder,
-  useDragControls,
-  useInView,
-  useMotionValue,
-} from "motion/react";
-import { FeaturesDemo } from "./features-demo";
-import { MarketplaceDemo } from "./marketplace-demo";
-import { PagesDemo } from "./pages-demo";
-
-const TAB_INTERVAL = 5000;
+import { animate, AnimatePresence, useDragControls, useInView, useMotionValue } from "motion/react";
+import { useState } from "react";
 
 type WindowState = "normal" | "minimized" | "closed" | "fullscreen";
 type DockDialog = "not-found" | "nice-try" | null;
@@ -53,185 +41,20 @@ const DOCK_DIALOGS: Record<
   },
 };
 
-function TabProgressIndicator({
-  isActive,
-  progressBarRef,
-}: {
-  isActive: boolean;
-  progressBarRef: (node: HTMLSpanElement | null) => void;
-}) {
-  return (
-    <AnimatePresence initial={false}>
-      {isActive && (
-        <m.span
-          className="absolute bottom-0 left-0 z-10 h-0.5 w-full overflow-hidden pointer-events-none"
-          initial={{ clipPath: "inset(0 100% 0 0)" }}
-          animate={{ clipPath: "inset(0 0% 0 0)" }}
-          exit={{ clipPath: "inset(0 0 0 100%)" }}
-          transition={{ duration: 0.24, ease: "easeInOut" }}
-        >
-          <span ref={progressBarRef} className="block h-full w-full origin-left bg-primary" />
-        </m.span>
-      )}
-    </AnimatePresence>
-  );
-}
-
-export function BrowserDemo({
-  tabs: initialTabs,
-  className,
-}: {
-  tabs: {
-    description?: string;
-    label: string;
-    icon: typeof FileText;
-  }[];
-  className?: string;
-}) {
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  const [tabOrder, setTabOrder] = useState(initialTabs);
-  const tabOrderRef = useRef(tabOrder);
-  tabOrderRef.current = tabOrder;
-
-  const [activeTab, setActiveTab] = useState(initialTabs[0]?.label ?? "");
-  const activeTabDescription = tabOrder.find((tab) => tab.label === activeTab)?.description;
-  const [isDraggingTab, setIsDraggingTab] = useState(false);
-  const isReorderingRef = useRef(false);
-
+export function BrowserDemo({ className }: { className?: string }) {
   const [windowState, setWindowState] = useState<WindowState>("normal");
   const [dockDialog, setDockDialog] = useState<DockDialog>(null);
   const [showCloseAlert, setShowCloseAlert] = useState(false);
   const [showRickroll, setShowRickroll] = useState(false);
   const rickrollRef = useRef<HTMLIFrameElement>(null);
 
-  useEffect(() => {
-    if (!showRickroll && rickrollRef.current) {
-      rickrollRef.current.src = "";
-    }
-  }, [showRickroll]);
-
   const windowX = useMotionValue(0);
   const windowY = useMotionValue(0);
-
-  const progressBarRef = useRef<HTMLSpanElement>(null);
-  const progressValueRef = useRef(0);
-  const rafRef = useRef<number | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const tabStartTimeRef = useRef(Date.now());
-  const pauseStartTimeRef = useRef<number | null>(null);
-  const windowRef = useRef<HTMLDivElement>(null);
-
-  const scheduleAdvance = (delayMs: number) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      setActiveTab((current) => {
-        const idx = tabOrderRef.current.findIndex((t) => t.label === current);
-        const next = (idx + 1) % tabOrderRef.current.length;
-        return tabOrderRef.current[next]?.label ?? current;
-      });
-    }, delayMs);
-  };
-
-  const startProgress = (fromValue: number, durationMs: number) => {
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-    }
-    const startTime = performance.now();
-    const tick = () => {
-      const elapsed = performance.now() - startTime;
-      const next = Math.min(fromValue + (elapsed / durationMs) * (1 - fromValue), 1);
-      progressValueRef.current = next;
-      if (progressBarRef.current) {
-        progressBarRef.current.style.transform = `scaleX(${next})`;
-      }
-      if (next < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  };
-
-  useLayoutEffect(() => {
-    if (progressBarRef.current) {
-      progressBarRef.current.style.transform = "scaleX(0)";
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    tabStartTimeRef.current = Date.now();
-    pauseStartTimeRef.current = null;
-    progressValueRef.current = 0;
-    startProgress(0, TAB_INTERVAL);
-    scheduleAdvance(TAB_INTERVAL);
-    requestAnimationFrame(() => {
-      if (windowRef.current?.matches(":hover")) {
-        handleContentMouseEnter();
-      }
-    });
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [activeTab]);
-
-  const handleTabClick = (label: string) => {
-    if (isReorderingRef.current) {
-      return;
-    }
-    setActiveTab(label);
-  };
-
-  const handleContentMouseEnter = () => {
-    if (pauseStartTimeRef.current !== null) {
-      return;
-    }
-    pauseStartTimeRef.current = Date.now();
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-    }
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-  };
-
-  const handleContentMouseLeave = () => {
-    if (pauseStartTimeRef.current === null) {
-      return;
-    }
-    const pauseDuration = Date.now() - pauseStartTimeRef.current;
-    pauseStartTimeRef.current = null;
-    tabStartTimeRef.current += pauseDuration;
-    const elapsed = Date.now() - tabStartTimeRef.current;
-    const remaining = Math.max(TAB_INTERVAL - elapsed, 0);
-    startProgress(progressValueRef.current, remaining);
-    scheduleAdvance(remaining);
-  };
-
-  const setProgressBarElement = (node: HTMLSpanElement | null) => {
-    if (node) {
-      progressBarRef.current = node;
-    }
-  };
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.5 });
   const dragControls = useDragControls();
+  const windowRef = useRef<HTMLDivElement>(null);
 
   const handleFullscreen = () => {
     windowX.set(0);
@@ -243,7 +66,7 @@ export function BrowserDemo({
     <div
       ref={containerRef}
       className={clsx(
-        "overflow-hidden relative w-full rounded-2xl lg:rounded-4xl min-h-52 max-md:mx-auto max-md:aspect-[9/8] max-md:max-w-[430px] md:aspect-video",
+        "overflow-hidden relative w-full rounded-2xl lg:rounded-4xl aspect-[8/5]",
         className,
       )}
     >
@@ -476,18 +299,15 @@ export function BrowserDemo({
             dragConstraints={containerRef}
             dragElastic={0.1}
             dragMomentum={false}
-            onMouseEnter={handleContentMouseEnter}
-            onMouseLeave={handleContentMouseLeave}
           >
             {/* Title bar */}
             <div
               className={clsx(
-                "flex h-12 shrink-0 select-none items-center border-b border-border bg-card",
+                "flex h-12 shrink-0 select-none items-center border-b border-border bg-card px-4",
                 windowState === "normal" ? "cursor-grab active:cursor-grabbing" : "cursor-default",
               )}
-              onDoubleClick={(e) => {
-                const target = e.target as HTMLElement;
-                if (windowState !== "normal" || target.closest("[data-tab-item]")) {
+              onDoubleClick={() => {
+                if (windowState !== "normal") {
                   return;
                 }
                 animate(windowX, 0, { type: "spring", damping: 25, stiffness: 300 });
@@ -497,16 +317,10 @@ export function BrowserDemo({
                 if (windowState !== "normal") {
                   return;
                 }
-                const target = e.target as HTMLElement;
-                if (!target.closest("[data-tab-item]")) {
-                  dragControls.start(e);
-                }
+                dragControls.start(e);
               }}
             >
-              <div
-                className="hidden md:flex items-center gap-2 px-4"
-                onPointerDown={(e) => e.stopPropagation()}
-              >
+              <div className="flex items-center gap-2" onPointerDown={(e) => e.stopPropagation()}>
                 <button
                   className="relative h-3 w-3 cursor-pointer rounded-full bg-[#ff5f57] transition-[filter] hover:brightness-110 active:brightness-75 before:absolute before:-inset-2 before:content-['']"
                   onClick={() => {
@@ -524,101 +338,42 @@ export function BrowserDemo({
                 />
               </div>
 
-              {isMobile ? (
-                <div className="flex h-full items-center flex-1 overflow-x-auto">
-                  {tabOrder.map((tab, i) => {
-                    const Icon = tab.icon;
-                    const isActive = tab.label === activeTab;
-                    return (
-                      <button
-                        key={tab.label}
-                        data-tab-item
-                        className={clsx(
-                          "relative flex cursor-pointer hover:bg-accent items-center gap-1.5 px-2.5 h-full text-xs overflow-hidden transition-colors duration-300 shrink-0",
-                          i === 0 && "border-l border-border",
-                          isActive
-                            ? "text-foreground bg-accent border-r border-border"
-                            : "text-muted-foreground border-r border-border hover:text-foreground",
-                        )}
-                        onClick={() => handleTabClick(tab.label)}
-                      >
-                        <Icon className="w-3 h-3 shrink-0" />
-                        <span>{tab.label}</span>
-                        <TabProgressIndicator
-                          isActive={isActive}
-                          progressBarRef={setProgressBarElement}
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <Reorder.Group
-                  axis="x"
-                  values={tabOrder}
-                  onReorder={setTabOrder}
-                  className="flex h-full items-center flex-1 overflow-x-auto"
+              {/* URL bar */}
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-md bg-muted px-3 py-1 text-xs text-muted-foreground w-48 md:w-64 pointer-events-none">
+                <svg
+                  className="w-3 h-3 shrink-0 text-muted-foreground/60"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
                 >
-                  {tabOrder.map((tab, i) => {
-                    const Icon = tab.icon;
-                    const isActive = tab.label === activeTab;
-                    return (
-                      <Reorder.Item
-                        key={tab.label}
-                        value={tab}
-                        layoutDependency={tabOrder}
-                        data-tab-item
-                        className={clsx(
-                          "relative flex cursor-pointer hover:bg-accent items-center gap-2 px-4 h-full text-sm overflow-hidden transition-colors duration-300 list-none",
-                          i === 0 && "border-l border-border",
-                          isActive
-                            ? "text-foreground bg-accent border-r border-border"
-                            : "text-muted-foreground border-r border-border hover:text-foreground",
-                        )}
-                        onClick={() => handleTabClick(tab.label)}
-                        onDragStart={() => {
-                          isReorderingRef.current = true;
-                          setIsDraggingTab(true);
-                          setActiveTab(tab.label);
-                        }}
-                        onDragEnd={() => {
-                          setIsDraggingTab(false);
-                          setTimeout(() => {
-                            isReorderingRef.current = false;
-                          }, 50);
-                        }}
-                      >
-                        <Icon className="w-4 h-4" />
-                        <span>{tab.label}</span>
-                        <TabProgressIndicator
-                          isActive={isActive && !isDraggingTab}
-                          progressBarRef={setProgressBarElement}
-                        />
-                      </Reorder.Item>
-                    );
-                  })}
-                </Reorder.Group>
-              )}
+                  <path
+                    d="M8 1a5 5 0 1 0 0 10A5 5 0 0 0 8 1zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z"
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                  />
+                  <path
+                    d="M8 1c-1.5 0-3 3.134-3 7s1.5 7 3 7 3-3.134 3-7-1.5-7-3-7zM6 8c0-3.566 1-6 2-6s2 2.434 2 6-1 6-2 6-2-2.434-2-6z"
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                  />
+                  <path
+                    d="M1 8h14M1 5h14M1 11h14"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    fill="none"
+                  />
+                </svg>
+                <span className="truncate">your-platform.com</span>
+              </div>
             </div>
 
-            {activeTabDescription && (
-              <div className="border-b border-border bg-muted/25 px-3 py-2 md:px-4">
-                <p className="truncate text-xs font-medium text-muted-foreground md:text-sm">
-                  {activeTabDescription}
-                </p>
-              </div>
-            )}
-
+            {/* SVG content */}
             <div className="flex-1 overflow-hidden">
-              {initialTabs[0] && activeTab === initialTabs[0].label ? (
-                <FeaturesDemo isMobile={isMobile} />
-              ) : initialTabs[1] && activeTab === initialTabs[1].label ? (
-                <PagesDemo isMobile={isMobile} />
-              ) : initialTabs[3] && activeTab === initialTabs[3].label ? (
-                <MarketplaceDemo isMobile={isMobile} />
-              ) : (
-                <div className="h-full bg-card" />
-              )}
+              <img
+                src="/demo-showcase-3.png"
+                alt="TailorKit demo showcase"
+                className="h-full w-full object-cover object-top"
+                draggable={false}
+              />
             </div>
           </m.div>
         )}
