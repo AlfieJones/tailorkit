@@ -17,7 +17,7 @@ export interface InitOptions {
   packageManager?: string;
 }
 
-const PACKAGE_MANAGERS = ["bun", "yarn", "pnpm", "npm"] as const;
+const PACKAGE_MANAGERS = ["pnpm", "yarn", "npm", "bun"] as const;
 type PackageManager = (typeof PACKAGE_MANAGERS)[number];
 
 const isPackageManager = (value: string): value is PackageManager =>
@@ -67,7 +67,7 @@ const promptPackageManager = async (given: string | undefined): Promise<PackageM
   }
   const answer = abortIfCancelled(
     await select({
-      initialValue: "bun" as PackageManager,
+      initialValue: "pnpm" as PackageManager,
       message: "Package manager",
       options: PACKAGE_MANAGERS.map((value) => ({ label: value, value })),
     }),

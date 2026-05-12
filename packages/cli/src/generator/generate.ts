@@ -66,12 +66,12 @@ export const generateApp = async (options: GenerateAppOptions): Promise<void> =>
   const checkParts: string[] = [];
   const fixParts: string[] = [];
   if (linting) {
-    checkParts.push("bun run lint");
-    fixParts.push("bun run lint:fix");
+    checkParts.push("pnpm run lint");
+    fixParts.push("pnpm run lint:fix");
   }
   if (formatting) {
-    checkParts.push("bun run format");
-    fixParts.push("bun run format:fix");
+    checkParts.push("pnpm run format");
+    fixParts.push("pnpm run format:fix");
   }
 
   const templateData = {

@@ -3,14 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "bin": {
-    "tailorkit": "./src/index.ts"
+    "tailorkit": "./dist/index.js"
   },
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun --minify",
+    "build": "vite build",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -26,6 +26,7 @@
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vitest": "^4.0.15"
   }
 }

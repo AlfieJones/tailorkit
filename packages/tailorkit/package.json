@@ -14,7 +14,7 @@
     "./arktype": "./src/arktype.ts"
   },
   "scripts": {
-    "build": "bun build ./src/cli.ts ./src/index.ts ./src/react.ts ./src/zod.ts ./src/valibot.ts ./src/arktype.ts --outdir ./dist --target node --minify",
+    "build": "tsup ./src/cli.ts ./src/index.ts ./src/react.ts ./src/zod.ts ./src/valibot.ts ./src/arktype.ts --out-dir ./dist --format esm --target node20 --minify --clean",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
+    "tsup": "^8.5.1",
     "typescript": "catalog:"
   },
   "peerDependencies": {

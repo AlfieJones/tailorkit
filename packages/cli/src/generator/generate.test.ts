@@ -137,8 +137,8 @@ describe("generateApp", () => {
     expect(content).toContain('"lint:fix": "oxlint --fix"');
     expect(content).toContain('"format": "oxfmt --check"');
     expect(content).toContain('"format:fix": "oxfmt --write"');
-    expect(content).toContain('"check": "bun run lint && bun run format"');
-    expect(content).toContain('"fix": "bun run lint:fix && bun run format:fix"');
+    expect(content).toContain('"check": "pnpm run lint && pnpm run format"');
+    expect(content).toContain('"fix": "pnpm run lint:fix && pnpm run format:fix"');
   });
 
   it("includes only lint scripts when only linting is enabled", async () => {
@@ -149,8 +149,8 @@ describe("generateApp", () => {
     expect(content).toContain('"lint": "oxlint"');
     expect(content).toContain('"lint:fix": "oxlint --fix"');
     expect(content).not.toContain('"format":');
-    expect(content).toContain('"check": "bun run lint"');
-    expect(content).toContain('"fix": "bun run lint:fix"');
+    expect(content).toContain('"check": "pnpm run lint"');
+    expect(content).toContain('"fix": "pnpm run lint:fix"');
   });
 
   it("includes only format scripts when only formatting is enabled", async () => {
@@ -161,8 +161,8 @@ describe("generateApp", () => {
     expect(content).not.toContain('"lint":');
     expect(content).toContain('"format": "oxfmt --check"');
     expect(content).toContain('"format:fix": "oxfmt --write"');
-    expect(content).toContain('"check": "bun run format"');
-    expect(content).toContain('"fix": "bun run format:fix"');
+    expect(content).toContain('"check": "pnpm run format"');
+    expect(content).toContain('"fix": "pnpm run format:fix"');
   });
 
   it("renders package versions into package.json", async () => {

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import { intro, log, outro } from "@clack/prompts";
 import { cac } from "cac";
 import pc from "picocolors";
