@@ -1,3 +1,6 @@
+# Wait at least 3 days before allowing a release
+minimumReleaseAge: 4320
+
 packages:
   - apps/*
   - examples/*
@@ -21,7 +24,7 @@ catalog:
   "@types/react-dom": ^19.2.3
   "@vitejs/plugin-react": ^6.0.1
   ai: ^6.0.176
-  better-auth: 1.6.9
+  better-auth: 1.6.11
   class-variance-authority: ^0.7.1
   dotenv: ^17.2.2
   drizzle-orm: ^1.0.0-rc.2
