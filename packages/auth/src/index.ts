@@ -12,6 +12,7 @@ import { emailOTP } from "better-auth/plugins/email-otp";
 import { organization } from "better-auth/plugins/organization";
 import { polarClient } from "./lib/payments";
 import { ac, roles } from "./lib/permissions";
+import { apiKey } from "@better-auth/api-key";
 
 const noopWaitUntil = (promise: Promise<unknown>) => void promise;
 
@@ -59,6 +60,7 @@ export function createAuth() {
           return Promise.resolve();
         },
       }),
+      apiKey({}),
       organization({
         ac,
         roles,

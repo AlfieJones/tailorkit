@@ -14,7 +14,7 @@ export function CollapsibleTrigger({
 }: CollapsiblePrimitive.Trigger.Props): React.ReactElement {
   return (
     <CollapsiblePrimitive.Trigger
-      className={cn("cursor-pointer", className)}
+      className={className}
       data-slot="collapsible-trigger"
       {...props}
     />
