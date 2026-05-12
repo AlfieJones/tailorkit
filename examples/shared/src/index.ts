@@ -11,6 +11,48 @@ const Button = component({
   slots: ["default"],
 });
 
+const Tabs = component({
+  fields: z.object({
+    value: z.string(),
+  }),
+  callbacks: {
+    onValueChange: {
+      input: [z.string()],
+    },
+  },
+  slots: ["default"],
+});
+
+const TabsList = component({
+  slots: ["default"],
+});
+
+const TabsTab = component({
+  fields: z.object({
+    value: z.string(),
+  }),
+  slots: ["default"],
+});
+
+const TabsPanel = component({
+  fields: z.object({
+    value: z.string(),
+  }),
+  slots: ["default"],
+});
+
+const Input = component({
+  fields: z.object({
+    value: z.string(),
+  }),
+  callbacks: {
+    onValueChange: {
+      input: [z.string()],
+    },
+  },
+  slots: ["default"],
+});
+
 // This is the contract between the your platform and apps
 // Try to avoid breaking changes as this can break any apps which rely on the schema
 export const schema = defineSchema({
@@ -28,6 +70,11 @@ export const schema = defineSchema({
   components: {
     ...primitives,
     Button,
+    Tabs,
+    TabsList,
+    TabsTab,
+    TabsPanel,
+    Input,
   },
   screens: {
     "/": screen({}),

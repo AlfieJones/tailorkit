@@ -16,8 +16,8 @@ import * as m from "motion/react-m";
 import { animate, AnimatePresence, useDragControls, useInView, useMotionValue } from "motion/react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import demoDark from "../assets/demo-showcase-dark.png?format=webp&quality=85";
-import demoLight from "../assets/demo-showcase-light.png?format=webp&quality=85";
+import demoDark from "@/assets/demo-showcase-dark.png?format=webp&quality=85";
+import demoLight from "@/assets/demo-showcase-light.png?format=webp&quality=85";
 
 type WindowState = "normal" | "minimized" | "closed" | "fullscreen";
 type DockDialog = "not-found" | "nice-try" | null;

@@ -13,8 +13,11 @@ export const tailorClient = createTailorKitClient(schema, {
     ...reactPrimitives,
 
     Button: ({ props, slots }) => <Button {...props}>{slots.default}</Button>,
-    Input: ({ props, slots }) => <Input {...props}>{slots.default}</Input>,
-
+    Input: ({ props: { onValueChange, ...rest }, slots }) => (
+      <Input onChange={(e) => onValueChange(e.target.value)} {...rest}>
+        {slots.default}
+      </Input>
+    ),
     Tabs: ({ props, slots }) => <Tabs {...props}>{slots.default}</Tabs>,
     TabsList: ({ props, slots }) => <TabsList {...props}>{slots.default}</TabsList>,
     TabsTab: ({ props, slots }) => <TabsTab {...props}>{slots.default}</TabsTab>,

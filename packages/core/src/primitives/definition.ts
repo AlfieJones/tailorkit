@@ -34,14 +34,19 @@ export type PrimitiveComponentDefinitions = Record<
 
 const boxProps = {
   background: { kind: "token", responsive: true, token: "background" },
+  basis: { kind: "token", responsive: true, token: "size" },
   border: { kind: "token", responsive: true, token: "border" },
   borderColor: { kind: "token", responsive: true, token: "borderColor" },
+  grow: { kind: "enum", responsive: true, values: ["0", "1"] },
   height: { kind: "token", responsive: true, token: "size" },
   margin: { kind: "token", responsive: true, token: "space" },
+  minHeight: { kind: "token", responsive: true, token: "size" },
+  minWidth: { kind: "token", responsive: true, token: "size" },
   overflow: { kind: "token", responsive: true, token: "overflow" },
   overflowWrap: { kind: "token", responsive: true, token: "overflowWrap" },
   padding: { kind: "token", responsive: true, token: "space" },
   radius: { kind: "token", responsive: true, token: "radius" },
+  shrink: { kind: "enum", responsive: true, values: ["0", "1"] },
   textAlign: { kind: "token", responsive: true, token: "textAlign" },
   textColor: { kind: "token", responsive: true, token: "textColor" },
   textOverflow: { kind: "token", responsive: true, token: "textOverflow" },
@@ -70,6 +75,7 @@ export const primitiveDefinitions = {
     direction: { kind: "enum", responsive: true, values: ["row", "column"] },
     gap: { kind: "token", responsive: true, token: "space" },
     justify: { kind: "enum", responsive: true, values: ["start", "center", "end", "between"] },
+    wrap: { kind: "enum", responsive: true, values: ["wrap", "nowrap", "wrap-reverse"] },
   },
   Grid: {
     ...boxProps,

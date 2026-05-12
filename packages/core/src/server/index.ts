@@ -73,7 +73,10 @@ export function createTailorKitServer<
 }
 
 async function loadApps(
-  apps: TailorKitServerOptions["apps"],
+  apps: TailorKitServerOptions<
+    Record<string, ComponentDefinition>,
+    Record<string, ScreenDefinition>
+  >["apps"],
 ): Promise<readonly TailorKitServerApp[]> {
   if (apps === undefined) {
     return [];

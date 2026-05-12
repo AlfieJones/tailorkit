@@ -92,6 +92,24 @@ const declarationsForProp = (prop: string, value: PrimitiveValue): string[] => {
   if (prop === "overflow") {
     return [`overflow: ${toCssValue("raw", value)};`];
   }
+  if (prop === "grow") {
+    return [`flex-grow: ${String(value)};`];
+  }
+  if (prop === "shrink") {
+    return [`flex-shrink: ${String(value)};`];
+  }
+  if (prop === "minHeight") {
+    return [`min-height: ${toCssValue("size", value)};`];
+  }
+  if (prop === "minWidth") {
+    return [`min-width: ${toCssValue("size", value)};`];
+  }
+  if (prop === "basis") {
+    return [`flex-basis: ${toCssValue("size", value)};`];
+  }
+  if (prop === "wrap") {
+    return [`flex-wrap: ${toCssValue("raw", value)};`];
+  }
   return [];
 };
 

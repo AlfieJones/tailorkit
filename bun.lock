@@ -13,7 +13,7 @@
         "@tailorkit/cli": "workspace:*",
         "@tailorkit/config": "workspace:*",
         "@types/node": "^24.12.2",
-        "docs": "^0.3.2-canary.0",
+        "docs": "workspace:*",
         "lefthook": "latest",
         "oxfmt": "0.48.0",
         "oxlint": "1.63.0",
@@ -22,6 +22,30 @@
         "ultracite": "7.6.4",
         "vite-imagetools": "^10.0.0",
         "vitest": "^4.1.5",
+      },
+    },
+    "apps/demo": {
+      "name": "demo",
+      "dependencies": {
+        "@tailorkit/core": "workspace:*",
+        "@tailorkit/ui": "workspace:*",
+        "@tailwindcss/vite": "catalog:",
+        "@tanstack/react-router": "catalog:",
+        "@tanstack/react-start": "catalog:",
+        "lucide-react": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "tailorkit": "workspace:*",
+        "tailwindcss": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "@vitejs/plugin-react": "catalog:",
+        "typescript": "catalog:",
+        "vite": "catalog:",
       },
     },
     "apps/docs": {
@@ -1994,6 +2018,8 @@
     "defu": ["defu@6.1.7", "", {}, "sha512-7z22QmUWiQ/2d0KkdYmANbRUVABpZ9SNYyH5vx6PZ+nE5bcC0l7uFvEfHlyld/HcGBFTL536ClDt3DEcSlEJAQ=="],
 
     "delaunator": ["delaunator@5.1.0", "", { "dependencies": { "robust-predicates": "^3.0.2" } }, "sha512-AGrQ4QSgssa1NGmWmLPqN5NY2KajF5MqxetNEO+o0n3ZwZZeTmt7bBnvzHWrmkZFxGgr4HdyFgelzgi06otLuQ=="],
+
+    "demo": ["demo@workspace:apps/demo"],
 
     "denque": ["denque@2.1.0", "", {}, "sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw=="],
 
