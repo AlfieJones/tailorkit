@@ -1,5 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Clipboard, Paintbrush } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import type { TailorKitTheme } from "tailorkit";
+import {
+  createHandoff,
+  decodeState,
+  defaultEmbedConfig,
+  defaultTheme,
+  encodeState,
+  getShadcnTokens,
+  mergeTheme,
+  shadcnTokenNames,
+  toCssVars,
+} from "#/lib/demo-theme";
+import type { DemoAppId, DemoEmbedConfig, DemoHandoff } from "#/lib/demo-theme";
+import { cn } from "@tailorkit/ui/lib/utils";
 
 function RailTodoIcon() {
   return (
@@ -41,21 +57,6 @@ function RailMessagesIcon() {
     </svg>
   );
 }
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
-import type { TailorKitTheme } from "tailorkit";
-import {
-  createHandoff,
-  decodeState,
-  defaultEmbedConfig,
-  defaultTheme,
-  encodeState,
-  getShadcnTokens,
-  mergeTheme,
-  shadcnTokenNames,
-  toCssVars,
-} from "#/lib/demo-theme";
-import type { DemoAppId, DemoEmbedConfig, DemoHandoff } from "#/lib/demo-theme";
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -397,7 +398,10 @@ function SidebarPreview({
           </div>
         </div>
         <iframe
-          className="absolute inset-y-0 right-14 z-10 h-full w-[min(22rem,calc(100%-3.5rem))] border-0 border-[color:var(--border)] border-l bg-[color:var(--background)]"
+          className={cn(
+            "absolute inset-y-0 right-14 z-10 h-full w-[min(22rem,calc(100%-3.5rem))] border-[color:var(--border)] bg-[color:var(--background)]",
+            railBorder ? "border-l" : "border-0",
+          )}
           src={panelUrl}
           title="TailorKit panel preview"
         />
@@ -513,7 +517,7 @@ function setToken(theme: TailorKitTheme, name: TokenName, value: string): Tailor
 }
 
 function toColorInput(value: string) {
-  return /^#[\da-f]{6}$/i.test(value) ? value : getShadcnTokens(defaultTheme).foreground;
+  return /^#[\da-f]{6}$/iu.test(value) ? value : getShadcnTokens(defaultTheme).foreground;
 }
 
 function createConsoleScript(

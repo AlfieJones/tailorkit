@@ -1,0 +1,42 @@
+{
+  "name": "@tailorkit/storage",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tailorkit/env": "workspace:*"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.956.0",
+    "@aws-sdk/s3-request-presigner": "^3.956.0",
+    "@tailorkit/config": "workspace:*",
+    "@types/node": "catalog:",
+    "@vercel/blob": "^2.0.0",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-s3": "^3.956.0",
+    "@aws-sdk/s3-request-presigner": "^3.956.0",
+    "@vercel/blob": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@aws-sdk/s3-request-presigner": {
+      "optional": true
+    },
+    "@vercel/blob": {
+      "optional": true
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import {
   BookOpenIcon,
   ChevronsUpDownIcon,
+  ExternalLinkIcon,
   HomeIcon,
   LaptopMinimalIcon,
   LogOutIcon,
@@ -86,23 +87,21 @@ export function SidebarUserMenu() {
           <DropdownMenuItem
             render={
               <a href="https://tailorkit.dev" rel="noopener" target="_blank">
-                <span className="sr-only">Homepage</span>
+                <HomeIcon />
+                <span className="w-full">Homepage</span>
+                <ExternalLinkIcon />
               </a>
             }
-          >
-            <HomeIcon />
-            Homepage
-          </DropdownMenuItem>
+          />
           <DropdownMenuItem
             render={
               <a href="https://tailorkit.dev/docs" rel="noopener" target="_blank">
-                <span className="sr-only">Documentation</span>
+                <BookOpenIcon />
+                <span className="w-full">Documentation</span>
+                <ExternalLinkIcon />
               </a>
             }
-          >
-            <BookOpenIcon />
-            Documentation
-          </DropdownMenuItem>
+          />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem closeOnClick={false} className="p-0 data-highlighted:bg-transparent">

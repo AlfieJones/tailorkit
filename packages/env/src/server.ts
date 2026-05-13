@@ -15,19 +15,56 @@ const hasSesTransport = (values: {
   AWS_SECRET_ACCESS_KEY?: string;
 }) => Boolean(values.AWS_ROLE_ARN || (values.AWS_ACCESS_KEY_ID && values.AWS_SECRET_ACCESS_KEY));
 
+const hasS3CompatibleStorage = (values: {
+  STORAGE_ACCESS_KEY_ID?: string;
+  STORAGE_BUCKET?: string;
+  STORAGE_PROVIDER?: string;
+  STORAGE_SECRET_ACCESS_KEY?: string;
+}) =>
+  values.STORAGE_PROVIDER !== "s3" ||
+  Boolean(
+    values.STORAGE_BUCKET && values.STORAGE_ACCESS_KEY_ID && values.STORAGE_SECRET_ACCESS_KEY,
+  );
+
+const hasVercelBlobStorage = (values: {
+  BLOB_READ_WRITE_TOKEN?: string;
+  STORAGE_PROVIDER?: string;
+}) => values.STORAGE_PROVIDER !== "vercel-blob" || Boolean(values.BLOB_READ_WRITE_TOKEN);
+
 export const env = createEnv({
   createFinalSchema: (shape) =>
     z.object(shape).superRefine((values, context) => {
       if (hasSmtpTransport(values) || hasSesTransport(values)) {
-        return;
+        if (hasS3CompatibleStorage(values) && hasVercelBlobStorage(values)) {
+          return;
+        }
       }
 
-      context.addIssue({
-        code: "custom",
-        message:
-          "Email transport requires SMTP_URL or SES credentials via AWS_ROLE_ARN or AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.",
-        path: ["SMTP_URL"],
-      });
+      if (!hasSmtpTransport(values) && !hasSesTransport(values)) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "Email transport requires SMTP_URL or SES credentials via AWS_ROLE_ARN or AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.",
+          path: ["SMTP_URL"],
+        });
+      }
+
+      if (!hasS3CompatibleStorage(values)) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "S3-compatible storage requires STORAGE_BUCKET, STORAGE_ACCESS_KEY_ID, and STORAGE_SECRET_ACCESS_KEY.",
+          path: ["STORAGE_BUCKET"],
+        });
+      }
+
+      if (!hasVercelBlobStorage(values)) {
+        context.addIssue({
+          code: "custom",
+          message: "Vercel Blob storage requires BLOB_READ_WRITE_TOKEN.",
+          path: ["BLOB_READ_WRITE_TOKEN"],
+        });
+      }
     }),
   emptyStringAsUndefined: true,
   extends: [vercel()],
@@ -62,6 +99,16 @@ export const env = createEnv({
     UPSTASH_REDIS_REST_URL: z.string().min(1).optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     REDIS_URL: z.string().min(1).optional(),
+    // Object storage
+    BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
+    STORAGE_ACCESS_KEY_ID: z.string().min(1).optional(),
+    STORAGE_BUCKET: z.string().min(1).optional(),
+    STORAGE_ENDPOINT: z.url().optional(),
+    STORAGE_FORCE_PATH_STYLE: z.stringbool().optional(),
+    STORAGE_PROVIDER: z.enum(["s3", "vercel-blob"]).optional(),
+    STORAGE_PUBLIC_BASE_URL: z.url().optional(),
+    STORAGE_REGION: z.string().min(1).optional(),
+    STORAGE_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   },
 });
 

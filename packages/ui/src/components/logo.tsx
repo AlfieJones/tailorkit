@@ -9,17 +9,17 @@ export function Logo({ className }: LogoProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
+      xmlSpace="preserve"
+      viewBox="0 0 48 48"
       className={cn(className)}
       fillRule="evenodd"
       clipRule="evenodd"
       strokeLinejoin="round"
       strokeMiterlimit={2}
       fill="currentColor"
-      aria-label="TailorKit logo"
     >
-      <path d="M3 6h6v6H3z" transform="matrix(1.5 0 0 1.5 10.5 -9)" />
-      <path d="M2 6v12h12v-6H8V6z" transform="matrix(1.5 0 0 1.5 -3 -3)" />
+      <path d="M0 13h11v11H0z" transform="translate(27 -18.273)scale(1.6364)" />
+      <path d="M0 4h10v10h10v10H0z" transform="matrix(1.8 0 0 1.8 3 1.8)" />
     </svg>
   );
 }

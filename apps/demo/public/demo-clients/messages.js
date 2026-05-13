@@ -4,8 +4,8 @@ import { version as preactVersion } from "preact/package.json";
 
 function createRemoteComponent(name, options) {
   const tagName = `tailorkit-${name
-    .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .replaceAll(/[\s_]+/g, "-")
+    .replaceAll(/([a-z0-9])([A-Z])/gu, "$1-$2")
+    .replaceAll(/[\s_]+/gu, "-")
     .toLowerCase()}`;
 
   return function RemoteComponent({ children, ...props }) {

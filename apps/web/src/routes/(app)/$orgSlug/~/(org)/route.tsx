@@ -28,7 +28,7 @@ import { OrgSwitcher } from "@/components/sidebar/org-switcher";
 import { SidebarBrand } from "@/components/sidebar/sidebar-brand";
 import { SidebarUserMenu } from "@/components/sidebar/sidebar-user-menu";
 
-export const Route = createFileRoute("/(app)/$orgSlug/(org)")({
+export const Route = createFileRoute("/(app)/$orgSlug/~/(org)")({
   component: OrgLayout,
 });
 
@@ -39,7 +39,8 @@ interface AppSidebarProps {
 export function AppSidebar({ orgSlug }: AppSidebarProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
-  const onSettingsPath = pathname.startsWith(`/${orgSlug}/settings`);
+  const orgBase = `/${orgSlug}/~`;
+  const onSettingsPath = pathname.startsWith(`${orgBase}/settings`);
 
   return (
     <Sidebar>
@@ -60,8 +61,8 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={isActive(`/${orgSlug}/projects`)}
-                    render={<Link params={{ orgSlug }} to="/$orgSlug/projects" />}
+                    isActive={isActive(`${orgBase}/projects`)}
+                    render={<Link params={{ orgSlug }} to="/$orgSlug/~/projects" />}
                   >
                     <FolderIcon />
                     <span>Projects</span>
@@ -88,8 +89,8 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={pathname === `/${orgSlug}/settings`}
-                    render={<Link params={{ orgSlug }} to="/$orgSlug/settings" />}
+                    isActive={pathname === `${orgBase}/settings`}
+                    render={<Link params={{ orgSlug }} to="/$orgSlug/~/settings" />}
                   >
                     <SettingsIcon />
                     <span>General</span>
@@ -98,8 +99,8 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
 
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={isActive(`/${orgSlug}/settings/members`)}
-                    render={<Link params={{ orgSlug }} to="/$orgSlug/settings/members" />}
+                    isActive={isActive(`${orgBase}/settings/members`)}
+                    render={<Link params={{ orgSlug }} to="/$orgSlug/~/settings/members" />}
                   >
                     <UsersIcon />
                     <span>Members</span>
@@ -108,8 +109,8 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
 
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={isActive(`/${orgSlug}/settings/billing`)}
-                    render={<Link params={{ orgSlug }} to="/$orgSlug/settings/billing" />}
+                    isActive={isActive(`${orgBase}/settings/billing`)}
+                    render={<Link params={{ orgSlug }} to="/$orgSlug/~/settings/billing" />}
                   >
                     <CreditCardIcon />
                     <span>Billing</span>
@@ -146,7 +147,7 @@ function OrgLayout() {
         <AppSidebar orgSlug={orgSlug} />
         <SidebarInset>
           <SidebarLayoutHeader />
-          <main className="flex flex-1 flex-col gap-4 p-6">
+          <main className="flex flex-1 flex-col gap-4 p-4">
             <Outlet />
           </main>
         </SidebarInset>

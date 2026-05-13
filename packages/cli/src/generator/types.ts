@@ -150,7 +150,7 @@ const toObjectType = (schema: JsonSchema, depth: number): string => {
     return fallbackObjectType;
   }
 
-  const required = new Set(schema.required ?? []);
+  const required = new Set(schema.required);
   const currentIndent = " ".repeat(depth);
   const propertyIndent = " ".repeat(depth + 2);
   const lines = ["{"];

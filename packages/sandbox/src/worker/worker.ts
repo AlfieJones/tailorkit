@@ -142,7 +142,7 @@ export default packageJson;
 
 function rewritePreactImports(source: string): string {
   return source.replaceAll(
-    /(from\s*["']|import\s*["'])(preact(?:\/hooks|\/jsx-dev-runtime|\/jsx-runtime|\/package\.json)?)(["'])/g,
+    /(from\s*["']|import\s*["'])(preact(?:\/hooks|\/jsx-dev-runtime|\/jsx-runtime|\/package\.json)?)(["'])/gu,
     (match, prefix: string, specifier: string, suffix: string) => {
       const moduleUrl = sandboxPreactModules[specifier];
 

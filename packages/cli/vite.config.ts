@@ -16,7 +16,7 @@ export default defineConfig({
     outDir: "dist",
     rollupOptions: {
       external: [
-        /^node:/,
+        /^node:/u,
         "@clack/prompts",
         "@standard-schema/spec",
         "arktype",

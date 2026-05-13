@@ -1,14 +1,155 @@
+import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
 import { validateProjectSlug } from "@tailorkit/db/validate-project-slug";
+import { apikey } from "@tailorkit/db/schema/auth";
 import { project } from "@tailorkit/db/schema/project";
 import { ORPCError } from "@orpc/server";
 import { protectedProcedure, requireOrg, requireProject } from "../procedures";
 import z from "zod";
+import { and, desc, eq, ne } from "drizzle-orm";
+import { customAlphabet } from "nanoid";
 
 const projectInput = z.object({
   orgSlug: z.string(),
   projectSlug: z.string(),
 });
+
+const projectApiKeyConfigId = "project-host";
+const createApiKeyPrefixSuffix = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 4);
+
+const projectApiKeyMetadataSchema = z.object({
+  projectId: z.string(),
+  rotatedAt: z.string().optional(),
+  rotatedToKeyId: z.string().optional(),
+  status: z.enum(["active", "rotating"]).default("active"),
+});
+
+type ProjectApiKeyMetadata = z.infer<typeof projectApiKeyMetadataSchema>;
+
+interface ProjectApiKey {
+  id: string;
+  name: string | null;
+  start: string | null;
+  prefix: string | null;
+  enabled: boolean;
+  expiresAt: Date | string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  lastRequest: Date | string | null;
+  metadata: Record<string, unknown> | string | null;
+}
+
+function toDate(value: Date | string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+  return value instanceof Date ? value : new Date(value);
+}
+
+function isKeyExpired(key: { expiresAt: Date | string | null }) {
+  const expiresAt = toDate(key.expiresAt);
+  return Boolean(expiresAt && expiresAt.getTime() <= Date.now());
+}
+
+function parseProjectApiKeyMetadata(metadata: Record<string, unknown> | string | null) {
+  const value =
+    typeof metadata === "string"
+      ? (() => {
+          try {
+            return JSON.parse(metadata) as unknown;
+          } catch {
+            return null;
+          }
+        })()
+      : metadata;
+  const result = projectApiKeyMetadataSchema.safeParse(value);
+  return result.success ? result.data : null;
+}
+
+function serializeProjectApiKey(key: ProjectApiKey, metadata: ProjectApiKeyMetadata) {
+  return {
+    createdAt: toDate(key.createdAt),
+    enabled: key.enabled,
+    expiresAt: toDate(key.expiresAt),
+    id: key.id,
+    lastRequest: toDate(key.lastRequest),
+    metadata,
+    name: key.name,
+    prefix: key.prefix,
+    start: key.start,
+    updatedAt: toDate(key.updatedAt),
+  };
+}
+
+async function listProjectApiKeys({
+  organizationId,
+  projectId,
+}: {
+  headers: Headers;
+  organizationId: string;
+  projectId: string;
+}) {
+  const keys = await listAllProjectApiKeys({ organizationId, projectId });
+
+  const validKeys = keys.filter((key) => key.enabled && !isKeyExpired(key));
+  const [active, ...previous] = validKeys;
+
+  return {
+    active: active ? [active] : [],
+    rotating: previous,
+  };
+}
+
+async function listAllProjectApiKeys({
+  organizationId,
+  projectId,
+}: {
+  organizationId: string;
+  projectId: string;
+}) {
+  const result = await db
+    .select()
+    .from(apikey)
+    .where(and(eq(apikey.referenceId, organizationId), eq(apikey.configId, projectApiKeyConfigId)))
+    .orderBy(desc(apikey.createdAt));
+
+  return result
+    .map((key) => {
+      const metadata = parseProjectApiKeyMetadata(key.metadata);
+      if (!metadata || metadata.projectId !== projectId) {
+        return null;
+      }
+
+      return serializeProjectApiKey(key, metadata);
+    })
+    .filter((key): key is NonNullable<typeof key> => Boolean(key));
+}
+
+async function createProjectApiKey({
+  headers,
+  organizationId,
+  projectId,
+  projectName,
+}: {
+  headers: Headers;
+  organizationId: string;
+  projectId: string;
+  projectName: string;
+}) {
+  return auth.api.createApiKey({
+    body: {
+      configId: projectApiKeyConfigId,
+      metadata: {
+        projectId,
+        status: "active",
+      } satisfies ProjectApiKeyMetadata,
+      name: `${projectName} host key`,
+      organizationId,
+      prefix: `tk_proj_${createApiKeyPrefixSuffix()}_`,
+    },
+    headers,
+  });
+}
 
 export const projectRouter = {
   list: protectedProcedure
@@ -32,7 +173,6 @@ export const projectRouter = {
         orgSlug: z.string(),
         name: z.string().min(1),
         slug: z.string().min(1),
-        description: z.string().optional(),
       }),
     )
     .use(requireOrg({ project: ["create"] }))
@@ -55,7 +195,6 @@ export const projectRouter = {
       const [createdProject] = await db
         .insert(project)
         .values({
-          description: input.description?.trim() || null,
           name: input.name.trim(),
           organizationId: context.org.id,
           slug: input.slug,
@@ -66,6 +205,177 @@ export const projectRouter = {
         throw new ORPCError("BAD_REQUEST", { message: "Failed to create project." });
       }
 
-      return createdProject;
+      try {
+        const apiKey = await createProjectApiKey({
+          headers: context.headers,
+          organizationId: context.org.id,
+          projectId: createdProject.id,
+          projectName: createdProject.name,
+        });
+
+        return { ...createdProject, apiKey };
+      } catch (error) {
+        await db.delete(project).where(eq(project.id, createdProject.id));
+        throw error;
+      }
+    }),
+
+  update: protectedProcedure
+    .input(
+      projectInput.extend({
+        name: z.string().min(1),
+        slug: z.string().min(1),
+      }),
+    )
+    .use(requireProject({ project: ["update"] }))
+    .handler(async ({ input, context, errors }) => {
+      const slugResult = validateProjectSlug(input.slug);
+      if (!slugResult.valid) {
+        throw errors.BAD_REQUEST({ message: slugResult.reason });
+      }
+
+      const [existing] = await db
+        .select({ id: project.id })
+        .from(project)
+        .where(
+          and(
+            eq(project.organizationId, context.org.id),
+            eq(project.slug, input.slug),
+            ne(project.id, context.project.id),
+          ),
+        )
+        .limit(1);
+
+      if (existing) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "A project with this slug already exists in this organisation.",
+        });
+      }
+
+      const [updatedProject] = await db
+        .update(project)
+        .set({
+          name: input.name.trim(),
+          slug: input.slug,
+        })
+        .where(eq(project.id, context.project.id))
+        .returning();
+
+      if (!updatedProject) {
+        throw new ORPCError("BAD_REQUEST", { message: "Failed to update project." });
+      }
+
+      return updatedProject;
+    }),
+
+  delete: protectedProcedure
+    .input(projectInput)
+    .use(requireProject({ project: ["delete"] }))
+    .handler(async ({ context }) => {
+      const keys = await listAllProjectApiKeys({
+        organizationId: context.org.id,
+        projectId: context.project.id,
+      });
+
+      await Promise.all(
+        keys.map((key) =>
+          auth.api.deleteApiKey({
+            body: {
+              configId: projectApiKeyConfigId,
+              keyId: key.id,
+            },
+            headers: context.headers,
+          }),
+        ),
+      );
+
+      await db.delete(project).where(eq(project.id, context.project.id));
+
+      return { id: context.project.id };
+    }),
+
+  apiKeys: protectedProcedure
+    .input(projectInput)
+    .use(requireProject())
+    .handler(({ context }) =>
+      listProjectApiKeys({
+        headers: context.headers,
+        organizationId: context.org.id,
+        projectId: context.project.id,
+      }),
+    ),
+
+  rotateApiKey: protectedProcedure
+    .input(
+      projectInput.extend({
+        gracePeriodSeconds: z
+          .number()
+          .int()
+          .min(0)
+          .max(60 * 60 * 24 * 30),
+      }),
+    )
+    .use(requireProject({ project: ["update"] }))
+    .handler(async ({ input, context }) => {
+      const currentKeys = await listProjectApiKeys({
+        headers: context.headers,
+        organizationId: context.org.id,
+        projectId: context.project.id,
+      });
+
+      const apiKey = await createProjectApiKey({
+        headers: context.headers,
+        organizationId: context.org.id,
+        projectId: context.project.id,
+        projectName: context.project.name,
+      });
+
+      const rotatedAt = new Date().toISOString();
+
+      try {
+        if (input.gracePeriodSeconds === 0) {
+          await Promise.all(
+            currentKeys.active.map((key) =>
+              auth.api.deleteApiKey({
+                body: {
+                  configId: projectApiKeyConfigId,
+                  keyId: key.id,
+                },
+                headers: context.headers,
+              }),
+            ),
+          );
+        } else {
+          await Promise.all(
+            currentKeys.active.map((key) =>
+              auth.api.updateApiKey({
+                body: {
+                  configId: projectApiKeyConfigId,
+                  expiresIn: input.gracePeriodSeconds,
+                  keyId: key.id,
+                  metadata: {
+                    ...key.metadata,
+                    rotatedAt,
+                    rotatedToKeyId: apiKey.id,
+                    status: "rotating",
+                  } satisfies ProjectApiKeyMetadata,
+                },
+                headers: context.headers,
+              }),
+            ),
+          );
+        }
+      } catch (error) {
+        await auth.api.deleteApiKey({
+          body: {
+            configId: projectApiKeyConfigId,
+            keyId: apiKey.id,
+          },
+          headers: context.headers,
+        });
+        throw error;
+      }
+
+      return { apiKey };
     }),
 };

@@ -130,7 +130,7 @@ function OrganizationsPage() {
                   {org.slug && (
                     <CardAction>
                       <Button
-                        render={<Link params={{ orgSlug: org.slug }} to="/$orgSlug" />}
+                        render={<Link params={{ orgSlug: org.slug }} to="/$orgSlug/~/projects" />}
                         size="sm"
                         variant="outline"
                       >

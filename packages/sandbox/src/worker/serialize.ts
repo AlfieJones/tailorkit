@@ -174,10 +174,6 @@ function toCallbackMapEntry(
 ): [string, { callback: string; inputCount: number }][] {
   const [event, config] = entry;
 
-  if (typeof config === "string") {
-    return [[event, { callback: config, inputCount: 0 }]];
-  }
-
   if (config === null || typeof config !== "object" || Array.isArray(config)) {
     return [];
   }

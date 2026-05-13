@@ -1,6 +1,5 @@
-import { h, render } from "preact";
 import type { ComponentType, VNode } from "preact";
-import { createContext } from "preact";
+import { createContext, h, render } from "preact";
 import { useContext } from "preact/hooks";
 import { version as preactVersion } from "preact/package.json";
 import { assertSupportedPreactVersion } from "../preact-version.js";

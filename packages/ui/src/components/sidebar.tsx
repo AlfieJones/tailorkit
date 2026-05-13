@@ -176,7 +176,7 @@ export function SidebarInset({
         "relative flex w-full flex-1 flex-col bg-background z-20",
         "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-1 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm/5",
         "lg:rounded-2xl lg:border not-dark:bg-clip-padding lg:shadow-xs/5",
-        "lg:before:pointer-events-none lg:before:absolute lg:before:inset-0 lg:before:rounded-[calc(var(--radius-2xl)-1px)] lg:before:shadow-[0_1px_--theme(--color-black/4%)] dark:lg:before:shadow-[0_-1px_--theme(--color-white/6%)] mt-1 mr-1 mb-1 ml-2",
+        "lg:before:pointer-events-none lg:before:absolute lg:before:inset-0 lg:before:rounded-[calc(var(--radius-2xl)-1px)] lg:before:shadow-[0_1px_--theme(--color-black/4%)] dark:lg:before:shadow-[0_-1px_--theme(--color-white/6%)] mt-1 mr-1 mb-1 ml-1",
         className,
       )}
       data-slot="sidebar-inset"
@@ -492,7 +492,7 @@ export function SidebarPanelTrigger({
       className={cn(
         "w-full hover:text-sidebar-accent-foreground text-sidebar-accent-foreground/75",
         "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground",
-        back ? "pr-8 text-center mb-1" : "text-left",
+        back ? "text-center mb-1 px-2.5" : "text-left",
       )}
       data-active={isActive}
       onClick={() => setActivePanel(target)}
@@ -503,6 +503,7 @@ export function SidebarPanelTrigger({
       {back && <ChevronLeftIcon />}
       {children}
       {!back && <ChevronRightIcon />}
+      {back && <span className="size-4" aria-hidden="true" />}
     </Button>
   );
 }

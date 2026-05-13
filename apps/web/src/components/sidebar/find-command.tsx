@@ -66,11 +66,11 @@ export function FindCommand({ orgSlug }: FindCommandProps) {
               <CommandEmpty>No results found.</CommandEmpty>
               {orgSlug && (
                 <CommandGroup heading="Navigation">
-                  <CommandItem onSelect={() => go(`/${orgSlug}`)}>
+                  <CommandItem onSelect={() => go(`/${orgSlug}/~/projects`)}>
                     <FolderIcon />
                     Dashboard
                   </CommandItem>
-                  <CommandItem onSelect={() => go(`/${orgSlug}/projects`)}>
+                  <CommandItem onSelect={() => go(`/${orgSlug}/~/projects`)}>
                     <FileIcon />
                     Projects
                   </CommandItem>
@@ -87,7 +87,7 @@ export function FindCommand({ orgSlug }: FindCommandProps) {
                   Account settings
                 </CommandItem>
                 {orgSlug && (
-                  <CommandItem onSelect={() => go(`/${orgSlug}/settings`)}>
+                  <CommandItem onSelect={() => go(`/${orgSlug}/~/settings`)}>
                     <SettingsIcon />
                     Org settings
                   </CommandItem>

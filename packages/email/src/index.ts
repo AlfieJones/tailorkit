@@ -7,6 +7,7 @@ import type SESTransport from "nodemailer/lib/ses-transport";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import { BetterAuthOtpTemplate, betterAuthEmailSubjects } from "./templates/better-auth";
 import type { BetterAuthEmailType } from "./templates/better-auth";
+import { InvitationTemplate } from "./templates/better-auth/invitation";
 
 export interface SendEmailInput {
   from?: string;
@@ -21,6 +22,14 @@ export interface SendBetterAuthOtpInput {
   email: string;
   otp: string;
   type: BetterAuthEmailType;
+}
+
+export interface SendOrganizationInvitationEmailInput {
+  email: string;
+  invitationId: string;
+  inviterName?: string;
+  organizationName: string;
+  role?: string | null;
 }
 
 let cachedTransporter: Mail | undefined;
@@ -105,5 +114,33 @@ export const sendBetterAuthOtpEmail = async ({ email, otp, type }: SendBetterAut
   });
 };
 
-export { BetterAuthOtpTemplate };
+export const sendOrganizationInvitationEmail = async ({
+  email,
+  invitationId,
+  inviterName,
+  organizationName,
+  role,
+}: SendOrganizationInvitationEmailInput) => {
+  const acceptUrl = new URL("/account/invites", getBaseUrl());
+  acceptUrl.searchParams.set("invitationId", invitationId);
+
+  const component = InvitationTemplate({
+    acceptUrl: acceptUrl.toString(),
+    inviterName,
+    logoBaseUrl: getBaseUrl(),
+    organizationName,
+    role: role ?? "member",
+  });
+
+  await sendEmail({
+    from: env.SMTP_FROM_INVITE ?? env.SMTP_FROM_AUTH ?? env.SMTP_FROM,
+    html: await render(component),
+    replyTo: env.SMTP_REPLY_TO,
+    subject: `${inviterName ?? "Someone"} invited you to join ${organizationName}`,
+    text: await render(component, { plainText: true }),
+    to: email,
+  });
+};
+
+export { BetterAuthOtpTemplate, InvitationTemplate };
 export type { BetterAuthEmailType };

@@ -51,7 +51,7 @@ function InvitesPage() {
       queryClient.invalidateQueries(orpc.user.getPendingInvitations.queryOptions());
       const slug = (data as { organization?: { slug?: string } })?.organization?.slug;
       if (slug) {
-        navigate({ params: { orgSlug: slug }, to: "/$orgSlug" });
+        navigate({ params: { orgSlug: slug }, to: "/$orgSlug/~/projects" });
         return;
       }
       navigate({ to: "/account/organizations" });

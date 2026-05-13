@@ -8,10 +8,8 @@ import {
   CardPanel,
   CardTitle,
 } from "@tailorkit/ui/components/card";
-import { Field, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
-import { Textarea } from "@tailorkit/ui/components/textarea";
 import { toastManager } from "@tailorkit/ui/components/toast";
-import { formatFieldErrors, useAppForm, useFieldContext } from "@tailorkit/ui/form";
+import { useAppForm } from "@tailorkit/ui/form";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
@@ -21,39 +19,15 @@ export const Route = createFileRoute("/(app)/account/settings/")({
   component: SettingsProfile,
 });
 
-function TextAreaField({ label, placeholder }: { label: string; placeholder?: string }) {
-  const field = useFieldContext<string>();
-  const errors = field.state.meta.errors;
-  const isError = errors.length > 0;
-
-  return (
-    <Field invalid={isError}>
-      <FieldLabel>{label}</FieldLabel>
-      <Textarea
-        aria-invalid={isError || undefined}
-        onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.value)}
-        placeholder={placeholder}
-        value={field.state.value}
-      />
-      {isError && <FieldError>{formatFieldErrors(errors)}</FieldError>}
-    </Field>
-  );
-}
-
 function SettingsProfile() {
   const { data: session } = authClient.useSession();
 
   const form = useAppForm({
     defaultValues: {
-      bio: (session?.user as unknown as { bio?: string | null })?.bio ?? "",
-      email: session?.user.email ?? "",
       name: session?.user.name ?? "",
     },
     onSubmit: async ({ value }) => {
       const result = await authClient.updateUser({
-        bio: value.bio,
-        email: value.email,
         name: value.name,
       } as Parameters<typeof authClient.updateUser>[0]);
 
@@ -74,8 +48,6 @@ function SettingsProfile() {
     },
     validators: {
       onSubmit: z.object({
-        bio: z.string(),
-        email: z.string().email("Invalid email address"),
         name: z.string().min(1, "Name is required"),
       }),
     },
@@ -100,14 +72,6 @@ function SettingsProfile() {
             <CardPanel className="flex flex-col gap-4 max-w-lg">
               <form.AppField name="name">
                 {(field) => <field.TextField label="Display name" placeholder="Your name" />}
-              </form.AppField>
-
-              <form.AppField name="email">
-                {(field) => <field.TextField label="Email" placeholder="you@example.com" />}
-              </form.AppField>
-
-              <form.AppField name="bio">
-                {() => <TextAreaField label="Bio" placeholder="Tell us a bit about yourself" />}
               </form.AppField>
             </CardPanel>
           </form>

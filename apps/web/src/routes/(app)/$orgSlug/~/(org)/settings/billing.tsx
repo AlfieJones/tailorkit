@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CreditCardIcon } from "lucide-react";
 import { Button } from "@tailorkit/ui/components/button";
 
-export const Route = createFileRoute("/(app)/$orgSlug/(org)/settings/billing")({
+export const Route = createFileRoute("/(app)/$orgSlug/~/(org)/settings/billing")({
   component: OrgSettingsBilling,
 });
 

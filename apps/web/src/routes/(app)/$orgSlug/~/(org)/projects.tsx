@@ -5,6 +5,14 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { FolderIcon, FolderPlusIcon } from "lucide-react";
 import { Button } from "@tailorkit/ui/components/button";
 import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@tailorkit/ui/components/empty";
+import {
   Dialog,
   DialogClose,
   DialogDescription,
@@ -21,8 +29,9 @@ import { validateProjectSlug } from "@tailorkit/db/validate-project-slug";
 import { z } from "zod";
 import { SetHeaderActions } from "@/components/header-actions";
 import { client, orpc } from "@/utils/orpc";
+import { setProjectApiKey } from "@/utils/project-api-key-memory";
 
-export const Route = createFileRoute("/(app)/$orgSlug/(org)/projects")({
+export const Route = createFileRoute("/(app)/$orgSlug/~/(org)/projects")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(
       context.orpc.project.list.queryOptions({ input: { orgSlug: params.orgSlug } }),
@@ -39,14 +48,13 @@ function toSlug(name: string) {
 }
 
 const projectSchema = z.object({
-  description: z.string(),
   name: z.string().min(1, "Name is required."),
   slug: z.string().superRefine((value, ctx) => {
     const result = validateProjectSlug(value);
     if (!result.valid) {
       ctx.addIssue({
         code: "custom",
-        message: result.reason ?? "This slug is reserved and cannot be used.",
+        message: result.reason ?? "Enter a valid slug.",
       });
     }
   }),
@@ -63,18 +71,21 @@ function CreateProjectDialog({ children, orgSlug }: CreateProjectDialogProps) {
   const slugTouched = useRef(false);
 
   const createMutation = useMutation({
-    mutationFn: (input: { description: string; name: string; slug: string }) =>
+    mutationFn: (input: { name: string; slug: string }) =>
       client.project.create({
-        description: input.description.trim() || undefined,
         name: input.name.trim(),
         orgSlug,
         slug: input.slug,
       }),
     onSuccess: (project) => {
       queryClient.invalidateQueries(orpc.project.list.queryOptions({ input: { orgSlug } }));
+      setProjectApiKey(orgSlug, project.slug, project.apiKey.key);
       form.reset();
       slugTouched.current = false;
-      navigate({ params: { orgSlug, projectSlug: project.slug }, to: "/$orgSlug/$projectSlug" });
+      navigate({
+        params: { orgSlug, projectSlug: project.slug },
+        to: "/$orgSlug/$projectSlug",
+      });
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : "Failed to create project";
@@ -83,7 +94,7 @@ function CreateProjectDialog({ children, orgSlug }: CreateProjectDialogProps) {
   });
 
   const form = useAppForm({
-    defaultValues: { description: "", name: "", slug: "" },
+    defaultValues: { name: "", slug: "" },
     onSubmit: async ({ value }) => {
       try {
         await createMutation.mutateAsync(value);
@@ -123,8 +134,7 @@ function CreateProjectDialog({ children, orgSlug }: CreateProjectDialogProps) {
                 <field.TextField
                   autoComplete="off"
                   label="Name"
-                  placeholder="Website redesign"
-                  required
+                  placeholder="Amazing project"
                   type="text"
                   onChange={(event) => {
                     if (!slugTouched.current) {
@@ -141,24 +151,12 @@ function CreateProjectDialog({ children, orgSlug }: CreateProjectDialogProps) {
                   autoComplete="off"
                   description={`tailorkit.com/${orgSlug}/${field.state.value || "project-slug"}`}
                   label="Slug"
-                  placeholder="website-redesign"
-                  required
+                  placeholder="amazing-project"
                   type="text"
                   onChange={(event) => {
                     slugTouched.current = true;
                     field.handleChange(toSlug(event.target.value));
                   }}
-                />
-              )}
-            </form.AppField>
-
-            <form.AppField name="description">
-              {(field) => (
-                <field.TextField
-                  autoComplete="off"
-                  label="Description"
-                  placeholder="Optional project summary"
-                  type="text"
                 />
               )}
             </form.AppField>
@@ -205,9 +203,25 @@ function ProjectsPage() {
       </div>
 
       {projects.length === 0 ? (
-        <div className="rounded-lg border px-4 py-12 text-center text-muted-foreground text-sm">
-          No projects yet.
-        </div>
+        <Empty className="mx-auto max-w-md rounded-lg border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <FolderPlusIcon />
+            </EmptyMedia>
+            <EmptyTitle>No projects yet</EmptyTitle>
+            <EmptyDescription>
+              Create a project to start building inside this organisation.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <CreateProjectDialog orgSlug={orgSlug}>
+              <Button size="sm">
+                <FolderPlusIcon />
+                Create project
+              </Button>
+            </CreateProjectDialog>
+          </EmptyContent>
+        </Empty>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
@@ -218,16 +232,11 @@ function ProjectsPage() {
               to="/$orgSlug/$projectSlug"
             >
               <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center rounded-md bg-muted">
+                <span className="flex size-7 items-center justify-center rounded-md bg-muted">
                   <FolderIcon className="size-3.5 text-muted-foreground" />
-                </div>
+                </span>
                 <span className="font-medium text-sm">{project.name}</span>
               </div>
-              {project.description && (
-                <p className="text-muted-foreground text-xs leading-relaxed">
-                  {project.description}
-                </p>
-              )}
             </Link>
           ))}
         </div>

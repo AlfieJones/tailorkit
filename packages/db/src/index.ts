@@ -5,7 +5,7 @@ import * as schema from "./schema";
 import { relations } from "./relations";
 
 export function createDb() {
-  return drizzle(env.DATABASE_URL, { schema, relations, logger: env.NODE_ENV === "development" });
+  return drizzle(env.DATABASE_URL, { schema, relations });
 }
 
 export const db = createDb();

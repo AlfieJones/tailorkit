@@ -30,5 +30,9 @@ export default defineConfig({
     "prefer-ternary": "off",
     "prefer-await-to-then": "off",
     "no-plusplus": "off",
+    "unicorn/no-negated-condition": "off",
+    "unicorn/prefer-dom-node-dataset": "off",
+    "unicorn/no-array-for-each": "off",
+    "unicorn/consistent-function-scoping": "off",
   },
 });

@@ -5,4 +5,4 @@ export type {
   TailorKitServer,
   TailorKitServerApp,
   TailorKitServerOptions,
-} from "@tailorkit/core/server";
+} from "@tailorkit/core/server/types";

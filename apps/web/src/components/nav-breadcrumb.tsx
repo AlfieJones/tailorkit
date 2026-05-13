@@ -21,6 +21,14 @@ const accountRouteLabels: Record<string, string> = {
   "/(app)/account/settings/security": "Security",
 };
 
+const settingsRouteLabels: Record<string, string> = {
+  "/(app)/$orgSlug/$projectSlug/settings/": "General",
+  "/(app)/$orgSlug/$projectSlug/settings/api-keys": "API Keys",
+  "/(app)/$orgSlug/~/(org)/settings/": "General",
+  "/(app)/$orgSlug/~/(org)/settings/members": "Members",
+  "/(app)/$orgSlug/~/(org)/settings/billing": "Billing",
+};
+
 function toLabel(segment: string) {
   return segment
     .split("-")
@@ -33,13 +41,8 @@ function addOrgSegment(id: string, params: Record<string, string>, segments: Bre
     return;
   }
 
-  const isLast =
-    !("projectSlug" in params) &&
-    !id.includes("/projects") &&
-    !id.includes("/support") &&
-    !id.includes("/settings");
   segments.push({
-    href: isLast ? undefined : `/${params.orgSlug}`,
+    href: `/${params.orgSlug}/~/projects`,
     label: toLabel(params.orgSlug),
   });
 }
@@ -71,17 +74,25 @@ function addStaticSegments(
   if (id.includes("/support")) {
     segments.push({ label: "Support" });
   }
-  if (
-    id.includes("/settings") &&
-    !("orgSlug" in params) &&
-    !segments.some((s) => s.label === "Settings")
-  ) {
-    segments.push({ label: "Settings" });
+  if (id.includes("/settings") && !segments.some((s) => s.label === "Settings")) {
+    let href = "/account/settings";
+    if ("projectSlug" in params) {
+      href = `/${params.orgSlug}/${params.projectSlug}/settings`;
+    } else if ("orgSlug" in params) {
+      href = `/${params.orgSlug}/~/settings`;
+    }
+
+    segments.push({ href, label: "Settings" });
   }
 
   const accountLabel = accountRouteLabels[id];
   if (accountLabel) {
     segments.push({ label: accountLabel });
+  }
+
+  const settingsLabel = settingsRouteLabels[id];
+  if (settingsLabel) {
+    segments.push({ label: settingsLabel });
   }
 }
 

@@ -564,7 +564,7 @@ export function validateOrgSlug(slug: string) {
     };
   }
 
-  const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
   if (!SLUG_RE.test(slug)) {
     return {
       valid: false,

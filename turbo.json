@@ -13,6 +13,9 @@
     "check-types": {
       "dependsOn": ["^check-types"]
     },
+    "test": {
+      "outputs": []
+    },
     "dev": {
       "cache": false,
       "persistent": true
@@ -34,18 +37,17 @@
       "cache": false,
       "persistent": true
     },
-    "services:start": {
-      "cache": false,
-      "persistent": true
-    },
-    "services:stop": {
+    "//#services:start": {
       "cache": false
     },
-    "services:watch": {
+    "//#services:stop": {
+      "cache": false
+    },
+    "//#services:watch": {
       "cache": false,
       "persistent": true
     },
-    "services:down": {
+    "//#services:down": {
       "cache": false
     }
   }

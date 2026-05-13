@@ -19,6 +19,7 @@
     "@tailorkit/db": "workspace:*",
     "@tailorkit/email": "workspace:*",
     "@tailorkit/env": "workspace:*",
+    "@tailorkit/kv": "workspace:*",
     "@vercel/functions": "^3.5.0",
     "better-auth": "catalog:",
     "dotenv": "catalog:",

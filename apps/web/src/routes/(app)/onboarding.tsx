@@ -219,7 +219,7 @@ function Onboarding() {
       queryClient.invalidateQueries(orpc.user.getOrgs.queryOptions());
       const slug = (data as { organization?: { slug?: string } })?.organization?.slug;
       if (slug) {
-        navigate({ params: { orgSlug: slug }, to: "/$orgSlug" });
+        navigate({ params: { orgSlug: slug }, to: "/$orgSlug/~/projects" });
       } else {
         navigate({ to: "/" });
       }
@@ -245,7 +245,7 @@ function Onboarding() {
     const data = await client.user.createOrg({ name: values.name.trim(), slug: values.slug });
     queryClient.invalidateQueries(orpc.user.getOrgs.queryOptions());
     const orgSlug = (data as { slug?: string })?.slug ?? values.slug;
-    navigate({ params: { orgSlug }, to: "/$orgSlug" });
+    navigate({ params: { orgSlug }, to: "/$orgSlug/~/projects" });
   }
 
   const pendingInvitations = invitations ?? [];

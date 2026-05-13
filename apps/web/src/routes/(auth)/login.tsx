@@ -140,7 +140,7 @@ function RouteComponent() {
           rel="noopener"
           target="_blank"
         >
-          <Logo className="size-8" />
+          <Logo className="size-6" />
           <span className="font-semibold text-lg">TailorKit</span>
         </a>
         <CardFrame className="w-full">

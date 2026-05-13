@@ -64,7 +64,7 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
       const orgSlug = (data as { slug?: string })?.slug ?? input.slug;
       setOpen(false);
       resetForm();
-      navigate({ params: { orgSlug }, to: "/$orgSlug" });
+      navigate({ params: { orgSlug }, to: "/$orgSlug/~/projects" });
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : "Failed to create organisation";

@@ -327,7 +327,7 @@ function resolveThemeVars(theme) {
   const resolved = Object.fromEntries(
     Object.entries(tokens).map(([key, value]) => {
       if (typeof value === "string" && value.startsWith("var(")) {
-        const varName = value.match(/^var\(\s*(--[^,)]+)/)?.[1];
+        const varName = value.match(/^var\(\s*(--[^,)]+)/u)?.[1];
         const computed = varName ? style.getPropertyValue(varName).trim() : "";
         return [key, computed || value];
       }
@@ -350,7 +350,7 @@ function getShadcnTokens(theme) {
 }
 
 function escapeHtml(value) {
-  return String(value ?? "").replaceAll(/[&<>"']/g, (char) => {
+  return String(value ?? "").replaceAll(/[&<>"']/gu, (char) => {
     const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
     return entities[char];
   });

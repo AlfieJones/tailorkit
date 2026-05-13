@@ -16,7 +16,7 @@ export const Route = createFileRoute("/(app)/")({
     const orgId = getActiveOrgId();
     const org = orgs.find((org) => org.id === orgId) || orgs[0];
     if (org) {
-      throw redirect({ params: { orgSlug: org.slug }, to: "/$orgSlug" });
+      throw redirect({ params: { orgSlug: org.slug }, to: "/$orgSlug/~/projects" });
     }
 
     throw redirect({ to: "/onboarding" });

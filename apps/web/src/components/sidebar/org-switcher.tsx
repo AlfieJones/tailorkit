@@ -50,7 +50,7 @@ export function OrgSwitcher({ orgSlug }: OrgSwitcherProps) {
         items={orgs ?? []}
         onValueChange={(org) => {
           if (org) {
-            navigate({ params: { orgSlug: org.slug }, to: "/$orgSlug" });
+            navigate({ params: { orgSlug: org.slug }, to: "/$orgSlug/~/projects" });
           }
         }}
         value={currentOrg}
@@ -91,12 +91,12 @@ export function OrgSwitcher({ orgSlug }: OrgSwitcherProps) {
           <ComboboxList>
             {(org) => (
               <ComboboxItem key={org.slug} value={org}>
-                <Avatar className="size-5 rounded-sm">
-                  <AvatarFallback className="rounded-sm text-[10px]">
+                <Avatar className="size-5 rounded-sm mr-2">
+                  <AvatarFallback className="rounded-sm text-[10px] bg-input">
                     {orgInitials(org.name)}
                   </AvatarFallback>
                 </Avatar>
-                {org.name}
+                <span>{org.name}</span>
               </ComboboxItem>
             )}
           </ComboboxList>

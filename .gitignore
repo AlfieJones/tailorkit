@@ -13,6 +13,8 @@ build
 .env
 .env*.local
 
+.pnpm-store
+
 # IDEs and editors
 .vscode/*
 !.vscode/settings.json
@@ -23,6 +25,8 @@ build
 *.swp
 *.swo
 *~
+!apps/**/~/
+!apps/**/~/**
 .DS_Store
 .claude/worktrees
 .claude/launch.json

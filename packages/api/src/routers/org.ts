@@ -1,5 +1,7 @@
 import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
+import { invitation } from "@tailorkit/db/schema/index";
+import { and, eq } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import { protectedProcedure, requireOrg } from "../procedures";
 import z from "zod";
@@ -72,6 +74,32 @@ export const orgRouter = {
         orderBy: { createdAt: "desc" },
       }),
     ),
+
+  /**
+   * Revoke a pending invitation for an org. Caller must be owner or admin.
+   */
+  revokeInvitation: protectedProcedure
+    .input(z.object({ orgSlug: z.string(), invitationId: z.string() }))
+    .use(requireOrg({ invitation: ["cancel"] }))
+    .handler(async ({ input, context }) => {
+      const [revoked] = await db
+        .update(invitation)
+        .set({ status: "canceled" })
+        .where(
+          and(
+            eq(invitation.id, input.invitationId),
+            eq(invitation.organizationId, context.org.id),
+            eq(invitation.status, "pending"),
+          ),
+        )
+        .returning({ id: invitation.id });
+
+      if (!revoked) {
+        throw new ORPCError("NOT_FOUND");
+      }
+
+      return revoked;
+    }),
 
   /**
    * Remove a member from an org.

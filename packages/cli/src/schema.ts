@@ -116,10 +116,7 @@ export const loadSchemaFromModule = async (options: {
 };
 
 export const runExperimentalSchema = async (options: ExperimentalSchemaOptions): Promise<void> => {
-  const serialized = await loadSchemaFromModule(options);
-
-  // eslint-disable-next-line no-console
-  console.log(JSON.stringify(serialized, null, 2));
+  await loadSchemaFromModule(options);
 
   outro(pc.green("Schema serialized successfully."));
 };

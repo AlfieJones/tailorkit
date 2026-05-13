@@ -2,7 +2,7 @@ name: tailorkit
 
 services:
   postgres:
-    image: postgres
+    image: postgres:18
     container_name: tailorkit-postgres
     environment:
       POSTGRES_DB: tailorkit
@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - tailorkit_postgres_data:/var/lib/postgresql
+      - pg_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -31,5 +31,41 @@ services:
       timeout: 5s
       retries: 5
 
+  rustfs-perms:
+    image: alpine:3.22
+    user: root
+    volumes:
+      - rustfs_data:/data
+    command: chown -R 10001:10001 /data
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: tailorkit-rustfs
+    depends_on:
+      rustfs-perms:
+        condition: service_completed_successfully
+    environment:
+      RUSTFS_ACCESS_KEY: rustfsadmin
+      RUSTFS_SECRET_KEY: rustfsadmin
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "9000:9000" # S3-compatible API
+      - "9001:9001" # Console
+    volumes:
+      - rustfs_data:/data
+    command: /data
+    restart: unless-stopped
+
+  rustfs-create-bucket:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    depends_on:
+      - rustfs
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set rustfs http://rustfs:9000 rustfsadmin rustfsadmin; do sleep 2; done;
+      mc mb --ignore-existing rustfs/tailorkit;
+      "
+
 volumes:
-  tailorkit_postgres_data:
+  pg_data:
+  rustfs_data:

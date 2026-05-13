@@ -9,22 +9,26 @@ import {
 const statement = {
   ...defaultStatements,
 
+  projectApiKey: ["create", "read", "update", "delete"],
   project: ["create", "share", "update", "delete"],
 } as const;
 
 export const ac = createAccessControl(statement);
 
 const member = ac.newRole({
+  projectApiKey: ["create", "read"],
   project: ["create"],
   ...memberAc.statements,
 });
 
 const admin = ac.newRole({
+  projectApiKey: ["create", "read", "update", "delete"],
   project: ["create", "update"],
   ...adminAc.statements,
 });
 
 const owner = ac.newRole({
+  projectApiKey: ["create", "read", "update", "delete"],
   project: ["create", "update", "delete"],
   ...ownerAc.statements,
 });

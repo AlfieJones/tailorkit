@@ -45,6 +45,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --animate-skeleton: skeleton 2s -1s infinite linear;
+
   @keyframes skeleton {
     to {
       background-position: -200% 0;
@@ -60,75 +61,95 @@
   --animate-toast-error-odd: toast-error-odd 0.28s cubic-bezier(0.5, 1, 0.89, 1);
 
   --animate-toast-error-even: toast-error-even 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+
   @keyframes caret-blink {
     0%,
     70%,
     to {
       opacity: 1;
     }
+
     20%,
     50% {
       opacity: 0;
     }
   }
+
   @keyframes toast-success-odd {
     0% {
       scale: 1;
     }
+
     30% {
       scale: 1.025;
     }
+
     60% {
       scale: 0.99;
     }
+
     100% {
       scale: 1;
     }
   }
+
   @keyframes toast-error-odd {
     0% {
       translate: 0 0;
     }
+
     25% {
       translate: -3px 0;
     }
+
     50% {
       translate: 3px 0;
     }
+
     75% {
       translate: -3px 0;
     }
+
     100% {
       translate: 0 0;
     }
   }
+
   @keyframes toast-success-even {
     0% {
       scale: 1;
     }
+
     30% {
       scale: 1.025;
     }
+
     60% {
       scale: 0.99;
     }
+
     100% {
       scale: 1;
     }
   }
+
   @keyframes toast-error-even {
     0% {
       translate: 0 0;
     }
+
     25% {
       translate: -3px 0;
     }
+
     50% {
       translate: 3px 0;
     }
+
     75% {
       translate: -3px 0;
     }
+
     100% {
       translate: 0 0;
     }
@@ -152,7 +173,7 @@
   --accent: hsla(0, 0%, 82%, 50%);
   --accent-foreground: hsl(0, 0%, 9%);
   --destructive: oklch(63.7% 0.237 25.331);
-  --destructive-foreground: hsl(0, 0%, 98%);
+  --destructive-foreground: oklch(50.5% 0.213 27.518);
   --info: oklch(62.3% 0.214 259.815);
   --info-foreground: hsl(0, 0%, 98%);
   --success: oklch(72.3% 0.219 149.579);
@@ -188,7 +209,7 @@
   --accent: hsla(0, 0%, 40.9%, 30%);
   --accent-foreground: hsl(0, 0%, 90%);
   --destructive: oklch(63.7% 0.237 25.331);
-  --destructive-foreground: hsl(0, 0%, 98%);
+  --destructive-foreground: oklch(70.4% 0.191 22.216);
   --info: oklch(62.3% 0.214 259.815);
   --info-foreground: hsl(0, 0%, 98%);
   --success: oklch(72.3% 0.219 149.579);
@@ -196,9 +217,9 @@
   --warning: oklch(76.9% 0.188 70.08);
   --warning-foreground: hsl(0, 0%, 9%);
   --border: hsla(0, 0%, 40%, 20%);
-  --input: hsl(0, 0%, 9.8%);
+  --input: hsl(0, 0%, 16%);
   --ring: #a191f1;
-  --sidebar: hsl(0, 0%, 7.04%);
+  --sidebar: hsl(0, 0%, 6.25%);
   --sidebar-foreground: hsl(0, 0%, 92%);
   --sidebar-primary: #a191f1;
   --sidebar-primary-foreground: hsl(0, 0%, 9%);

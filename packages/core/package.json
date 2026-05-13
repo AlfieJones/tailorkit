@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./server": "./src/server/index.ts",
+    "./server/types": "./src/server/types.ts",
     "./schema": "./src/schema/index.ts",
     "./spec": "./src/spec/index.ts",
     "./layout": "./src/layout/index.ts",
@@ -22,6 +23,7 @@
   },
   "dependencies": {
     "@standard-schema/spec": "^1.1.0",
+    "h3": "2.0.1-rc.20",
     "zod": "catalog:"
   },
   "devDependencies": {

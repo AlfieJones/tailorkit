@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { Building2Icon, ChevronLeftIcon, MailIcon, ShieldIcon, UserIcon } from "lucide-react";
+import { Building2Icon, MailIcon, ShieldIcon, UserIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { SidebarLayoutHeader } from "@/components/sidebar-layout-header";
+import { SidebarBackButton } from "@/components/sidebar/sidebar-back-button";
 import { SidebarBrand } from "@/components/sidebar/sidebar-brand";
 import { SidebarUserMenu } from "@/components/sidebar/sidebar-user-menu";
 import { orpc } from "@/utils/orpc";
@@ -38,14 +39,11 @@ export function AccountSidebar() {
         <SidebarHeaderRow>
           <SidebarBrand />
         </SidebarHeaderRow>
-        <Link
-          className="-mx-1 relative flex w-[calc(100%+0.5rem)] items-center rounded px-1 py-1.5 font-medium text-foreground text-sm transition-colors hover:bg-accent"
+        <SidebarBackButton
+          label="Account"
           params={backOrg?.slug ? { orgSlug: backOrg.slug } : undefined}
-          to={backOrg?.slug ? "/$orgSlug" : "/"}
-        >
-          <ChevronLeftIcon className="absolute left-1 size-4 text-muted-foreground" />
-          <span className="flex-1 text-center">Account</span>
-        </Link>
+          to={backOrg?.slug ? "/$orgSlug/~/projects" : "/"}
+        />
       </SidebarHeader>
 
       <SidebarSeparator />
@@ -107,7 +105,7 @@ export function AccountLayout({ children }: { children?: ReactNode }) {
       <AccountSidebar />
       <SidebarInset>
         <SidebarLayoutHeader />
-        <main className="flex flex-1 flex-col gap-4 p-6">{children ?? <Outlet />}</main>
+        <main className="flex flex-1 flex-col gap-4 p-4">{children ?? <Outlet />}</main>
       </SidebarInset>
     </SidebarProvider>
   );
