@@ -26,13 +26,13 @@ function resolveMax(value: Breakpoint | number): string {
   return `(max-width: ${px - 1}px)`;
 }
 
-function parseQuery(query: BreakpointQuery | MediaQueryInput | (string & {})): string {
+function parseQuery(query: MediaQueryInput | string): string {
   if (typeof query !== "string") {
     const parts: string[] = [];
-    if (query.min != null) {
+    if (query.min !== undefined && query.min !== null) {
       parts.push(resolveMin(query.min));
     }
-    if (query.max != null) {
+    if (query.max !== undefined && query.max !== null) {
       parts.push(resolveMax(query.max));
     }
     if (query.pointer === "coarse") {
@@ -77,7 +77,7 @@ export interface MediaQueryInput {
   pointer?: "coarse" | "fine";
 }
 
-export function useMediaQuery(query: BreakpointQuery | MediaQueryInput | (string & {})): boolean {
+export function useMediaQuery(query: BreakpointQuery | MediaQueryInput | string): boolean {
   const mediaQuery = parseQuery(query);
 
   const subscribe = useCallback(

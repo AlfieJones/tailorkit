@@ -167,7 +167,7 @@ const toObjectType = (schema: JsonSchema, depth: number): string => {
 };
 
 const toIdentifier = (name: string): string => {
-  const identifier = name.replaceAll(/[^A-Za-z0-9_$]/g, "_");
+  const identifier = name.replaceAll(/[^A-Za-z0-9_$]/gu, "_");
 
   if (/^[A-Za-z_$]/u.test(identifier)) {
     return identifier;

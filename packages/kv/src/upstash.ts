@@ -4,8 +4,8 @@ import type { KV, SetOptions } from "./types.js";
 
 export function createUpstashKV(): KV<"upstash"> {
   const redis = new Redis({
-    url: env.UPSTASH_REDIS_REST_URL as string,
-    token: env.UPSTASH_REDIS_REST_TOKEN as string,
+    url: env.KV_REST_API_URL as string,
+    token: env.KV_REST_API_TOKEN as string,
   });
 
   return {

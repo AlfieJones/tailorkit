@@ -8,6 +8,7 @@ import type {
   ScreenDefinition,
   TailorKitSchema,
 } from "@tailorkit/core/schema";
+import type { primitives } from "./primitives";
 import { buildThemeCss, PrimitiveThemeContext } from "./primitives";
 import { RemoteViewHost } from "./remote-view";
 
@@ -97,8 +98,8 @@ const ScreenMatchDepthContext = createContext(0);
 
 const toComponentTagName = (name: string): string =>
   `${componentTagPrefix}${name
-    .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .replaceAll(/[\s_]+/g, "-")
+    .replaceAll(/([a-z0-9])([A-Z])/gu, "$1-$2")
+    .replaceAll(/[\s_]+/gu, "-")
     .toLowerCase()}`;
 
 export interface TailorKitInstance<
@@ -115,7 +116,7 @@ export interface TailorKitInstance<
   $internal: { schema: TailorKitSchema<TComponents, TScreens> };
 }
 
-type PrimitiveRenderers = typeof import("./primitives").primitives;
+type PrimitiveRenderers = typeof primitives;
 
 type CustomComponentRenderers<TComponents extends Record<string, ComponentDefinition>> = {
   [TName in Exclude<keyof TComponents, keyof PrimitiveRenderers>]?: ComponentRenderer<

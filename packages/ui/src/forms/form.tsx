@@ -63,7 +63,7 @@ export function NumberField({ onBlur, onChange, ...props }: NumberFieldProps) {
         field.handleBlur();
         onBlur?.(event);
       }}
-      onChange={(value, eventDetails) => {
+      onChange={(value: number | null, eventDetails) => {
         field.handleChange(value);
         onChange?.(value, eventDetails);
       }}

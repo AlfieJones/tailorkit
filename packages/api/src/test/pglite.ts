@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { relations } from "@tailorkit/db/relations";
 import * as schema from "@tailorkit/db/schema/index";

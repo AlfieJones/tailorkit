@@ -226,6 +226,26 @@ function EmailPanel({ note, onClose }: { note?: string; onClose: () => void }) {
 
 // ─── Main demo ────────────────────────────────────────────────────────────────
 
+function FeaturePanelContent({
+  activeApp,
+  note,
+  onClose,
+}: {
+  activeApp: ActiveApp;
+  note?: string;
+  onClose: () => void;
+}) {
+  const panelProps = { note, onClose };
+
+  if (activeApp === "billing") {
+    return <BillingPanel {...panelProps} />;
+  }
+  if (activeApp === "analytics") {
+    return <AnalyticsPanel {...panelProps} />;
+  }
+  return <EmailPanel {...panelProps} />;
+}
+
 export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
   const [activeApp, setActiveApp] = useState<ActiveApp | null>("billing");
   const toggleApp = (id: ActiveApp) => setActiveApp((prev) => (prev === id ? null : id));
@@ -414,24 +434,11 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
                   transition={{ duration: 0.12 }}
                   className="h-full"
                 >
-                  {activeApp === "billing" && (
-                    <BillingPanel
-                      note={featureCommentCopy ?? undefined}
-                      onClose={() => setActiveApp(null)}
-                    />
-                  )}
-                  {activeApp === "analytics" && (
-                    <AnalyticsPanel
-                      note={featureCommentCopy ?? undefined}
-                      onClose={() => setActiveApp(null)}
-                    />
-                  )}
-                  {activeApp === "email" && (
-                    <EmailPanel
-                      note={featureCommentCopy ?? undefined}
-                      onClose={() => setActiveApp(null)}
-                    />
-                  )}
+                  <FeaturePanelContent
+                    activeApp={activeApp}
+                    note={featureCommentCopy ?? undefined}
+                    onClose={() => setActiveApp(null)}
+                  />
                 </m.div>
               </AnimatePresence>
             </m.div>
@@ -455,24 +462,11 @@ export function FeaturesDemo({ isMobile }: { isMobile: boolean }) {
                   transition={{ duration: 0.12 }}
                   className="h-full"
                 >
-                  {activeApp === "billing" && (
-                    <BillingPanel
-                      note={featureCommentCopy ?? undefined}
-                      onClose={() => setActiveApp(null)}
-                    />
-                  )}
-                  {activeApp === "analytics" && (
-                    <AnalyticsPanel
-                      note={featureCommentCopy ?? undefined}
-                      onClose={() => setActiveApp(null)}
-                    />
-                  )}
-                  {activeApp === "email" && (
-                    <EmailPanel
-                      note={featureCommentCopy ?? undefined}
-                      onClose={() => setActiveApp(null)}
-                    />
-                  )}
+                  <FeaturePanelContent
+                    activeApp={activeApp}
+                    note={featureCommentCopy ?? undefined}
+                    onClose={() => setActiveApp(null)}
+                  />
                 </m.div>
               )}
             </AnimatePresence>

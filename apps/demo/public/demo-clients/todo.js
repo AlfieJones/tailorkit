@@ -4,8 +4,8 @@ import { version as preactVersion } from "preact/package.json";
 
 function createRemoteComponent(name, options) {
   const tagName = `tailorkit-${name
-    .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .replaceAll(/[\s_]+/g, "-")
+    .replaceAll(/([a-z0-9])([A-Z])/gu, "$1-$2")
+    .replaceAll(/[\s_]+/gu, "-")
     .toLowerCase()}`;
 
   return function RemoteComponent({ children, ...props }) {
@@ -14,16 +14,16 @@ function createRemoteComponent(name, options) {
 
     for (const [key, inputCount] of Object.entries(options.callbacks ?? {})) {
       const callback = nextProps[key];
-      delete nextProps[key];
       if (typeof callback !== "function") {
         continue;
       }
 
-      const eventName = `tailorkitcallback${key.replaceAll(/[^A-Za-z0-9_$]/g, "").toLowerCase()}`;
+      const eventName = `tailorkitcallback${key.replaceAll(/[^A-Za-z0-9_$]/gu, "").toLowerCase()}`;
       callbackMap[eventName] = { callback: key, inputCount };
       nextProps[`on${eventName}`] = (event) => {
         callback(...(event.detail ?? []).slice(0, inputCount));
       };
+      nextProps[key] = undefined;
     }
 
     if (Object.keys(callbackMap).length > 0) {

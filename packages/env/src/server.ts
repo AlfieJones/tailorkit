@@ -7,62 +7,64 @@ config({
   path: ["../../apps/web/.env.local", "../../apps/web/.env"],
 });
 
-const hasSmtpTransport = (values: { SMTP_URL?: string }) => Boolean(values.SMTP_URL);
-
-const hasSesTransport = (values: {
-  AWS_ACCESS_KEY_ID?: string;
-  AWS_ROLE_ARN?: string;
-  AWS_SECRET_ACCESS_KEY?: string;
-}) => Boolean(values.AWS_ROLE_ARN || (values.AWS_ACCESS_KEY_ID && values.AWS_SECRET_ACCESS_KEY));
-
-const hasS3CompatibleStorage = (values: {
-  STORAGE_ACCESS_KEY_ID?: string;
-  STORAGE_BUCKET?: string;
-  STORAGE_PROVIDER?: string;
-  STORAGE_SECRET_ACCESS_KEY?: string;
-}) =>
-  values.STORAGE_PROVIDER !== "s3" ||
-  Boolean(
-    values.STORAGE_BUCKET && values.STORAGE_ACCESS_KEY_ID && values.STORAGE_SECRET_ACCESS_KEY,
-  );
-
-const hasVercelBlobStorage = (values: {
-  BLOB_READ_WRITE_TOKEN?: string;
-  STORAGE_PROVIDER?: string;
-}) => values.STORAGE_PROVIDER !== "vercel-blob" || Boolean(values.BLOB_READ_WRITE_TOKEN);
-
 export const env = createEnv({
   createFinalSchema: (shape) =>
     z.object(shape).superRefine((values, context) => {
-      if (hasSmtpTransport(values) || hasSesTransport(values)) {
-        if (hasS3CompatibleStorage(values) && hasVercelBlobStorage(values)) {
-          return;
-        }
-      }
-
-      if (!hasSmtpTransport(values) && !hasSesTransport(values)) {
+      if (values.EMAIL_PROVIDER === "smtp" && !values.EMAIL_SMTP_URL) {
         context.addIssue({
           code: "custom",
-          message:
-            "Email transport requires SMTP_URL or SES credentials via AWS_ROLE_ARN or AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.",
-          path: ["SMTP_URL"],
+          message: "SMTP email requires EMAIL_SMTP_URL.",
+          path: ["EMAIL_SMTP_URL"],
         });
       }
 
-      if (!hasS3CompatibleStorage(values)) {
+      if (
+        values.EMAIL_PROVIDER === "ses" &&
+        !(values.EMAIL_ACCESS_KEY_ID && values.EMAIL_SECRET_ACCESS_KEY)
+      ) {
         context.addIssue({
           code: "custom",
-          message:
-            "S3-compatible storage requires STORAGE_BUCKET, STORAGE_ACCESS_KEY_ID, and STORAGE_SECRET_ACCESS_KEY.",
-          path: ["STORAGE_BUCKET"],
+          message: "SES email requires EMAIL_ACCESS_KEY_ID and EMAIL_SECRET_ACCESS_KEY.",
+          path: ["EMAIL_ACCESS_KEY_ID"],
         });
       }
 
-      if (!hasVercelBlobStorage(values)) {
+      if (
+        values.BLOB_PROVIDER === "s3" &&
+        !(values.BLOB_BUCKET && values.BLOB_ACCESS_KEY_ID && values.BLOB_SECRET_ACCESS_KEY)
+      ) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "S3-compatible blob storage requires BLOB_BUCKET, BLOB_ACCESS_KEY_ID, and BLOB_SECRET_ACCESS_KEY.",
+          path: ["BLOB_BUCKET"],
+        });
+      }
+
+      if (values.BLOB_PROVIDER === "vercel" && !values.BLOB_READ_WRITE_TOKEN) {
         context.addIssue({
           code: "custom",
           message: "Vercel Blob storage requires BLOB_READ_WRITE_TOKEN.",
           path: ["BLOB_READ_WRITE_TOKEN"],
+        });
+      }
+
+      if (
+        values.KV_PROVIDER === "upstash" &&
+        !(values.KV_REST_API_URL && values.KV_REST_API_TOKEN)
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Upstash KV requires KV_REST_API_URL and KV_REST_API_TOKEN.",
+          path: ["KV_REST_API_URL"],
+        });
+      }
+
+      if (values.KV_PROVIDER === "redis" && !values.KV_REDIS_URL) {
+        context.addIssue({
+          code: "custom",
+          message: "Redis KV requires KV_REDIS_URL.",
+          path: ["KV_REDIS_URL"],
         });
       }
     }),
@@ -74,12 +76,6 @@ export const env = createEnv({
     AUTH_SECRET:
       process.env.NODE_ENV === "production" ? z.string().min(32) : z.string().min(32).optional(),
 
-    // AWS
-    AWS_ACCESS_KEY_ID: z.string().min(1).optional(),
-    AWS_DEFAULT_REGION: z.string().min(1).optional(),
-    AWS_REGION: z.string().min(1).optional(),
-    AWS_ROLE_ARN: z.string().min(1).optional(),
-
     // Database
     DATABASE_URL: z.string().min(1),
 
@@ -88,27 +84,32 @@ export const env = createEnv({
     PORT: z.number().optional(),
 
     // Email
-    SMTP_FROM: z.string().min(1),
-    SMTP_FROM_AUTH: z.string().min(1).optional(),
-    SMTP_FROM_INVITE: z.string().min(1).optional(),
-    SMTP_REPLY_TO: z.string().min(1).optional(),
-    SMTP_URL: z.string().min(1).optional(),
+    EMAIL_ACCESS_KEY_ID: z.string().min(1).optional(),
+    EMAIL_FROM: z.string().min(1),
+    EMAIL_FROM_AUTH: z.string().min(1).optional(),
+    EMAIL_FROM_INVITE: z.string().min(1).optional(),
+    EMAIL_PROVIDER: z.enum(["ses", "smtp"]),
+    EMAIL_REGION: z.string().min(1).optional(),
+    EMAIL_REPLY_TO: z.string().min(1).optional(),
+    EMAIL_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    EMAIL_SMTP_URL: z.string().min(1).optional(),
     // Billing
     POLAR_ACCESS_TOKEN: z.string().min(1),
-    // Cache variables
-    UPSTASH_REDIS_REST_URL: z.string().min(1).optional(),
-    UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
-    REDIS_URL: z.string().min(1).optional(),
+    // KV
+    KV_PROVIDER: z.enum(["upstash", "redis"]).optional(),
+    KV_REDIS_URL: z.string().min(1).optional(),
+    KV_REST_API_TOKEN: z.string().min(1).optional(),
+    KV_REST_API_URL: z.url().optional(),
     // Object storage
+    BLOB_ACCESS_KEY_ID: z.string().min(1).optional(),
+    BLOB_BUCKET: z.string().min(1).optional(),
+    BLOB_ENDPOINT: z.url().optional(),
+    BLOB_FORCE_PATH_STYLE: z.stringbool().optional(),
+    BLOB_PROVIDER: z.enum(["vercel", "s3"]),
+    BLOB_PUBLIC_BASE_URL: z.url().optional(),
     BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
-    STORAGE_ACCESS_KEY_ID: z.string().min(1).optional(),
-    STORAGE_BUCKET: z.string().min(1).optional(),
-    STORAGE_ENDPOINT: z.url().optional(),
-    STORAGE_FORCE_PATH_STYLE: z.stringbool().optional(),
-    STORAGE_PROVIDER: z.enum(["s3", "vercel-blob"]).optional(),
-    STORAGE_PUBLIC_BASE_URL: z.url().optional(),
-    STORAGE_REGION: z.string().min(1).optional(),
-    STORAGE_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    BLOB_REGION: z.string().min(1).optional(),
+    BLOB_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   },
 });
 

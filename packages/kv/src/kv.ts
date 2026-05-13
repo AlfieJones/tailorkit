@@ -8,12 +8,16 @@ type KVInstance = KV<"upstash"> | KV<"redis"> | null;
 let instance: KVInstance | undefined;
 
 function createKV(): KVInstance {
-  if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
+  if (env.KV_PROVIDER === "upstash") {
     return createUpstashKV();
   }
 
-  if (env.REDIS_URL) {
-    return createRedisKV(env.REDIS_URL);
+  if (env.KV_PROVIDER === "redis") {
+    if (!env.KV_REDIS_URL) {
+      throw new Error("KV_REDIS_URL is required when KV_PROVIDER is redis");
+    }
+
+    return createRedisKV(env.KV_REDIS_URL);
   }
 
   return null;

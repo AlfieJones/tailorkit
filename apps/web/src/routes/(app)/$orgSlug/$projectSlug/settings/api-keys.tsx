@@ -64,6 +64,26 @@ function maskSecretWithPrefix(value: string, prefix: string) {
   return `${prefix}${"*".repeat(Math.max(8, value.length - prefix.length))}`;
 }
 
+function getApiKeyDisplayValue({
+  activeKey,
+  showStoredApiKey,
+  storedApiKey,
+}: {
+  activeKey: { id: string; prefix?: string | null; start?: string | null };
+  showStoredApiKey: boolean;
+  storedApiKey: string | null;
+}) {
+  if (!storedApiKey) {
+    return keyLabel(activeKey);
+  }
+
+  if (showStoredApiKey) {
+    return storedApiKey;
+  }
+
+  return maskSecretWithPrefix(storedApiKey, activeKey.prefix ?? activeKey.start ?? "");
+}
+
 function ProjectApiKeysPage() {
   const { orgSlug, projectSlug } = Route.useParams();
   const queryClient = useQueryClient();
@@ -230,14 +250,7 @@ function ProjectApiKeysPage() {
             <div className="flex flex-col gap-2 sm:flex-row">
               <div className="flex h-8 min-w-0 flex-1 items-center overflow-x-auto rounded-lg border bg-muted px-3 font-mono text-sm sm:h-7">
                 <p className="whitespace-nowrap">
-                  {storedApiKey
-                    ? showStoredApiKey
-                      ? storedApiKey
-                      : maskSecretWithPrefix(
-                          storedApiKey,
-                          activeKey.prefix ?? activeKey.start ?? "",
-                        )
-                    : keyLabel(activeKey)}
+                  {getApiKeyDisplayValue({ activeKey, showStoredApiKey, storedApiKey })}
                 </p>
               </div>
               {storedApiKey ? (

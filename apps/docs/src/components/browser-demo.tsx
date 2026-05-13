@@ -9,12 +9,11 @@ import {
 } from "@tailorkit/ui/components/card";
 import { Logo } from "@tailorkit/ui/components/logo";
 import { clsx } from "clsx";
-import { useRef } from "react";
 import { StaticMeshGradient } from "@paper-design/shaders-react";
 import { Trash2 } from "lucide-react";
 import * as m from "motion/react-m";
 import { animate, AnimatePresence, useDragControls, useInView, useMotionValue } from "motion/react";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import demoDark from "@/assets/demo-showcase-dark.png?format=webp&quality=85";
 import demoLight from "@/assets/demo-showcase-light.png?format=webp&quality=85";

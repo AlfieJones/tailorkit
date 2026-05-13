@@ -131,12 +131,12 @@ const componentTagPrefix = "tailorkit-";
 
 const toComponentTagName = (name: string): string =>
   `${componentTagPrefix}${name
-    .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .replaceAll(/[\s_]+/g, "-")
+    .replaceAll(/([a-z0-9])([A-Z])/gu, "$1-$2")
+    .replaceAll(/[\s_]+/gu, "-")
     .toLowerCase()}`;
 
 const toCallbackEventName = (name: string): string =>
-  `tailorkitcallback${name.replaceAll(/[^A-Za-z0-9_$]/g, "").toLowerCase()}`;
+  `tailorkitcallback${name.replaceAll(/[^A-Za-z0-9_$]/gu, "").toLowerCase()}`;
 
 const toEventProp = (event: string): string => `on${event}`;
 

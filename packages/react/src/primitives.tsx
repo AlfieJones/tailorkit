@@ -27,7 +27,7 @@ const cssEscape = (value: string): string => {
   if (typeof css?.escape === "function") {
     return css.escape(value);
   }
-  return value.replaceAll(/[^A-Za-z0-9_-]/g, "\\$&");
+  return value.replaceAll(/[^A-Za-z0-9_-]/gu, "\\$&");
 };
 
 const toCssValue = (
@@ -56,20 +56,19 @@ const toResponsiveEntries = <T,>(value: Responsive<T> | undefined): [string, T][
 };
 
 const declarationsForProp = (prop: string, value: PrimitiveValue): string[] => {
-  if (prop === "background") {
-    return [`background: ${toCssValue("background", value)};`];
-  }
-  if (prop === "border") {
-    return [`border: ${toCssValue("border", value)};`];
-  }
-  if (prop === "borderColor") {
-    return [`border-color: ${toCssValue("borderColor", value)};`];
-  }
-  if (prop === "textColor") {
-    return [`color: ${toCssValue("textColor", value)};`];
-  }
   if (prop === "columns") {
     return [`grid-template-columns: repeat(${String(value)}, minmax(0, 1fr));`];
+  }
+  const tokenDeclarations: Record<string, [(typeof tokenGroups)[number], string]> = {
+    background: ["background", "background"],
+    border: ["border", "border"],
+    borderColor: ["borderColor", "border-color"],
+    textColor: ["textColor", "color"],
+  };
+  const tokenDeclaration = tokenDeclarations[prop];
+  if (tokenDeclaration) {
+    const [group, property] = tokenDeclaration;
+    return [`${property}: ${toCssValue(group, value)};`];
   }
   if (prop === "gap" || prop === "margin" || prop === "padding") {
     return [`${prop}: ${toCssValue("space", value)};`];

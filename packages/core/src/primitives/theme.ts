@@ -204,18 +204,30 @@ export const defaultTextTransform = {
   none: "none",
 } as const;
 
+const defaultTokenGroups = {
+  border: defaultBorder,
+  overflow: defaultOverflow,
+  overflowWrap: defaultOverflowWrap,
+  radius: defaultRadius,
+  size: defaultSize,
+  space: defaultSpace,
+  textAlign: defaultTextAlign,
+  textOverflow: defaultTextOverflow,
+  textTransform: defaultTextTransform,
+} satisfies TailorKitTheme["tokens"];
+
+const resolveTokens = (theme: TailorKitTheme | undefined): TailorKitTheme["tokens"] => {
+  const tokens = { ...theme?.tokens };
+
+  for (const [key, value] of Object.entries(defaultTokenGroups)) {
+    const tokenKey = key as keyof typeof defaultTokenGroups;
+    tokens[tokenKey] ??= value;
+  }
+
+  return tokens;
+};
+
 export const resolveTheme = (theme: TailorKitTheme | undefined): TailorKitTheme => ({
   breakpoints: theme?.breakpoints ?? defaultBreakpoints,
-  tokens: {
-    ...theme?.tokens,
-    border: theme?.tokens?.border ?? defaultBorder,
-    overflow: theme?.tokens?.overflow ?? defaultOverflow,
-    overflowWrap: theme?.tokens?.overflowWrap ?? defaultOverflowWrap,
-    radius: theme?.tokens?.radius ?? defaultRadius,
-    size: theme?.tokens?.size ?? defaultSize,
-    space: theme?.tokens?.space ?? defaultSpace,
-    textAlign: theme?.tokens?.textAlign ?? defaultTextAlign,
-    textOverflow: theme?.tokens?.textOverflow ?? defaultTextOverflow,
-    textTransform: theme?.tokens?.textTransform ?? defaultTextTransform,
-  },
+  tokens: resolveTokens(theme),
 });

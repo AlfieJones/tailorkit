@@ -34,7 +34,6 @@ const createQueryClient = (isBrowser: boolean) =>
         // With SSR, we usually want to set some default staleTime
         // above 0 to avoid refetching immediately on the client
         staleTime: 30 * 1000,
-        // TODO improve this to retry requets with timeouts or too many tries etc
         retry: (count, error: AppError) =>
           isBrowser &&
           !(isDefinedError(error) && error.status >= 400 && error.status < 500) &&

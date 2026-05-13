@@ -36,6 +36,8 @@ export function NumberField({
   );
 }
 
+export type NumberFieldProps = React.ComponentProps<typeof NumberField>;
+
 export function NumberFieldGroup({
   className,
   ...props

@@ -4,7 +4,7 @@ import { build as viteBuild } from "vite";
 import { loadTailorKitConfig } from "../config/loader";
 import { assertSupportedPreactVersion } from "../preact-version";
 
-const preactExternal = /^preact(?:\/.*)?$/;
+const preactExternal = /^preact(?:\/.*)?$/u;
 
 export interface BuildAppOptions {
   configPath?: string;

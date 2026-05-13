@@ -1,7 +1,7 @@
 export const MINIMUM_PREACT_MAJOR_VERSION = 10;
 
 export const assertSupportedPreactVersion = (version: string, label = "Preact"): void => {
-  const match = /^(\d+)\./.exec(version);
+  const match = /^(\d+)\./u.exec(version);
 
   if (!match?.[1]) {
     throw new Error(`Unable to parse ${label} version "${version}".`);

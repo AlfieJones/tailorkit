@@ -9,7 +9,7 @@ import { Separator } from "@tailorkit/ui/components/separator";
 import { cn } from "@tailorkit/ui/lib/utils";
 
 export const groupVariants = cva(
-  "flex w-fit *:focus-visible:z-1 has-[>[data-slot=group]]:gap-2 *:has-focus-visible:z-1 dark:*:[[data-slot=separator]:has(~button:hover):not(:has(~[data-slot=separator]~[data-slot]:hover)),[data-slot=separator]:has(~[data-slot][data-pressed]):not(:has(~[data-slot=separator]~[data-slot][data-pressed]))]:before:bg-input/64 dark:*:[button:hover~[data-slot=separator]:not([data-slot]:hover~[data-slot=separator]~[data-slot=separator]),[data-slot][data-pressed]~[data-slot=separator]:not([data-slot][data-pressed]~[data-slot=separator]~[data-slot=separator])]:before:bg-input/64",
+  "flex min-w-0 w-fit border-0 p-0 *:focus-visible:z-1 has-[>[data-slot=group]]:gap-2 *:has-focus-visible:z-1 dark:*:[[data-slot=separator]:has(~button:hover):not(:has(~[data-slot=separator]~[data-slot]:hover)),[data-slot=separator]:has(~[data-slot][data-pressed]):not(:has(~[data-slot=separator]~[data-slot][data-pressed]))]:before:bg-input/64 dark:*:[button:hover~[data-slot=separator]:not([data-slot]:hover~[data-slot=separator]~[data-slot=separator]),[data-slot][data-pressed]~[data-slot=separator]:not([data-slot][data-pressed]~[data-slot=separator]~[data-slot=separator])]:before:bg-input/64",
   {
     defaultVariants: {
       orientation: "horizontal",
@@ -34,17 +34,16 @@ export function Group({
   className?: string;
   orientation?: VariantProps<typeof groupVariants>["orientation"];
   children: React.ReactNode;
-} & React.ComponentProps<"div">): React.ReactElement {
+} & React.ComponentProps<"fieldset">): React.ReactElement {
   return (
-    <div
+    <fieldset
       className={cn(groupVariants({ orientation }), className)}
       data-orientation={orientation}
       data-slot="group"
-      role="group"
       {...props}
     >
       {children}
-    </div>
+    </fieldset>
   );
 }
 

@@ -13,13 +13,13 @@ pnpm services:start
 Use these environment variables:
 
 ```env
-STORAGE_PROVIDER=s3
-STORAGE_BUCKET=tailorkit
-STORAGE_ENDPOINT=http://localhost:9000
-STORAGE_REGION=auto
-STORAGE_ACCESS_KEY_ID=rustfsadmin
-STORAGE_SECRET_ACCESS_KEY=rustfsadmin
-STORAGE_FORCE_PATH_STYLE=true
+BLOB_PROVIDER=s3
+BLOB_BUCKET=tailorkit
+BLOB_ENDPOINT=http://localhost:9000
+BLOB_REGION=auto
+BLOB_ACCESS_KEY_ID=rustfsadmin
+BLOB_SECRET_ACCESS_KEY=rustfsadmin
+BLOB_FORCE_PATH_STYLE=true
 ```
 
 The same `s3` provider works with any S3-compatible service by changing the
@@ -30,7 +30,7 @@ endpoint, bucket, and credentials.
 Use Vercel Blob with private access:
 
 ```env
-STORAGE_PROVIDER=vercel-blob
+BLOB_PROVIDER=vercel
 BLOB_READ_WRITE_TOKEN=...
 ```
 

@@ -19,6 +19,7 @@ export interface TailorKitServerOptions<
 }
 
 export interface TailorKitServer {
+  fetch: (request: Request) => Response | Promise<Response>;
   handler: EventHandler;
 }
 

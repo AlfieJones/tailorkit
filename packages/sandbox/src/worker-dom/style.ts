@@ -1,6 +1,6 @@
 import type { Element } from "./element.js";
 
-const UNITLESS_STYLE_PROPS = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i;
+const UNITLESS_STYLE_PROPS = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/iu;
 
 export class StyleDeclaration {
   #element: Element;
@@ -101,9 +101,9 @@ function formatStyleValue(name: string, value: string | number): string {
 }
 
 function toCamelCase(name: string): string {
-  return name.replaceAll(/-([a-z])/g, (_, char: string) => char.toUpperCase());
+  return name.replaceAll(/-([a-z])/gu, (_, char: string) => char.toUpperCase());
 }
 
 function toKebabCase(name: string): string {
-  return name.replaceAll(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+  return name.replaceAll(/[A-Z]/gu, (char) => `-${char.toLowerCase()}`);
 }

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { tailorKit } from "tailorkit";
+import { defineSchema, primitives, tailorKit } from "tailorkit";
 
 const tailor = tailorKit({
   apps: [
@@ -10,12 +10,13 @@ const tailor = tailorKit({
     },
   ],
   basePath: "/api/tailorkit",
+  schema: defineSchema({ components: { ...primitives } }),
 });
 
 export const Route = createFileRoute("/api/tailorkit/$")({
   server: {
     handlers: {
-      GET: ({ request }) => tailor.handler(request),
+      GET: ({ request }) => tailor.fetch(request),
     },
   },
 });

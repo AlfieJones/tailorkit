@@ -24,7 +24,7 @@ export function rehypeWrapWords() {
         return;
       }
 
-      const words = node.value.split(/(?=\s)/);
+      const words = node.value.split(/(?=\s)/u);
 
       // Create new span nodes for each word and whitespace
       const newNodes: ElementContent[] = words.flatMap((word) => {

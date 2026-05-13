@@ -1,17 +1,17 @@
 import type { ComponentDefinition, ScreenDefinition } from "../schema";
 import type { PublicTailorKitApp, TailorKitServerApp, TailorKitServerOptions } from "./types";
 
-export async function loadApps(
+export function loadApps(
   apps: TailorKitServerOptions<
     Record<string, ComponentDefinition>,
     Record<string, ScreenDefinition>
   >["apps"],
 ): Promise<readonly TailorKitServerApp[]> {
   if (apps === undefined) {
-    return [];
+    return Promise.resolve([]);
   }
 
-  return typeof apps === "function" ? apps() : apps;
+  return Promise.resolve(typeof apps === "function" ? apps() : apps);
 }
 
 export function toPublicApp(app: TailorKitServerApp, basePath: string): PublicTailorKitApp {

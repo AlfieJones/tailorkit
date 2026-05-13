@@ -74,7 +74,7 @@ function objectUrl(options: S3CompatibleStorageOptions, key: string): string | u
   }
 
   const encodedKey = key.split("/").map(encodeURIComponent).join("/");
-  return `${options.publicBaseUrl.replace(/\/$/, "")}/${encodedKey}`;
+  return `${options.publicBaseUrl.replace(/\/$/u, "")}/${encodedKey}`;
 }
 
 export function createS3CompatibleStorage(options: S3CompatibleStorageOptions): Storage<"s3"> {

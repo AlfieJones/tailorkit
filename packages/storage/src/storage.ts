@@ -8,19 +8,23 @@ type StorageInstance = Storage<"s3"> | Storage<"vercel-blob"> | null;
 let instance: StorageInstance | undefined;
 
 function createStorage(): StorageInstance {
-  if (env.STORAGE_PROVIDER === "vercel-blob") {
+  if (env.BLOB_PROVIDER === "vercel") {
     return createVercelBlobStorage();
   }
 
-  if (env.STORAGE_PROVIDER === "s3") {
+  if (env.BLOB_PROVIDER === "s3") {
+    if (!env.BLOB_BUCKET) {
+      throw new Error("BLOB_BUCKET is required when BLOB_PROVIDER is s3");
+    }
+
     return createS3CompatibleStorage({
-      bucket: env.STORAGE_BUCKET!,
-      region: env.STORAGE_REGION,
-      endpoint: env.STORAGE_ENDPOINT,
-      accessKeyId: env.STORAGE_ACCESS_KEY_ID,
-      secretAccessKey: env.STORAGE_SECRET_ACCESS_KEY,
-      forcePathStyle: env.STORAGE_FORCE_PATH_STYLE ?? Boolean(env.STORAGE_ENDPOINT),
-      publicBaseUrl: env.STORAGE_PUBLIC_BASE_URL,
+      bucket: env.BLOB_BUCKET,
+      region: env.BLOB_REGION,
+      endpoint: env.BLOB_ENDPOINT,
+      accessKeyId: env.BLOB_ACCESS_KEY_ID,
+      secretAccessKey: env.BLOB_SECRET_ACCESS_KEY,
+      forcePathStyle: env.BLOB_FORCE_PATH_STYLE ?? Boolean(env.BLOB_ENDPOINT),
+      publicBaseUrl: env.BLOB_PUBLIC_BASE_URL,
     });
   }
 

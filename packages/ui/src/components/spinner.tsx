@@ -6,12 +6,5 @@ export function Spinner({
   className,
   ...props
 }: React.ComponentProps<typeof Loader2Icon>): React.ReactElement {
-  return (
-    <Loader2Icon
-      aria-label="Loading"
-      className={cn("animate-spin", className)}
-      role="status"
-      {...props}
-    />
-  );
+  return <Loader2Icon aria-label="Loading" className={cn("animate-spin", className)} {...props} />;
 }

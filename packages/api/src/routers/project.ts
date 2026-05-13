@@ -91,8 +91,10 @@ async function listProjectApiKeys({
 }) {
   const keys = await listAllProjectApiKeys({ organizationId, projectId });
 
-  const validKeys = keys.filter((key) => key.enabled && !isKeyExpired(key));
-  const [active, ...previous] = validKeys;
+  const active = keys.find((key) => key.enabled && !isKeyExpired(key));
+  const previous = active
+    ? keys.filter((key) => key.id !== active.id && key.enabled && !isKeyExpired(key))
+    : [];
 
   return {
     active: active ? [active] : [],
@@ -122,10 +124,10 @@ async function listAllProjectApiKeys({
 
       return serializeProjectApiKey(key, metadata);
     })
-    .filter((key): key is NonNullable<typeof key> => Boolean(key));
+    .filter(Boolean);
 }
 
-async function createProjectApiKey({
+function createProjectApiKey({
   headers,
   organizationId,
   projectId,

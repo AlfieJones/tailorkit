@@ -38,8 +38,8 @@ function toSlug(value: string) {
   return value
     .toLowerCase()
     .trim()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/^-+|-+$/g, "");
+    .replaceAll(/[^a-z0-9]+/gu, "-")
+    .replaceAll(/^-+|-+$/gu, "");
 }
 
 const projectSettingsSchema = z.object({

@@ -166,13 +166,16 @@ function AppRailStatus({
   errorMessage?: string;
   status: "error" | "idle" | "loading" | "ready";
 }) {
-  const label =
-    status === "error"
-      ? (errorMessage ?? "Unable to load apps")
-      : status === "ready"
-        ? "No apps available"
-        : "Loading apps";
-  const text = status === "error" ? "!" : status === "ready" ? "-" : "...";
+  let label = "Loading apps";
+  let text = "...";
+
+  if (status === "error") {
+    label = errorMessage ?? "Unable to load apps";
+    text = "!";
+  } else if (status === "ready") {
+    label = "No apps available";
+    text = "-";
+  }
 
   return (
     <div
@@ -224,7 +227,7 @@ function AppPanel({
 
 function getAppInitials(label: string) {
   const initials = label
-    .split(/[\s-]+/)
+    .split(/[\s-]+/u)
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())

@@ -34,6 +34,7 @@ export function createTailorKitServer<
   });
 
   return {
+    fetch: (request) => app.fetch(request),
     handler: app.handler,
   };
 }

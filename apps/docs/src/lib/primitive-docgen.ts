@@ -49,13 +49,13 @@ export interface BoxProps {
    *
    * The allowed values are generated from the host schema's background tokens.
    *
-   * @remarks `background token | responsive`
+   * `background token | responsive`
    */
   background?: BreakpointValue<BackgroundToken>;
   /**
    * Border style token. Defaults include `solid`, `dashed`, `dotted`, and `double`.
    *
-   * @remarks `border token | responsive`
+   * `border token | responsive`
    */
   border?: BreakpointValue<BorderToken>;
   /**
@@ -63,49 +63,49 @@ export interface BoxProps {
    *
    * The allowed values are generated from the host schema's border color tokens.
    *
-   * @remarks `borderColor token | responsive`
+   * `borderColor token | responsive`
    */
   borderColor?: BreakpointValue<BorderColorToken>;
   /**
    * Height token from `theme.tokens.size`.
    *
-   * @remarks `size token | responsive`
+   * `size token | responsive`
    */
   height?: BreakpointValue<SizeToken>;
   /**
    * Margin token from `theme.tokens.space`.
    *
-   * @remarks `space token | responsive`
+   * `space token | responsive`
    */
   margin?: BreakpointValue<SpaceToken>;
   /**
    * Overflow behavior token.
    *
-   * @remarks `overflow token | responsive`
+   * `overflow token | responsive`
    */
   overflow?: BreakpointValue<OverflowToken>;
   /**
    * Text wrapping token.
    *
-   * @remarks `overflowWrap token | responsive`
+   * `overflowWrap token | responsive`
    */
   overflowWrap?: BreakpointValue<OverflowWrapToken>;
   /**
    * Padding token from `theme.tokens.space`.
    *
-   * @remarks `space token | responsive`
+   * `space token | responsive`
    */
   padding?: BreakpointValue<SpaceToken>;
   /**
    * Corner radius token from `theme.tokens.radius`.
    *
-   * @remarks `radius token | responsive`
+   * `radius token | responsive`
    */
   radius?: BreakpointValue<RadiusToken>;
   /**
    * Text alignment token.
    *
-   * @remarks `textAlign token | responsive`
+   * `textAlign token | responsive`
    */
   textAlign?: BreakpointValue<TextAlignToken>;
   /**
@@ -113,25 +113,25 @@ export interface BoxProps {
    *
    * The allowed values are generated from the host schema's text color tokens.
    *
-   * @remarks `textColor token | responsive`
+   * `textColor token | responsive`
    */
   textColor?: BreakpointValue<TextColorToken>;
   /**
    * Text overflow token.
    *
-   * @remarks `textOverflow token | responsive`
+   * `textOverflow token | responsive`
    */
   textOverflow?: BreakpointValue<TextOverflowToken>;
   /**
    * Text transform token.
    *
-   * @remarks `textTransform token | responsive`
+   * `textTransform token | responsive`
    */
   textTransform?: BreakpointValue<TextTransformToken>;
   /**
    * Width token from `theme.tokens.size`.
    *
-   * @remarks `size token | responsive`
+   * `size token | responsive`
    */
   width?: BreakpointValue<SizeToken>;
 }
@@ -140,25 +140,25 @@ export interface FlexProps extends BoxProps {
   /**
    * Cross-axis alignment.
    *
-   * @remarks `alignment | responsive`
+   * `alignment | responsive`
    */
   align?: BreakpointValue<"start" | "center" | "end" | "stretch">;
   /**
    * Flex direction.
    *
-   * @remarks `direction | responsive`
+   * `direction | responsive`
    */
   direction?: BreakpointValue<"row" | "column">;
   /**
    * Gap token from `theme.tokens.space`.
    *
-   * @remarks `space token | responsive`
+   * `space token | responsive`
    */
   gap?: BreakpointValue<SpaceToken>;
   /**
    * Main-axis distribution.
    *
-   * @remarks `justification | responsive`
+   * `justification | responsive`
    */
   justify?: BreakpointValue<"start" | "center" | "end" | "between">;
 }
@@ -167,13 +167,13 @@ export interface GridProps extends BoxProps {
   /**
    * Number of grid columns.
    *
-   * @remarks `columns | responsive`
+   * `columns | responsive`
    */
   columns?: BreakpointValue<1 | 2 | 3 | 4 | 6 | 12>;
   /**
    * Gap token from `theme.tokens.space`.
    *
-   * @remarks `space token | responsive`
+   * `space token | responsive`
    */
   gap?: BreakpointValue<SpaceToken>;
 }
@@ -184,7 +184,7 @@ export interface InlineProps {
    *
    * The allowed values are generated from the host schema's background tokens.
    *
-   * @remarks `background token | responsive`
+   * `background token | responsive`
    */
   background?: BreakpointValue<BackgroundToken>;
   /**
@@ -192,37 +192,37 @@ export interface InlineProps {
    *
    * The allowed values are generated from the host schema's border color tokens.
    *
-   * @remarks `borderColor token | responsive`
+   * `borderColor token | responsive`
    */
   borderColor?: BreakpointValue<BorderColorToken>;
   /**
    * Margin token from `theme.tokens.space`.
    *
-   * @remarks `space token | responsive`
+   * `space token | responsive`
    */
   margin?: BreakpointValue<SpaceToken>;
   /**
    * Text wrapping token.
    *
-   * @remarks `overflowWrap token | responsive`
+   * `overflowWrap token | responsive`
    */
   overflowWrap?: BreakpointValue<OverflowWrapToken>;
   /**
    * Padding token from `theme.tokens.space`.
    *
-   * @remarks `space token | responsive`
+   * `space token | responsive`
    */
   padding?: BreakpointValue<SpaceToken>;
   /**
    * Corner radius token from `theme.tokens.radius`.
    *
-   * @remarks `radius token | responsive`
+   * `radius token | responsive`
    */
   radius?: BreakpointValue<RadiusToken>;
   /**
    * Text alignment token.
    *
-   * @remarks `textAlign token | responsive`
+   * `textAlign token | responsive`
    */
   textAlign?: BreakpointValue<TextAlignToken>;
   /**
@@ -230,19 +230,19 @@ export interface InlineProps {
    *
    * The allowed values are generated from the host schema's text color tokens.
    *
-   * @remarks `textColor token | responsive`
+   * `textColor token | responsive`
    */
   textColor?: BreakpointValue<TextColorToken>;
   /**
    * Text overflow token.
    *
-   * @remarks `textOverflow token | responsive`
+   * `textOverflow token | responsive`
    */
   textOverflow?: BreakpointValue<TextOverflowToken>;
   /**
    * Text transform token.
    *
-   * @remarks `textTransform token | responsive`
+   * `textTransform token | responsive`
    */
   textTransform?: BreakpointValue<TextTransformToken>;
 }

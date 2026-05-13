@@ -3,7 +3,7 @@ import { Element } from "./element.js";
 import type { Node } from "./node.js";
 import { Text } from "./text.js";
 
-const ROOT_HTML_PATTERN = /<([a-z][\w-]*)([^>]*)id=["']root["']([^>]*)>/i;
+const ROOT_HTML_PATTERN = /<([a-z][\w-]*)([^>]*)id=["']root["']([^>]*)>/iu;
 
 export interface WorkerDOMOptions {
   html?: string;

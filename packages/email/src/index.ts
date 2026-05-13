@@ -34,15 +34,38 @@ export interface SendOrganizationInvitationEmailInput {
 
 let cachedTransporter: Mail | undefined;
 
-const hasSesCredentials = () =>
-  Boolean(env.AWS_ROLE_ARN || (env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY));
+const hasSesCredentials = () => Boolean(env.EMAIL_ACCESS_KEY_ID && env.EMAIL_SECRET_ACCESS_KEY);
 
-const resolveAwsRegion = () => env.AWS_REGION ?? env.AWS_DEFAULT_REGION ?? "us-east-1";
+const resolveSesRegion = () => env.EMAIL_REGION ?? "us-east-1";
 
 const createSmtpTransport = (smtpUrl: string) => nodemailer.createTransport(smtpUrl);
 
+const resolveSmtpUrl = () => {
+  if (!env.EMAIL_SMTP_URL) {
+    throw new Error("EMAIL_SMTP_URL is required when EMAIL_PROVIDER is smtp.");
+  }
+
+  return env.EMAIL_SMTP_URL;
+};
+
+const resolveSesCredentials = () => {
+  if (!(env.EMAIL_ACCESS_KEY_ID && env.EMAIL_SECRET_ACCESS_KEY)) {
+    throw new Error(
+      "EMAIL_ACCESS_KEY_ID and EMAIL_SECRET_ACCESS_KEY are required when EMAIL_PROVIDER is ses.",
+    );
+  }
+
+  return {
+    accessKeyId: env.EMAIL_ACCESS_KEY_ID,
+    secretAccessKey: env.EMAIL_SECRET_ACCESS_KEY,
+  };
+};
+
 const createSesTransport = () => {
-  const sesClient = new SESv2Client({ region: resolveAwsRegion() });
+  const sesClient = new SESv2Client({
+    credentials: resolveSesCredentials(),
+    region: resolveSesRegion(),
+  });
 
   const options: SESTransport.Options = {
     SES: { SendEmailCommand, sesClient },
@@ -53,15 +76,15 @@ const createSesTransport = () => {
 
 const getTransporter = () => {
   cachedTransporter ??= (() => {
-    if (env.SMTP_URL) {
-      return createSmtpTransport(env.SMTP_URL);
+    if (env.EMAIL_PROVIDER === "smtp") {
+      return createSmtpTransport(resolveSmtpUrl());
     }
 
-    if (hasSesCredentials()) {
+    if (env.EMAIL_PROVIDER === "ses" && hasSesCredentials()) {
       return createSesTransport();
     }
 
-    throw new Error("Email transport requires SMTP_URL or AWS credentials for SES.");
+    throw new Error("Email transport requires EMAIL_PROVIDER with matching credentials.");
   })();
 
   return cachedTransporter;
@@ -69,10 +92,10 @@ const getTransporter = () => {
 
 const resolveFrom = (type?: BetterAuthEmailType) => {
   if (type) {
-    return env.SMTP_FROM_AUTH ?? env.SMTP_FROM;
+    return env.EMAIL_FROM_AUTH ?? env.EMAIL_FROM;
   }
 
-  return env.SMTP_FROM;
+  return env.EMAIL_FROM;
 };
 
 const renderBetterAuthOtpEmail = async ({
@@ -92,7 +115,7 @@ export const sendEmail = async ({ from, html, replyTo, subject, text, to }: Send
   const message: SMTPTransport.MailOptions = {
     from: from ?? resolveFrom(),
     html,
-    replyTo: replyTo ?? env.SMTP_REPLY_TO,
+    replyTo: replyTo ?? env.EMAIL_REPLY_TO,
     subject,
     text,
     to,
@@ -107,7 +130,7 @@ export const sendBetterAuthOtpEmail = async ({ email, otp, type }: SendBetterAut
   await sendEmail({
     from: resolveFrom(type),
     html,
-    replyTo: env.SMTP_REPLY_TO,
+    replyTo: env.EMAIL_REPLY_TO,
     subject: betterAuthEmailSubjects[type],
     text,
     to: email,
@@ -133,9 +156,9 @@ export const sendOrganizationInvitationEmail = async ({
   });
 
   await sendEmail({
-    from: env.SMTP_FROM_INVITE ?? env.SMTP_FROM_AUTH ?? env.SMTP_FROM,
+    from: env.EMAIL_FROM_INVITE ?? env.EMAIL_FROM_AUTH ?? env.EMAIL_FROM,
     html: await render(component),
-    replyTo: env.SMTP_REPLY_TO,
+    replyTo: env.EMAIL_REPLY_TO,
     subject: `${inviterName ?? "Someone"} invited you to join ${organizationName}`,
     text: await render(component, { plainText: true }),
     to: email,
