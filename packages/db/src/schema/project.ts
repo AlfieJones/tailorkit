@@ -13,7 +13,6 @@ export const project = pgTable(
       .references(() => organization.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
-    description: text("description"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -25,3 +24,5 @@ export const project = pgTable(
     uniqueIndex("project_organizationId_slug_unique").on(table.organizationId, table.slug),
   ],
 );
+
+export type Project = typeof project.$inferSelect;

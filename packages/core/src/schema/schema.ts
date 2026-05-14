@@ -7,6 +7,7 @@ import { resolveTheme } from "../primitives/theme";
 export type Schema = StandardSchemaV1;
 export type CallbackMap = Record<string, CallbackDefinition | undefined>;
 type EmptyCallbackMap = Record<never, never>;
+type EmptyActionMap = Record<never, never>;
 
 type EmptyObject = Record<string, never>;
 type VoidResult = ReturnType<() => void>;
@@ -77,6 +78,36 @@ export interface ScreenDefinition<TContext extends Schema = Schema> {
   context?: TContext;
 }
 
+export interface ActionDefinition<
+  TInput extends Schema | undefined = Schema | undefined,
+  TOutput extends Schema | undefined = Schema | undefined,
+> {
+  input?: TInput;
+  output?: TOutput;
+}
+
+export interface ActionTree {
+  [key: string]: ActionDefinition | ActionTree | undefined;
+}
+
+export type InferActionInput<TAction> =
+  TAction extends ActionDefinition<infer TInput, Schema | undefined> ? InferSchema<TInput> : never;
+
+export type InferActionOutput<TAction> =
+  TAction extends ActionDefinition<Schema | undefined, infer TOutput>
+    ? InferSchema<TOutput>
+    : never;
+
+export type InferRequestContext<TSchema> =
+  TSchema extends TailorKitSchema<
+    Record<string, ComponentDefinition>,
+    Record<string, ScreenDefinition>,
+    ActionTree,
+    infer TRequestContext
+  >
+    ? InferSchema<TRequestContext>
+    : EmptyObject;
+
 export type ComponentProps<TComponent> =
   TComponent extends ComponentDefinition<
     infer TFields,
@@ -103,21 +134,32 @@ export interface ResolvedScreenMetadata {
   context?: Schema;
 }
 
+export interface ResolvedActionMetadata {
+  input?: Schema;
+  output?: Schema;
+}
+
 export type SchemaSerializer = (schema: Schema) => Record<string, unknown> | undefined;
 
 export interface TailorKitSchema<
   TComponents extends Record<string, ComponentDefinition>,
   TScreens extends Record<string, ScreenDefinition>,
+  TActions extends ActionTree = EmptyActionMap,
+  TRequestContext extends Schema | undefined = undefined,
 > {
   $internal: {
+    actions: TActions;
     components: {
       [TName in keyof TComponents]: ResolvedComponentMetadata;
     };
+    requestContext?: TRequestContext;
     screens: {
       [TName in keyof TScreens]: ResolvedScreenMetadata;
     };
   };
+  actions: TActions;
   components: TComponents;
+  requestContext?: TRequestContext;
   screens: TScreens;
   theme: TailorKitTheme;
   serialize(schemaSerializer?: SchemaSerializer): TailorKitSchemaSpec;
@@ -196,6 +238,20 @@ export function screen<const TContext extends Schema>(
   return definition;
 }
 
+interface ActionBuilder<TInput extends Schema | undefined = undefined> {
+  input: <const TNextInput extends Schema>(input: TNextInput) => ActionBuilder<TNextInput>;
+  output: <const TOutput extends Schema>(output: TOutput) => ActionDefinition<TInput, TOutput>;
+}
+
+const createActionBuilder = <TInput extends Schema | undefined = undefined>(
+  inputSchema?: TInput,
+): ActionBuilder<TInput> => ({
+  input: <const TNextInput extends Schema>(input: TNextInput) => createActionBuilder(input),
+  output: <const TOutput extends Schema>(output: TOutput) => ({ input: inputSchema, output }),
+});
+
+export const action = createActionBuilder();
+
 const resolveComponentMetadata = (
   name: string,
   definition: ComponentDefinition,
@@ -215,17 +271,62 @@ const resolveComponentMetadata = (
   };
 };
 
+const serializeActions = (
+  actions: ActionTree,
+  schemaSerializer?: SchemaSerializer,
+): TailorKitSchemaSpec["actions"] => {
+  const serialized: NonNullable<TailorKitSchemaSpec["actions"]> = {};
+
+  for (const [name, definition] of Object.entries(actions)) {
+    if (definition === undefined) {
+      continue;
+    }
+
+    if ("input" in definition || "output" in definition) {
+      const actionDefinition = definition as ActionDefinition;
+      serialized[name] = {
+        input:
+          actionDefinition.input === undefined || schemaSerializer === undefined
+            ? undefined
+            : schemaSerializer(actionDefinition.input),
+        output:
+          actionDefinition.output === undefined || schemaSerializer === undefined
+            ? undefined
+            : schemaSerializer(actionDefinition.output),
+      };
+    } else {
+      serialized[name] = serializeActions(definition as ActionTree, schemaSerializer);
+    }
+  }
+
+  return serialized;
+};
+
 export function defineSchema<
   const TComponents extends Record<string, ComponentDefinition>,
   const TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+  const TActions extends ActionTree = EmptyActionMap,
+  const TRequestContext extends Schema | undefined = undefined,
 >(schema: {
+  actions?: TActions;
   components: TComponents;
+  requestContext?: TRequestContext;
   screens?: TScreens;
   theme?: TailorKitTheme;
-}): TailorKitSchema<TComponents, TScreens> {
+}): TailorKitSchema<TComponents, TScreens, TActions, TRequestContext> {
   const theme = resolveTheme(schema.theme);
-  const components = {} as TailorKitSchema<TComponents, TScreens>["$internal"]["components"];
-  const screens = {} as TailorKitSchema<TComponents, TScreens>["$internal"]["screens"];
+  const components = {} as TailorKitSchema<
+    TComponents,
+    TScreens,
+    TActions,
+    TRequestContext
+  >["$internal"]["components"];
+  const screens = {} as TailorKitSchema<
+    TComponents,
+    TScreens,
+    TActions,
+    TRequestContext
+  >["$internal"]["screens"];
 
   for (const [name, definition] of Object.entries(schema.components)) {
     components[name as keyof TComponents] = resolveComponentMetadata(name, definition, theme);
@@ -280,6 +381,7 @@ export function defineSchema<
     }
 
     return {
+      actions: serializeActions(schema.actions ?? {}, schemaSerializer),
       components: serializedComponents,
       screens: serializedScreens,
       theme,
@@ -288,10 +390,17 @@ export function defineSchema<
   };
 
   return {
+    actions: (schema.actions ?? {}) as TActions,
     components: schema.components,
+    requestContext: schema.requestContext,
     screens: (schema.screens ?? {}) as TScreens,
     theme,
     serialize,
-    $internal: { components, screens },
+    $internal: {
+      actions: (schema.actions ?? {}) as TActions,
+      components,
+      requestContext: schema.requestContext,
+      screens,
+    },
   };
 }

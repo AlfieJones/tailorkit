@@ -2,7 +2,7 @@
   "hooks": {
     "PostToolUse": [
       {
-        "command": "bun fix",
+        "command": "pnpm fix",
         "type": "command"
       }
     ]

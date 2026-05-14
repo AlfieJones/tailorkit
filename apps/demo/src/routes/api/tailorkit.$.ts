@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { tailorKit } from "tailorkit";
-import { createDemoSchema, demoApps } from "#/lib/tailorkit";
+import { createDemoSchema } from "#/lib/tailorkit";
 import { defaultTheme } from "#/lib/demo-theme";
 
 const tailor = tailorKit({
-  apps: demoApps,
   basePath: "/api/tailorkit",
+  platform: {
+    rpcUrl: process.env.TAILORKIT_PLATFORM_RPC_URL ?? "http://localhost:3000/api/rpc",
+  },
   schema: createDemoSchema(defaultTheme),
 });
 

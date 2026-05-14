@@ -2,14 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { defineSchema, primitives, tailorKit } from "tailorkit";
 
 const tailor = tailorKit({
-  apps: [
-    {
-      id: "some-id",
-      name: "Notes",
-      clientUrl: "http://127.0.0.1:4175",
-    },
-  ],
   basePath: "/api/tailorkit",
+  platform: {
+    rpcUrl: process.env.TAILORKIT_PLATFORM_RPC_URL ?? "http://localhost:3000/api/rpc",
+  },
   schema: defineSchema({ components: { ...primitives } }),
 });
 

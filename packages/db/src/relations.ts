@@ -48,6 +48,42 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.organization.id,
     }),
   },
+  app: {
+    activeVersion: r.one.appVersion({
+      from: r.app.activeVersionId,
+      to: r.appVersion.id,
+    }),
+    pendingUploads: r.many.pendingAssetUpload({
+      from: r.app.id,
+      to: r.pendingAssetUpload.appId,
+    }),
+    versions: r.many.appVersion({
+      from: r.app.id,
+      to: r.appVersion.appId,
+    }),
+  },
+  appVersion: {
+    app: r.one.app({
+      from: r.appVersion.appId,
+      to: r.app.id,
+    }),
+    clientFile: r.one.appVersionClientFile({
+      from: r.appVersion.id,
+      to: r.appVersionClientFile.versionId,
+    }),
+  },
+  pendingAssetUpload: {
+    app: r.one.app({
+      from: r.pendingAssetUpload.appId,
+      to: r.app.id,
+    }),
+  },
+  appVersionClientFile: {
+    version: r.one.appVersion({
+      from: r.appVersionClientFile.versionId,
+      to: r.appVersion.id,
+    }),
+  },
   session: {
     user: r.one.user({
       from: r.session.userId,

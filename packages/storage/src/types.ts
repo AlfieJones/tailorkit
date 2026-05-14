@@ -1,4 +1,4 @@
-export type StorageType = "s3" | "vercel-blob";
+export type StorageType = "s3";
 
 export type StorageBody = Blob | Buffer | Uint8Array | ArrayBuffer | ReadableStream;
 
@@ -46,6 +46,14 @@ export interface CreateUploadUrlOutput {
   key: string;
   uploadUrl: string;
   headers?: Record<string, string>;
+}
+
+export interface UploadToUrlInput {
+  uploadUrl: string;
+  body: StorageBody;
+  headers?: Record<string, string>;
+  contentType?: string;
+  maxBytes?: number;
 }
 
 export interface CreateDownloadUrlInput {

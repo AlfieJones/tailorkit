@@ -1,5 +1,6 @@
 import path from "node:path";
 import { createRequire } from "node:module";
+import { writeFile } from "node:fs/promises";
 import { build as viteBuild } from "vite";
 import { loadTailorKitConfig } from "../config/loader";
 import { assertSupportedPreactVersion } from "../preact-version";
@@ -23,7 +24,8 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
 
   assertSupportedPreactVersion(preactVersion);
 
-  return viteBuild({
+  const resolvedOutDir = path.resolve(loaded.root, outDir);
+  const result = await viteBuild({
     build: {
       emptyOutDir: true,
       lib: {
@@ -31,7 +33,7 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
         fileName: "client",
         formats: ["es"],
       },
-      outDir: path.resolve(loaded.root, outDir),
+      outDir: resolvedOutDir,
       watch: options.watch ? {} : null,
       minify: "oxc",
       rollupOptions: {
@@ -51,6 +53,26 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
     mode: options.mode,
     root: loaded.root,
   });
+
+  await writeFile(
+    path.join(resolvedOutDir, "tailorkit-upload.json"),
+    `${JSON.stringify(
+      {
+        assets: {
+          client: "client.js",
+        },
+        limits: {
+          clientMaxBytes: 1024 * 1024,
+        },
+        version: 1,
+      },
+      null,
+      2,
+    )}\n`,
+    "utf-8",
+  );
+
+  return result;
 };
 
 function getInstalledPreactVersion(root: string): string {

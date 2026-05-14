@@ -23,7 +23,7 @@
     "react": "catalog:",
     "react-dom": "^19.2.6",
     "typescript": "catalog:",
-    "vitest": "^4.0.15"
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "react": ">=19.2.6"

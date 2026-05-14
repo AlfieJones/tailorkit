@@ -10,10 +10,11 @@
     }
   },
   "scripts": {
-    "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate"
+    "drizzle-kit": "node --preserve-symlinks-main ./node_modules/drizzle-kit/bin.cjs",
+    "db:push": "pnpm drizzle-kit push",
+    "db:generate": "pnpm drizzle-kit generate",
+    "db:studio": "pnpm drizzle-kit studio",
+    "db:migrate": "pnpm drizzle-kit migrate"
   },
   "dependencies": {
     "@tailorkit/env": "workspace:*",

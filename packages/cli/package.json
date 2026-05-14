@@ -27,6 +27,6 @@
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "^4.0.15"
+    "vitest": "catalog:"
   }
 }

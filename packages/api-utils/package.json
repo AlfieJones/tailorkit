@@ -1,0 +1,26 @@
+{
+  "name": "@tailorkit/api-utils",
+  "type": "module",
+  "exports": {
+    "./rate-limiting": {
+      "default": "./src/rate-limiting.ts"
+    },
+    "./dev-delay": {
+      "default": "./src/dev-delay.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@orpc/experimental-ratelimit": "^1.14.3",
+    "@orpc/server": "catalog:",
+    "@tailorkit/api-utils": "workspace:*",
+    "@tailorkit/env": "workspace:*",
+    "@tailorkit/kv": "workspace:*",
+    "@upstash/ratelimit": "^2.0.8",
+    "@vercel/functions": "^3.5.1"
+  },
+  "devDependencies": {
+    "@tailorkit/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

@@ -1,10 +1,10 @@
 # @tailorkit/storage
 
-Provider-neutral object storage for TailorKit.
+S3-compatible object storage for TailorKit.
 
-## Local RustFS
+## Local S3
 
-Start the local S3-compatible RustFS service:
+Start the local S3-compatible SeaweedFS service:
 
 ```bash
 pnpm services:start
@@ -13,25 +13,13 @@ pnpm services:start
 Use these environment variables:
 
 ```env
-BLOB_PROVIDER=s3
 BLOB_BUCKET=tailorkit
-BLOB_ENDPOINT=http://localhost:9000
-BLOB_REGION=auto
-BLOB_ACCESS_KEY_ID=rustfsadmin
-BLOB_SECRET_ACCESS_KEY=rustfsadmin
+BLOB_ENDPOINT=http://localhost:8333
+BLOB_REGION=us-east-1
+BLOB_ACCESS_KEY_ID=some_access_key
+BLOB_SECRET_ACCESS_KEY=some_secret_key
 BLOB_FORCE_PATH_STYLE=true
 ```
 
-The same `s3` provider works with any S3-compatible service by changing the
-endpoint, bucket, and credentials.
-
-## Vercel Blob
-
-Use Vercel Blob with private access:
-
-```env
-BLOB_PROVIDER=vercel
-BLOB_READ_WRITE_TOKEN=...
-```
-
-Uploads use `access: "private"` by default.
+The same configuration shape works with any S3-compatible service, including
+R2, S3, MinIO, and SeaweedFS, by changing the endpoint, bucket, and credentials.

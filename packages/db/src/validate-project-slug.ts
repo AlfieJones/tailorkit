@@ -1,9 +1,5 @@
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
-export function isProjectSlugReserved(_slug: string) {
-  return false;
-}
-
 export function validateProjectSlug(slug: string) {
   if (slug.length < 3) {
     return {

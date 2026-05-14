@@ -30,7 +30,17 @@ interface SerializedScreen {
   context?: JsonSchema;
 }
 
+interface SerializedActions {
+  [key: string]: SerializedAction | SerializedActions;
+}
+
+interface SerializedAction {
+  input?: JsonSchema;
+  output?: JsonSchema;
+}
+
 interface TailorKitSchemaFile {
+  actions?: SerializedActions;
   components?: Record<string, SerializedComponent>;
   screens?: Record<string, SerializedScreen>;
 }
@@ -254,7 +264,65 @@ const renderComponent = (name: string, component: SerializedComponent): string =
   return lines.join("\n");
 };
 
+const isSerializedAction = (
+  value: SerializedAction | SerializedActions,
+): value is SerializedAction => "input" in value || "output" in value;
+
+const renderActions = (actions: SerializedActions, depth = 0): string => {
+  const indent = " ".repeat(depth);
+  const propertyIndent = " ".repeat(depth + 2);
+  const lines = ["{"];
+
+  for (const [key, value] of Object.entries(actions)) {
+    if (isSerializedAction(value)) {
+      const input = toTypeScriptType(value.input, depth + 2);
+      const output = toTypeScriptType(value.output, depth + 2);
+      lines.push(
+        `${propertyIndent}${toPropertyKey(key)}: (input: ${input}) => Promise<${output}>;`,
+      );
+    } else {
+      const nested = renderActions(value, depth + 2).split("\n");
+      lines.push(`${propertyIndent}${toPropertyKey(key)}: ${nested[0]}`);
+      lines.push(...nested.slice(1, -1));
+      lines.push(`${nested.at(-1)};`);
+    }
+  }
+
+  lines.push(`${indent}}`);
+  return lines.join("\n");
+};
+
+const renderActionRuntime = (actions: SerializedActions, pathParts: string[] = []): string => {
+  const lines = ["{"];
+
+  for (const [key, value] of Object.entries(actions)) {
+    const path = [...pathParts, key];
+    if (isSerializedAction(value)) {
+      lines.push(`  ${toPropertyKey(key)}: async (input: unknown) => {`);
+      lines.push(
+        `    const response = await fetch(${quote(`/api/tailorkit/actions/${path.join(".")}`)}, {`,
+      );
+      lines.push(`      body: JSON.stringify(input),`);
+      lines.push(`      headers: { "content-type": "application/json" },`);
+      lines.push(`      method: "POST",`);
+      lines.push(`    });`);
+      lines.push(`    if (!response.ok) throw new Error(await response.text());`);
+      lines.push(`    return response.json();`);
+      lines.push(`  },`);
+    } else {
+      const nested = renderActionRuntime(value, path).split("\n");
+      lines.push(`  ${toPropertyKey(key)}: ${nested[0]}`);
+      lines.push(...nested.slice(1).map((line) => `  ${line}`));
+      lines.push(",");
+    }
+  }
+
+  lines.push("}");
+  return lines.join("\n");
+};
+
 export const renderGeneratedTypes = (schema: TailorKitSchemaFile): string => {
+  const actionsType = renderActions(schema.actions ?? {});
   const chunks = [
     generatedHeader,
     renderScreenProps(schema.screens ?? {}),
@@ -263,7 +331,9 @@ export const renderGeneratedTypes = (schema: TailorKitSchemaFile): string => {
 }
 
 export type ScreenPath = keyof ScreenPropsByPath & string;
-export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];`,
+export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
+export type TailorKitActions = ${actionsType};
+export const actions = ${renderActionRuntime(schema.actions ?? {})} as TailorKitActions;`,
   ];
 
   for (const [name, component] of Object.entries(schema.components ?? {})) {

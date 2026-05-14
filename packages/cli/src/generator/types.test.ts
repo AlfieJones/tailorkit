@@ -195,6 +195,42 @@ describe("renderGeneratedTypes", () => {
 
     expect(output).toContain("background?: never;");
   });
+
+  it("generates typed action callers without request context", () => {
+    const output = renderGeneratedTypes({
+      actions: {
+        todo: {
+          create: {
+            input: {
+              properties: {
+                title: { type: "string" },
+              },
+              required: ["title"],
+              type: "object",
+            },
+            output: {
+              properties: {
+                id: { type: "string" },
+                title: { type: "string" },
+              },
+              required: ["id", "title"],
+              type: "object",
+            },
+          },
+        },
+      },
+      components: {},
+      screens: {},
+    });
+
+    expect(output).toContain("export type TailorKitActions = {");
+    expect(output).toContain("todo: {");
+    expect(output).toContain("create: (input: {");
+    expect(output).toContain("title: string;");
+    expect(output).toContain("}) => Promise<{");
+    expect(output).toContain("id: string;");
+    expect(output).not.toContain("requestContext");
+  });
 });
 
 describe("generateTypes", () => {

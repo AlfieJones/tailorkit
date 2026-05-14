@@ -29,23 +29,12 @@ export const env = createEnv({
         });
       }
 
-      if (
-        values.BLOB_PROVIDER === "s3" &&
-        !(values.BLOB_BUCKET && values.BLOB_ACCESS_KEY_ID && values.BLOB_SECRET_ACCESS_KEY)
-      ) {
+      if (values.BLOB_BUCKET && !(values.BLOB_ACCESS_KEY_ID && values.BLOB_SECRET_ACCESS_KEY)) {
         context.addIssue({
           code: "custom",
           message:
             "S3-compatible blob storage requires BLOB_BUCKET, BLOB_ACCESS_KEY_ID, and BLOB_SECRET_ACCESS_KEY.",
           path: ["BLOB_BUCKET"],
-        });
-      }
-
-      if (values.BLOB_PROVIDER === "vercel" && !values.BLOB_READ_WRITE_TOKEN) {
-        context.addIssue({
-          code: "custom",
-          message: "Vercel Blob storage requires BLOB_READ_WRITE_TOKEN.",
-          path: ["BLOB_READ_WRITE_TOKEN"],
         });
       }
 
@@ -105,9 +94,7 @@ export const env = createEnv({
     BLOB_BUCKET: z.string().min(1).optional(),
     BLOB_ENDPOINT: z.url().optional(),
     BLOB_FORCE_PATH_STYLE: z.stringbool().optional(),
-    BLOB_PROVIDER: z.enum(["vercel", "s3"]),
     BLOB_PUBLIC_BASE_URL: z.url().optional(),
-    BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
     BLOB_REGION: z.string().min(1).optional(),
     BLOB_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   },

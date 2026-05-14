@@ -1,0 +1,22 @@
+{
+  "name": "@tailorkit/api-platform",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@orpc/client": "catalog:",
+    "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
+    "@tailorkit/api-utils": "workspace:*",
+    "@tailorkit/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailorkit/config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -18,10 +18,12 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
+    "@tailorkit/api-utils": "workspace:*",
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
+    "@tailorkit/storage": "workspace:*",
     "@types/pg": "catalog:",
     "@upstash/ratelimit": "^2.0.0",
     "@vercel/functions": "^3.5.0",
@@ -34,6 +36,6 @@
     "@electric-sql/pglite": "^0.3.15",
     "@tailorkit/config": "workspace:*",
     "typescript": "catalog:",
-    "vitest": "^4.1.6"
+    "vitest": "catalog:"
   }
 }

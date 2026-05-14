@@ -1,8 +1,8 @@
 import { ORPCError, os } from "@orpc/server";
 import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
-import { env } from "@tailorkit/env/server";
-import { ratelimitMiddleware } from "./rate-limiting";
+import { ratelimitMiddleware } from "@tailorkit/api-utils/rate-limiting";
+import { devDelayMiddleware } from "@tailorkit/api-utils/dev-delay";
 import type { Context } from "./context";
 import type { ac } from "@tailorkit/auth/lib/permissions";
 
@@ -14,24 +14,9 @@ export const o = os.$context<Context>().errors({
   TOO_MANY_REQUESTS: {},
 });
 
-const timingMiddleware = o.middleware(async ({ path, next }) => {
-  const start = Date.now();
-
-  if (env.NODE_ENV === "development") {
-    // artificial delay in dev 100-500ms
-    const waitMs = Math.floor(Math.random() * 400) + 100;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
-  }
-
-  const result = await next();
-
-  const end = Date.now();
-  console.log(`[ORPC] ${path} took ${end - start}ms to execute`);
-
-  return result;
-});
-
-export const publicProcedure = o.use(timingMiddleware).use(ratelimitMiddleware);
+export const publicProcedure = o
+  .use(devDelayMiddleware)
+  .use(ratelimitMiddleware(({ context }) => context.user?.id ?? `ip:${context.ip}`));
 
 const requireAuth = o.middleware(({ context, next }) => {
   if (!context.session || !context.user) {
