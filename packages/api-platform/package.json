@@ -12,7 +12,9 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@tailorkit/api-utils": "workspace:*",
-    "@tailorkit/db": "workspace:*"
+    "@tailorkit/db": "workspace:*",
+    "@tailorkit/storage": "workspace:*",
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",

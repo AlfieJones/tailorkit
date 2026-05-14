@@ -47,43 +47,45 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.project.organizationId,
       to: r.organization.id,
     }),
+    apps: r.many.app({
+      from: r.project.id,
+      to: r.app.projectId,
+    }),
   },
+
   app: {
-    activeVersion: r.one.appVersion({
-      from: r.app.activeVersionId,
-      to: r.appVersion.id,
+    project: r.one.project({
+      from: r.app.projectId,
+      to: r.project.id,
     }),
-    pendingUploads: r.many.pendingAssetUpload({
-      from: r.app.id,
-      to: r.pendingAssetUpload.appId,
+    currentDeployment: r.one.appDeployment({
+      from: r.app.currentDeploymentId,
+      to: r.appDeployment.id,
     }),
-    versions: r.many.appVersion({
+    deployments: r.many.appDeployment({
       from: r.app.id,
-      to: r.appVersion.appId,
+      to: r.appDeployment.appId,
     }),
   },
-  appVersion: {
+
+  appDeployment: {
     app: r.one.app({
-      from: r.appVersion.appId,
+      from: r.appDeployment.appId,
       to: r.app.id,
     }),
-    clientFile: r.one.appVersionClientFile({
-      from: r.appVersion.id,
-      to: r.appVersionClientFile.versionId,
+    files: r.many.appDeploymentFile({
+      from: r.appDeployment.id,
+      to: r.appDeploymentFile.appDeploymentId,
     }),
   },
-  pendingAssetUpload: {
-    app: r.one.app({
-      from: r.pendingAssetUpload.appId,
-      to: r.app.id,
+
+  appDeploymentFile: {
+    appDeployment: r.one.appDeployment({
+      from: r.appDeploymentFile.appDeploymentId,
+      to: r.appDeployment.id,
     }),
   },
-  appVersionClientFile: {
-    version: r.one.appVersion({
-      from: r.appVersionClientFile.versionId,
-      to: r.appVersion.id,
-    }),
-  },
+
   session: {
     user: r.one.user({
       from: r.session.userId,

@@ -27,7 +27,7 @@ export const app = pgTable(
 
     resourceId: text("resource_id").notNull(),
 
-    name: text("name"),
+    name: text("name").notNull(),
     description: text("description"),
 
     currentDeploymentId: uuid("current_deployment_id").references(
@@ -46,7 +46,7 @@ export const app = pgTable(
 
 export const App = createSelectSchema(app, {
   name: z.string().max(127),
-  description: z.string().max(255),
+  description: z.string().max(255).nullable(),
   resourceId: z.string().max(255),
 });
 export type App = z.output<typeof App>;
@@ -68,9 +68,10 @@ export const appDeployment = pgTable("app_deployment", {
 
   status: appDeploymentStatus("status").default("deploying").notNull(),
 
-  clientEntryFileId: uuid("client_entry_file_id")
-    .notNull()
-    .references((): AnyPgColumn => appDeploymentFile.id, { onDelete: "cascade" }),
+  clientEntryFileId: uuid("client_entry_file_id").references(
+    (): AnyPgColumn => appDeploymentFile.id,
+    { onDelete: "restrict" },
+  ),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -129,7 +130,7 @@ export const appDeploymentFile = pgTable(
 export const AppDeploymentFile = createSelectSchema(appDeploymentFile, {
   objectKey: z
     .string()
-    .max(255)
+    .max(512)
     .regex(
       /^(?:[a-zA-Z0-9._-]+\/)*[a-zA-Z0-9._-]+\.[a-zA-Z0-9]+$/u,
       "Must be a valid object key like assets/client.js",

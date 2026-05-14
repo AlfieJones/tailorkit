@@ -698,6 +698,12 @@ importers:
       '@tailorkit/db':
         specifier: workspace:*
         version: link:../db
+      '@tailorkit/storage':
+        specifier: workspace:*
+        version: link:../storage
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 1.0.0-rc.2-e38a2ba(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(@upstash/redis@1.38.0)(arktype@2.2.0)(better-sqlite3@12.10.0)(pg@8.20.0)(valibot@1.4.0(typescript@6.0.3))(zod@4.4.3)
     devDependencies:
       '@tailorkit/config':
         specifier: workspace:*

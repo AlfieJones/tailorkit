@@ -18,15 +18,15 @@ export interface PutObjectOutput {
   etag?: string;
 }
 
-export interface GetObjectInput {
+export interface HeadObjectInput {
   key: string;
 }
 
-export interface GetObjectOutput {
+export interface HeadObjectOutput {
   key: string;
-  body: ReadableStream;
   contentType?: string;
   contentLength?: number;
+  checksumSha256?: string;
   etag?: string;
   metadata?: Record<string, string>;
 }
@@ -37,6 +37,7 @@ export interface DeleteObjectInput {
 
 export interface CreateUploadUrlInput {
   key: string;
+  checksumSha256?: string;
   contentType?: string;
   expiresInSeconds?: number;
   metadata?: Record<string, string>;
@@ -68,9 +69,8 @@ export interface CreateDownloadUrlOutput {
 
 export interface Storage<T extends StorageType = StorageType> {
   readonly type: T;
-  put: (input: PutObjectInput) => Promise<PutObjectOutput>;
-  get: (input: GetObjectInput) => Promise<GetObjectOutput>;
+  head: (input: HeadObjectInput) => Promise<HeadObjectOutput>;
   delete: (input: DeleteObjectInput) => Promise<void>;
-  createUploadUrl?: (input: CreateUploadUrlInput) => Promise<CreateUploadUrlOutput>;
-  createDownloadUrl?: (input: CreateDownloadUrlInput) => Promise<CreateDownloadUrlOutput>;
+  createUploadUrl: (input: CreateUploadUrlInput) => Promise<CreateUploadUrlOutput>;
+  createDownloadUrl: (input: CreateDownloadUrlInput) => Promise<CreateDownloadUrlOutput>;
 }

@@ -6,7 +6,10 @@ import { db } from "@tailorkit/db";
 
 const rateLimiter = createRatelimiter({ maxRequests: 100, window: 1000 });
 
-export const o = os.$context<Context>();
+export const o = os.$context<Context>().$route({
+  inputStructure: "detailed",
+  outputStructure: "detailed",
+});
 
 export const protectedRouter = o
   .use(devDelayMiddleware)

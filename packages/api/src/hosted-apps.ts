@@ -192,7 +192,7 @@ export async function publishHostedAppVersion(input: PublishHostedAppVersionInpu
     throw new Error("Pending client upload has expired.");
   }
 
-  const object = await storage.get({ key: upload.objectKey });
+  const object = await storage.head({ key: upload.objectKey });
   if (object.contentLength !== undefined && object.contentLength > upload.maxBytes) {
     await db
       .update(pendingAssetUpload)
