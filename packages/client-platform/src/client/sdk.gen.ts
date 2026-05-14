@@ -44,9 +44,9 @@ export type Options<
 };
 
 export const appsList = <ThrowOnError extends boolean = false>(
-  options?: Options<AppsListData, ThrowOnError>,
+  options: Options<AppsListData, ThrowOnError>,
 ) =>
-  (options?.client ?? client).get<AppsListResponses, unknown, ThrowOnError>({
+  (options.client ?? client).get<AppsListResponses, unknown, ThrowOnError>({
     url: "/apps",
     ...options,
   });
@@ -107,7 +107,7 @@ export const deploymentsList = <ThrowOnError extends boolean = false>(
   options: Options<DeploymentsListData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<DeploymentsListResponses, unknown, ThrowOnError>({
-    url: "/apps/{appId}/deployments",
+    url: "/deployments",
     ...options,
   });
 
@@ -115,7 +115,7 @@ export const deploymentsCreate = <ThrowOnError extends boolean = false>(
   options: Options<DeploymentsCreateData, ThrowOnError>,
 ) =>
   (options.client ?? client).post<DeploymentsCreateResponses, unknown, ThrowOnError>({
-    url: "/apps/{appId}/deployments",
+    url: "/deployments",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -127,7 +127,7 @@ export const deploymentsGet = <ThrowOnError extends boolean = false>(
   options: Options<DeploymentsGetData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<DeploymentsGetResponses, unknown, ThrowOnError>({
-    url: "/apps/{appId}/deployments/{deploymentId}",
+    url: "/deployments/{deploymentId}",
     ...options,
   });
 
@@ -135,7 +135,7 @@ export const deploymentsPublish = <ThrowOnError extends boolean = false>(
   options: Options<DeploymentsPublishData, ThrowOnError>,
 ) =>
   (options.client ?? client).post<DeploymentsPublishResponses, unknown, ThrowOnError>({
-    url: "/apps/{appId}/deployments/{deploymentId}",
+    url: "/deployments/{deploymentId}",
     ...options,
     headers: {
       "Content-Type": "application/json",

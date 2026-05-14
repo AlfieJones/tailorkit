@@ -5,8 +5,9 @@ import { defaultTheme } from "#/lib/demo-theme";
 
 const tailor = tailorKit({
   basePath: "/api/tailorkit",
-  platform: {
-    rpcUrl: process.env.TAILORKIT_PLATFORM_RPC_URL ?? "http://localhost:3000/api/rpc",
+  $internal: {
+    platformBaseUrl:
+      process.env.TAILORKIT_PLATFORM_BASE_URL ?? "http://localhost:3000/api/platform",
   },
   schema: createDemoSchema(defaultTheme),
 });
@@ -14,7 +15,7 @@ const tailor = tailorKit({
 export const Route = createFileRoute("/api/tailorkit/$")({
   server: {
     handlers: {
-      GET: ({ request }) => tailor.fetch(request),
+      GET: ({ request }) => tailor.handler(request),
     },
   },
 });

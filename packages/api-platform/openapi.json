@@ -17,6 +17,7 @@
           {
             "name": "page",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "integer",
               "minimum": 1,
@@ -29,11 +30,22 @@
           {
             "name": "pageSize",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 100,
               "default": 20
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
             },
             "allowEmptyValue": true,
             "allowReserved": true
@@ -259,6 +271,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
           }
         ],
         "responses": {
@@ -344,6 +366,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
           }
         ],
         "responses": {
@@ -376,6 +408,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
           }
         ],
         "requestBody": {
@@ -399,13 +441,9 @@
                         "type": "null"
                       }
                     ]
-                  },
-                  "resourceId": {
-                    "type": "string",
-                    "maxLength": 255
                   }
                 },
-                "required": ["name", "description", "resourceId"]
+                "required": ["name", "description"]
               }
             }
           }
@@ -495,6 +533,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
           }
         ],
         "requestBody": {
@@ -587,21 +635,14 @@
         }
       }
     },
-    "/apps/{appId}/deployments": {
+    "/deployments": {
       "get": {
         "operationId": "deployments.list",
         "parameters": [
           {
-            "name": "appId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "page",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "integer",
               "minimum": 1,
@@ -614,11 +655,32 @@
           {
             "name": "pageSize",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 100,
               "default": 20
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
+          },
+          {
+            "name": "appId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
             },
             "allowEmptyValue": true,
             "allowReserved": true
@@ -710,16 +772,6 @@
       },
       "post": {
         "operationId": "deployments.create",
-        "parameters": [
-          {
-            "name": "appId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -727,6 +779,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
                   "assets": {
                     "type": "array",
                     "prefixItems": [
@@ -765,9 +820,12 @@
                         ]
                       }
                     ]
+                  },
+                  "resourceId": {
+                    "type": "string"
                   }
                 },
-                "required": ["assets"]
+                "required": ["appId", "assets", "resourceId"]
               }
             }
           }
@@ -927,18 +985,10 @@
         }
       }
     },
-    "/apps/{appId}/deployments/{deploymentId}": {
+    "/deployments/{deploymentId}": {
       "get": {
         "operationId": "deployments.get",
         "parameters": [
-          {
-            "name": "appId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "deploymentId",
             "in": "path",
@@ -946,6 +996,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
           }
         ],
         "responses": {
@@ -1008,14 +1068,6 @@
         "operationId": "deployments.publish",
         "parameters": [
           {
-            "name": "appId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "deploymentId",
             "in": "path",
             "required": true,
@@ -1031,11 +1083,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "resourceId": {
+                    "type": "string"
+                  },
                   "rollout": {
                     "type": "boolean",
                     "default": true
                   }
-                }
+                },
+                "required": ["resourceId"]
               }
             }
           }

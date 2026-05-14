@@ -44,6 +44,32 @@ const deploymentAssetUpload = z.object({
   uploadUrl: z.url(),
 });
 
+const requireDeployment = o.middleware(
+  async ({ next, context }, input: { deploymentId: string; resourceId: string }) => {
+    const deploymentWithApp = await db.query.appDeployment.findFirst({
+      where: {
+        id: input.deploymentId,
+      },
+      with: {
+        app: true,
+      },
+    });
+
+    if (
+      !deploymentWithApp ||
+      !deploymentWithApp.app ||
+      deploymentWithApp.app.projectId !== context.project.id ||
+      deploymentWithApp.app.resourceId !== input.resourceId
+    ) {
+      throw new ORPCError("NOT_FOUND", { message: "Deployment not found." });
+    }
+
+    const { app: scopedApp, ...deployment } = deploymentWithApp;
+
+    return next({ context: { ...context, app: scopedApp, deployment } });
+  },
+);
+
 function hexToBase64(hex: string): string {
   const bytes = new Uint8Array(hex.length / 2);
 
@@ -61,12 +87,11 @@ const listAppDeployments = protectedRouter
   })
   .input(
     z.object({
-      params: z.object({ appId: z.string() }),
-      query: paginationQuery,
+      query: paginationQuery.extend({ appId: z.string(), resourceId: z.string() }),
     }),
   )
   .output(paginatedOutput(AppDeployment))
-  .use(requireApp, ({ params: { appId } }) => ({ appId }))
+  .use(requireApp, ({ query: { appId, resourceId } }) => ({ appId, resourceId }))
   .handler(async ({ context, input }) => {
     const { page, pageSize } = input.query;
     const deployments = await db.query.appDeployment.findMany({
@@ -97,23 +122,18 @@ const getAppDeployment = protectedRouter
     path: "/:deploymentId",
     method: "GET",
   })
-  .input(z.object({ params: z.object({ appId: z.string(), deploymentId: z.string() }) }))
+  .input(
+    z.object({
+      params: z.object({ deploymentId: z.string() }),
+      query: z.object({ resourceId: z.string() }),
+    }),
+  )
   .output(z.object({ body: AppDeployment }))
-  .use(requireApp, ({ params: { appId } }) => ({ appId }))
-  .handler(async ({ context, input }) => {
-    const deployment = await db.query.appDeployment.findFirst({
-      where: {
-        appId: context.app.id,
-        id: input.params.deploymentId,
-      },
-    });
-
-    if (!deployment) {
-      throw new ORPCError("NOT_FOUND", { message: "Deployment not found." });
-    }
-
-    return { body: deployment };
-  });
+  .use(requireDeployment, ({ params: { deploymentId }, query: { resourceId } }) => ({
+    deploymentId,
+    resourceId,
+  }))
+  .handler(({ context }) => ({ body: context.deployment }));
 
 const createAppDeployment = protectedRouter
   .route({
@@ -123,9 +143,10 @@ const createAppDeployment = protectedRouter
   .input(
     z.object({
       body: z.object({
+        appId: z.string(),
         assets: z.tuple([createDeploymentAssetInput]),
+        resourceId: z.string(),
       }),
-      params: z.object({ appId: z.string() }),
     }),
   )
   .output(
@@ -136,7 +157,7 @@ const createAppDeployment = protectedRouter
       }),
     }),
   )
-  .use(requireApp, ({ params: { appId } }) => ({ appId }))
+  .use(requireApp, ({ body: { appId, resourceId } }) => ({ appId, resourceId }))
   .handler(async ({ context, input }) => {
     const [asset] = input.body.assets;
     const deploymentId = crypto.randomUUID();
@@ -221,25 +242,19 @@ const publishAppDeployment = protectedRouter
   .input(
     z.object({
       body: z.object({
+        resourceId: z.string(),
         rollout: z.boolean().optional().default(true),
       }),
-      params: z.object({ appId: z.string(), deploymentId: z.string() }),
+      params: z.object({ deploymentId: z.string() }),
     }),
   )
   .output(z.object({ body: AppDeployment }))
-  .use(requireApp, ({ params: { appId } }) => ({ appId }))
+  .use(requireDeployment, ({ body: { resourceId }, params: { deploymentId } }) => ({
+    deploymentId,
+    resourceId,
+  }))
   .handler(async ({ context, input }) => {
-    const deployment = await db.query.appDeployment.findFirst({
-      where: {
-        appId: context.app.id,
-        id: input.params.deploymentId,
-      },
-    });
-
-    if (!deployment) {
-      throw new ORPCError("NOT_FOUND", { message: "Deployment not found." });
-    }
-
+    const { deployment } = context;
     const files = await db.query.appDeploymentFile.findMany({
       where: {
         appDeploymentId: deployment.id,
@@ -317,7 +332,7 @@ const publishAppDeployment = protectedRouter
     return { body: publishedDeployment };
   });
 
-export const deploymentRouter = o.prefix("/apps/:appId/deployments").router({
+export const deploymentRouter = o.prefix("/deployments").router({
   list: listAppDeployments,
   get: getAppDeployment,
   create: createAppDeployment,

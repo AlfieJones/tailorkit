@@ -7,9 +7,10 @@ export type ClientOptions = {
 export type AppsListData = {
   body?: never;
   path?: never;
-  query?: {
+  query: {
     page?: number;
     pageSize?: number;
+    resourceId: string;
   };
   url: "/apps";
 };
@@ -73,7 +74,9 @@ export type AppsDeleteData = {
   path: {
     appId: string;
   };
-  query?: never;
+  query: {
+    resourceId: string;
+  };
   url: "/apps/{appId}";
 };
 
@@ -93,7 +96,9 @@ export type AppsGetData = {
   path: {
     appId: string;
   };
-  query?: never;
+  query: {
+    resourceId: string;
+  };
   url: "/apps/{appId}";
 };
 
@@ -119,12 +124,13 @@ export type AppsUpdateData = {
   body: {
     name: string;
     description: string | null;
-    resourceId: string;
   };
   path: {
     appId: string;
   };
-  query?: never;
+  query: {
+    resourceId: string;
+  };
   url: "/apps/{appId}";
 };
 
@@ -153,7 +159,9 @@ export type AppsDeployData = {
   path: {
     appId: string;
   };
-  query?: never;
+  query: {
+    resourceId: string;
+  };
   url: "/apps/{appId}/deploy";
 };
 
@@ -177,14 +185,14 @@ export type AppsDeployResponse = AppsDeployResponses[keyof AppsDeployResponses];
 
 export type DeploymentsListData = {
   body?: never;
-  path: {
-    appId: string;
-  };
-  query?: {
+  path?: never;
+  query: {
     page?: number;
     pageSize?: number;
+    appId: string;
+    resourceId: string;
   };
-  url: "/apps/{appId}/deployments";
+  url: "/deployments";
 };
 
 export type DeploymentsListResponses = {
@@ -212,6 +220,7 @@ export type DeploymentsListResponse = DeploymentsListResponses[keyof Deployments
 
 export type DeploymentsCreateData = {
   body: {
+    appId: string;
     assets: [
       {
         contentType: "application/javascript";
@@ -221,12 +230,11 @@ export type DeploymentsCreateData = {
         objectKey: string;
       },
     ];
+    resourceId: string;
   };
-  path: {
-    appId: string;
-  };
+  path?: never;
   query?: never;
-  url: "/apps/{appId}/deployments";
+  url: "/deployments";
 };
 
 export type DeploymentsCreateResponses = {
@@ -271,11 +279,12 @@ export type DeploymentsCreateResponse =
 export type DeploymentsGetData = {
   body?: never;
   path: {
-    appId: string;
     deploymentId: string;
   };
-  query?: never;
-  url: "/apps/{appId}/deployments/{deploymentId}";
+  query: {
+    resourceId: string;
+  };
+  url: "/deployments/{deploymentId}";
 };
 
 export type DeploymentsGetResponses = {
@@ -296,14 +305,14 @@ export type DeploymentsGetResponse = DeploymentsGetResponses[keyof DeploymentsGe
 
 export type DeploymentsPublishData = {
   body: {
+    resourceId: string;
     rollout?: boolean;
   };
   path: {
-    appId: string;
     deploymentId: string;
   };
   query?: never;
-  url: "/apps/{appId}/deployments/{deploymentId}";
+  url: "/deployments/{deploymentId}";
 };
 
 export type DeploymentsPublishResponses = {

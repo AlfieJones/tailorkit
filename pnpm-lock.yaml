@@ -892,12 +892,15 @@ importers:
       '@orpc/client':
         specifier: 'catalog:'
         version: 1.14.3(@opentelemetry/api@1.9.1)
+      '@orpc/server':
+        specifier: 'catalog:'
+        version: 1.14.3(@opentelemetry/api@1.9.1)(crossws@0.4.5(srvx@0.11.15))(ws@8.20.1)
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
-      h3:
-        specifier: 2.0.1-rc.20
-        version: 2.0.1-rc.20(crossws@0.4.5(srvx@0.11.15))
+      '@tailorkit/client-platform':
+        specifier: workspace:*
+        version: link:../client-platform
       zod:
         specifier: 'catalog:'
         version: 4.4.3

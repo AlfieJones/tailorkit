@@ -15,14 +15,16 @@ export const protectedRouter = o
   .use(devDelayMiddleware)
   .use(ratelimitMiddleware(rateLimiter, ({ context }) => context.organization.id));
 
-export const requireApp = o.middleware(async ({ context, next }, input: { appId: string }) => {
-  const app = await db.query.app.findFirst({
-    where: { id: input.appId, projectId: context.project.id },
-  });
+export const requireApp = o.middleware(
+  async ({ context, next }, input: { appId: string; resourceId: string }) => {
+    const app = await db.query.app.findFirst({
+      where: { id: input.appId, projectId: context.project.id, resourceId: input.resourceId },
+    });
 
-  if (!app) {
-    throw new ORPCError("NOT_FOUND");
-  }
+    if (!app) {
+      throw new ORPCError("NOT_FOUND");
+    }
 
-  return next({ context: { ...context, app } });
-});
+    return next({ context: { ...context, app } });
+  },
+);
