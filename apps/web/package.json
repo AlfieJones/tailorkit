@@ -19,6 +19,8 @@
     "@polar-sh/better-auth": "catalog:",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailorkit/api": "workspace:*",
+    "@tailorkit/api-platform": "workspace:*",
+    "@tailorkit/api-utils": "workspace:*",
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/env": "workspace:*",

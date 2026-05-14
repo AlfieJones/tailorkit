@@ -9,6 +9,8 @@ import { waitUntil as vercelWaitUntil } from "@vercel/functions";
 import { env } from "@tailorkit/env/server";
 import type { Context, Meta, MiddlewareOptions } from "@orpc/server";
 
+export { RatelimitHandlerPlugin } from "@orpc/experimental-ratelimit";
+
 export function createRatelimiter({
   maxRequests,
   window,

@@ -4,14 +4,24 @@
   "exports": {
     ".": {
       "default": "./src/index.ts"
+    },
+    "./openapi": {
+      "default": "./openapi.json"
+    },
+    "./context": {
+      "default": "./src/context.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "generate:openapi": "tsx scripts/generate-openapi.ts"
+  },
   "dependencies": {
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
+    "@orpc/zod": "catalog:",
     "@tailorkit/api-utils": "workspace:*",
+    "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/storage": "workspace:*",
     "drizzle-orm": "catalog:"

@@ -1,0 +1,28 @@
+{
+  "name": "@tailorkit/client-platform",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./client": {
+      "default": "./src/client/index.ts"
+    },
+    "./client/*": {
+      "default": "./src/client/*.ts"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-ts",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hey-api/client-fetch": "^0.13.1"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.97.1",
+    "@tailorkit/api-platform": "workspace:*",
+    "@tailorkit/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

@@ -1,5 +1,3 @@
-import { polar, checkout, portal, usage } from "@polar-sh/better-auth";
-import { apiKey } from "@better-auth/api-key";
 import { createDb } from "@tailorkit/db";
 import * as schema from "@tailorkit/db/schema/auth";
 import { sendBetterAuthOtpEmail, sendOrganizationInvitationEmail } from "@tailorkit/email";
@@ -12,8 +10,8 @@ import { waitUntil as vercelWaitUntil } from "@vercel/functions";
 import { haveIBeenPwned } from "better-auth/plugins";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { organization } from "better-auth/plugins/organization";
-import { polarClient } from "./lib/payments";
 import { ac, roles } from "./lib/permissions";
+import { apiKey } from "@better-auth/api-key";
 
 const noopWaitUntil = (promise: Promise<unknown>) => void promise;
 
@@ -119,29 +117,6 @@ export function createAuth() {
           : {
               storage: "database" as const,
             }),
-      }),
-      polar({
-        client: polarClient,
-        createCustomerOnSignUp: false,
-        enableCustomerPortal: true,
-        use: [
-          checkout({
-            authenticatedUsersOnly: true,
-            products: [
-              {
-                productId: "your-product-id",
-                slug: "pro",
-              },
-              {
-                productId: "your-product-id",
-                slug: "enterprise",
-              },
-            ],
-            successUrl: "/todo-success?checkout_id={CHECKOUT_ID}",
-          }),
-          portal(),
-          usage({ creditProducts: [{ slug: "builder-credits", productId: "some-product-id" }] }),
-        ],
       }),
       tanstackStartCookies(),
     ],

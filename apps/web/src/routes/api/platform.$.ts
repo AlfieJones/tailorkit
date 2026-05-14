@@ -1,24 +1,30 @@
 import { onError } from "@orpc/server";
-import { RPCHandler } from "@orpc/server/fetch";
-import { createContext } from "@tailorkit/api/context";
-import { appRouter } from "@tailorkit/api/routers/index";
+import { createContext } from "@tailorkit/api-platform/context";
+import { platformRouter } from "@tailorkit/api-platform";
 import { RatelimitHandlerPlugin } from "@tailorkit/api-utils/rate-limiting";
 import { createFileRoute } from "@tanstack/react-router";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
 
-const rpcHandler = new RPCHandler(appRouter, {
+const handler = new OpenAPIHandler(platformRouter, {
+  plugins: [new RatelimitHandlerPlugin()],
   interceptors: [
     onError((error) => {
       console.error(error);
     }),
   ],
-  plugins: [new RatelimitHandlerPlugin()],
 });
 
 async function handle({ request }: { request: Request }) {
-  const rpcResult = await rpcHandler.handle(request, {
-    context: await createContext({ request }),
-    prefix: "/api/rpc",
+  const context = await createContext({ request }).catch((error) => {
+    console.error(error);
+    throw new Response("Unauthorized", { status: 401 });
   });
+
+  const rpcResult = await handler.handle(request, {
+    context,
+    prefix: "/api/platform",
+  });
+
   if (rpcResult.response) {
     return rpcResult.response;
   }
@@ -26,7 +32,7 @@ async function handle({ request }: { request: Request }) {
   return new Response("Not found", { status: 404 });
 }
 
-export const Route = createFileRoute("/api/rpc/$")({
+export const Route = createFileRoute("/api/platform/$")({
   server: {
     handlers: {
       DELETE: handle,

@@ -1,0 +1,14 @@
+{
+  "extends": "@tailorkit/config/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["ESNext", "DOM"],
+    "sourceMap": true,
+    "outDir": "dist",
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo",
+    "composite": true,
+    "strictNullChecks": true
+  },
+  "include": ["src", "openapi-ts.config.ts"]
+}

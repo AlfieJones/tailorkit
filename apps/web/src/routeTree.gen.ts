@@ -22,6 +22,7 @@ import { Route as appAccountRouteRouteImport } from './routes/(app)/account/rout
 import { Route as appOrgSlugRouteRouteImport } from './routes/(app)/$orgSlug/route'
 import { Route as appOrgSlugIndexRouteImport } from './routes/(app)/$orgSlug/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
+import { Route as ApiPlatformSplatRouteImport } from './routes/api/platform.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as appAccountOrganizationsRouteImport } from './routes/(app)/account/organizations'
 import { Route as appAccountInvitesRouteImport } from './routes/(app)/account/invites'
@@ -102,6 +103,11 @@ const appOrgSlugIndexRoute = appOrgSlugIndexRouteImport.update({
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPlatformSplatRoute = ApiPlatformSplatRouteImport.update({
+  id: '/api/platform/$',
+  path: '/api/platform/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -223,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/account/invites': typeof appAccountInvitesRoute
   '/account/organizations': typeof appAccountOrganizationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/platform/$': typeof ApiPlatformSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/$orgSlug/': typeof appOrgSlugIndexRoute
   '/$orgSlug/~': typeof appOrgSlugChar126orgRouteRouteWithChildren
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/account/invites': typeof appAccountInvitesRoute
   '/account/organizations': typeof appAccountOrganizationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/platform/$': typeof ApiPlatformSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/$orgSlug': typeof appOrgSlugIndexRoute
   '/account/settings/security': typeof appAccountSettingsSecurityRoute
@@ -282,6 +290,7 @@ export interface FileRoutesById {
   '/(app)/account/invites': typeof appAccountInvitesRoute
   '/(app)/account/organizations': typeof appAccountOrganizationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/platform/$': typeof ApiPlatformSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/(app)/$orgSlug/': typeof appOrgSlugIndexRoute
   '/(app)/$orgSlug/~/(org)': typeof appOrgSlugChar126orgRouteRouteWithChildren
@@ -315,6 +324,7 @@ export interface FileRouteTypes {
     | '/account/invites'
     | '/account/organizations'
     | '/api/auth/$'
+    | '/api/platform/$'
     | '/api/rpc/$'
     | '/$orgSlug/'
     | '/$orgSlug/~'
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/account/invites'
     | '/account/organizations'
     | '/api/auth/$'
+    | '/api/platform/$'
     | '/api/rpc/$'
     | '/$orgSlug'
     | '/account/settings/security'
@@ -373,6 +384,7 @@ export interface FileRouteTypes {
     | '/(app)/account/invites'
     | '/(app)/account/organizations'
     | '/api/auth/$'
+    | '/api/platform/$'
     | '/api/rpc/$'
     | '/(app)/$orgSlug/'
     | '/(app)/$orgSlug/~/(org)'
@@ -395,6 +407,7 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   LogoutRoute: typeof LogoutRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiPlatformSplatRoute: typeof ApiPlatformSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
@@ -489,6 +502,13 @@ declare module '@tanstack/react-router' {
       path: '/api/rpc/$'
       fullPath: '/api/rpc/$'
       preLoaderRoute: typeof ApiRpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/platform/$': {
+      id: '/api/platform/$'
+      path: '/api/platform/$'
+      fullPath: '/api/platform/$'
+      preLoaderRoute: typeof ApiPlatformSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -784,6 +804,7 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   LogoutRoute: LogoutRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiPlatformSplatRoute: ApiPlatformSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }
 export const routeTree = rootRouteImport
