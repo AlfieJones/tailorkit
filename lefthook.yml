@@ -1,5 +1,3 @@
-# Lefthook configuration
-# https://github.com/evilmartians/lefthook
 pre-commit:
   parallel: false
   jobs:

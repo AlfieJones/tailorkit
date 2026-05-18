@@ -5,6 +5,9 @@
     "./rate-limiting": {
       "default": "./src/rate-limiting.ts"
     },
+    "./hashing": {
+      "default": "./src/hashing.ts"
+    },
     "./dev-delay": {
       "default": "./src/dev-delay.ts"
     }

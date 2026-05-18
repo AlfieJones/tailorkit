@@ -13,7 +13,7 @@
     "generate": "better-auth generate --config src/index.ts --output ../db/src/schema/auth.ts"
   },
   "dependencies": {
-    "@better-auth/api-key": "1.6.9",
+    "@better-auth/api-key": "1.6.11",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/email": "workspace:*",
     "@tailorkit/env": "workspace:*",

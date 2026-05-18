@@ -8,7 +8,7 @@
     "dev": "vite dev"
   },
   "dependencies": {
-    "@ai-sdk/devtools": "^0.0.17",
+    "@ai-sdk/devtools": "^0.0.18",
     "@ai-sdk/google": "^3.0.70",
     "@ai-sdk/react": "catalog:",
     "@orpc/client": "catalog:",
