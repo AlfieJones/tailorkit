@@ -23,6 +23,7 @@
     "@tailorkit/api-utils": "workspace:*",
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
+    "@tailorkit/env": "workspace:*",
     "@tailorkit/storage": "workspace:*",
     "drizzle-orm": "catalog:"
   },
