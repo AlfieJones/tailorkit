@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 
 export function Footer() {
   return (
-    <footer className="flex flex-col border-t border-border">
+    <footer className="flex flex-col border-t border-border bg-sidebar">
       {/* Links row */}
       <div className="flex flex-col gap-10 px-6 py-12 sm:flex-row sm:justify-between lg:px-14">
         {/* Logo + copyright */}

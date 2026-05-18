@@ -13,11 +13,13 @@ export const Route = createFileRoute("/")({
 function Home() {
   return (
     <HomeLayout {...baseOptions()}>
-      <main className="flex flex-col max-w-7xl mx-auto w-full border-x border-border">
-        <HomeHero />
-        <PlatformFeatures />
-        <HomeCTA />
-        <Footer />
+      <main className="bg-sidebar">
+        <div className="flex flex-col max-w-7xl mx-auto w-full border-x border-border bg-background">
+          <HomeHero />
+          <PlatformFeatures />
+          <HomeCTA />
+          <Footer />
+        </div>
       </main>
     </HomeLayout>
   );
