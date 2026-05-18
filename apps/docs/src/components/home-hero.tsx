@@ -1,6 +1,7 @@
 import { Button } from "@tailorkit/ui/button";
 import { Link } from "@tanstack/react-router";
 import pkg from "@rive-app/react-webgl2";
+import type { Alignment, Fit, Layout } from "@rive-app/react-webgl2";
 
 const {
   default: RiveDefault,
@@ -9,9 +10,9 @@ const {
   Alignment,
 } = pkg as unknown as {
   default: typeof pkg;
-  Layout: typeof import("@rive-app/react-webgl2").Layout;
-  Fit: typeof import("@rive-app/react-webgl2").Fit;
-  Alignment: typeof import("@rive-app/react-webgl2").Alignment;
+  Layout: typeof Layout;
+  Fit: typeof Fit;
+  Alignment: typeof Alignment;
 };
 
 const Rive = (RiveDefault as unknown as { default?: typeof RiveDefault }).default ?? RiveDefault;

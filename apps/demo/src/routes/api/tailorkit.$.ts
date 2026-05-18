@@ -15,7 +15,11 @@ const tailor = tailorKit({
 export const Route = createFileRoute("/api/tailorkit/$")({
   server: {
     handlers: {
-      GET: ({ request }) => tailor.handler(request),
+      GET: ({ request }) =>
+        tailor.handler(request, {
+          requestContext: {},
+          resourceId: "demo",
+        }),
     },
   },
 });

@@ -16,7 +16,6 @@
   "dependencies": {
     "@orpc/experimental-ratelimit": "^1.14.3",
     "@orpc/server": "catalog:",
-    "@tailorkit/api-utils": "workspace:*",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
     "@upstash/ratelimit": "^2.0.8",

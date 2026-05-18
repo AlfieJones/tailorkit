@@ -23,7 +23,7 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: /^use-sync-external-store\/shim$/,
+        find: /^use-sync-external-store\/shim$/u,
         replacement: fileURLToPath(
           new URL("src/lib/use-sync-external-store-shim.ts", import.meta.url),
         ),
