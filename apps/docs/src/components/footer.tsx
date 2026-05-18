@@ -78,7 +78,7 @@ export function Footer() {
 
       {/* Watermark */}
       <div className="select-none overflow-hidden pt-4 pb-0 flex justify-center">
-        <p className="font-display text-[clamp(3.5rem,14vw,11rem)] font-bold leading-none tracking-tight text-foreground/[0.06] whitespace-nowrap">
+        <p className="font-display text-[clamp(3.5rem,14vw,11rem)] font-bold leading-none tracking-tight text-transparent whitespace-nowrap bg-gradient-to-b from-foreground/[0.06] to-primary/45 bg-clip-text">
           TailorKit
         </p>
       </div>
