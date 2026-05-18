@@ -49,13 +49,6 @@ export function Footer() {
               >
                 GitHub
               </a>
-              <a
-                href="https://x.com/tailorkit"
-                rel="noopener noreferrer"
-                className="text-sm text-foreground/60 hover:text-foreground transition-colors"
-              >
-                X (Twitter)
-              </a>
             </div>
           </div>
         </div>
