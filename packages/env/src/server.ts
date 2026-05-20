@@ -94,12 +94,13 @@ export const env = createEnv({
     KV_REST_API_TOKEN: z.string().min(1).optional(),
     KV_REST_API_URL: z.url().optional(),
     // Object storage
-    BLOB_ACCESS_KEY_ID: z.string().min(1).optional(),
     BLOB_BUCKET: z.string().min(1).optional(),
     BLOB_ENDPOINT: z.url().optional(),
+    BLOB_REGION: z.string().min(1).optional(),
     BLOB_FORCE_PATH_STYLE: z.stringbool().optional(),
     BLOB_PUBLIC_BASE_URL: z.url().optional(),
-    BLOB_REGION: z.string().min(1).optional(),
+
+    BLOB_ACCESS_KEY_ID: z.string().min(1).optional(),
     BLOB_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   },
 });
