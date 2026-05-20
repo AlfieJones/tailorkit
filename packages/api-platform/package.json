@@ -13,6 +13,7 @@
     }
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "generate:openapi": "tsx scripts/generate-openapi.ts"
   },
   "dependencies": {

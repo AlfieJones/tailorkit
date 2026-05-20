@@ -30,7 +30,7 @@ const spec = await generator.generate(platformRouter, {
 });
 
 spec.paths = Object.fromEntries(
-  Object.entries(spec.paths).map(([path, pathItem]) => [
+  Object.entries(spec.paths ?? {}).map(([path, pathItem]) => [
     path.replaceAll(/:([A-Za-z_][A-Za-z0-9_]*)/gu, "{$1}"),
     pathItem,
   ]),

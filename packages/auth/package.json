@@ -10,6 +10,7 @@
     }
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "generate": "better-auth generate --config src/index.ts --output ../db/src/schema/auth.ts"
   },
   "dependencies": {

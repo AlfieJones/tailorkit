@@ -1,7 +1,7 @@
 import { createTailorKitServer } from "@tailorkit/core/server";
 import type { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import type { ReactNode } from "react";
-import { components, tailorKitClient } from "../tailor-kit";
+import { components, createTailorKitClient } from "../tailor-kit";
 
 const typedSchema = <TValue,>(): StandardSchemaV1<unknown, TValue> &
   StandardJSONSchemaV1<unknown, TValue> =>
@@ -27,7 +27,7 @@ const server = createTailorKitServer({
   },
 });
 
-const tailor = tailorKitClient<typeof server>({ baseUrl: "http://runtime.test" });
+const tailor = createTailorKitClient<typeof server>({ baseUrl: "http://runtime.test" });
 
 const slotsServer = createTailorKitServer({
   components: {
@@ -39,7 +39,7 @@ const slotsServer = createTailorKitServer({
 
 const slotsSchema = slotsServer.$internal.schema;
 
-tailorKitClient<typeof slotsServer>({
+createTailorKitClient<typeof slotsServer>({
   baseUrl: "http://runtime.test",
   components: {
     Button: ({ slots }) => {

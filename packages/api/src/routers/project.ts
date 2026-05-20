@@ -26,19 +26,6 @@ const projectApiKeyMetadataSchema = z.object({
 
 type ProjectApiKeyMetadata = z.infer<typeof projectApiKeyMetadataSchema>;
 
-interface ProjectApiKey {
-  id: string;
-  name: string | null;
-  start: string | null;
-  prefix: string | null;
-  enabled: boolean;
-  expiresAt: Date | string | null;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  lastRequest: Date | string | null;
-  metadata: Record<string, unknown> | string | null;
-}
-
 function toDate(value: Date | string | null): Date | null {
   if (!value) {
     return null;
@@ -64,21 +51,6 @@ function parseProjectApiKeyMetadata(metadata: Record<string, unknown> | string |
       : metadata;
   const result = projectApiKeyMetadataSchema.safeParse(value);
   return result.success ? result.data : null;
-}
-
-function serializeProjectApiKey(key: ProjectApiKey, metadata: ProjectApiKeyMetadata) {
-  return {
-    createdAt: toDate(key.createdAt),
-    enabled: key.enabled,
-    expiresAt: toDate(key.expiresAt),
-    id: key.id,
-    lastRequest: toDate(key.lastRequest),
-    metadata,
-    name: key.name,
-    prefix: key.prefix,
-    start: key.start,
-    updatedAt: toDate(key.updatedAt),
-  };
 }
 
 async function listProjectApiKeys({
@@ -122,9 +94,20 @@ async function listAllProjectApiKeys({
         return null;
       }
 
-      return serializeProjectApiKey(key, metadata);
+      return {
+        createdAt: toDate(key.createdAt),
+        enabled: key.enabled ?? false,
+        expiresAt: toDate(key.expiresAt),
+        id: key.id,
+        lastRequest: toDate(key.lastRequest),
+        metadata,
+        name: key.name,
+        prefix: key.prefix,
+        start: key.start,
+        updatedAt: toDate(key.updatedAt),
+      };
     })
-    .filter(Boolean);
+    .filter((key): key is NonNullable<typeof key> => !!key);
 }
 
 function createProjectApiKey({

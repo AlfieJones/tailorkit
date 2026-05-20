@@ -12,7 +12,9 @@
       "default": "./src/dev-delay.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
   "dependencies": {
     "@orpc/experimental-ratelimit": "^1.14.3",
     "@orpc/server": "catalog:",

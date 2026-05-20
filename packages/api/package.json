@@ -10,6 +10,7 @@
     }
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
@@ -23,7 +24,6 @@
     "@tailorkit/db": "workspace:*",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
-    "@tailorkit/storage": "workspace:*",
     "@types/pg": "catalog:",
     "@upstash/ratelimit": "^2.0.0",
     "@vercel/functions": "^3.6.0",

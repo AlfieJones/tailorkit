@@ -10,6 +10,7 @@
     }
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "drizzle-kit": "node --preserve-symlinks-main ./node_modules/drizzle-kit/bin.cjs",
     "db:push": "pnpm drizzle-kit push",
     "db:generate": "pnpm drizzle-kit generate",

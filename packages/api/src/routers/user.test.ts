@@ -160,7 +160,9 @@ describe("userRouter", () => {
     await expect(
       call(userRouter.getOrg, { orgSlug: "compilers-inc" }, { context: createContext() }),
     ).rejects.toEqual(
-      expect.objectContaining({ code: "NOT_FOUND" } satisfies Partial<ORPCError<"NOT_FOUND">>),
+      expect.objectContaining({ code: "NOT_FOUND" } satisfies Partial<
+        ORPCError<"NOT_FOUND", unknown>
+      >),
     );
   });
 

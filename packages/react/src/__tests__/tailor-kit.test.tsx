@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createTailorKitServer } from "@tailorkit/core/server";
 import type { WorkerUiHost } from "@tailorkit/sandbox/host";
 import type { HostToWorkerPayload, RemoteNode } from "@tailorkit/sandbox/protocol";
-import { tailorKitClient } from "../tailor-kit";
+import { createTailorKitClient } from "../tailor-kit";
 
 const hostRecords: { appUrl: string; props: Record<string, unknown> | undefined }[] = [];
 
@@ -78,7 +78,7 @@ function ScreenMatchHost({
   tailor,
 }: {
   nested: boolean;
-  tailor: ReturnType<typeof tailorKitClient<typeof server>>;
+  tailor: ReturnType<typeof createTailorKitClient<typeof server>>;
 }) {
   return (
     <tailor.ScreenMatch pattern="/" screen="/home" context={{ page: "home" }}>
@@ -106,7 +106,7 @@ describe("tailorKitClient React adapter", () => {
 
   it("fetches and caches apps", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json([{ id: "todo", name: "Todo" }]));
-    const tailor = tailorKitClient<typeof server>({
+    const tailor = createTailorKitClient<typeof server>({
       baseUrl: "http://runtime.test/api/tailorkit",
       components,
     });
@@ -130,7 +130,10 @@ describe("tailorKitClient React adapter", () => {
   });
 
   it("selects the deepest mounted ScreenMatch and restores the parent on unmount", async () => {
-    const tailor = tailorKitClient<typeof server>({ baseUrl: "http://runtime.test", components });
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: "http://runtime.test",
+      components,
+    });
 
     const view = render(<ScreenMatchHost nested tailor={tailor} />);
 
@@ -156,7 +159,10 @@ describe("tailorKitClient React adapter", () => {
   });
 
   it("renders the current match for multiple direct app props", async () => {
-    const tailor = tailorKitClient<typeof server>({ baseUrl: "http://runtime.test", components });
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: "http://runtime.test",
+      components,
+    });
 
     render(
       <tailor.ScreenMatch pattern="/" screen="/home" context={{ page: "home" }}>
