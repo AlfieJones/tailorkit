@@ -1,9 +1,10 @@
 import { Badge } from "@tailorkit/ui/badge";
 import { Button } from "@tailorkit/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@tailorkit/ui/table";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { CustomerTable } from "#/components/customer-table";
 import { customers, deals } from "#/lib/crm-data";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -18,16 +19,12 @@ function Home() {
         <MetricCard label="Open deals" value={deals.length.toString()} />
       </section>
 
-      <section>
-        <Card className="rounded-lg">
-          <CardHeader className="p-4">
-            <CardTitle>Customers</CardTitle>
-            <CardDescription>Click a row to open the customer record.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <CustomerTable limit={4} />
-          </CardContent>
-        </Card>
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-semibold text-lg">Customers</h2>
+          <p className="text-muted-foreground text-sm">Click a row to open the customer record.</p>
+        </div>
+        <CustomerTable limit={4} />
       </section>
     </div>
   );
@@ -53,52 +50,9 @@ export function PageHeader({ description, title }: { description?: string; title
   );
 }
 
-export function CustomerTable({ limit }: { limit?: number }) {
-  const visibleCustomers = typeof limit === "number" ? customers.slice(0, limit) : customers;
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Customer</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Owner</TableHead>
-          <TableHead>Value</TableHead>
-          <TableHead className="w-px" />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {visibleCustomers.map((customer) => (
-          <TableRow key={customer.id}>
-            <TableCell>
-              <div className="font-medium">{customer.name}</div>
-              <div className="mt-1 text-muted-foreground text-xs">{customer.company}</div>
-            </TableCell>
-            <TableCell>
-              <Badge variant={getStatusVariant(customer.status)}>{customer.status}</Badge>
-            </TableCell>
-            <TableCell>{customer.owner}</TableCell>
-            <TableCell>{customer.value}</TableCell>
-            <TableCell>
-              <Button
-                size="sm"
-                variant="ghost"
-                render={<Link to="/customers/$customerId" params={{ customerId: customer.id }} />}
-              >
-                View
-                <ArrowRight aria-hidden="true" />
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
 export function DealTable() {
   return (
-    <Table>
+    <Table variant="card">
       <TableHeader>
         <TableRow>
           <TableHead>Account</TableHead>
@@ -132,16 +86,4 @@ export function DealTable() {
       </TableBody>
     </Table>
   );
-}
-
-function getStatusVariant(status: string) {
-  if (status === "Active") {
-    return "success";
-  }
-
-  if (status === "At risk") {
-    return "warning";
-  }
-
-  return "info";
 }

@@ -59,6 +59,7 @@
     "./table": "./src/components/table.tsx",
     "./tabs": "./src/components/tabs.tsx",
     "./textarea": "./src/components/textarea.tsx",
+    "./theme-toggle": "./src/components/theme-toggle.tsx",
     "./toast": "./src/components/toast.tsx",
     "./toggle": "./src/components/toggle.tsx",
     "./toggle-group": "./src/components/toggle-group.tsx",

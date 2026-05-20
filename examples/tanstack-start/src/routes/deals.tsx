@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
 import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
 import { deals } from "#/lib/crm-data";
 import { DealTable, PageHeader } from "./index";
@@ -31,17 +31,15 @@ function DealsPage() {
         </Card>
       </section>
 
-      <Card className="rounded-lg">
-        <CardHeader className="p-4">
-          <CardTitle>Deal list</CardTitle>
-          <CardDescription>
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-semibold text-lg">Deal list</h2>
+          <p className="text-muted-foreground text-sm">
             Click through to view owner, probability, and next step.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <DealTable />
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+        <DealTable />
+      </section>
     </div>
   );
 }

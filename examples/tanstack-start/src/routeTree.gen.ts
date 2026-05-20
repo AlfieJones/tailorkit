@@ -14,8 +14,8 @@ import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DealsDealIdRouteImport } from './routes/deals.$dealId'
 import { Route as CustomersCustomerIdRouteImport } from './routes/customers.$customerId'
+import { Route as ApiAuthRouteImport } from './routes/api/auth'
 import { Route as ApiTailorkitSplatRouteImport } from './routes/api/tailorkit.$'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
 const DealsRoute = DealsRouteImport.update({
   id: '/deals',
@@ -42,14 +42,14 @@ const CustomersCustomerIdRoute = CustomersCustomerIdRouteImport.update({
   path: '/$customerId',
   getParentRoute: () => CustomersRoute,
 } as any)
+const ApiAuthRoute = ApiAuthRouteImport.update({
+  id: '/api/auth',
+  path: '/api/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTailorkitSplatRoute = ApiTailorkitSplatRouteImport.update({
   id: '/api/tailorkit/$',
   path: '/api/tailorkit/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -57,18 +57,18 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/customers': typeof CustomersRouteWithChildren
   '/deals': typeof DealsRouteWithChildren
+  '/api/auth': typeof ApiAuthRoute
   '/customers/$customerId': typeof CustomersCustomerIdRoute
   '/deals/$dealId': typeof DealsDealIdRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/tailorkit/$': typeof ApiTailorkitSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/customers': typeof CustomersRouteWithChildren
   '/deals': typeof DealsRouteWithChildren
+  '/api/auth': typeof ApiAuthRoute
   '/customers/$customerId': typeof CustomersCustomerIdRoute
   '/deals/$dealId': typeof DealsDealIdRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/tailorkit/$': typeof ApiTailorkitSplatRoute
 }
 export interface FileRoutesById {
@@ -76,9 +76,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/customers': typeof CustomersRouteWithChildren
   '/deals': typeof DealsRouteWithChildren
+  '/api/auth': typeof ApiAuthRoute
   '/customers/$customerId': typeof CustomersCustomerIdRoute
   '/deals/$dealId': typeof DealsDealIdRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/tailorkit/$': typeof ApiTailorkitSplatRoute
 }
 export interface FileRouteTypes {
@@ -87,27 +87,27 @@ export interface FileRouteTypes {
     | '/'
     | '/customers'
     | '/deals'
+    | '/api/auth'
     | '/customers/$customerId'
     | '/deals/$dealId'
-    | '/api/auth/$'
     | '/api/tailorkit/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/customers'
     | '/deals'
+    | '/api/auth'
     | '/customers/$customerId'
     | '/deals/$dealId'
-    | '/api/auth/$'
     | '/api/tailorkit/$'
   id:
     | '__root__'
     | '/'
     | '/customers'
     | '/deals'
+    | '/api/auth'
     | '/customers/$customerId'
     | '/deals/$dealId'
-    | '/api/auth/$'
     | '/api/tailorkit/$'
   fileRoutesById: FileRoutesById
 }
@@ -115,7 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CustomersRoute: typeof CustomersRouteWithChildren
   DealsRoute: typeof DealsRouteWithChildren
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiAuthRoute: typeof ApiAuthRoute
   ApiTailorkitSplatRoute: typeof ApiTailorkitSplatRoute
 }
 
@@ -156,18 +156,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersCustomerIdRouteImport
       parentRoute: typeof CustomersRoute
     }
+    '/api/auth': {
+      id: '/api/auth'
+      path: '/api/auth'
+      fullPath: '/api/auth'
+      preLoaderRoute: typeof ApiAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tailorkit/$': {
       id: '/api/tailorkit/$'
       path: '/api/tailorkit/$'
       fullPath: '/api/tailorkit/$'
       preLoaderRoute: typeof ApiTailorkitSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -199,7 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustomersRoute: CustomersRouteWithChildren,
   DealsRoute: DealsRouteWithChildren,
-  ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiAuthRoute: ApiAuthRoute,
   ApiTailorkitSplatRoute: ApiTailorkitSplatRoute,
 }
 export const routeTree = rootRouteImport

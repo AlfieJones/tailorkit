@@ -1,7 +1,8 @@
 import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
+import { CustomerTable } from "#/components/customer-table";
 import { customers } from "#/lib/crm-data";
-import { CustomerTable, PageHeader } from "./index";
+import { PageHeader } from "./index";
 
 export const Route = createFileRoute("/customers")({ component: CustomersPage });
 
@@ -41,15 +42,15 @@ function CustomersPage() {
         </Card>
       </section>
 
-      <Card className="rounded-lg">
-        <CardHeader className="p-4">
-          <CardTitle>Customer list</CardTitle>
-          <CardDescription>Click through to view contact details and next steps.</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <CustomerTable />
-        </CardContent>
-      </Card>
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-semibold text-lg">Customer list</h2>
+          <p className="text-muted-foreground text-sm">
+            Click through to view contact details and next steps.
+          </p>
+        </div>
+        <CustomerTable />
+      </section>
     </div>
   );
 }

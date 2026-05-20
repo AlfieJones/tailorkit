@@ -1,6 +1,8 @@
-import { tailorKit } from "tailorkit";
+import { createTailorKit } from "tailorkit";
 import { primitives } from "tailorkit/zod";
 import { z } from "zod";
+
+export * from "./auth";
 
 const Button = {
   fields: z.object({
@@ -56,7 +58,7 @@ const Input = {
 
 // This is the contract between the your platform and apps
 // Try to avoid breaking changes as this can break any apps which rely on the schema
-export const tailor = tailorKit({
+export const tailor = createTailorKit({
   components: {
     ...primitives({
       // See https://tailorkit.dev/docs/styling#theme

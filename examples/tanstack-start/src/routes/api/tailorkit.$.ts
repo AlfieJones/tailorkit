@@ -1,19 +1,19 @@
-import { auth } from "#/lib/auth";
+import { getDemoUserFromRequest } from "@examples/shared";
 import { tailorKit } from "#/lib/tailorkit";
 import { createFileRoute } from "@tanstack/react-router";
 
 const handle = ({ request }: { request: Request }) =>
   tailorKit.handler(request, {
-    authenticate: async () => {
-      const session = await auth.api.getSession({ headers: request.headers });
+    authenticate: () => {
+      const user = getDemoUserFromRequest(request);
 
-      if (!session) {
+      if (!user) {
         return null;
       }
 
       return {
-        actionContext: { user: session.user },
-        scopeId: session.user.id,
+        actionContext: { user },
+        scopeId: user.id,
       };
     },
   });

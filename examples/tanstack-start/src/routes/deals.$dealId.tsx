@@ -54,9 +54,11 @@ function DealDetailPage() {
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border p-3">
-      <p className="text-muted-foreground text-xs">{label}</p>
-      <p className="mt-1 font-medium text-sm">{value}</p>
-    </div>
+    <Card>
+      <CardContent className="p-3">
+        <p className="text-muted-foreground text-xs">{label}</p>
+        <p className="mt-1 font-medium text-sm">{value}</p>
+      </CardContent>
+    </Card>
   );
 }

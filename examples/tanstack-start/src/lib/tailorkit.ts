@@ -1,7 +1,7 @@
 import { createActions, createTailorKit } from "tailorkit";
 import { primitives } from "tailorkit/zod";
 import { z } from "zod";
-import type { User } from "./auth";
+import type { DemoUser } from "@examples/shared";
 
 const Button = {
   fields: z.object({
@@ -13,7 +13,7 @@ const Button = {
   slots: ["default"],
 };
 
-const action = createActions().context<{ user: User }>();
+const action = createActions().context<{ user: DemoUser }>();
 
 export const tailorKit = createTailorKit({
   projectKey: process.env.TAILORKIT_PROJECT_KEY,
