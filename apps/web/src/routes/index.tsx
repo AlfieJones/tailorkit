@@ -8,6 +8,25 @@ const getActiveOrgId = createIsomorphicFn()
   .server(() => getCookie("active-org-id"))
   .client(() => sessionStorage.getItem("active-org-id") ?? "");
 
+const clearSessionCookies = createIsomorphicFn()
+  .server(() => {
+    sessionCookieNames.forEach((name) =>
+      setCookie(name, "", {
+        httpOnly: true,
+        maxAge: 0,
+        path: "/",
+        sameSite: "lax",
+      }),
+    );
+
+    setCookie("active-org-id", "", {
+      maxAge: 0,
+      path: "/",
+      sameSite: "lax",
+    });
+  })
+  .client(() => {});
+
 export const Route = createFileRoute("/")({
   component: () => null,
   loader: async ({ context }) => {
@@ -16,14 +35,7 @@ export const Route = createFileRoute("/")({
     );
 
     if (!session.session) {
-      sessionCookieNames.forEach((name) =>
-        setCookie(name, "", {
-          httpOnly: true,
-          maxAge: 0,
-          path: "/",
-          sameSite: "lax",
-        }),
-      );
+      clearSessionCookies();
 
       throw redirect({
         replace: true,

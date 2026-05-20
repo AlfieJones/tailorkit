@@ -25,7 +25,7 @@ export const env = createEnv({
         context.addIssue({
           code: "custom",
           message: "SES email requires EMAIL_ACCESS_KEY_ID and EMAIL_SECRET_ACCESS_KEY.",
-          path: ["EMAIL_ACCESS_KEY_ID"],
+          path: ["EMAIL_ACCESS_KEY_ID", "EMAIL_SECRET_ACCESS_KEY"],
         });
       }
 
@@ -34,7 +34,7 @@ export const env = createEnv({
           code: "custom",
           message:
             "S3-compatible blob storage requires BLOB_BUCKET, BLOB_ACCESS_KEY_ID, and BLOB_SECRET_ACCESS_KEY.",
-          path: ["BLOB_BUCKET"],
+          path: ["BLOB_BUCKET", "BLOB_ACCESS_KEY_ID", "BLOB_SECRET_ACCESS_KEY"],
         });
       }
 
@@ -45,7 +45,7 @@ export const env = createEnv({
         context.addIssue({
           code: "custom",
           message: "Upstash KV requires KV_REST_API_URL and KV_REST_API_TOKEN.",
-          path: ["KV_REST_API_URL"],
+          path: ["KV_REST_API_URL", "KV_REST_API_TOKEN"],
         });
       }
 
