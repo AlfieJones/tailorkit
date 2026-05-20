@@ -16,9 +16,9 @@ export const protectedRouter = o
   .use(ratelimitMiddleware(rateLimiter, ({ context }) => context.organization.id));
 
 export const requireApp = o.middleware(
-  async ({ context, next }, input: { appId: string; resourceId: string }) => {
+  async ({ context, next }, input: { appId: string; scopeId: string }) => {
     const app = await db.query.app.findFirst({
-      where: { id: input.appId, projectId: context.project.id, resourceId: input.resourceId },
+      where: { id: input.appId, projectId: context.project.id, scopeId: input.scopeId },
     });
 
     if (!app) {

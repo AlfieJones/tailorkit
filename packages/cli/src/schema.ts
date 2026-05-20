@@ -36,14 +36,6 @@ const isTailorKitInstanceLike = (value: unknown): value is TailorKitInstanceLike
   "schema" in ((value as Record<string, unknown>).$internal as Record<string, unknown>) &&
   isSchemaLike(((value as Record<string, unknown>).$internal as Record<string, unknown>).schema);
 
-const hasToJSONSchema = (
-  schema: unknown,
-): schema is { toJSONSchema: () => Record<string, unknown> } =>
-  schema !== null &&
-  typeof schema === "object" &&
-  "toJSONSchema" in schema &&
-  typeof (schema as Record<string, unknown>).toJSONSchema === "function";
-
 const tryExtractSchema = (mod: Record<string, unknown>): SchemaLike | undefined => {
   // 1. Named `schema` export
   if (isSchemaLike(mod.schema)) {
@@ -101,18 +93,11 @@ export const loadSchemaFromModule = async (options: {
   if (schema === undefined) {
     const exports = Object.keys(mod).join(", ") || "(none)";
     throw new Error(
-      `Could not find a TailorKit schema export in ${filePath}.\nAvailable exports: ${exports}. Expected a \`schema\` export from \`defineSchema()\` or a \`tailorKit()\` instance export.`,
+      `Could not find a TailorKit schema export in ${filePath}.\nAvailable exports: ${exports}. Expected a \`tailorKit()\` instance export or a compatible schema export.`,
     );
   }
 
-  const schemaSerializer = (s: unknown): Record<string, unknown> | undefined => {
-    if (hasToJSONSchema(s)) {
-      return s.toJSONSchema();
-    }
-    return undefined;
-  };
-
-  return schema.serialize(schemaSerializer) as TailorKitSchemaFile;
+  return schema.serialize() as TailorKitSchemaFile;
 };
 
 export const runExperimentalSchema = async (options: ExperimentalSchemaOptions): Promise<void> => {

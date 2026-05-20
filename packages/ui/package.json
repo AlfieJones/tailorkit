@@ -79,7 +79,7 @@
     "lucide-react": "catalog:",
     "next-themes": "catalog:",
     "react": "catalog:",
-    "react-day-picker": "^10.0.0",
+    "react-day-picker": "^10.0.1",
     "react-dom": "catalog:",
     "shadcn": "^4.7.0",
     "tailwind-merge": "catalog:",

@@ -7,7 +7,7 @@ import {
   appsUpdate,
 } from "@tailorkit/client-platform/client";
 import { z } from "zod";
-import { o } from "../procedures";
+import { getTailorKitScopeId, o, requireCliDeployToken } from "../procedures";
 
 const paginationInput = z.object({
   page: z.number().int().min(1).optional(),
@@ -20,65 +20,83 @@ const appInput = z.object({
 });
 
 export const appRouter = {
-  create: o.input(appInput).handler(
-    async ({ context, input }) =>
-      await appsCreate({
-        body: { ...input, resourceId: context.tailorkit.resourceId },
-        client: context.platform,
-        headers: context.platformHeaders,
-      }),
-  ),
-  delete: o.input(z.object({ appId: z.string() })).handler(
-    async ({ context, input }) =>
-      await appsDelete({
-        client: context.platform,
-        headers: context.platformHeaders,
-        path: { appId: input.appId },
-        query: { resourceId: context.tailorkit.resourceId },
-      }),
-  ),
-  deploy: o.input(z.object({ appId: z.string(), deploymentId: z.string() })).handler(
-    async ({ context, input }) =>
-      await appsDeploy({
-        body: { deploymentId: input.deploymentId },
-        client: context.platform,
-        headers: context.platformHeaders,
-        path: { appId: input.appId },
-        query: { resourceId: context.tailorkit.resourceId },
-      }),
-  ),
-  get: o.input(z.object({ appId: z.string() })).handler(
-    async ({ context, input }) =>
-      await appsGet({
-        client: context.platform,
-        headers: context.platformHeaders,
-        path: { appId: input.appId },
-        query: { resourceId: context.tailorkit.resourceId },
-      }),
-  ),
-  list: o.input(paginationInput.optional()).handler(
-    async ({ context, input }) =>
-      await appsList({
-        client: context.platform,
-        headers: context.platformHeaders,
-        query: {
-          page: input?.page,
-          pageSize: input?.pageSize,
-          resourceId: context.tailorkit.resourceId,
-        },
-      }),
-  ),
-  update: o.input(z.object({ appId: z.string() }).extend(appInput.shape)).handler(
-    async ({ context, input }) =>
-      await appsUpdate({
-        body: {
-          description: input.description,
-          name: input.name,
-        },
-        client: context.platform,
-        headers: context.platformHeaders,
-        path: { appId: input.appId },
-        query: { resourceId: context.tailorkit.resourceId },
-      }),
-  ),
+  create: o
+    .use(requireCliDeployToken)
+    .input(appInput)
+    .handler(
+      async ({ context, input }) =>
+        await appsCreate({
+          body: { ...input, scopeId: getTailorKitScopeId(context) },
+          client: context.platform,
+          headers: context.platformHeaders,
+        }),
+    ),
+  delete: o
+    .use(requireCliDeployToken)
+    .input(z.object({ appId: z.string() }))
+    .handler(
+      async ({ context, input }) =>
+        await appsDelete({
+          client: context.platform,
+          headers: context.platformHeaders,
+          path: { appId: input.appId },
+          query: { scopeId: getTailorKitScopeId(context) },
+        }),
+    ),
+  deploy: o
+    .use(requireCliDeployToken)
+    .input(z.object({ appId: z.string(), deploymentId: z.string() }))
+    .handler(
+      async ({ context, input }) =>
+        await appsDeploy({
+          body: { deploymentId: input.deploymentId },
+          client: context.platform,
+          headers: context.platformHeaders,
+          path: { appId: input.appId },
+          query: { scopeId: getTailorKitScopeId(context) },
+        }),
+    ),
+  get: o
+    .use(requireCliDeployToken)
+    .input(z.object({ appId: z.string() }))
+    .handler(
+      async ({ context, input }) =>
+        await appsGet({
+          client: context.platform,
+          headers: context.platformHeaders,
+          path: { appId: input.appId },
+          query: { scopeId: getTailorKitScopeId(context) },
+        }),
+    ),
+  list: o
+    .use(requireCliDeployToken)
+    .input(paginationInput.optional())
+    .handler(
+      async ({ context, input }) =>
+        await appsList({
+          client: context.platform,
+          headers: context.platformHeaders,
+          query: {
+            page: input?.page,
+            pageSize: input?.pageSize,
+            scopeId: getTailorKitScopeId(context),
+          },
+        }),
+    ),
+  update: o
+    .use(requireCliDeployToken)
+    .input(z.object({ appId: z.string() }).extend(appInput.shape))
+    .handler(
+      async ({ context, input }) =>
+        await appsUpdate({
+          body: {
+            description: input.description,
+            name: input.name,
+          },
+          client: context.platform,
+          headers: context.platformHeaders,
+          path: { appId: input.appId },
+          query: { scopeId: getTailorKitScopeId(context) },
+        }),
+    ),
 };

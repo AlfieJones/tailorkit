@@ -26,7 +26,7 @@
     "@tailorkit/storage": "workspace:*",
     "@types/pg": "catalog:",
     "@upstash/ratelimit": "^2.0.0",
-    "@vercel/functions": "^3.5.0",
+    "@vercel/functions": "^3.6.0",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "nanoid": "^5.1.11",

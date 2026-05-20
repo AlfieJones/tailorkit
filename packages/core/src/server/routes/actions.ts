@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 import type { Schema } from "../../schema";
-import { o } from "../procedures";
+import { getTailorKitContext, o, requireHostAuth } from "../procedures";
 
 const validateSchema = async <T>(schema: Schema | undefined, value: unknown): Promise<T> => {
   if (schema === undefined) {
@@ -18,7 +18,8 @@ const validateSchema = async <T>(schema: Schema | undefined, value: unknown): Pr
 
 export const actionRouter = {
   call: o
-    .input(z.object({ input: z.unknown(), path: z.string() }))
+    .use(requireHostAuth)
+    .input(z.object({ input: z.unknown().optional(), path: z.string() }))
     .handler(async ({ context, input }) => {
       const implementation = context.actions.get(input.path);
 
@@ -26,12 +27,11 @@ export const actionRouter = {
         throw new ORPCError("NOT_FOUND", { message: "Action not found" });
       }
 
-      const requestContext = await validateSchema(
-        context.requestContextSchema,
-        context.tailorkit?.requestContext,
-      );
       const actionInput = await validateSchema(implementation.definition.input, input.input);
-      const output = await implementation.handler({ input: actionInput, requestContext });
+      const output = await implementation.handler({
+        context: getTailorKitContext(context).actionContext,
+        input: actionInput,
+      });
 
       return validateSchema(implementation.definition.output, output);
     }),

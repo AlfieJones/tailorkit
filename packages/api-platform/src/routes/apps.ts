@@ -11,14 +11,14 @@ const listApps = protectedRouter
     path: "/",
     method: "GET",
   })
-  .input(z.object({ query: paginationQuery.extend({ resourceId: z.string() }) }))
+  .input(z.object({ query: paginationQuery.extend({ scopeId: z.string() }) }))
   .output(paginatedOutput(App))
   .handler(async ({ context, input }) => {
-    const { page, pageSize, resourceId } = input.query;
+    const { page, pageSize, scopeId } = input.query;
     const apps = await db.query.app.findMany({
       where: {
         projectId: context.project.id,
-        resourceId,
+        scopeId,
       },
       orderBy: {
         createdAt: "desc",
@@ -48,12 +48,12 @@ const getApp = protectedRouter
     z.object({
       params: z.object({ appId: z.string() }),
       query: z.object({
-        resourceId: z.string(),
+        scopeId: z.string(),
       }),
     }),
   )
   .output(z.object({ body: App }))
-  .use(requireApp, ({ params: { appId }, query: { resourceId } }) => ({ appId, resourceId }))
+  .use(requireApp, ({ params: { appId }, query: { scopeId } }) => ({ appId, scopeId }))
   .handler(({ context }) => ({ body: context.app }));
 
 const createApp = protectedRouter
@@ -63,7 +63,7 @@ const createApp = protectedRouter
   })
   .input(
     z.object({
-      body: App.pick({ name: true, description: true, resourceId: true }),
+      body: App.pick({ name: true, description: true, scopeId: true }),
     }),
   )
   .output(z.object({ body: App }))
@@ -74,7 +74,7 @@ const createApp = protectedRouter
         description: input.body.description?.trim() || undefined,
         name: input.body.name.trim(),
         projectId: context.project.id,
-        resourceId: input.body.resourceId,
+        scopeId: input.body.scopeId,
       })
       .returning();
 
@@ -93,11 +93,11 @@ const deleteApp = protectedRouter
   .input(
     z.object({
       params: z.object({ appId: z.string() }),
-      query: z.object({ resourceId: z.string() }),
+      query: z.object({ scopeId: z.string() }),
     }),
   )
   .output(z.object({ body: z.object({ id: z.uuid({ version: "v7" }) }) }))
-  .use(requireApp, ({ params: { appId }, query: { resourceId } }) => ({ appId, resourceId }))
+  .use(requireApp, ({ params: { appId }, query: { scopeId } }) => ({ appId, scopeId }))
   .handler(async ({ context }) => {
     await db.delete(app).where(eq(app.id, context.app.id));
 
@@ -113,11 +113,11 @@ const updateApp = protectedRouter
     z.object({
       body: App.pick({ name: true, description: true }),
       params: z.object({ appId: z.string() }),
-      query: z.object({ resourceId: z.string() }),
+      query: z.object({ scopeId: z.string() }),
     }),
   )
   .output(z.object({ body: App }))
-  .use(requireApp, ({ params: { appId }, query: { resourceId } }) => ({ appId, resourceId }))
+  .use(requireApp, ({ params: { appId }, query: { scopeId } }) => ({ appId, scopeId }))
   .handler(async ({ context, input }) => {
     const [updatedApp] = await db
       .update(app)
@@ -145,11 +145,11 @@ const deploy = protectedRouter
     z.object({
       body: z.object({ deploymentId: z.string() }),
       params: z.object({ appId: z.string() }),
-      query: z.object({ resourceId: z.string() }),
+      query: z.object({ scopeId: z.string() }),
     }),
   )
   .output(z.object({ body: App }))
-  .use(requireApp, ({ params: { appId }, query: { resourceId } }) => ({ appId, resourceId }))
+  .use(requireApp, ({ params: { appId }, query: { scopeId } }) => ({ appId, scopeId }))
   .handler(async ({ context, input }) => {
     const deployment = await db.query.appDeployment.findFirst({
       where: {

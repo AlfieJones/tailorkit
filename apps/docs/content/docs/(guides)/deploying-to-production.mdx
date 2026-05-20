@@ -27,40 +27,43 @@ objects over broad strings.
 
 <Callout title="Validate links">
   Do not render arbitrary strings as `href` or `src` values. Accept only safe protocols, usually
-  `http:` and `https:`.
+  `https:` and `mailto:`.
 </Callout>
 
-```ts title="./src/lib/tailor.ts" tab="Zod"
-import { component } from "tailorkit";
+```ts title="./src/lib/tailorkit.ts" tab="Zod"
 import { z } from "zod";
 
-const Link = component({
+const Link = {
   fields: z.object({
-    href: z.url(),
+    href: z.url({ protocol: /^(https|mailto)$/ }),
   }),
-});
+};
 ```
 
-```ts title="./src/lib/tailor.ts" tab="ArkType"
+```ts title="./src/lib/tailorkit.ts" tab="ArkType"
 import { type } from "arktype";
-import { component } from "tailorkit";
 
-const Link = component({
+const Link = {
   fields: type({
-    href: "string.url",
+    href: type("string.url").narrow((href) =>
+      ["https:", "mailto:"].includes(new URL(href).protocol),
+    ),
   }),
-});
+};
 ```
 
-```ts title="./src/lib/tailor.ts" tab="Valibot"
-import { component } from "tailorkit";
+```ts title="./src/lib/tailorkit.ts" tab="Valibot"
 import * as v from "valibot";
 
-const Link = component({
+const Link = {
   fields: v.object({
-    href: v.pipe(v.string(), v.url()),
+    href: v.pipe(
+      v.string(),
+      v.url(),
+      v.check((href) => ["https:", "mailto:"].includes(new URL(href).protocol)),
+    ),
   }),
-});
+};
 ```
 
 ### Text And HTML

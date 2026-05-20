@@ -1,42 +1,45 @@
-import { component, defineSchema, screen } from "@tailorkit/core/schema";
-import type { StandardSchemaV1 } from "@standard-schema/spec";
+import { createTailorKitServer } from "@tailorkit/core/server";
+import type { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import type { ReactNode } from "react";
-import { components, createTailorKitClient } from "../tailor-kit";
+import { components, tailorKitClient } from "../tailor-kit";
 
-const typedSchema = <TValue,>(): StandardSchemaV1<unknown, TValue> =>
+const typedSchema = <TValue,>(): StandardSchemaV1<unknown, TValue> &
+  StandardJSONSchemaV1<unknown, TValue> =>
   ({
     "~standard": {
+      jsonSchema: {
+        input: () => ({}),
+        output: () => ({}),
+      },
       validate: (value: unknown) => ({ value: value as TValue }),
       vendor: "test",
       version: 1,
     },
-  }) as const satisfies StandardSchemaV1<unknown, TValue>;
+  }) as const satisfies StandardSchemaV1<unknown, TValue> & StandardJSONSchemaV1<unknown, TValue>;
 
-const schema = defineSchema({
+const server = createTailorKitServer({
   components: {
-    Button: component({}),
+    Button: {},
   },
   screens: {
-    "/home": screen({
-      context: typedSchema<{ page: { title: string }; user: { id: string } }>(),
-    }),
-    "/user": screen({
-      context: typedSchema<{ userId: string }>(),
-    }),
+    "/home": { context: typedSchema<{ page: { title: string }; user: { id: string } }>() },
+    "/user": { context: typedSchema<{ userId: string }>() },
   },
 });
 
-const tailor = createTailorKitClient(schema, { baseUrl: "http://runtime.test" });
+const tailor = tailorKitClient<typeof server>({ baseUrl: "http://runtime.test" });
 
-const slotsSchema = defineSchema({
+const slotsServer = createTailorKitServer({
   components: {
-    Button: component({
+    Button: {
       slots: ["default"] as const,
-    }),
+    },
   },
 });
 
-createTailorKitClient(slotsSchema, {
+const slotsSchema = slotsServer.$internal.schema;
+
+tailorKitClient<typeof slotsServer>({
   baseUrl: "http://runtime.test",
   components: {
     Button: ({ slots }) => {
@@ -56,19 +59,19 @@ components(slotsSchema, {
   },
 });
 
-const callbackSchema = defineSchema({
+const callbackServer = createTailorKitServer({
   components: {
-    Button: component({
+    Button: {
       fields: typedSchema<{ variant?: "default" | "secondary" }>(),
       callbacks: {
         onClick: {},
       },
       slots: ["default"] as const,
-    }),
+    },
   },
 });
 
-components(callbackSchema, {
+components(callbackServer.$internal.schema, {
   Button: ({ props }) => {
     const variant: "default" | "secondary" | undefined = props.variant;
     const onClick: (() => void) | undefined = props.onClick;

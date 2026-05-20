@@ -1,4 +1,4 @@
-/* eslint-disable unicorn/prefer-modern-dom-apis, unicorn/prefer-dom-node-remove */
+/* eslint-disable unicorn/prefer-dom-node-remove */
 import { describe, expect, it, vi } from "vitest";
 import { createDocument } from "../document.js";
 import { Element } from "../element.js";

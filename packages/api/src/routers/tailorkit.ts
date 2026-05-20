@@ -9,7 +9,7 @@ import z from "zod";
 
 const deploymentInput = z.object({
   projectId: z.string().uuid(),
-  resourceId: z.string().min(1),
+  scopeId: z.string().min(1),
 });
 
 export const tailorkitRouter = {

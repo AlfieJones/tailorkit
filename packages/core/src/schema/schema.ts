@@ -1,342 +1,75 @@
-import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { TailorKitSchemaSpec } from "../spec";
-import { isPrimitiveComponentDefinition, resolvePrimitiveFields } from "../primitives/schema";
-import type { TailorKitTheme } from "../primitives/theme";
-import { resolveTheme } from "../primitives/theme";
+import type { ActionTree, NoMixedActionContexts } from "./actions";
+import { serializeActions } from "./actions";
+import type {
+  ComponentDefinitions,
+  NoComponentFieldCallbackConflicts,
+  ResolvedComponentMetadata,
+} from "./components";
+import { resolveComponentMetadata } from "./components";
+import type { ResolvedScreenMetadata, ScreenDefinitions } from "./screens";
+import { jsonSchemaSerializer, serializeSchema, serializeSchemaTuple } from "./shared";
+import type { SchemaSerializer } from "./shared";
 
-export type Schema = StandardSchemaV1;
-export type CallbackMap = Record<string, CallbackDefinition | undefined>;
-type EmptyCallbackMap = Record<never, never>;
 type EmptyActionMap = Record<never, never>;
 
-type EmptyObject = Record<string, never>;
-type VoidResult = ReturnType<() => void>;
-
-type InferSchema<TSchema> = TSchema extends Schema
-  ? StandardSchemaV1.InferOutput<TSchema>
-  : EmptyObject;
-
-type InferCallbackInputTuple<TInput extends readonly unknown[]> = {
-  [K in keyof TInput]: TInput[K] extends Schema ? StandardSchemaV1.InferOutput<TInput[K]> : never;
-};
-
-type InferCallbackInput<TCallback> = TCallback extends {
-  input?: infer TInput;
-}
-  ? TInput extends readonly Schema[]
-    ? InferCallbackInputTuple<TInput>
-    : never
-  : never;
-
-type InferCallbackOutput<TCallback> = TCallback extends { output?: infer TOutput }
-  ? TOutput extends Schema
-    ? StandardSchemaV1.InferOutput<TOutput>
-    : VoidResult
-  : VoidResult;
-
-type CallbackReturn<TCallback> = TCallback extends { async: true }
-  ? Promise<InferCallbackOutput<TCallback>>
-  : InferCallbackOutput<TCallback>;
-
-export type InferCallback<TCallback> =
-  InferCallbackInput<TCallback> extends never
-    ? () => CallbackReturn<TCallback>
-    : (...args: InferCallbackInput<TCallback>) => CallbackReturn<TCallback>;
-
-export type InferCallbacks<TCallbacks> =
-  TCallbacks extends Record<string, unknown>
-    ? {
-        [TKey in keyof TCallbacks as TCallbacks[TKey] extends undefined
-          ? never
-          : TKey]: InferCallback<NonNullable<TCallbacks[TKey]>>;
-      }
-    : EmptyObject;
-
-export type MergeProps<TBase, TOverride> = Omit<TBase, keyof TOverride> & TOverride;
-
-export interface CallbackDefinition<
-  TInput extends readonly Schema[] | undefined = readonly Schema[] | undefined,
-  TOutput extends Schema | undefined = Schema | undefined,
-  TAsync extends boolean | undefined = boolean | undefined,
-> {
-  async?: TAsync;
-  input?: TInput;
-  output?: TOutput;
-}
-
-export interface ComponentDefinition<
-  TFields extends Schema | undefined = Schema | undefined,
-  TCallbacks extends CallbackMap = EmptyCallbackMap,
-  TSlots extends readonly string[] | undefined = readonly string[] | undefined,
-> {
-  callbacks?: TCallbacks;
-  fields?: TFields;
-  slots?: TSlots;
-}
-
-export interface ScreenDefinition<TContext extends Schema = Schema> {
-  context?: TContext;
-}
-
-export interface ActionDefinition<
-  TInput extends Schema | undefined = Schema | undefined,
-  TOutput extends Schema | undefined = Schema | undefined,
-> {
-  input?: TInput;
-  output?: TOutput;
-}
-
-export interface ActionTree {
-  [key: string]: ActionDefinition | ActionTree | undefined;
-}
-
-export type InferActionInput<TAction> =
-  TAction extends ActionDefinition<infer TInput, Schema | undefined> ? InferSchema<TInput> : never;
-
-export type InferActionOutput<TAction> =
-  TAction extends ActionDefinition<Schema | undefined, infer TOutput>
-    ? InferSchema<TOutput>
-    : never;
-
-export type InferRequestContext<TSchema> =
-  TSchema extends TailorKitSchema<
-    Record<string, ComponentDefinition>,
-    Record<string, ScreenDefinition>,
-    ActionTree,
-    infer TRequestContext
-  >
-    ? InferSchema<TRequestContext>
-    : EmptyObject;
-
-export type ComponentProps<TComponent> =
-  TComponent extends ComponentDefinition<
-    infer TFields,
-    infer TCallbacks,
-    readonly string[] | undefined
-  >
-    ? MergeProps<InferSchema<TFields>, InferCallbacks<TCallbacks>>
-    : EmptyObject;
-
-export type ComponentSlots<TComponent> =
-  TComponent extends ComponentDefinition<Schema | undefined, CallbackMap, infer TSlots>
-    ? TSlots extends readonly string[]
-      ? Record<TSlots[number], unknown>
-      : EmptyObject
-    : EmptyObject;
-
-export interface ResolvedComponentMetadata {
-  callbacks: CallbackMap;
-  fields?: Schema;
-  slots: readonly string[];
-}
-
-export interface ResolvedScreenMetadata {
-  context?: Schema;
-}
-
-export interface ResolvedActionMetadata {
-  input?: Schema;
-  output?: Schema;
-}
-
-export type SchemaSerializer = (schema: Schema) => Record<string, unknown> | undefined;
-
 export interface TailorKitSchema<
-  TComponents extends Record<string, ComponentDefinition>,
-  TScreens extends Record<string, ScreenDefinition>,
+  TComponents extends Record<string, unknown> = ComponentDefinitions,
+  TScreens extends Record<string, unknown> = ScreenDefinitions,
   TActions extends ActionTree = EmptyActionMap,
-  TRequestContext extends Schema | undefined = undefined,
 > {
+  /**
+   * Internal TailorKit implementation details.
+   *
+   * This API is not covered by semantic versioning and may change or break at
+   * any time. Avoid depending on it in application code. If you need something
+   * exposed here, please open a GitHub issue explaining what you are trying to
+   * build so we can design a stable public API for that use case.
+   *
+   * @internal
+   */
   $internal: {
     actions: TActions;
     components: {
       [TName in keyof TComponents]: ResolvedComponentMetadata;
     };
-    requestContext?: TRequestContext;
     screens: {
       [TName in keyof TScreens]: ResolvedScreenMetadata;
     };
   };
   actions: TActions;
   components: TComponents;
-  requestContext?: TRequestContext;
   screens: TScreens;
-  theme: TailorKitTheme;
   serialize(schemaSerializer?: SchemaSerializer): TailorKitSchemaSpec;
 }
 
-type FieldCallbackConflictKeys<TFields, TCallbacks> = Extract<
-  string extends keyof InferSchema<TFields>
-    ? never
-    : string extends keyof TCallbacks
-      ? never
-      : Extract<keyof InferSchema<TFields>, keyof TCallbacks>,
-  string
->;
-
-type NoFieldCallbackConflicts<TFields, TCallbacks> =
-  FieldCallbackConflictKeys<TFields, TCallbacks> extends never
-    ? unknown
-    : {
-        readonly __tailorkit_error__: `Field and callback keys must be unique. Conflicting key: ${FieldCallbackConflictKeys<TFields, TCallbacks>}`;
-      };
-
-const getObjectKeys = (value: unknown): string[] => {
-  if (!(value && typeof value === "object")) {
-    return [];
-  }
-
-  if ("shape" in value) {
-    const shape = (value as { shape?: unknown }).shape;
-    if (shape && typeof shape === "object") {
-      return Object.keys(shape);
-    }
-  }
-
-  if ("entries" in value) {
-    const entries = (value as { entries?: unknown }).entries;
-    if (entries && typeof entries === "object") {
-      return Object.keys(entries);
-    }
-  }
-
-  return [];
-};
-
-const assertNoLocalFieldCallbackConflicts = (
-  componentName: string,
-  fieldKeys: readonly string[],
-  callbackKeys: readonly string[],
-): void => {
-  const callbackKeySet = new Set(callbackKeys);
-  for (const fieldKey of fieldKeys) {
-    if (callbackKeySet.has(fieldKey)) {
-      throw new Error(
-        `Component "${componentName}" defines both a field and callback named "${fieldKey}". Use distinct names for serializable fields and function callbacks.`,
-      );
-    }
-  }
-};
-
-export function component<
-  const TFields extends Schema | undefined = undefined,
-  const TCallbacks extends CallbackMap = EmptyCallbackMap,
-  const TSlots extends readonly string[] | undefined = undefined,
->(
-  definition: {
-    callbacks?: TCallbacks;
-    fields?: TFields;
-    slots?: TSlots;
-  } & NoFieldCallbackConflicts<TFields, TCallbacks>,
-): ComponentDefinition<TFields, TCallbacks, TSlots> {
-  return definition;
-}
-
-export function screen<const TContext extends Schema>(
-  definition: ScreenDefinition<TContext>,
-): ScreenDefinition<TContext> {
-  return definition;
-}
-
-interface ActionBuilder<TInput extends Schema | undefined = undefined> {
-  input: <const TNextInput extends Schema>(input: TNextInput) => ActionBuilder<TNextInput>;
-  output: <const TOutput extends Schema>(output: TOutput) => ActionDefinition<TInput, TOutput>;
-}
-
-const createActionBuilder = <TInput extends Schema | undefined = undefined>(
-  inputSchema?: TInput,
-): ActionBuilder<TInput> => ({
-  input: <const TNextInput extends Schema>(input: TNextInput) => createActionBuilder(input),
-  output: <const TOutput extends Schema>(output: TOutput) => ({ input: inputSchema, output }),
-});
-
-export const action = createActionBuilder();
-
-const resolveComponentMetadata = (
-  name: string,
-  definition: ComponentDefinition,
-  theme: TailorKitTheme,
-): ResolvedComponentMetadata => {
-  const fields = isPrimitiveComponentDefinition(definition)
-    ? resolvePrimitiveFields(definition, theme)
-    : definition.fields;
-  const fieldKeys = fields ? getObjectKeys(fields) : [];
-  const callbackKeys = Object.keys(definition.callbacks ?? {});
-  assertNoLocalFieldCallbackConflicts(name, fieldKeys, callbackKeys);
-
-  return {
-    callbacks: definition.callbacks ?? {},
-    fields,
-    slots: [...(definition.slots ?? [])],
-  };
-};
-
-const serializeActions = (
-  actions: ActionTree,
-  schemaSerializer?: SchemaSerializer,
-): TailorKitSchemaSpec["actions"] => {
-  const serialized: NonNullable<TailorKitSchemaSpec["actions"]> = {};
-
-  for (const [name, definition] of Object.entries(actions)) {
-    if (definition === undefined) {
-      continue;
-    }
-
-    if ("input" in definition || "output" in definition) {
-      const actionDefinition = definition as ActionDefinition;
-      serialized[name] = {
-        input:
-          actionDefinition.input === undefined || schemaSerializer === undefined
-            ? undefined
-            : schemaSerializer(actionDefinition.input),
-        output:
-          actionDefinition.output === undefined || schemaSerializer === undefined
-            ? undefined
-            : schemaSerializer(actionDefinition.output),
-      };
-    } else {
-      serialized[name] = serializeActions(definition as ActionTree, schemaSerializer);
-    }
-  }
-
-  return serialized;
-};
-
-export function defineSchema<
-  const TComponents extends Record<string, ComponentDefinition>,
-  const TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+export const createTailorKitSchema = <
+  const TComponents extends Record<string, unknown>,
+  const TScreens extends Record<string, unknown> = Record<string, never>,
   const TActions extends ActionTree = EmptyActionMap,
-  const TRequestContext extends Schema | undefined = undefined,
 >(schema: {
-  actions?: TActions;
-  components: TComponents;
-  requestContext?: TRequestContext;
+  actions?: TActions & NoMixedActionContexts<NoInfer<TActions>>;
+  components: TComponents & NoComponentFieldCallbackConflicts<NoInfer<TComponents>>;
   screens?: TScreens;
-  theme?: TailorKitTheme;
-}): TailorKitSchema<TComponents, TScreens, TActions, TRequestContext> {
-  const theme = resolveTheme(schema.theme);
+}): TailorKitSchema<TComponents, TScreens, TActions> => {
   const components = {} as TailorKitSchema<
     TComponents,
     TScreens,
-    TActions,
-    TRequestContext
+    TActions
   >["$internal"]["components"];
-  const screens = {} as TailorKitSchema<
-    TComponents,
-    TScreens,
-    TActions,
-    TRequestContext
-  >["$internal"]["screens"];
+  const screens = {} as TailorKitSchema<TComponents, TScreens, TActions>["$internal"]["screens"];
 
-  for (const [name, definition] of Object.entries(schema.components)) {
-    components[name as keyof TComponents] = resolveComponentMetadata(name, definition, theme);
+  for (const [name, definition] of Object.entries(schema.components as ComponentDefinitions)) {
+    components[name as keyof TComponents] = resolveComponentMetadata(name, definition);
   }
 
-  for (const [name, definition] of Object.entries(schema.screens ?? {})) {
+  for (const [name, definition] of Object.entries((schema.screens ?? {}) as ScreenDefinitions)) {
     screens[name as keyof TScreens] = { context: definition.context };
   }
 
-  const serialize = (schemaSerializer?: SchemaSerializer): TailorKitSchemaSpec => {
+  const serialize = (
+    schemaSerializer: SchemaSerializer = jsonSchemaSerializer,
+  ): TailorKitSchemaSpec => {
     const serializedComponents: TailorKitSchemaSpec["components"] = {};
     const serializedScreens: TailorKitSchemaSpec["screens"] = {};
 
@@ -348,35 +81,21 @@ export function defineSchema<
         }
         callbacks[callbackName] = {
           async: callback.async,
-          input:
-            callback.input === undefined || schemaSerializer === undefined
-              ? undefined
-              : callback.input
-                  .map(schemaSerializer)
-                  .filter((entry): entry is Record<string, unknown> => entry !== undefined),
-          output:
-            callback.output === undefined || schemaSerializer === undefined
-              ? undefined
-              : schemaSerializer(callback.output),
+          input: serializeSchemaTuple(callback.input, schemaSerializer),
+          output: serializeSchema(callback.output, schemaSerializer),
         };
       }
 
       serializedComponents[name] = {
         callbacks,
-        fields:
-          metadata.fields === undefined || schemaSerializer === undefined
-            ? undefined
-            : schemaSerializer(metadata.fields),
+        fields: serializeSchema(metadata.fields, schemaSerializer),
         slots: [...metadata.slots],
       };
     }
 
     for (const [name, metadata] of Object.entries(screens)) {
       serializedScreens[name] = {
-        context:
-          metadata.context === undefined || schemaSerializer === undefined
-            ? undefined
-            : schemaSerializer(metadata.context),
+        context: serializeSchema(metadata.context, schemaSerializer),
       };
     }
 
@@ -384,7 +103,6 @@ export function defineSchema<
       actions: serializeActions(schema.actions ?? {}, schemaSerializer),
       components: serializedComponents,
       screens: serializedScreens,
-      theme,
       version: 1,
     };
   };
@@ -392,15 +110,59 @@ export function defineSchema<
   return {
     actions: (schema.actions ?? {}) as TActions,
     components: schema.components,
-    requestContext: schema.requestContext,
     screens: (schema.screens ?? {}) as TScreens,
-    theme,
     serialize,
     $internal: {
       actions: (schema.actions ?? {}) as TActions,
       components,
-      requestContext: schema.requestContext,
       screens,
     },
   };
-}
+};
+
+export type { TailorKitTheme } from "../primitives/theme";
+export {
+  createActions,
+  type Action,
+  type ActionDefinition,
+  type ActionDefinitions,
+  type ActionHandler,
+  type Actions,
+  type ActionTree,
+  type HandlerArgs,
+  type ImplementedAction,
+  type InferActionInput,
+  type InferActionOutput,
+  type InferActionTreeContext,
+  type NoMixedActionContexts,
+  type ResolveActionTreeContext,
+} from "./actions";
+export {
+  type Callback,
+  type CallbackDefinition,
+  type CallbackMap,
+  type Callbacks,
+  type InferCallback,
+  type InferCallbacks,
+} from "./callbacks";
+export {
+  type Component,
+  type ComponentDefinition,
+  type ComponentDefinitions,
+  type ComponentProps,
+  type Components,
+  type ComponentSlots,
+  type Fields,
+  type NoComponentFieldCallbackConflicts,
+  type ResolvedComponentMetadata,
+  type Slots,
+} from "./components";
+export {
+  type ResolvedScreenMetadata,
+  type Screen,
+  type ScreenDefinition,
+  type ScreenDefinitions,
+  type Screens,
+} from "./screens";
+export { jsonSchemaSerializer, type Schema, type SchemaSerializer } from "./shared";
+export type { TailorKitSchema as TailorKit };

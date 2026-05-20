@@ -8,6 +8,8 @@ dist
 build
 *.tsbuildinfo
 .fumadocs-typescript
+*.sqlite
+*.sqlite-*
 
 # Environment variables
 .env

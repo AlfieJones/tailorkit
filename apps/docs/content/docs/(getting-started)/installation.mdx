@@ -22,132 +22,73 @@ npm install tailorkit
 
 ### Create TailorKit instance
 
-Create `tailor.ts` in your project root, `lib/`, `utils/`, `src/lib/`, or
+Create `tailorkit.ts` in your project root, `lib/`, `utils/`, `src/lib/`, or
 `app/lib/`.
 
-This file defines the screens, components, and theme tokens TailorKit apps can
-use.
+This file defines the screens, components, theme tokens, and actions TailorKit
+apps can use. Primitives provide basic layout and styling abilities. See
+[Layouts and Styles](/docs/layouts-and-styles) for the full set.
 
-```ts title="./src/lib/tailor.ts" tab="Zod"
-import { component, defineSchema, primitives, screen, tailorKit } from "tailorkit";
+```ts title="./src/lib/tailorkit.ts" tab="Zod"
+import { createActions, createTailorKit } from "tailorkit";
+import { primitives } from "tailorkit/zod";
 import { z } from "zod";
 
-const Button = component({
+// Define the components TailorKit apps can render.
+const Button = {
   fields: z.object({
-    variant: z.enum(["primary", "secondary"]),
+    variant: z.enum(["default", "secondary"]),
   }),
   callbacks: {
     onClick: {},
   },
   slots: ["default"],
-});
+};
 
-export const schema = defineSchema({
-  theme: {
-    tokens: {
-      borderColor: {
-        default: "var(--border)",
-      },
-      textColor: {
-        default: "var(--text)",
-      },
-    },
-  },
+// Type the context your server passes to actions.
+const action = createActions().context<{
+  user: { id: string; name: string };
+}>();
+
+export const tailorKit = createTailorKit({
+  projectKey: process.env.TAILORKIT_PROJECT_KEY,
+
   components: {
-    ...primitives,
+    // These provide basic layout and styling abilities.
+    ...primitives({
+      tokens: {
+        borderColor: {
+          default: "var(--border)",
+        },
+        textColor: {
+          default: "var(--text)",
+        },
+      },
+    }),
     Button,
   },
-  screens: {
-    "/": screen({}),
-  },
-});
 
-export const tailor = tailorKit({
-  schema,
+  screens: {
+    // Define each screen TailorKit apps can be installed on.
+    "/": {
+      context: z.object({}),
+    },
+  },
+
+  actions: {
+    // Actions let TailorKit apps run server-side logic in your app.
+    echo: action
+      .input(z.string())
+      .output(z.string())
+      // This runs on your server.
+      .handler(({ input, context }) => `${context.user.name} said '${input}'`),
+  },
 });
 ```
 
-```ts title="./src/lib/tailor.ts" tab="Valibot"
-import { component, defineSchema, primitives, screen, tailorKit } from "tailorkit";
-import * as v from "valibot";
-
-const Button = component({
-  fields: v.object({
-    variant: v.picklist(["primary", "secondary"]),
-  }),
-  callbacks: {
-    onClick: {},
-  },
-  slots: ["default"],
-});
-
-export const schema = defineSchema({
-  theme: {
-    tokens: {
-      borderColor: {
-        default: "var(--border)",
-      },
-      textColor: {
-        default: "var(--text)",
-      },
-    },
-  },
-  components: {
-    ...primitives,
-    Button,
-  },
-  screens: {
-    "/": screen({}),
-  },
-});
-
-export const tailor = tailorKit({
-  schema,
-});
-```
-
-```ts title="./src/lib/tailor.ts" tab="ArkType"
-import { component, defineSchema, primitives, screen, tailorKit } from "tailorkit";
-import { type } from "arktype";
-
-const Button = component({
-  fields: type({
-    variant: "'primary' | 'secondary'",
-  }),
-  callbacks: {
-    onClick: {},
-  },
-  slots: ["default"],
-});
-
-export const schema = defineSchema({
-  theme: {
-    tokens: {
-      borderColor: {
-        default: "var(--border)",
-      },
-      textColor: {
-        default: "var(--text)",
-      },
-    },
-  },
-  components: {
-    ...primitives,
-    Button,
-  },
-  screens: {
-    "/": screen({}),
-  },
-});
-
-export const tailor = tailorKit({
-  schema,
-});
-```
-
-<Callout title="Treat The Schema As Public API" type="warn">
-  TailorKit apps are built against the schema you export. Removing screens, components, fields,
-  callbacks, slots, or tokens can break existing apps.
+<Callout title="Treat Your TailorKit Config As Public API" type="warn">
+  TailorKit apps are built against the screens, components, actions, slots, and tokens you define
+  here. Removing or renaming them can break existing apps.
 </Callout>
 
 </Step>
@@ -158,104 +99,177 @@ export const tailor = tailorKit({
 Mount the handler at your TailorKit base path. The default is `/api/tailorkit`.
 
 <Callout title="Framework Support">
-  TailorKit works with any JavaScript framework that uses standard `Request` and `Response` objects.
-  Pass the incoming request to `tailor.handler(request)` and return the response.
+  TailorKit supports any backend framework that uses standard `Request` and `Response` objects, with
+  examples for popular frameworks below.
 </Callout>
 
-```ts title="app/api/tailorkit/[...tailorkit]/route.ts" tab="Next.js"
-import { tailor } from "@/lib/tailor";
+Pass your app's auth check as `authenticate` instead of blocking unauthenticated
+requests before `tailorKit.handler`. TailorKit calls `authenticate` only for
+routes that need your app's user context; CLI deployment routes use TailorKit's
+deploy-token authentication.
 
-export function GET(request: Request) {
-  return tailor.handler(request);
+```ts title="app/api/tailorkit/[...tailorkit]/route.ts" tab="Next.js (App)"
+import { auth } from "~/lib/auth";
+import { tailorKit } from "~/lib/tailorkit";
+
+async function handleRequest(request: Request) {
+  return tailorKit.handler(request, {
+    // [!code highlight]
+    authenticate: async () => {
+      // [!code highlight]
+      const session = await auth(request); // [!code highlight]
+
+      if (!session) {
+        // [!code highlight]
+        return null; // [!code highlight]
+      } // [!code highlight]
+
+      return {
+        // [!code highlight]
+        actionContext: { user: session.user }, // [!code highlight]
+        // Used to separate installed apps for each user, team, or project. // [!code highlight]
+        scopeId: session.user.id, // [!code highlight]
+      }; // [!code highlight]
+    }, // [!code highlight]
+  }); // [!code highlight]
 }
+
+export const GET = handleRequest;
+export const POST = handleRequest;
 ```
 
 ```ts title="routes/api/tailorkit.$.ts" tab="TanStack Start"
+import { auth } from "~/lib/auth";
+import { tailorKit } from "~/lib/tailorkit";
 import { createFileRoute } from "@tanstack/react-router";
-import { tailor } from "@/lib/tailor";
 
 export const Route = createFileRoute("/api/tailorkit/$")({
   server: {
     handlers: {
-      GET: ({ request }) => tailor.handler(request),
+      GET: handleRequest,
+      POST: handleRequest,
     },
   },
 });
+
+async function handleRequest({ request }: { request: Request }) {
+  return tailorKit.handler(request, {
+    // [!code highlight]
+    authenticate: async () => {
+      // [!code highlight]
+      const session = await auth(request); // [!code highlight]
+
+      if (!session) {
+        // [!code highlight]
+        return null; // [!code highlight]
+      } // [!code highlight]
+
+      return {
+        // [!code highlight]
+        actionContext: { user: session.user }, // [!code highlight]
+        // Used to separate installed apps for each user, team, or project. // [!code highlight]
+        scopeId: session.user.id, // [!code highlight]
+      }; // [!code highlight]
+    }, // [!code highlight]
+  }); // [!code highlight]
+}
+```
+
+```ts title="routes/api.tailorkit.$.ts" tab="React Router"
+import { auth } from "~/lib/auth";
+import { tailorKit } from "~/lib/tailorkit";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+
+async function handleRequest(request: Request) {
+  return tailorKit.handler(request, {
+    // [!code highlight]
+    authenticate: async () => {
+      // [!code highlight]
+      const session = await auth(request); // [!code highlight]
+
+      if (!session) {
+        // [!code highlight]
+        return null; // [!code highlight]
+      } // [!code highlight]
+
+      return {
+        // [!code highlight]
+        actionContext: { user: session.user }, // [!code highlight]
+        // Used to separate installed apps for each user, team, or project. // [!code highlight]
+        scopeId: session.user.id, // [!code highlight]
+      }; // [!code highlight]
+    }, // [!code highlight]
+  }); // [!code highlight]
+}
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  return handleRequest(request);
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  return handleRequest(request);
+}
 ```
 
 ```ts title="server/api/tailorkit/[...].ts" tab="Nitro"
-import { tailor } from "~/lib/tailor";
+import { auth } from "~/lib/auth";
+import { tailorKit } from "~/lib/tailorkit";
 import { toWebRequest } from "h3";
 
-export default defineEventHandler((event) => {
-  return tailor.handler(toWebRequest(event));
+export default defineEventHandler(async (event) => {
+  const request = toWebRequest(event);
+  return tailorKit.handler(request, {
+    // [!code highlight]
+    authenticate: async () => {
+      // [!code highlight]
+      const session = await auth(request); // [!code highlight]
+
+      if (!session) {
+        // [!code highlight]
+        return null; // [!code highlight]
+      } // [!code highlight]
+
+      return {
+        // [!code highlight]
+        actionContext: { user: session.user }, // [!code highlight]
+        // Used to separate installed apps for each user, team, or project. // [!code highlight]
+        scopeId: session.user.id, // [!code highlight]
+      }; // [!code highlight]
+    }, // [!code highlight]
+  }); // [!code highlight]
 });
 ```
 
 ```ts title="src/index.ts" tab="Hono"
 import { Hono } from "hono";
-import { tailor } from "./lib/tailor";
+import { auth } from "~/lib/auth";
+import { tailorKit } from "~/lib/tailorkit";
 
 const app = new Hono();
 
-app.get("/api/tailorkit/*", (c) => {
-  return tailor.handler(c.req.raw);
+app.on(["GET", "POST"], "/api/tailorkit/*", async (c) => {
+  return tailorKit.handler(c.req.raw, {
+    // [!code highlight]
+    authenticate: async () => {
+      // [!code highlight]
+      const session = await auth(c.req.raw); // [!code highlight]
+
+      if (!session) {
+        // [!code highlight]
+        return null; // [!code highlight]
+      } // [!code highlight]
+
+      return {
+        // [!code highlight]
+        actionContext: { user: session.user }, // [!code highlight]
+        // Used to separate installed apps for each user, team, or project. // [!code highlight]
+        scopeId: session.user.id, // [!code highlight]
+      }; // [!code highlight]
+    }, // [!code highlight]
+  }); // [!code highlight]
 });
 
 export default app;
-```
-
-```ts title="src/index.ts" tab="Express"
-import express from "express";
-import { tailor } from "./lib/tailor";
-
-const app = express();
-
-app.use("/api/tailorkit", async (req, res) => {
-  const response = await tailor.handler(
-    new Request(`${req.protocol}://${req.get("host")}${req.originalUrl}`, {
-      headers: req.headers as HeadersInit,
-      method: req.method,
-    }),
-  );
-
-  response.headers.forEach((value, key) => {
-    res.setHeader(key, value);
-  });
-
-  res.status(response.status).send(Buffer.from(await response.arrayBuffer()));
-});
-
-export default app;
-```
-
-```ts title="src/index.ts" tab="Fastify"
-import Fastify from "fastify";
-import { tailor } from "./lib/tailor";
-
-const fastify = Fastify();
-
-fastify.route({
-  method: ["GET"],
-  url: "/api/tailorkit/*",
-  handler: async (request, reply) => {
-    const response = await tailor.handler(
-      new Request(`${request.protocol}://${request.headers.host}${request.url}`, {
-        headers: request.headers as HeadersInit,
-        method: request.method,
-      }),
-    );
-
-    response.headers.forEach((value, key) => {
-      reply.header(key, value);
-    });
-
-    reply.status(response.status);
-    return Buffer.from(await response.arrayBuffer());
-  },
-});
-
-export default fastify;
 ```
 
 </Step>
@@ -263,16 +277,19 @@ export default fastify;
 
 ### Create the client
 
-Create `tailorkit-client.ts` near `tailor.ts`.
+The TailorKit client connects your frontend to the TailorKit API handler and
+maps the components from your TailorKit config to components in your app.
 
-Map schema components to the React components in your host app.
+Create `tailorkit-client.ts` in your frontend, wherever you keep client-side utilities.
 
 ```tsx title="./src/lib/tailorkit-client.ts" tab="React"
 import { Button } from "@/components/button";
+import type { tailorKit } from "./tailorkit";
 import { createTailorKitClient, primitives } from "tailorkit/react";
-import { schema } from "./tailor";
 
-export const tailorClient = createTailorKitClient(schema, {
+export const tailorKitClient = createTailorKitClient<typeof tailorKit>({
+  // Use your custom handler path here, for example:
+  // "http://localhost:3000/custom-path/tailorkit"
   baseUrl: "/api/tailorkit",
   components: {
     ...primitives,
@@ -285,20 +302,15 @@ export const tailorClient = createTailorKitClient(schema, {
   },
 });
 
-export default tailorClient;
+export default tailorKitClient;
 ```
-
-<Callout title="Custom Base Paths">
-  If your API handler uses a different base path, pass the full URL including the path. For example,
-  `http://localhost:3000/custom-path/tailorkit`.
-</Callout>
 
 </Step>
 <Step>
 
 ### Finish
 
-Deploy the host app after `tailor.ts`, the API handler, and the React client are
+Deploy the host app after `tailorkit.ts`, the API handler, and the React client are
 in place.
 
 🎉 TailorKit is installed.

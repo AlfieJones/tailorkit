@@ -5,7 +5,7 @@ import {
   deploymentsPublish,
 } from "@tailorkit/client-platform/client";
 import { z } from "zod";
-import { o } from "../procedures";
+import { getTailorKitScopeId, o, requireCliDeployToken } from "../procedures";
 
 const paginationInput = z.object({
   page: z.number().int().min(1).optional(),
@@ -21,41 +21,51 @@ const deploymentAssetInput = z.object({
 });
 
 export const deploymentRouter = {
-  create: o.input(z.object({ appId: z.string(), assets: z.tuple([deploymentAssetInput]) })).handler(
-    async ({ context, input }) =>
-      await deploymentsCreate({
-        body: {
-          appId: input.appId,
-          assets: input.assets,
-          resourceId: context.tailorkit.resourceId,
-        },
-        client: context.platform,
-        headers: context.platformHeaders,
-      }),
-  ),
-  get: o.input(z.object({ deploymentId: z.string() })).handler(
-    async ({ context, input }) =>
-      await deploymentsGet({
-        client: context.platform,
-        headers: context.platformHeaders,
-        path: { deploymentId: input.deploymentId },
-        query: { resourceId: context.tailorkit.resourceId },
-      }),
-  ),
-  list: o.input(z.object({ appId: z.string() }).merge(paginationInput)).handler(
-    async ({ context, input }) =>
-      await deploymentsList({
-        client: context.platform,
-        headers: context.platformHeaders,
-        query: {
-          appId: input.appId,
-          page: input.page,
-          pageSize: input.pageSize,
-          resourceId: context.tailorkit.resourceId,
-        },
-      }),
-  ),
+  create: o
+    .use(requireCliDeployToken)
+    .input(z.object({ appId: z.string(), assets: z.tuple([deploymentAssetInput]) }))
+    .handler(
+      async ({ context, input }) =>
+        await deploymentsCreate({
+          body: {
+            appId: input.appId,
+            assets: input.assets,
+            scopeId: getTailorKitScopeId(context),
+          },
+          client: context.platform,
+          headers: context.platformHeaders,
+        }),
+    ),
+  get: o
+    .use(requireCliDeployToken)
+    .input(z.object({ deploymentId: z.string() }))
+    .handler(
+      async ({ context, input }) =>
+        await deploymentsGet({
+          client: context.platform,
+          headers: context.platformHeaders,
+          path: { deploymentId: input.deploymentId },
+          query: { scopeId: getTailorKitScopeId(context) },
+        }),
+    ),
+  list: o
+    .use(requireCliDeployToken)
+    .input(z.object({ appId: z.string() }).merge(paginationInput))
+    .handler(
+      async ({ context, input }) =>
+        await deploymentsList({
+          client: context.platform,
+          headers: context.platformHeaders,
+          query: {
+            appId: input.appId,
+            page: input.page,
+            pageSize: input.pageSize,
+            scopeId: getTailorKitScopeId(context),
+          },
+        }),
+    ),
   publish: o
+    .use(requireCliDeployToken)
     .input(
       z.object({
         deploymentId: z.string(),
@@ -65,7 +75,7 @@ export const deploymentRouter = {
     .handler(
       async ({ context, input }) =>
         await deploymentsPublish({
-          body: { resourceId: context.tailorkit.resourceId, rollout: input.rollout },
+          body: { scopeId: getTailorKitScopeId(context), rollout: input.rollout },
           client: context.platform,
           headers: context.platformHeaders,
           path: { deploymentId: input.deploymentId },

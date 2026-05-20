@@ -14,12 +14,35 @@ and theme tokens.
 Add primitives to your host schema, then import the generated bindings from
 `#tailorkit` in app code.
 
-```ts
-import { defineSchema, primitives } from "tailorkit";
+```ts tab="Zod"
+import { defineSchema } from "tailorkit";
+import { primitives } from "tailorkit/zod";
 
 export const schema = defineSchema({
   components: {
-    ...primitives,
+    ...primitives(),
+  },
+});
+```
+
+```ts tab="Valibot"
+import { defineSchema } from "tailorkit";
+import { primitives } from "tailorkit/valibot";
+
+export const schema = defineSchema({
+  components: {
+    ...primitives(),
+  },
+});
+```
+
+```ts tab="ArkType"
+import { defineSchema } from "tailorkit";
+import { primitives } from "tailorkit/arktype";
+
+export const schema = defineSchema({
+  components: {
+    ...primitives(),
   },
 });
 ```
@@ -30,9 +53,9 @@ your TailorKit client. Custom components can sit beside them.
 ```tsx
 import { Button } from "@/components/button";
 import { createTailorKitClient, primitives } from "tailorkit/react";
-import { schema } from "./tailor";
+import { tailor } from "./tailor";
 
-export const tailorClient = createTailorKitClient(schema, {
+export const tailorClient = createTailorKitClient<typeof tailor>({
   baseUrl: "/api/tailorkit",
   components: {
     ...primitives,
@@ -81,7 +104,7 @@ A block container with spacing, sizing, surface, overflow, and text props.
 ### Flex
 
 A flex container. Includes every `Box` prop plus `direction`, `align`,
-`justify`, and `gap`.
+`justify`, `gap`, and `wrap`.
 
 <auto-type-table path="../../../src/lib/primitive-docgen.ts" name="FlexProps" />
 
@@ -109,8 +132,9 @@ props.
 Theme tokens are named values configured on the host schema. Primitive props use
 token names, and the React renderer turns them into scoped CSS variables.
 
-```ts
-import { defineSchema, primitives, type TailorKitTheme } from "tailorkit";
+```ts tab="Zod"
+import { defineSchema, type TailorKitTheme } from "tailorkit";
+import { primitives } from "tailorkit/zod";
 
 const theme: TailorKitTheme = {
   tokens: {
@@ -129,7 +153,61 @@ const theme: TailorKitTheme = {
 
 export const schema = defineSchema({
   components: {
-    ...primitives,
+    ...primitives(theme),
+  },
+  theme,
+});
+```
+
+```ts tab="Valibot"
+import { defineSchema, type TailorKitTheme } from "tailorkit";
+import { primitives } from "tailorkit/valibot";
+
+const theme: TailorKitTheme = {
+  tokens: {
+    background: {
+      surface: "var(--card)",
+      muted: "var(--muted)",
+    },
+    borderColor: {
+      default: "var(--border)",
+    },
+    textColor: {
+      muted: "var(--muted-foreground)",
+    },
+  },
+};
+
+export const schema = defineSchema({
+  components: {
+    ...primitives(theme),
+  },
+  theme,
+});
+```
+
+```ts tab="ArkType"
+import { defineSchema, type TailorKitTheme } from "tailorkit";
+import { primitives } from "tailorkit/arktype";
+
+const theme: TailorKitTheme = {
+  tokens: {
+    background: {
+      surface: "var(--card)",
+      muted: "var(--muted)",
+    },
+    borderColor: {
+      default: "var(--border)",
+    },
+    textColor: {
+      muted: "var(--muted-foreground)",
+    },
+  },
+};
+
+export const schema = defineSchema({
+  components: {
+    ...primitives(theme),
   },
   theme,
 });
@@ -221,14 +299,15 @@ Used by the `textTransform` prop. Defaults:
 
 Common `Box` props:
 
-`background`, `border`, `borderColor`, `height`, `margin`, `overflow`,
-`overflowWrap`, `padding`, `radius`, `textAlign`, `textColor`,
-`textOverflow`, `textTransform`, `width`
+`background`, `basis`, `border`, `borderColor`, `grow`, `height`, `margin`,
+`minHeight`, `minWidth`, `overflow`, `overflowWrap`, `padding`, `radius`,
+`shrink`, `textAlign`, `textColor`, `textOverflow`, `textTransform`, `width`
 
 `Flex` also supports:
 
 `align: "start" | "center" | "end" | "stretch"`, `direction: "row" |
-"column"`, `gap`, `justify: "start" | "center" | "end" | "between"`
+"column"`, `gap`, `justify: "start" | "center" | "end" | "between"`,
+`wrap: "wrap" | "nowrap" | "wrap-reverse"`
 
 `Grid` also supports:
 

@@ -1,11 +1,11 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen as testingScreen, waitFor } from "@testing-library/react";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { component, defineSchema, screen as defineScreen } from "@tailorkit/core/schema";
+import { createTailorKitServer } from "@tailorkit/core/server";
 import type { WorkerUiHost } from "@tailorkit/sandbox/host";
 import type { HostToWorkerPayload, RemoteNode } from "@tailorkit/sandbox/protocol";
-import { createTailorKitClient } from "../tailor-kit";
+import { tailorKitClient } from "../tailor-kit";
 
 const hostRecords: { appUrl: string; props: Record<string, unknown> | undefined }[] = [];
 
@@ -46,23 +46,23 @@ vi.mock("@tailorkit/sandbox/host", () => ({
 
 const emptySchema = {
   "~standard": {
+    jsonSchema: {
+      input: () => ({}),
+      output: () => ({}),
+    },
     validate: (value: unknown) => ({ value }),
     vendor: "test",
     version: 1,
   },
 } as const;
 
-const schema = defineSchema({
+const server = createTailorKitServer({
   components: {
-    Button: component({}),
+    Button: {},
   },
   screens: {
-    "/home": defineScreen({
-      context: emptySchema,
-    }),
-    "/user": defineScreen({
-      context: emptySchema,
-    }),
+    "/home": { context: emptySchema },
+    "/user": { context: emptySchema },
   },
 });
 
@@ -71,12 +71,14 @@ const components = {
     createElement("button", null, slots.default),
 };
 
+const schema = server.$internal.schema;
+
 function ScreenMatchHost({
   nested,
   tailor,
 }: {
   nested: boolean;
-  tailor: ReturnType<typeof createTailorKitClient<typeof schema.components, typeof schema.screens>>;
+  tailor: ReturnType<typeof tailorKitClient<typeof server>>;
 }) {
   return (
     <tailor.ScreenMatch pattern="/" screen="/home" context={{ page: "home" }}>
@@ -95,15 +97,16 @@ function ScreenMatchHost({
   );
 }
 
-describe("createTailorKitClient React adapter", () => {
+describe("tailorKitClient React adapter", () => {
   beforeEach(() => {
     hostRecords.length = 0;
     vi.restoreAllMocks();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json(schema.serialize()));
   });
 
   it("fetches and caches apps", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json([{ id: "todo", name: "Todo" }]));
-    const tailor = createTailorKitClient(schema, {
+    const tailor = tailorKitClient<typeof server>({
       baseUrl: "http://runtime.test/api/tailorkit",
       components,
     });
@@ -116,7 +119,7 @@ describe("createTailorKitClient React adapter", () => {
     render(createElement("div", null, createElement(AppList), createElement(AppList)));
 
     await waitFor(() => {
-      expect(screen.getAllByText("ready:todo")).toHaveLength(2);
+      expect(testingScreen.getAllByText("ready:todo")).toHaveLength(2);
     });
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     expect(globalThis.fetch).toHaveBeenCalledWith(
@@ -127,7 +130,7 @@ describe("createTailorKitClient React adapter", () => {
   });
 
   it("selects the deepest mounted ScreenMatch and restores the parent on unmount", async () => {
-    const tailor = createTailorKitClient(schema, { baseUrl: "http://runtime.test", components });
+    const tailor = tailorKitClient<typeof server>({ baseUrl: "http://runtime.test", components });
 
     const view = render(<ScreenMatchHost nested tailor={tailor} />);
 
@@ -153,7 +156,7 @@ describe("createTailorKitClient React adapter", () => {
   });
 
   it("renders the current match for multiple direct app props", async () => {
-    const tailor = createTailorKitClient(schema, { baseUrl: "http://runtime.test", components });
+    const tailor = tailorKitClient<typeof server>({ baseUrl: "http://runtime.test", components });
 
     render(
       <tailor.ScreenMatch pattern="/" screen="/home" context={{ page: "home" }}>

@@ -1,55 +1,77 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { action, defineSchema } from "../schema";
+import { createActions } from "../schema";
 import { createTailorKitClient } from "./client";
-import { implementActions } from "./actions";
 import { createTailorKitServer } from "./handler";
 
-const schema = defineSchema({
+const userAction = createActions().context<{ userId: string }>();
+const orgAction = createActions().context<{ orgId: string; userId: string }>();
+const untypedAction = createActions();
+
+const tailor = createTailorKitServer({
   actions: {
     todo: {
-      create: action
+      create: orgAction
         .input(z.object({ title: z.string().min(1) }))
-        .output(z.object({ id: z.string(), orgId: z.string(), title: z.string() })),
+        .output(z.object({ id: z.string(), orgId: z.string(), title: z.string() }))
+        .handler(({ input, context }) => ({
+          id: `${context.userId}:1`,
+          orgId: context.orgId,
+          title: input.title,
+        })),
     },
   },
   components: {},
-  requestContext: z.object({
-    orgId: z.string(),
-    userId: z.string(),
-  }),
 });
 
-const act = implementActions(schema);
-
-const actions = act.router({
-  todo: act.todo.router({
-    create: act.todo.create.handler(({ input, requestContext }) => ({
-      id: `${requestContext.userId}:1`,
-      orgId: requestContext.orgId,
-      title: input.title,
-    })),
-  }),
+const inferredTailor = createTailorKitServer({
+  actions: {
+    ping: userAction
+      .input(z.object({}))
+      .output(z.object({ userId: z.string() }))
+      .handler(({ context }) => ({ userId: context.userId })),
+  },
+  components: {},
 });
 
-const clientFor = (
-  server: ReturnType<typeof createTailorKitServer>,
-  context: Parameters<ReturnType<typeof createTailorKitServer>["handler"]>[1],
-) =>
-  createTailorKitClient({
-    fetch: (request, init) =>
-      Promise.resolve(
-        server.handler(request instanceof Request ? request : new Request(request, init), context),
-      ),
-    url: "https://example.com/api/tailorkit",
-  });
+const optionalSchemaTailor = createTailorKitServer({
+  actions: {
+    nested: {
+      ping: untypedAction.handler(() => ({ ping: "pong" as const })),
+    },
+    invalidOutput: untypedAction
+      .output(z.object({ ok: z.literal(true) }))
+      .handler(() => ({ ok: false }) as unknown as { ok: true }),
+  },
+  components: {},
+});
+
+optionalSchemaTailor.handler(new Request("https://example.com/api/tailorkit/schema"), {
+  authenticate: () => ({
+    // @ts-expect-error actionContext is never when actions do not call .context<...>()
+    actionContext: {},
+    scopeId: "test",
+  }),
+});
 
 describe("createTailorKitServer", () => {
-  it("dispatches actions with validated request context and input", async () => {
-    const server = createTailorKitServer({ actions, schema });
-    const client = clientFor(server, {
-      requestContext: { orgId: "org_1", userId: "user_1" },
-      resourceId: "org:org_1",
+  it("dispatches actions with host context and validated input", async () => {
+    const requests: Request[] = [];
+    const client = createTailorKitClient({
+      fetch: (request, init) => {
+        const hostRequest = request instanceof Request ? request : new Request(request, init);
+        requests.push(hostRequest);
+
+        return Promise.resolve(
+          tailor.handler(hostRequest, {
+            authenticate: () => ({
+              actionContext: { orgId: "org_1", userId: "user_1" },
+              scopeId: "org:org_1",
+            }),
+          }),
+        );
+      },
+      url: "https://example.com/api/tailorkit",
     });
 
     await expect(
@@ -59,15 +81,149 @@ describe("createTailorKitServer", () => {
       orgId: "org_1",
       title: "Ship it",
     });
+    expect(requests[0]?.method).toBe("POST");
+  });
+
+  it("infers handler context from implemented actions", async () => {
+    const client = createTailorKitClient({
+      fetch: (request, init) => {
+        const hostRequest = request instanceof Request ? request : new Request(request, init);
+
+        return Promise.resolve(
+          inferredTailor.handler(hostRequest, {
+            authenticate: () => ({
+              actionContext: { userId: "user_1" },
+              scopeId: "user:user_1",
+            }),
+          }),
+        );
+      },
+      url: "https://example.com/api/tailorkit",
+    });
+
+    await expect(client.actions.call({ input: {}, path: "ping" })).resolves.toEqual({
+      userId: "user_1",
+    });
+  });
+
+  it("dispatches nested actions without input or output schemas", async () => {
+    const client = createTailorKitClient({
+      fetch: (request, init) => {
+        const hostRequest = request instanceof Request ? request : new Request(request, init);
+
+        return Promise.resolve(
+          optionalSchemaTailor.handler(hostRequest, {
+            authenticate: () => ({ scopeId: "test" }),
+          }),
+        );
+      },
+      url: "https://example.com/api/tailorkit",
+    });
+
+    await expect(client.actions.call({ input: undefined, path: "nested.ping" })).resolves.toEqual({
+      ping: "pong",
+    });
+  });
+
+  it("rejects action calls when host authentication fails", async () => {
+    const client = createTailorKitClient({
+      fetch: (request, init) => {
+        const hostRequest = request instanceof Request ? request : new Request(request, init);
+
+        return Promise.resolve(
+          optionalSchemaTailor.handler(hostRequest, {
+            authenticate: () => null,
+          }),
+        );
+      },
+      url: "https://example.com/api/tailorkit",
+    });
+
+    await expect(client.actions.call({ input: undefined, path: "nested.ping" })).rejects.toThrow(
+      /Unauthorized/u,
+    );
+  });
+
+  it("rejects invalid action input only when an input schema exists", async () => {
+    const client = createTailorKitClient({
+      fetch: (request, init) => {
+        const hostRequest = request instanceof Request ? request : new Request(request, init);
+
+        return Promise.resolve(
+          tailor.handler(hostRequest, {
+            authenticate: () => ({
+              actionContext: { orgId: "org_1", userId: "user_1" },
+              scopeId: "org:org_1",
+            }),
+          }),
+        );
+      },
+      url: "https://example.com/api/tailorkit",
+    });
+
+    await expect(
+      client.actions.call({ input: { title: "" }, path: "todo.create" }),
+    ).rejects.toThrow(/Invalid TailorKit payload/u);
+  });
+
+  it("rejects invalid action output when an output schema exists", async () => {
+    const client = createTailorKitClient({
+      fetch: (request, init) => {
+        const hostRequest = request instanceof Request ? request : new Request(request, init);
+
+        return Promise.resolve(
+          optionalSchemaTailor.handler(hostRequest, {
+            authenticate: () => ({ scopeId: "test" }),
+          }),
+        );
+      },
+      url: "https://example.com/api/tailorkit",
+    });
+
+    await expect(client.actions.call({ input: undefined, path: "invalidOutput" })).rejects.toThrow(
+      /Invalid TailorKit payload/u,
+    );
+  });
+
+  it("serializes action definitions without handlers or omitted schemas", () => {
+    const serialized = optionalSchemaTailor.$internal.schema.serialize(() => ({ type: "object" }));
+
+    expect(serialized.actions?.nested).toMatchObject({ ping: {} });
+    expect(serialized.actions?.invalidOutput).toEqual({
+      output: { type: "object" },
+    });
+    expect(JSON.stringify(serialized)).not.toContain("handler");
+  });
+
+  it("serves the serialized schema from the handler", async () => {
+    const response = await optionalSchemaTailor.handler(
+      new Request("https://example.com/api/tailorkit/schema"),
+      { authenticate: () => ({ scopeId: "test" }) },
+    );
+
+    await expect(response.json()).resolves.toMatchObject({
+      actions: {
+        nested: { ping: {} },
+      },
+      components: {},
+      version: 1,
+    });
   });
 
   it("calls the platform client with authorization headers", async () => {
     const requests: Request[] = [];
+    const hostRequests: Request[] = [];
     const server = createTailorKitServer({
       $internal: {
         platformBaseUrl: "http://localhost:3000/api/platform",
-        platformFetch: (request) => {
-          requests.push(request instanceof Request ? request : new Request(request));
+        platformFetch: (request, init) => {
+          const platformRequest = request instanceof Request ? request : new Request(request, init);
+          requests.push(platformRequest);
+
+          if (platformRequest.url.endsWith("/cli-auth/verify-token")) {
+            return Promise.resolve(Response.json({ scopeId: "org:org_1" }));
+          }
+
           return Promise.resolve(
             Response.json({
               items: [],
@@ -75,25 +231,29 @@ describe("createTailorKitServer", () => {
             }),
           );
         },
+        platformHeaders: { authorization: "Bearer host-token" },
       },
-      schema,
+      components: {},
     });
     const client = createTailorKitClient({
-      fetch: (request, init) =>
-        Promise.resolve(
-          server.handler(
-            request instanceof Request
-              ? new Request(request, { headers: { authorization: "Bearer host-token" } })
-              : new Request(request, {
-                  ...init,
-                  headers: { ...init?.headers, authorization: "Bearer host-token" },
-                }),
-            {
-              requestContext: { orgId: "org_1", userId: "user_1" },
-              resourceId: "org:org_1",
+      fetch: (request, init) => {
+        const hostRequest =
+          request instanceof Request
+            ? new Request(request, { headers: { authorization: "Bearer host-token" } })
+            : new Request(request, {
+                ...init,
+                headers: { ...init?.headers, authorization: "Bearer host-token" },
+              });
+        hostRequests.push(hostRequest);
+
+        return Promise.resolve(
+          server.handler(hostRequest, {
+            authenticate: () => {
+              throw new Error("Host authentication should not run for deploy-token routes.");
             },
-          ),
-        ),
+          }),
+        );
+      },
       url: "https://example.com/api/tailorkit",
     });
 
@@ -101,40 +261,65 @@ describe("createTailorKitServer", () => {
       items: [],
       pagination: { hasMore: false, page: 1, pageSize: 20 },
     });
-    expect(requests[0]?.url).toBe("http://localhost:3000/api/platform/apps?page=1");
+    expect(hostRequests[0]?.method).toBe("POST");
+    expect(requests[0]?.url).toBe("http://localhost:3000/api/platform/cli-auth/verify-token");
     expect(requests[0]?.headers.get("authorization")).toBe("Bearer host-token");
+    expect(requests[1]?.url).toBe(
+      "http://localhost:3000/api/platform/apps?page=1&scopeId=org%3Aorg_1",
+    );
+    expect(requests[1]?.headers.get("authorization")).toBe("Bearer host-token");
   });
 
-  it("attaches the handler resource id when creating platform apps", async () => {
+  it("attaches the handler scope id when creating platform apps", async () => {
     const requests: Request[] = [];
+    const hostRequests: Request[] = [];
     const server = createTailorKitServer({
       $internal: {
         platformBaseUrl: "http://localhost:3000/api/platform",
-        platformFetch: (request) => {
-          requests.push(request instanceof Request ? request : new Request(request));
+        platformFetch: (request, init) => {
+          const platformRequest = request instanceof Request ? request : new Request(request, init);
+          requests.push(platformRequest);
+
+          if (platformRequest.url.endsWith("/cli-auth/verify-token")) {
+            return Promise.resolve(Response.json({ scopeId: "org:org_1" }));
+          }
+
           return Promise.resolve(Response.json({ id: "app_1" }));
         },
+        platformHeaders: { authorization: "Bearer host-token" },
       },
-      schema,
+      components: {},
     });
     const client = createTailorKitClient({
-      fetch: (request, init) =>
-        Promise.resolve(
-          server.handler(request instanceof Request ? request : new Request(request, init), {
-            requestContext: { orgId: "org_1", userId: "user_1" },
-            resourceId: "org:org_1",
+      fetch: (request, init) => {
+        const hostRequest =
+          request instanceof Request
+            ? new Request(request, { headers: { authorization: "Bearer cli-token" } })
+            : new Request(request, {
+                ...init,
+                headers: { ...init?.headers, authorization: "Bearer cli-token" },
+              });
+        hostRequests.push(hostRequest);
+
+        return Promise.resolve(
+          server.handler(hostRequest, {
+            authenticate: () => {
+              throw new Error("Host authentication should not run for deploy-token routes.");
+            },
           }),
-        ),
+        );
+      },
       url: "https://example.com/api/tailorkit",
     });
 
     await expect(client.apps.create({ description: null, name: "Calendar" })).resolves.toEqual({
       id: "app_1",
     });
-    await expect(requests[0]?.json()).resolves.toEqual({
+    expect(hostRequests[0]?.method).toBe("POST");
+    await expect(requests[1]?.json()).resolves.toEqual({
       description: null,
       name: "Calendar",
-      resourceId: "org:org_1",
+      scopeId: "org:org_1",
     });
   });
 });

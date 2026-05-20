@@ -1,30 +1,53 @@
 import { RPCHandler } from "@orpc/server/fetch";
 import { createClient } from "@tailorkit/client-platform/client/client/index";
 import type {
-  ActionTree,
-  ComponentDefinition,
-  InferRequestContext,
-  Schema,
-  ScreenDefinition,
+  NoComponentFieldCallbackConflicts,
+  NoMixedActionContexts,
+  ResolveActionTreeContext,
 } from "../schema";
+import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
 import { normalizeBasePath } from "./apps";
 import { createContext } from "./context";
 import { tailorkitRouter } from "./router";
-import type { TailorKitHandlerContext, TailorKitServer, TailorKitServerOptions } from "./types";
+import type {
+  InferTailorKitServerActions,
+  InferTailorKitServerComponents,
+  InferTailorKitServerScreens,
+  TailorKitHandlerOptions,
+  TailorKitServer,
+  TailorKitServerInputOptions,
+} from "./types";
 
 const defaultPlatformBaseUrl = "https://tailorkit.dev/api/platform";
 type AbsolutePath = `/${string}`;
 
-export function createTailorKitServer<
-  TComponents extends Record<string, ComponentDefinition>,
-  TScreens extends Record<string, ScreenDefinition>,
-  TActions extends ActionTree = Record<never, never>,
-  TRequestContext extends Schema | undefined = undefined,
->(
-  options: TailorKitServerOptions<TComponents, TScreens, TActions, TRequestContext>,
-): TailorKitServer<TComponents, TScreens, TActions, TRequestContext> {
+export function createTailorKitServer<const TOptions extends TailorKitServerInputOptions>(
+  options: TOptions & {
+    actions?: InferTailorKitServerActions<TOptions> &
+      NoMixedActionContexts<InferTailorKitServerActions<TOptions>>;
+    components: InferTailorKitServerComponents<TOptions> &
+      NoComponentFieldCallbackConflicts<InferTailorKitServerComponents<TOptions>>;
+    screens?: InferTailorKitServerScreens<TOptions>;
+  },
+): TailorKitServer<
+  InferTailorKitServerComponents<TOptions>,
+  InferTailorKitServerScreens<TOptions>,
+  InferTailorKitServerActions<TOptions>
+> {
   const basePath = normalizeBasePath(options.basePath ?? "/api/tailorkit");
+  const schema = createTailorKitSchema<
+    InferTailorKitServerComponents<TOptions>,
+    InferTailorKitServerScreens<TOptions>,
+    InferTailorKitServerActions<TOptions>
+  >({
+    actions: options.actions as
+      | (InferTailorKitServerActions<TOptions> &
+          NoMixedActionContexts<InferTailorKitServerActions<TOptions>>)
+      | undefined,
+    components: options.components,
+    screens: options.screens,
+  });
   const platformBaseUrl = options.$internal?.platformBaseUrl ?? defaultPlatformBaseUrl;
   const actions = flattenActionRouter(options.actions);
   const platform = createClient({
@@ -37,16 +60,23 @@ export function createTailorKitServer<
 
   const handler = async (
     request: Request,
-    context: TailorKitHandlerContext<InferRequestContext<typeof options.schema>>,
+    handlerOptions: TailorKitHandlerOptions<
+      ResolveActionTreeContext<InferTailorKitServerActions<TOptions>>
+    >,
   ) => {
+    const url = new URL(request.url);
+    if (url.pathname === `${basePath}/schema`) {
+      return Response.json(schema.serialize());
+    }
+
     const rpcResult = await rpcHandler.handle(request, {
       context: await createContext({
         actions,
         platform,
         platformHeaders: options.$internal?.platformHeaders,
         request,
-        requestContextSchema: options.schema.$internal.requestContext,
-        tailorkit: context,
+        schema,
+        authenticate: handlerOptions.authenticate,
       }),
       prefix: basePath as AbsolutePath,
     });
@@ -59,7 +89,7 @@ export function createTailorKitServer<
   };
 
   return {
-    $internal: { platformBaseUrl, router: tailorkitRouter, schema: options.schema },
+    $internal: { platformBaseUrl, router: tailorkitRouter, schema },
     handler,
   };
 }

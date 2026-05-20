@@ -26,6 +26,7 @@ export function createTailorKitClient(options: TailorKitClientOptions): TailorKi
         headers,
       });
     },
+    method: "POST",
     url: options.url,
   });
 

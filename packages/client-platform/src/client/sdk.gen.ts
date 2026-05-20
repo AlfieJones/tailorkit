@@ -15,6 +15,16 @@ import type {
   AppsListResponses,
   AppsUpdateData,
   AppsUpdateResponses,
+  CliAuthApproveData,
+  CliAuthApproveResponses,
+  CliAuthDenyData,
+  CliAuthDenyResponses,
+  CliAuthPollData,
+  CliAuthPollResponses,
+  CliAuthStartData,
+  CliAuthStartResponses,
+  CliAuthVerifyTokenData,
+  CliAuthVerifyTokenResponses,
   DeploymentsCreateData,
   DeploymentsCreateResponses,
   DeploymentsGetData,
@@ -96,6 +106,66 @@ export const appsDeploy = <ThrowOnError extends boolean = false>(
 ) =>
   (options.client ?? client).post<AppsDeployResponses, unknown, ThrowOnError>({
     url: "/apps/{appId}/deploy",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+export const cliAuthApprove = <ThrowOnError extends boolean = false>(
+  options: Options<CliAuthApproveData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<CliAuthApproveResponses, unknown, ThrowOnError>({
+    url: "/cli-auth/approve",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+export const cliAuthDeny = <ThrowOnError extends boolean = false>(
+  options: Options<CliAuthDenyData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<CliAuthDenyResponses, unknown, ThrowOnError>({
+    url: "/cli-auth/deny",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+export const cliAuthPoll = <ThrowOnError extends boolean = false>(
+  options: Options<CliAuthPollData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<CliAuthPollResponses, unknown, ThrowOnError>({
+    url: "/cli-auth/poll",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+export const cliAuthStart = <ThrowOnError extends boolean = false>(
+  options: Options<CliAuthStartData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<CliAuthStartResponses, unknown, ThrowOnError>({
+    url: "/cli-auth/start",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+export const cliAuthVerifyToken = <ThrowOnError extends boolean = false>(
+  options: Options<CliAuthVerifyTokenData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<CliAuthVerifyTokenResponses, unknown, ThrowOnError>({
+    url: "/cli-auth/verify-token",
     ...options,
     headers: {
       "Content-Type": "application/json",

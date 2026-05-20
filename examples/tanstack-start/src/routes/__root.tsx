@@ -1,8 +1,10 @@
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
-import { BarChart3, Building2, Handshake, Users, X } from "lucide-react";
+import { BarChart3, Building2, Handshake, LogOut, UserRound, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import type { SyntheticEvent } from "react";
 
-import tailorClient from "#/lib/tailorkit";
+import { authClient } from "#/lib/auth-client";
+import tailorClient from "#/lib/tailorkit-client";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -84,6 +86,9 @@ function AppShell() {
             <div className="flex h-14 items-center gap-2 px-4">
               <Building2 className="size-5" aria-hidden="true" />
               <span className="font-semibold text-sm">Northwind CRM</span>
+              <div className="ml-auto">
+                <AccountMenu />
+              </div>
             </div>
             <nav className="flex gap-1 overflow-x-auto px-3 pb-3" aria-label="Primary">
               {navItems.map(({ label, to }) => (
@@ -100,6 +105,9 @@ function AppShell() {
             </nav>
           </header>
           <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mb-6 hidden justify-end lg:flex">
+              <AccountMenu />
+            </div>
             <Outlet />
           </main>
         </div>
@@ -115,6 +123,160 @@ function AppShell() {
         {activeApp ? <AppPanel app={activeApp} onClose={() => setActiveAppId(null)} /> : null}
       </div>
     </tailorClient.ScreenMatch>
+  );
+}
+
+function AccountMenu() {
+  const session = authClient.useSession();
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (session.isPending) {
+    return (
+      <div className="flex h-9 items-center rounded-md border bg-background px-3 text-muted-foreground text-sm">
+        Loading
+      </div>
+    );
+  }
+
+  if (session.data) {
+    return (
+      <div className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 shadow-xs">
+        <div className="flex size-7 items-center justify-center rounded-md bg-accent text-muted-foreground">
+          <UserRound className="size-4" aria-hidden="true" />
+        </div>
+        <div className="hidden min-w-0 sm:block">
+          <p className="truncate font-medium text-xs">{session.data.user.name}</p>
+          <p className="truncate text-muted-foreground text-xs">{session.data.user.email}</p>
+        </div>
+        <button
+          aria-label="Sign out"
+          className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+          onClick={() => void authClient.signOut()}
+          type="button"
+        >
+          <LogOut className="size-4" aria-hidden="true" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        className="flex h-9 items-center gap-2 rounded-md border bg-background px-3 font-medium text-sm shadow-xs hover:bg-accent"
+        onClick={() => setIsOpen((current) => !current)}
+        type="button"
+      >
+        <UserRound className="size-4" aria-hidden="true" />
+        Account
+      </button>
+      {isOpen ? <AuthForm /> : null}
+    </div>
+  );
+}
+
+function AuthForm() {
+  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const [name, setName] = useState("Demo User");
+  const [email, setEmail] = useState("demo@example.com");
+  const [password, setPassword] = useState("password123");
+  const [message, setMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function onSubmit(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setMessage(null);
+
+    const result =
+      mode === "sign-up"
+        ? await authClient.signUp.email({ email, name, password })
+        : await authClient.signIn.email({ email, password });
+
+    setIsSubmitting(false);
+
+    if (result.error) {
+      setMessage(result.error.message ?? "Authentication failed");
+      return;
+    }
+
+    setMessage(mode === "sign-up" ? "Account created" : "Signed in");
+  }
+
+  return (
+    <form
+      className="absolute right-0 top-11 z-40 w-[20rem] max-w-[calc(100vw-2rem)] rounded-lg border bg-background p-3 shadow-lg"
+      onSubmit={(event) => void onSubmit(event)}
+    >
+      <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
+        <button
+          className={
+            mode === "sign-in"
+              ? "h-8 rounded-sm bg-background font-medium text-sm shadow-xs"
+              : "h-8 rounded-sm text-muted-foreground text-sm hover:text-foreground"
+          }
+          onClick={() => setMode("sign-in")}
+          type="button"
+        >
+          Sign in
+        </button>
+        <button
+          className={
+            mode === "sign-up"
+              ? "h-8 rounded-sm bg-background font-medium text-sm shadow-xs"
+              : "h-8 rounded-sm text-muted-foreground text-sm hover:text-foreground"
+          }
+          onClick={() => setMode("sign-up")}
+          type="button"
+        >
+          Sign up
+        </button>
+      </div>
+      <div className="mt-3 space-y-2">
+        {mode === "sign-up" ? (
+          <label className="block">
+            <span className="font-medium text-xs">Name</span>
+            <input
+              className="mt-1 h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              onChange={(event) => setName(event.target.value)}
+              required
+              value={name}
+            />
+          </label>
+        ) : null}
+        <label className="block">
+          <span className="font-medium text-xs">Email</span>
+          <input
+            className="mt-1 h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            onChange={(event) => setEmail(event.target.value)}
+            required
+            type="email"
+            value={email}
+          />
+        </label>
+        <label className="block">
+          <span className="font-medium text-xs">Password</span>
+          <input
+            className="mt-1 h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            minLength={8}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            type="password"
+            value={password}
+          />
+        </label>
+      </div>
+      {message ? <p className="mt-3 text-muted-foreground text-xs">{message}</p> : null}
+      <button
+        className="mt-3 flex h-9 w-full items-center justify-center rounded-md bg-primary px-3 font-medium text-primary-foreground text-sm hover:bg-primary/90 disabled:opacity-60"
+        disabled={isSubmitting}
+        type="submit"
+      >
+        {isSubmitting && "Working"}
+        {!isSubmitting && mode === "sign-up" && "Create account"}
+        {!isSubmitting && mode !== "sign-up" && "Sign in"}
+      </button>
+    </form>
   );
 }
 

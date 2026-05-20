@@ -1,5 +1,6 @@
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import { remarkMdxMermaid } from "fumadocs-core/mdx-plugins";
+import { remarkSteps } from "fumadocs-core/mdx-plugins/remark-steps";
 import {
   createFileSystemGeneratorCache,
   createGenerator,
@@ -21,6 +22,6 @@ export const docs = defineDocs({
 
 export default defineConfig({
   mdxOptions: {
-    remarkPlugins: [remarkMdxMermaid, [remarkAutoTypeTable, { generator }]],
+    remarkPlugins: [remarkSteps, remarkMdxMermaid, [remarkAutoTypeTable, { generator }]],
   },
 });

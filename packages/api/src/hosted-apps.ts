@@ -32,29 +32,29 @@ export interface CreateHostedAppVersionInput {
   manifest?: unknown;
   maxBytes: number;
   projectId: string;
-  resourceId: string;
+  scopeId: string;
 }
 
 export interface PublishHostedAppVersionInput {
   clientEntryUploadId: string;
   projectId: string;
-  resourceId: string;
+  scopeId: string;
 }
 
 export interface GetActiveHostedAppClientInput {
   appId: string;
   projectId: string;
-  resourceId: string;
+  scopeId: string;
 }
 
 const objectKeyForUpload = (input: {
   appKey: string;
-  resourceId: string;
+  scopeId: string;
   uploadId: string;
 }): string => {
-  const resourceId = encodeURIComponent(input.resourceId);
+  const scopeId = encodeURIComponent(input.scopeId);
   const appKey = encodeURIComponent(input.appKey);
-  return `hosted-apps/${resourceId}/${appKey}/${input.uploadId}/client.js`;
+  return `hosted-apps/${scopeId}/${appKey}/${input.uploadId}/client.js`;
 };
 
 const requireStorage = () => {
@@ -70,13 +70,13 @@ const findOrCreateApp = async (input: {
   key: string;
   name?: string;
   projectId: string;
-  resourceId: string;
+  scopeId: string;
 }) => {
   const existing = await db.query.app.findFirst({
     where: {
       key: input.key,
       projectId: input.projectId,
-      resourceId: input.resourceId,
+      scopeId: input.scopeId,
     },
   });
 
@@ -91,7 +91,7 @@ const findOrCreateApp = async (input: {
       key: input.key,
       name: input.name,
       projectId: input.projectId,
-      resourceId: input.resourceId,
+      scopeId: input.scopeId,
     })
     .returning();
 
@@ -116,7 +116,7 @@ export async function createHostedAppVersion(input: CreateHostedAppVersionInput)
     key: uploadMetadata.appId,
     name: uploadMetadata.name,
     projectId,
-    resourceId: input.resourceId,
+    scopeId: input.scopeId,
   });
   const expiresAt = new Date(Date.now() + uploadIntentTtlMs);
   const [upload] = await db
@@ -138,7 +138,7 @@ export async function createHostedAppVersion(input: CreateHostedAppVersionInput)
 
   const objectKey = objectKeyForUpload({
     appKey: app.key,
-    resourceId: app.resourceId,
+    scopeId: app.scopeId,
     uploadId: upload.id,
   });
 
@@ -152,7 +152,7 @@ export async function createHostedAppVersion(input: CreateHostedAppVersionInput)
     key: objectKey,
     metadata: {
       appId: app.key,
-      resourceId: app.resourceId,
+      scopeId: app.scopeId,
       uploadId: upload.id,
     },
   });
@@ -180,7 +180,7 @@ export async function publishHostedAppVersion(input: PublishHostedAppVersionInpu
     },
   });
 
-  if (!upload || !upload.app || upload.app.resourceId !== input.resourceId) {
+  if (!upload || !upload.app || upload.app.scopeId !== input.scopeId) {
     throw new Error("Pending client upload not found.");
   }
 
@@ -250,11 +250,11 @@ export async function publishHostedAppVersion(input: PublishHostedAppVersionInpu
   return { id: upload.id, ok: true };
 }
 
-export async function listHostedApps(input: { projectId: string; resourceId: string }) {
+export async function listHostedApps(input: { projectId: string; scopeId: string }) {
   const apps = await db.query.app.findMany({
     where: {
       projectId: input.projectId,
-      resourceId: input.resourceId,
+      scopeId: input.scopeId,
     },
     orderBy: { createdAt: "desc" },
     with: {
@@ -286,7 +286,7 @@ export async function getActiveHostedAppClient(input: GetActiveHostedAppClientIn
     where: {
       key: input.appId,
       projectId: input.projectId,
-      resourceId: input.resourceId,
+      scopeId: input.scopeId,
     },
     with: {
       activeVersion: {

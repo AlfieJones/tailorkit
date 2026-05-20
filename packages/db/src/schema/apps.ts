@@ -25,7 +25,7 @@ export const app = pgTable(
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
 
-    resourceId: text("resource_id").notNull(),
+    scopeId: text("scope_id").notNull(),
 
     name: text("name").notNull(),
     description: text("description"),
@@ -41,13 +41,13 @@ export const app = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("app_projectId_resourceId_idx").on(table.projectId, table.resourceId)],
+  (table) => [index("app_projectId_scopeId_idx").on(table.projectId, table.scopeId)],
 );
 
 export const App = createSelectSchema(app, {
   name: z.string().max(127),
   description: z.string().max(255).nullable(),
-  resourceId: z.string().max(255),
+  scopeId: z.string().max(255),
 });
 export type App = z.output<typeof App>;
 

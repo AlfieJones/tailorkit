@@ -19,7 +19,7 @@
     "@tailorkit/app": "workspace:*",
     "@tailorkit/core": "workspace:*",
     "cac": "^7.0.0",
-    "liquidjs": "^10.26.0",
+    "liquidjs": "^10.27.0",
     "picocolors": "^1.1.1"
   },
   "devDependencies": {

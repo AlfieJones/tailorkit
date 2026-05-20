@@ -10,7 +10,7 @@ export type AppsListData = {
   query: {
     page?: number;
     pageSize?: number;
-    resourceId: string;
+    scopeId: string;
   };
   url: "/apps";
 };
@@ -23,7 +23,7 @@ export type AppsListResponses = {
     items: Array<{
       id: string;
       projectId: string;
-      resourceId: string;
+      scopeId: string;
       name: string;
       description: string | null;
       currentDeploymentId: string | null;
@@ -44,7 +44,7 @@ export type AppsCreateData = {
   body: {
     name: string;
     description: string | null;
-    resourceId: string;
+    scopeId: string;
   };
   path?: never;
   query?: never;
@@ -58,7 +58,7 @@ export type AppsCreateResponses = {
   200: {
     id: string;
     projectId: string;
-    resourceId: string;
+    scopeId: string;
     name: string;
     description: string | null;
     currentDeploymentId: string | null;
@@ -75,7 +75,7 @@ export type AppsDeleteData = {
     appId: string;
   };
   query: {
-    resourceId: string;
+    scopeId: string;
   };
   url: "/apps/{appId}";
 };
@@ -97,7 +97,7 @@ export type AppsGetData = {
     appId: string;
   };
   query: {
-    resourceId: string;
+    scopeId: string;
   };
   url: "/apps/{appId}";
 };
@@ -109,7 +109,7 @@ export type AppsGetResponses = {
   200: {
     id: string;
     projectId: string;
-    resourceId: string;
+    scopeId: string;
     name: string;
     description: string | null;
     currentDeploymentId: string | null;
@@ -129,7 +129,7 @@ export type AppsUpdateData = {
     appId: string;
   };
   query: {
-    resourceId: string;
+    scopeId: string;
   };
   url: "/apps/{appId}";
 };
@@ -141,7 +141,7 @@ export type AppsUpdateResponses = {
   200: {
     id: string;
     projectId: string;
-    resourceId: string;
+    scopeId: string;
     name: string;
     description: string | null;
     currentDeploymentId: string | null;
@@ -160,7 +160,7 @@ export type AppsDeployData = {
     appId: string;
   };
   query: {
-    resourceId: string;
+    scopeId: string;
   };
   url: "/apps/{appId}/deploy";
 };
@@ -172,7 +172,7 @@ export type AppsDeployResponses = {
   200: {
     id: string;
     projectId: string;
-    resourceId: string;
+    scopeId: string;
     name: string;
     description: string | null;
     currentDeploymentId: string | null;
@@ -183,6 +183,122 @@ export type AppsDeployResponses = {
 
 export type AppsDeployResponse = AppsDeployResponses[keyof AppsDeployResponses];
 
+export type CliAuthApproveData = {
+  body: {
+    scopeId: string;
+    userCode: string;
+  };
+  path?: never;
+  query?: never;
+  url: "/cli-auth/approve";
+};
+
+export type CliAuthApproveResponses = {
+  /**
+   * OK
+   */
+  200: {
+    id: string;
+  };
+};
+
+export type CliAuthApproveResponse = CliAuthApproveResponses[keyof CliAuthApproveResponses];
+
+export type CliAuthDenyData = {
+  body: {
+    userCode: string;
+  };
+  path?: never;
+  query?: never;
+  url: "/cli-auth/deny";
+};
+
+export type CliAuthDenyResponses = {
+  /**
+   * OK
+   */
+  200: {
+    id: string;
+  };
+};
+
+export type CliAuthDenyResponse = CliAuthDenyResponses[keyof CliAuthDenyResponses];
+
+export type CliAuthPollData = {
+  body: {
+    deviceCode: string;
+  };
+  path?: never;
+  query?: never;
+  url: "/cli-auth/poll";
+};
+
+export type CliAuthPollResponses = {
+  /**
+   * OK
+   */
+  200:
+    | {
+        status: "pending";
+      }
+    | {
+        status: "denied";
+      }
+    | {
+        deployToken: string;
+        scopeId: string;
+        status: "approved";
+      }
+    | {
+        status: "expired";
+      };
+};
+
+export type CliAuthPollResponse = CliAuthPollResponses[keyof CliAuthPollResponses];
+
+export type CliAuthStartData = {
+  body: {
+    [key: string]: unknown;
+  };
+  path?: never;
+  query?: never;
+  url: "/cli-auth/start";
+};
+
+export type CliAuthStartResponses = {
+  /**
+   * OK
+   */
+  200: {
+    deviceCode: string;
+    expiresAt: string;
+    userCode: string;
+  };
+};
+
+export type CliAuthStartResponse = CliAuthStartResponses[keyof CliAuthStartResponses];
+
+export type CliAuthVerifyTokenData = {
+  body: {
+    deployToken: string;
+  };
+  path?: never;
+  query?: never;
+  url: "/cli-auth/verify-token";
+};
+
+export type CliAuthVerifyTokenResponses = {
+  /**
+   * OK
+   */
+  200: {
+    scopeId: string;
+  };
+};
+
+export type CliAuthVerifyTokenResponse =
+  CliAuthVerifyTokenResponses[keyof CliAuthVerifyTokenResponses];
+
 export type DeploymentsListData = {
   body?: never;
   path?: never;
@@ -190,7 +306,7 @@ export type DeploymentsListData = {
     page?: number;
     pageSize?: number;
     appId: string;
-    resourceId: string;
+    scopeId: string;
   };
   url: "/deployments";
 };
@@ -230,7 +346,7 @@ export type DeploymentsCreateData = {
         objectKey: string;
       },
     ];
-    resourceId: string;
+    scopeId: string;
   };
   path?: never;
   query?: never;
@@ -282,7 +398,7 @@ export type DeploymentsGetData = {
     deploymentId: string;
   };
   query: {
-    resourceId: string;
+    scopeId: string;
   };
   url: "/deployments/{deploymentId}";
 };
@@ -305,7 +421,7 @@ export type DeploymentsGetResponse = DeploymentsGetResponses[keyof DeploymentsGe
 
 export type DeploymentsPublishData = {
   body: {
-    resourceId: string;
+    scopeId: string;
     rollout?: boolean;
   };
   path: {

@@ -1,9 +1,8 @@
 import { ArkErrors } from "arktype";
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
-import { defineSchema } from "../schema";
+import { createTailorKitSchema } from "../schema/schema";
 import { primitives as arktypePrimitives } from "./arktype";
-import { primitives } from "./schema";
 import { primitives as valibotPrimitives } from "./valibot";
 import { primitives as zodPrimitives } from "./zod";
 
@@ -23,44 +22,40 @@ const isValid = (schema: unknown, value: unknown): boolean => {
 };
 
 describe("primitive schema components", () => {
-  const schema = defineSchema({
-    theme: {
-      breakpoints: {
-        base: null,
-        sm: "640px",
-        lg: "1024px",
+  const theme = {
+    breakpoints: {
+      base: null,
+      sm: "640px",
+      lg: "1024px",
+    },
+    tokens: {
+      background: {
+        muted: "var(--muted)",
+        surface: "var(--background)",
       },
-      tokens: {
-        background: {
-          muted: "var(--muted)",
-          surface: "var(--background)",
-        },
-        borderColor: {
-          default: "var(--border)",
-        },
-        textColor: {
-          default: "var(--foreground)",
-          muted: "var(--muted-foreground)",
-        },
-        radius: {
-          md: "8px",
-          sm: "4px",
-        },
-        space: {
-          lg: "16px",
-          md: "8px",
-          sm: "4px",
-        },
+      borderColor: {
+        default: "var(--border)",
+      },
+      textColor: {
+        default: "var(--foreground)",
+        muted: "var(--muted-foreground)",
+      },
+      radius: {
+        md: "8px",
+        sm: "4px",
+      },
+      space: {
+        lg: "16px",
+        md: "8px",
+        sm: "4px",
       },
     },
-    components: {
-      ...primitives,
-    },
-  });
+  };
 
-  it("stores the resolved theme on the schema", () => {
-    expect(schema.theme.breakpoints?.sm).toBe("640px");
-    expect(schema.theme.tokens?.space?.md).toBe("8px");
+  const schema = createTailorKitSchema({
+    components: {
+      ...zodPrimitives(theme),
+    },
   });
 
   it("validates primitive token props against theme token names", () => {
@@ -78,37 +73,15 @@ describe("primitive schema components", () => {
     expect(isValid(flex, { direction: { xl: "row" } })).toBe(false);
   });
 
-  it("serializes the theme with the schema", () => {
-    expect(schema.serialize().theme?.breakpoints?.lg).toBe("1024px");
+  it("serializes primitive components without schema theme metadata", () => {
+    expect("theme" in schema.serialize()).toBe(false);
     expect(schema.serialize().components.Box?.slots).toEqual(["default"]);
   });
 
-  it("provides default breakpoints and theme tokens", () => {
-    const defaultSchema = defineSchema({
-      components: {
-        ...primitives,
-      },
-    });
-
-    expect(defaultSchema.theme.breakpoints).toMatchObject({ "2xl": "1536px" });
-    expect(defaultSchema.theme.tokens).toMatchObject({
-      border: { solid: "solid" },
-      overflow: { scroll: "scroll" },
-      overflowWrap: { breakWord: "break-word" },
-      radius: { md: "0.5rem" },
-      size: { "1/3": "33.333333%", full: "100%", min: "min-content" },
-      space: { "3xl": "4.5rem" },
-      textAlign: { justify: "justify" },
-      textOverflow: { ellipsis: "ellipsis" },
-      textTransform: { uppercase: "uppercase" },
-    });
-    expect(defaultSchema.theme.tokens?.textColor).toBeUndefined();
-  });
-
   it("validates default primitive tokens", () => {
-    const defaultSchema = defineSchema({
+    const defaultSchema = createTailorKitSchema({
       components: {
-        ...primitives,
+        ...zodPrimitives(),
       },
     });
     const box = defaultSchema.$internal.components.Box.fields;

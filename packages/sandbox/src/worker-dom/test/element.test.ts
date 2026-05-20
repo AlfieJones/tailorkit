@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/prefer-modern-dom-apis, unicorn/prefer-dom-node-remove */
 import { describe, expect, it, vi } from "vitest";
 import { Element, isElement } from "../element.js";
 import { DomEvent } from "../event.js";

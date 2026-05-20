@@ -1,10 +1,14 @@
 import { createContext, useContext, useEffect, useId, useMemo, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
-import type { StandardSchemaV1 } from "@standard-schema/spec";
+import type { StandardJSONSchemaV1 } from "@standard-schema/spec";
+import type { TailorKitSchemaSpecType } from "@tailorkit/core/spec";
 import type {
+  ActionTree,
+  CallbackMap,
   ComponentDefinition,
   ComponentProps,
   ComponentSlots,
+  Schema,
   ScreenDefinition,
   TailorKitSchema,
 } from "@tailorkit/core/schema";
@@ -16,12 +20,18 @@ type ReactComponentSlots<TComponent> = {
   [TSlot in keyof ComponentSlots<TComponent>]: ReactNode;
 };
 
-type ComponentRenderer<TComponent extends ComponentDefinition> = (args: {
+type AnyComponentDefinition = ComponentDefinition<
+  Schema | undefined,
+  CallbackMap,
+  readonly string[] | undefined
+>;
+
+type ComponentRenderer<TComponent extends AnyComponentDefinition> = (args: {
   props: ComponentProps<TComponent>;
   slots: ReactComponentSlots<TComponent>;
 }) => ReactNode;
 
-type ComponentRenderers<TComponents extends Record<string, ComponentDefinition>> = {
+type ComponentRenderers<TComponents extends Record<string, AnyComponentDefinition>> = {
   [TName in keyof TComponents]?: ComponentRenderer<TComponents[TName]>;
 };
 
@@ -39,6 +49,12 @@ interface TailorKitAppsSnapshot {
   status: "error" | "idle" | "loading" | "ready";
 }
 
+interface TailorKitSchemaSnapshot {
+  error: Error | null;
+  schema: TailorKitSchemaSpecType | null;
+  status: "error" | "idle" | "loading" | "ready";
+}
+
 interface ScreenMatchEntry {
   context: unknown;
   depth: number;
@@ -51,7 +67,11 @@ interface ScreenMatchEntry {
 }
 
 type ScreenContext<TScreen> =
-  TScreen extends ScreenDefinition<infer TContext> ? StandardSchemaV1.InferOutput<TContext> : never;
+  TScreen extends ScreenDefinition<infer TContext>
+    ? TContext extends StandardJSONSchemaV1
+      ? StandardJSONSchemaV1.InferOutput<TContext>
+      : Record<string, never>
+    : never;
 
 type ScreenName<TScreens extends Record<string, ScreenDefinition>> = keyof TScreens & string;
 
@@ -103,7 +123,6 @@ const toComponentTagName = (name: string): string =>
     .toLowerCase()}`;
 
 export interface TailorKitInstance<
-  TComponents extends Record<string, ComponentDefinition>,
   TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
 > {
   Screen: (props: ScreenProps) => ReactNode;
@@ -113,34 +132,64 @@ export interface TailorKitInstance<
   getApp: (id: string) => TailorKitApp | undefined;
   getApps: () => TailorKitApp[];
   useApps: () => TailorKitAppsSnapshot;
-  $internal: { schema: TailorKitSchema<TComponents, TScreens> };
 }
 
 type PrimitiveRenderers = typeof primitives;
-
-type CustomComponentRenderers<TComponents extends Record<string, ComponentDefinition>> = {
+type CustomComponentRenderers<TComponents extends Record<string, AnyComponentDefinition>> = {
   [TName in Exclude<keyof TComponents, keyof PrimitiveRenderers>]?: ComponentRenderer<
     TComponents[TName]
   >;
 };
 
-export function components<
-  TComponents extends Record<string, ComponentDefinition>,
-  TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
->(
-  _schema: TailorKitSchema<TComponents, TScreens>,
+export function components<TComponents extends Record<string, AnyComponentDefinition>>(
+  _schema: TailorKitSchema<TComponents, Record<string, ScreenDefinition>>,
   customComponents: CustomComponentRenderers<TComponents>,
 ): ComponentRenderers<TComponents> {
   return customComponents as ComponentRenderers<TComponents>;
 }
 
+type ServerComponents<TTailor> = TTailor extends {
+  $internal: {
+    schema: TailorKitSchema<infer TComponents, Record<string, ScreenDefinition>, ActionTree>;
+  };
+}
+  ? TComponents extends Record<string, AnyComponentDefinition>
+    ? TComponents
+    : never
+  : never;
+
+type ServerScreens<TTailor> = TTailor extends {
+  $internal: {
+    schema: TailorKitSchema<Record<string, AnyComponentDefinition>, infer TScreens, ActionTree>;
+  };
+}
+  ? TScreens extends Record<string, ScreenDefinition>
+    ? TScreens
+    : never
+  : never;
+
+type AnyServerSchema = TailorKitSchema<
+  Record<string, AnyComponentDefinition>,
+  Record<string, ScreenDefinition>,
+  ActionTree
+>;
+
 export function createTailorKitClient<
-  TComponents extends Record<string, ComponentDefinition>,
+  TTailor extends { $internal: { schema: AnyServerSchema } },
+>(options: {
+  baseUrl: string | URL;
+  components?: ComponentRenderers<ServerComponents<TTailor>>;
+}): TailorKitInstance<ServerScreens<TTailor>> {
+  return createReactTailorKitClient<ServerComponents<TTailor>, ServerScreens<TTailor>>(options);
+}
+
+function createReactTailorKitClient<
+  TComponents extends Record<string, AnyComponentDefinition>,
   TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
->(
-  schema: TailorKitSchema<TComponents, TScreens>,
-  options: { baseUrl: string | URL; components?: ComponentRenderers<TComponents> },
-): TailorKitInstance<TComponents, TScreens> {
+>(options: {
+  baseUrl: string | URL;
+  components?: ComponentRenderers<TComponents>;
+}): TailorKitInstance<TScreens> {
   const wrappedComponents: Record<string, unknown> = {};
   const store = createTailorKitStore(options.baseUrl);
 
@@ -214,28 +263,35 @@ export function createTailorKitClient<
       store.getCurrentMatch,
       store.getCurrentMatch,
     );
+    const props = useMemo(
+      () =>
+        match === null
+          ? undefined
+          : {
+              context: match.context,
+              isLoading: match.isLoading,
+              screen: match.screen,
+            },
+      [match],
+    );
+    const appUrl = useMemo(() => resolveAppUrl(app, store.baseUrl), [app]);
 
     if (match === null) {
       return null;
     }
 
+    const theme = {};
     const screenId = `tailorkit-screen-${reactId.replaceAll(":", "")}`;
 
     return (
-      <PrimitiveThemeContext.Provider value={{ screenId, theme: schema.theme }}>
+      <PrimitiveThemeContext.Provider value={{ screenId, theme }}>
         <div data-tailorkit-screen={screenId}>
-          <style data-tailorkit-theme-style={screenId}>
-            {buildThemeCss(screenId, schema.theme)}
-          </style>
+          <style data-tailorkit-theme-style={screenId}>{buildThemeCss(screenId, theme)}</style>
           <RemoteViewHost
-            appUrl={resolveAppUrl(app, store.baseUrl)}
+            appUrl={appUrl}
             components={wrappedComponents}
             createWorker={createWorker}
-            props={{
-              context: match.context,
-              isLoading: match.isLoading,
-              screen: match.screen,
-            }}
+            props={props}
             workerUrl={workerUrl}
           />
         </div>
@@ -249,7 +305,6 @@ export function createTailorKitClient<
     getApp: store.getApp,
     getApps: store.getApps,
     useApps,
-    $internal: { schema },
   };
 }
 
@@ -262,8 +317,14 @@ function createTailorKitStore(baseUrlInput: string | URL) {
     error: null,
     status: "idle",
   };
+  let schemaSnapshot: TailorKitSchemaSnapshot = {
+    error: null,
+    schema: null,
+    status: "idle",
+  };
   let currentMatch: ScreenMatchEntry | null = null;
-  let fetchPromise: Promise<void> | null = null;
+  let fetchAppsPromise: Promise<void> | null = null;
+  let fetchSchemaPromise: Promise<void> | null = null;
   let nextOrder = 0;
 
   const emit = (): void => {
@@ -289,14 +350,14 @@ function createTailorKitStore(baseUrlInput: string | URL) {
   return {
     baseUrl,
     fetchApps: (): Promise<void> => {
-      if (fetchPromise) {
-        return fetchPromise;
+      if (fetchAppsPromise) {
+        return fetchAppsPromise;
       }
 
       appsSnapshot = { ...appsSnapshot, status: "loading" };
       emit();
 
-      fetchPromise = fetch(new URL("apps", baseUrl))
+      fetchAppsPromise = fetch(new URL("apps", baseUrl))
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`Unable to fetch TailorKit apps from ${baseUrl.toString()}.`);
@@ -318,13 +379,45 @@ function createTailorKitStore(baseUrlInput: string | URL) {
           emit();
         });
 
-      return fetchPromise;
+      return fetchAppsPromise;
+    },
+    fetchSchema: (): Promise<void> => {
+      if (fetchSchemaPromise) {
+        return fetchSchemaPromise;
+      }
+
+      schemaSnapshot = { ...schemaSnapshot, status: "loading" };
+      emit();
+
+      fetchSchemaPromise = fetch(new URL("schema", baseUrl))
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`Unable to fetch TailorKit schema from ${baseUrl.toString()}.`);
+          }
+          schemaSnapshot = {
+            error: null,
+            schema: (await response.json()) as TailorKitSchemaSpecType,
+            status: "ready",
+          };
+          emit();
+        })
+        .catch((error: unknown) => {
+          schemaSnapshot = {
+            ...schemaSnapshot,
+            error: error instanceof Error ? error : new Error(String(error)),
+            status: "error",
+          };
+          emit();
+        });
+
+      return fetchSchemaPromise;
     },
     getApp: (id: string): TailorKitApp | undefined =>
       appsSnapshot.apps.find((app) => app.id === id),
     getApps: (): TailorKitApp[] => appsSnapshot.apps,
     getAppsSnapshot: (): TailorKitAppsSnapshot => appsSnapshot,
     getCurrentMatch: (): ScreenMatchEntry | null => currentMatch,
+    getSchemaSnapshot: (): TailorKitSchemaSnapshot => schemaSnapshot,
     registerMatch: (entry: Omit<ScreenMatchEntry, "order">): void => {
       const existing = matches.get(entry.id);
       matches.set(entry.id, {

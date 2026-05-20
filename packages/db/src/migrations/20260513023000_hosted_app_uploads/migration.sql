@@ -1,7 +1,7 @@
 CREATE TABLE "app" (
   "id" uuid PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
   "project_id" uuid NOT NULL,
-  "resource_id" text NOT NULL,
+  "scope_id" text NOT NULL,
   "key" text NOT NULL,
   "name" text,
   "description" text,
@@ -13,7 +13,7 @@ CREATE TABLE "app" (
 --> statement-breakpoint
 CREATE INDEX "app_projectId_idx" ON "app" ("project_id");
 --> statement-breakpoint
-CREATE INDEX "app_resourceId_idx" ON "app" ("resource_id");
+CREATE INDEX "app_scopeId_idx" ON "app" ("scope_id");
 --> statement-breakpoint
 CREATE UNIQUE INDEX "app_projectId_key_unique" ON "app" ("project_id", "key");
 --> statement-breakpoint

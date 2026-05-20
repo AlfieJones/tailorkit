@@ -1,74 +1,74 @@
-import { component, defineSchema, screen, primitives, tailorKit } from "tailorkit";
+import { tailorKit } from "tailorkit";
+import { primitives } from "tailorkit/zod";
 import { z } from "zod";
 
-const Button = component({
+const Button = {
   fields: z.object({
     variant: z.enum(["default", "secondary"]),
   }),
   callbacks: {
     onClick: {},
   },
-  slots: ["default"],
-});
+  slots: ["default"] as const,
+} as const;
 
-const Tabs = component({
+const Tabs = {
   fields: z.object({
     value: z.string(),
   }),
   callbacks: {
     onValueChange: {
-      input: [z.string()],
+      input: [z.string()] as const,
     },
   },
-  slots: ["default"],
-});
+  slots: ["default"] as const,
+} as const;
 
-const TabsList = component({
-  slots: ["default"],
-});
+const TabsList = {
+  slots: ["default"] as const,
+} as const;
 
-const TabsTab = component({
+const TabsTab = {
   fields: z.object({
     value: z.string(),
   }),
-  slots: ["default"],
-});
+  slots: ["default"] as const,
+} as const;
 
-const TabsPanel = component({
+const TabsPanel = {
   fields: z.object({
     value: z.string(),
   }),
-  slots: ["default"],
-});
+  slots: ["default"] as const,
+} as const;
 
-const Input = component({
+const Input = {
   fields: z.object({
     value: z.string(),
   }),
   callbacks: {
     onValueChange: {
-      input: [z.string()],
+      input: [z.string()] as const,
     },
   },
-  slots: ["default"],
-});
+  slots: ["default"] as const,
+} as const;
 
 // This is the contract between the your platform and apps
 // Try to avoid breaking changes as this can break any apps which rely on the schema
-export const schema = defineSchema({
-  theme: {
-    // See https://tailorkit.dev/docs/styling#theme
-    tokens: {
-      borderColor: {
-        default: "var(--border)",
-      },
-      textColor: {
-        default: "var(--text)",
-      },
-    },
-  },
+export const tailor = tailorKit({
   components: {
-    ...primitives,
+    ...primitives({
+      // See https://tailorkit.dev/docs/styling#theme
+      tokens: {
+        borderColor: {
+          default: "var(--border)",
+        },
+        textColor: {
+          default: "var(--text)",
+        },
+      },
+    }),
     Button,
     Tabs,
     TabsList,
@@ -77,10 +77,8 @@ export const schema = defineSchema({
     Input,
   },
   screens: {
-    "/": screen({}),
+    "/": {},
   },
 });
 
-export const tailor = tailorKit({
-  schema,
-});
+export const schema = tailor.$internal.schema;

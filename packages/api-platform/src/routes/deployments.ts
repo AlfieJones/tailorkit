@@ -45,7 +45,7 @@ const deploymentAssetUpload = z.object({
 });
 
 const requireDeployment = o.middleware(
-  async ({ next, context }, input: { deploymentId: string; resourceId: string }) => {
+  async ({ next, context }, input: { deploymentId: string; scopeId: string }) => {
     const deploymentWithApp = await db.query.appDeployment.findFirst({
       where: {
         id: input.deploymentId,
@@ -59,7 +59,7 @@ const requireDeployment = o.middleware(
       !deploymentWithApp ||
       !deploymentWithApp.app ||
       deploymentWithApp.app.projectId !== context.project.id ||
-      deploymentWithApp.app.resourceId !== input.resourceId
+      deploymentWithApp.app.scopeId !== input.scopeId
     ) {
       throw new ORPCError("NOT_FOUND", { message: "Deployment not found." });
     }
@@ -87,11 +87,11 @@ const listAppDeployments = protectedRouter
   })
   .input(
     z.object({
-      query: paginationQuery.extend({ appId: z.string(), resourceId: z.string() }),
+      query: paginationQuery.extend({ appId: z.string(), scopeId: z.string() }),
     }),
   )
   .output(paginatedOutput(AppDeployment))
-  .use(requireApp, ({ query: { appId, resourceId } }) => ({ appId, resourceId }))
+  .use(requireApp, ({ query: { appId, scopeId } }) => ({ appId, scopeId }))
   .handler(async ({ context, input }) => {
     const { page, pageSize } = input.query;
     const deployments = await db.query.appDeployment.findMany({
@@ -125,13 +125,13 @@ const getAppDeployment = protectedRouter
   .input(
     z.object({
       params: z.object({ deploymentId: z.string() }),
-      query: z.object({ resourceId: z.string() }),
+      query: z.object({ scopeId: z.string() }),
     }),
   )
   .output(z.object({ body: AppDeployment }))
-  .use(requireDeployment, ({ params: { deploymentId }, query: { resourceId } }) => ({
+  .use(requireDeployment, ({ params: { deploymentId }, query: { scopeId } }) => ({
     deploymentId,
-    resourceId,
+    scopeId,
   }))
   .handler(({ context }) => ({ body: context.deployment }));
 
@@ -145,7 +145,7 @@ const createAppDeployment = protectedRouter
       body: z.object({
         appId: z.string(),
         assets: z.tuple([createDeploymentAssetInput]),
-        resourceId: z.string(),
+        scopeId: z.string(),
       }),
     }),
   )
@@ -157,7 +157,7 @@ const createAppDeployment = protectedRouter
       }),
     }),
   )
-  .use(requireApp, ({ body: { appId, resourceId } }) => ({ appId, resourceId }))
+  .use(requireApp, ({ body: { appId, scopeId } }) => ({ appId, scopeId }))
   .handler(async ({ context, input }) => {
     const [asset] = input.body.assets;
     const deploymentId = crypto.randomUUID();
@@ -242,16 +242,16 @@ const publishAppDeployment = protectedRouter
   .input(
     z.object({
       body: z.object({
-        resourceId: z.string(),
+        scopeId: z.string(),
         rollout: z.boolean().optional().default(true),
       }),
       params: z.object({ deploymentId: z.string() }),
     }),
   )
   .output(z.object({ body: AppDeployment }))
-  .use(requireDeployment, ({ body: { resourceId }, params: { deploymentId } }) => ({
+  .use(requireDeployment, ({ body: { scopeId }, params: { deploymentId } }) => ({
     deploymentId,
-    resourceId,
+    scopeId,
   }))
   .handler(async ({ context, input }) => {
     const { deployment } = context;

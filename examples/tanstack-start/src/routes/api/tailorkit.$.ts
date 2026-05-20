@@ -1,15 +1,28 @@
+import { auth } from "#/lib/auth";
+import { tailorKit } from "#/lib/tailorkit";
 import { createFileRoute } from "@tanstack/react-router";
-import { defineSchema, primitives, tailorKit } from "tailorkit";
 
-const tailor = tailorKit({
-  basePath: "/api/tailorkit",
-  schema: defineSchema({ components: { ...primitives } }),
-});
+const handle = ({ request }: { request: Request }) =>
+  tailorKit.handler(request, {
+    authenticate: async () => {
+      const session = await auth.api.getSession({ headers: request.headers });
+
+      if (!session) {
+        return null;
+      }
+
+      return {
+        actionContext: { user: session.user },
+        scopeId: session.user.id,
+      };
+    },
+  });
 
 export const Route = createFileRoute("/api/tailorkit/$")({
   server: {
     handlers: {
-      GET: ({ request }) => tailor.fetch(request),
+      GET: handle,
+      POST: handle,
     },
   },
 });

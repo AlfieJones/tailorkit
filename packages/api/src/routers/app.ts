@@ -25,7 +25,7 @@ export const hostedAppRouter = {
         description: z.string().optional(),
         key: appKeySchema,
         name: z.string().min(1).optional(),
-        resourceId: z.string().min(1).optional(),
+        scopeId: z.string().min(1).optional(),
       }),
     )
     .use(requireProject({ project: ["update"] }))
@@ -50,7 +50,7 @@ export const hostedAppRouter = {
           key: input.key,
           name: input.name?.trim() || undefined,
           projectId: context.project.id,
-          resourceId: input.resourceId ?? context.project.id,
+          scopeId: input.scopeId ?? context.project.id,
         })
         .returning();
 

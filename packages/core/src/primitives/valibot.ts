@@ -50,7 +50,9 @@ export const primitives = (theme: TailorKitTheme = {}): PrimitiveComponents => {
   for (const name of primitiveNames) {
     components[name] = {
       callbacks: {},
-      fields: v.strictObject(primitiveShape(name, resolvedTheme) as v.ObjectEntries),
+      fields: v.strictObject(
+        primitiveShape(name, resolvedTheme) as v.ObjectEntries,
+      ) as unknown as ComponentDefinition["fields"],
       slots: ["default"] as const,
     };
   }

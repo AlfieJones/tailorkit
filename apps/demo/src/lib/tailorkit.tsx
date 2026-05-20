@@ -1,5 +1,6 @@
-import { component, defineSchema, primitives, screen } from "tailorkit";
-import type { TailorKitTheme } from "tailorkit";
+import { createTailorKit } from "tailorkit";
+import type { Component, TailorKitTheme } from "tailorkit";
+import { primitives } from "tailorkit/zod";
 import { createTailorKitClient, primitives as reactPrimitives } from "tailorkit/react";
 import type React from "react";
 import { z } from "zod";
@@ -25,6 +26,9 @@ import { Checkbox } from "@tailorkit/ui/components/checkbox";
 import { Input } from "@tailorkit/ui/components/input";
 import { Separator } from "@tailorkit/ui/components/separator";
 import { defaultTheme, withPrimitiveThemeTokens } from "./demo-theme";
+
+const component = <const TComponent extends Component>(definition: TComponent): TComponent =>
+  definition;
 
 const ButtonComponent = component({
   callbacks: {
@@ -121,10 +125,12 @@ const DropdownMenuItemComponent = component({
 });
 const DropdownMenuSeparatorComponent = component({});
 
-export const createDemoSchema = (theme: TailorKitTheme = defaultTheme) =>
-  defineSchema({
+export const createDemoSchema = (theme: TailorKitTheme = defaultTheme) => {
+  const primitiveTheme = withPrimitiveThemeTokens(theme);
+
+  return {
     components: {
-      ...primitives,
+      ...primitives(primitiveTheme),
       Badge: BadgeComponent,
       Button: ButtonComponent,
       Card: CardComponent,
@@ -147,12 +153,12 @@ export const createDemoSchema = (theme: TailorKitTheme = defaultTheme) =>
       TabsPanel: TabsPanelComponent,
     },
     screens: {
-      "/": screen({
+      "/": {
         context: z.object({}).optional(),
-      }),
+      },
     },
-    theme: withPrimitiveThemeTokens(theme),
-  });
+  } as const;
+};
 
 export const demoApps = [
   {
@@ -170,9 +176,9 @@ export const demoApps = [
 ];
 
 export function createDemoTailorClient(theme: TailorKitTheme) {
-  const schema = createDemoSchema(theme);
+  const server = createTailorKit(createDemoSchema(theme));
 
-  return createTailorKitClient(schema, {
+  return createTailorKitClient<typeof server>({
     baseUrl:
       typeof window === "undefined"
         ? "http://localhost/api/tailorkit/"

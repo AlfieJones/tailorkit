@@ -51,6 +51,28 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.project.id,
       to: r.app.projectId,
     }),
+    cliAuthSessions: r.many.cliAuthSession({
+      from: r.project.id,
+      to: r.cliAuthSession.projectId,
+    }),
+    cliTokens: r.many.cliToken({
+      from: r.project.id,
+      to: r.cliToken.projectId,
+    }),
+  },
+
+  cliAuthSession: {
+    project: r.one.project({
+      from: r.cliAuthSession.projectId,
+      to: r.project.id,
+    }),
+  },
+
+  cliToken: {
+    project: r.one.project({
+      from: r.cliToken.projectId,
+      to: r.project.id,
+    }),
   },
 
   app: {

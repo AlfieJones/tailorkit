@@ -19,6 +19,9 @@ export const JsonSchema: z.ZodType<Record<string, unknown>> = z
     const: z.unknown().optional(),
     items: z.lazy(() => JsonSchema).optional(),
     anyOf: z.lazy(() => z.array(JsonSchema)).optional(),
+    oneOf: z.lazy(() => z.array(JsonSchema)).optional(),
+    allOf: z.lazy(() => z.array(JsonSchema)).optional(),
+    not: z.lazy(() => JsonSchema).optional(),
   })
   .strict();
 

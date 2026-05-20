@@ -10,10 +10,10 @@ export function Footer() {
       <div className="flex flex-col gap-10 px-6 py-12 sm:flex-row sm:justify-between lg:px-14">
         {/* Logo + copyright */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <Logo className="size-5 text-foreground" />
             <span className="font-semibold text-foreground text-sm">TailorKit</span>
-          </div>
+          </Link>
           <p className="text-xs text-foreground/50">
             © copyright TailorKit {new Date().getFullYear()}. All rights reserved.
           </p>

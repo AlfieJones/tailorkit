@@ -41,7 +41,7 @@
             "allowReserved": true
           },
           {
-            "name": "resourceId",
+            "name": "scopeId",
             "in": "query",
             "required": true,
             "schema": {
@@ -72,7 +72,7 @@
                             "type": "string",
                             "format": "uuid"
                           },
-                          "resourceId": {
+                          "scopeId": {
                             "type": "string",
                             "maxLength": 255
                           },
@@ -116,7 +116,7 @@
                         "required": [
                           "id",
                           "projectId",
-                          "resourceId",
+                          "scopeId",
                           "name",
                           "description",
                           "currentDeploymentId",
@@ -176,12 +176,12 @@
                       }
                     ]
                   },
-                  "resourceId": {
+                  "scopeId": {
                     "type": "string",
                     "maxLength": 255
                   }
                 },
-                "required": ["name", "description", "resourceId"]
+                "required": ["name", "description", "scopeId"]
               }
             }
           }
@@ -202,7 +202,7 @@
                       "type": "string",
                       "format": "uuid"
                     },
-                    "resourceId": {
+                    "scopeId": {
                       "type": "string",
                       "maxLength": 255
                     },
@@ -246,7 +246,7 @@
                   "required": [
                     "id",
                     "projectId",
-                    "resourceId",
+                    "scopeId",
                     "name",
                     "description",
                     "currentDeploymentId",
@@ -273,7 +273,7 @@
             }
           },
           {
-            "name": "resourceId",
+            "name": "scopeId",
             "in": "query",
             "required": true,
             "schema": {
@@ -299,7 +299,7 @@
                       "type": "string",
                       "format": "uuid"
                     },
-                    "resourceId": {
+                    "scopeId": {
                       "type": "string",
                       "maxLength": 255
                     },
@@ -343,7 +343,7 @@
                   "required": [
                     "id",
                     "projectId",
-                    "resourceId",
+                    "scopeId",
                     "name",
                     "description",
                     "currentDeploymentId",
@@ -368,7 +368,7 @@
             }
           },
           {
-            "name": "resourceId",
+            "name": "scopeId",
             "in": "query",
             "required": true,
             "schema": {
@@ -410,7 +410,7 @@
             }
           },
           {
-            "name": "resourceId",
+            "name": "scopeId",
             "in": "query",
             "required": true,
             "schema": {
@@ -464,7 +464,7 @@
                       "type": "string",
                       "format": "uuid"
                     },
-                    "resourceId": {
+                    "scopeId": {
                       "type": "string",
                       "maxLength": 255
                     },
@@ -508,7 +508,7 @@
                   "required": [
                     "id",
                     "projectId",
-                    "resourceId",
+                    "scopeId",
                     "name",
                     "description",
                     "currentDeploymentId",
@@ -535,7 +535,7 @@
             }
           },
           {
-            "name": "resourceId",
+            "name": "scopeId",
             "in": "query",
             "required": true,
             "schema": {
@@ -577,7 +577,7 @@
                       "type": "string",
                       "format": "uuid"
                     },
-                    "resourceId": {
+                    "scopeId": {
                       "type": "string",
                       "maxLength": 255
                     },
@@ -621,13 +621,255 @@
                   "required": [
                     "id",
                     "projectId",
-                    "resourceId",
+                    "scopeId",
                     "name",
                     "description",
                     "currentDeploymentId",
                     "createdAt",
                     "updatedAt"
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cli-auth/approve": {
+      "post": {
+        "operationId": "cliAuth.approve",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "scopeId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "userCode": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["scopeId", "userCode"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cli-auth/deny": {
+      "post": {
+        "operationId": "cliAuth.deny",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userCode": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["userCode"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cli-auth/poll": {
+      "post": {
+        "operationId": "cliAuth.poll",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "deviceCode": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["deviceCode"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "const": "pending"
+                        }
+                      },
+                      "required": ["status"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "const": "denied"
+                        }
+                      },
+                      "required": ["status"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "deployToken": {
+                          "type": "string"
+                        },
+                        "scopeId": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "const": "approved"
+                        }
+                      },
+                      "required": ["deployToken", "scopeId", "status"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "const": "expired"
+                        }
+                      },
+                      "required": ["status"]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cli-auth/start": {
+      "post": {
+        "operationId": "cliAuth.start",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deviceCode": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "x-native-type": "date"
+                    },
+                    "userCode": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["deviceCode", "expiresAt", "userCode"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cli-auth/verify-token": {
+      "post": {
+        "operationId": "cliAuth.verifyToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "deployToken": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": ["deployToken"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "scopeId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["scopeId"]
                 }
               }
             }
@@ -676,7 +918,7 @@
             "allowReserved": true
           },
           {
-            "name": "resourceId",
+            "name": "scopeId",
             "in": "query",
             "required": true,
             "schema": {
@@ -821,11 +1063,11 @@
                       }
                     ]
                   },
-                  "resourceId": {
+                  "scopeId": {
                     "type": "string"
                   }
                 },
-                "required": ["appId", "assets", "resourceId"]
+                "required": ["appId", "assets", "scopeId"]
               }
             }
           }
@@ -998,7 +1240,7 @@
             }
           },
           {
-            "name": "resourceId",
+            "name": "scopeId",
             "in": "query",
             "required": true,
             "schema": {
@@ -1083,7 +1325,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "resourceId": {
+                  "scopeId": {
                     "type": "string"
                   },
                   "rollout": {
@@ -1091,7 +1333,7 @@
                     "default": true
                   }
                 },
-                "required": ["resourceId"]
+                "required": ["scopeId"]
               }
             }
           }

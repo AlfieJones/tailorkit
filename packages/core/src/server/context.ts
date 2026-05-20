@@ -1,14 +1,22 @@
 import type { Client as PlatformClient } from "@tailorkit/client-platform/client/client/index";
-import type { ActionDefinition, Schema } from "../schema";
-import type { ImplementedAction } from "./actions";
-import type { TailorKitHandlerContext, TailorKitPlatformOptions } from "./types";
+import type { ImplementedAction, TailorKitSchema } from "../schema";
+import type { TailorKitPlatformOptions } from "./types";
+
+interface TailorKitRuntimeContext {
+  actionContext?: unknown;
+  scopeId: string;
+}
 
 export interface Context {
-  actions: Map<string, ImplementedAction<ActionDefinition, unknown>>;
+  actions: Map<string, ImplementedAction>;
   platform: PlatformClient;
-  platformHeaders: Headers;
-  requestContextSchema?: Schema;
-  tailorkit: TailorKitHandlerContext;
+  platformHeaders: Record<string, string>;
+  request: Request;
+  schema: TailorKitSchema;
+  tailorkit?: TailorKitRuntimeContext;
+  authenticate: (
+    request: Request,
+  ) => TailorKitRuntimeContext | null | Promise<TailorKitRuntimeContext | null>;
 }
 
 export interface CreateContextOptions {
@@ -16,8 +24,10 @@ export interface CreateContextOptions {
   platform: PlatformClient;
   platformHeaders?: TailorKitPlatformOptions["headers"];
   request: Request;
-  requestContextSchema?: Schema;
-  tailorkit: TailorKitHandlerContext;
+  schema: TailorKitSchema;
+  authenticate: (
+    request: Request,
+  ) => TailorKitRuntimeContext | null | Promise<TailorKitRuntimeContext | null>;
 }
 
 export async function createContext(options: CreateContextOptions): Promise<Context> {
@@ -25,18 +35,14 @@ export async function createContext(options: CreateContextOptions): Promise<Cont
     ? options.platformHeaders()
     : options.platformHeaders);
 
-  const platformHeaders = new Headers(configuredHeaders);
-  const authorization = options.request.headers.get("authorization");
-
-  if (authorization) {
-    platformHeaders.set("authorization", authorization);
-  }
+  const platformHeaders = Object.fromEntries(new Headers(configuredHeaders));
 
   return {
     actions: options.actions,
     platform: options.platform,
     platformHeaders,
-    requestContextSchema: options.requestContextSchema,
-    tailorkit: options.tailorkit,
+    request: options.request,
+    schema: options.schema,
+    authenticate: options.authenticate,
   };
 }

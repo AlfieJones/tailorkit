@@ -1,2 +1,2 @@
-export { createTailorKitClient, primitives } from "@tailorkit/react";
+export { primitives, createTailorKitClient } from "@tailorkit/react";
 export type { TailorKitApp, TailorKitInstance } from "@tailorkit/react";

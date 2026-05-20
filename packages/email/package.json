@@ -10,7 +10,7 @@
     "dev": "email dev --dir src/templates --port 3003"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.1047.0",
+    "@aws-sdk/client-sesv2": "^3.1048.0",
     "@react-email/components": "^1.0.1",
     "@react-email/render": "^2.0.8",
     "@tailorkit/env": "workspace:*",

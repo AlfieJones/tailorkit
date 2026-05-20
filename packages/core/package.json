@@ -8,10 +8,6 @@
     "./server/types": "./src/server/types.ts",
     "./schema": "./src/schema/index.ts",
     "./spec": "./src/spec/index.ts",
-    "./layout": "./src/layout/index.ts",
-    "./layout/zod": "./src/layout/zod.ts",
-    "./layout/valibot": "./src/layout/valibot.ts",
-    "./layout/arktype": "./src/layout/arktype.ts",
     "./primitives/zod": "./src/primitives/zod.ts",
     "./primitives/valibot": "./src/primitives/valibot.ts",
     "./primitives/arktype": "./src/primitives/arktype.ts"
@@ -19,7 +15,7 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "generate:native": "tsx scripts/generate-native-components/index.ts",
-    "test": "vitest run"
+    "test": "vitest --typecheck"
   },
   "dependencies": {
     "@orpc/client": "catalog:",
