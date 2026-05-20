@@ -1,11 +1,9 @@
 import type { VercelConfig } from "@vercel/config/v1";
 
-const docsOrigin = "https://tailorkit-docs.vercel.app";
-
 export const config: VercelConfig = {
   rewrites: [
     {
-      destination: docsOrigin,
+      destination: "https://tailorkit-docs.vercel.app",
       missing: [
         {
           key: "tailorkit.session_token",
@@ -15,7 +13,7 @@ export const config: VercelConfig = {
       source: "/",
     },
     {
-      destination: `${docsOrigin}/docs/:path*`,
+      destination: "https://tailorkit-docs.vercel.app/docs/:path*",
       source: "/docs/:path*",
     },
   ],
