@@ -114,24 +114,21 @@ import { tailorKit } from "~/lib/tailorkit";
 
 async function handleRequest(request: Request) {
   return tailorKit.handler(request, {
-    // [!code highlight]
+    // [!code highlight:15]
     authenticate: async () => {
-      // [!code highlight]
-      const session = await auth(request); // [!code highlight]
+      const session = await auth(request);
 
       if (!session) {
-        // [!code highlight]
-        return null; // [!code highlight]
-      } // [!code highlight]
+        return;
+      }
 
       return {
-        // [!code highlight]
-        actionContext: { user: session.user }, // [!code highlight]
-        // Used to separate installed apps for each user, team, or project. // [!code highlight]
-        scopeId: session.user.id, // [!code highlight]
-      }; // [!code highlight]
-    }, // [!code highlight]
-  }); // [!code highlight]
+        actionContext: { user: session.user },
+        // Used to separate installed apps for each user, team, or project.
+        scopeId: session.user.id,
+      };
+    },
+  });
 }
 
 export const GET = handleRequest;
@@ -154,24 +151,21 @@ export const Route = createFileRoute("/api/tailorkit/$")({
 
 async function handleRequest({ request }: { request: Request }) {
   return tailorKit.handler(request, {
-    // [!code highlight]
+    // [!code highlight:15]
     authenticate: async () => {
-      // [!code highlight]
-      const session = await auth(request); // [!code highlight]
+      const session = await auth(request);
 
       if (!session) {
-        // [!code highlight]
-        return null; // [!code highlight]
-      } // [!code highlight]
+        return;
+      }
 
       return {
-        // [!code highlight]
-        actionContext: { user: session.user }, // [!code highlight]
-        // Used to separate installed apps for each user, team, or project. // [!code highlight]
-        scopeId: session.user.id, // [!code highlight]
-      }; // [!code highlight]
-    }, // [!code highlight]
-  }); // [!code highlight]
+        actionContext: { user: session.user },
+        // Used to separate installed apps for each user, team, or project.
+        scopeId: session.user.id,
+      };
+    },
+  });
 }
 ```
 
@@ -182,24 +176,21 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 
 async function handleRequest(request: Request) {
   return tailorKit.handler(request, {
-    // [!code highlight]
+    // [!code highlight:15]
     authenticate: async () => {
-      // [!code highlight]
-      const session = await auth(request); // [!code highlight]
+      const session = await auth(request);
 
       if (!session) {
-        // [!code highlight]
-        return null; // [!code highlight]
-      } // [!code highlight]
+        return;
+      }
 
       return {
-        // [!code highlight]
-        actionContext: { user: session.user }, // [!code highlight]
-        // Used to separate installed apps for each user, team, or project. // [!code highlight]
-        scopeId: session.user.id, // [!code highlight]
-      }; // [!code highlight]
-    }, // [!code highlight]
-  }); // [!code highlight]
+        actionContext: { user: session.user },
+        // Used to separate installed apps for each user, team, or project.
+        scopeId: session.user.id,
+      };
+    },
+  });
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -219,24 +210,21 @@ import { toWebRequest } from "h3";
 export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
   return tailorKit.handler(request, {
-    // [!code highlight]
+    // [!code highlight:15]
     authenticate: async () => {
-      // [!code highlight]
-      const session = await auth(request); // [!code highlight]
+      const session = await auth(request);
 
       if (!session) {
-        // [!code highlight]
-        return null; // [!code highlight]
-      } // [!code highlight]
+        return;
+      }
 
       return {
-        // [!code highlight]
-        actionContext: { user: session.user }, // [!code highlight]
-        // Used to separate installed apps for each user, team, or project. // [!code highlight]
-        scopeId: session.user.id, // [!code highlight]
-      }; // [!code highlight]
-    }, // [!code highlight]
-  }); // [!code highlight]
+        actionContext: { user: session.user },
+        // Used to separate installed apps for each user, team, or project.
+        scopeId: session.user.id,
+      };
+    },
+  });
 });
 ```
 
@@ -249,24 +237,21 @@ const app = new Hono();
 
 app.on(["GET", "POST"], "/api/tailorkit/*", async (c) => {
   return tailorKit.handler(c.req.raw, {
-    // [!code highlight]
+    // [!code highlight:15]
     authenticate: async () => {
-      // [!code highlight]
-      const session = await auth(c.req.raw); // [!code highlight]
+      const session = await auth(c.req.raw);
 
       if (!session) {
-        // [!code highlight]
-        return null; // [!code highlight]
-      } // [!code highlight]
+        return;
+      }
 
       return {
-        // [!code highlight]
-        actionContext: { user: session.user }, // [!code highlight]
-        // Used to separate installed apps for each user, team, or project. // [!code highlight]
-        scopeId: session.user.id, // [!code highlight]
-      }; // [!code highlight]
-    }, // [!code highlight]
-  }); // [!code highlight]
+        actionContext: { user: session.user },
+        // Used to separate installed apps for each user, team, or project.
+        scopeId: session.user.id,
+      };
+    },
+  });
 });
 
 export default app;
