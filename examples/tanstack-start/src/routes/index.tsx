@@ -112,7 +112,7 @@ function getStageIndicatorClassName(stage: string) {
 }
 
 function formatDealTotal() {
-  const total = deals.reduce((sum, deal) => sum + Number(deal.amount.replaceAll(/[$,]/g, "")), 0);
+  const total = deals.reduce((sum, deal) => sum + Number(deal.amount.replaceAll(/[$,]/gu, "")), 0);
 
   return new Intl.NumberFormat("en-US", {
     currency: "USD",

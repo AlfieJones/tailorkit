@@ -67,7 +67,7 @@ function getStatusIndicatorClassName(status: string) {
 }
 
 function formatCurrencyTotal(rows: { value: string }[]) {
-  const total = rows.reduce((sum, row) => sum + Number(row.value.replaceAll(/[$,]/g, "")), 0);
+  const total = rows.reduce((sum, row) => sum + Number(row.value.replaceAll(/[$,]/gu, "")), 0);
 
   return new Intl.NumberFormat("en-US", {
     currency: "USD",

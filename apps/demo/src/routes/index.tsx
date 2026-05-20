@@ -193,6 +193,7 @@ function DemoPage() {
             <Panel title="Demo setup">
               <Field label="Customer label">
                 <input
+                  aria-label="Customer label"
                   className="h-9 w-full rounded-md border border-[color:var(--border)] bg-[color:var(--input)] px-3 text-sm text-[color:var(--foreground)] outline-none focus:border-[color:var(--ring)]"
                   onChange={(event) =>
                     setConfig((current) => ({ ...current, customerLabel: event.target.value }))
@@ -202,6 +203,7 @@ function DemoPage() {
               </Field>
               <Field label="Panel width">
                 <input
+                  aria-label="Panel width"
                   className="h-9 w-full rounded-md border border-[color:var(--border)] bg-[color:var(--input)] px-3 text-sm text-[color:var(--foreground)] outline-none focus:border-[color:var(--ring)]"
                   max={520}
                   min={280}
@@ -217,6 +219,7 @@ function DemoPage() {
               </Field>
               <label className="flex items-center gap-2 text-[color:var(--muted-foreground)] text-sm">
                 <input
+                  aria-label="Reserve customer page space for the rail"
                   checked={config.pushPage}
                   className="size-4 accent-[color:var(--primary)]"
                   onChange={(event) =>
@@ -228,6 +231,7 @@ function DemoPage() {
               </label>
               <label className="flex items-center gap-2 text-[color:var(--muted-foreground)] text-sm">
                 <input
+                  aria-label="Show rail border"
                   checked={config.railBorder}
                   className="size-4 accent-[color:var(--primary)]"
                   onChange={(event) =>
@@ -239,6 +243,7 @@ function DemoPage() {
               </label>
               <label className="flex items-center gap-2 text-[color:var(--muted-foreground)] text-sm">
                 <input
+                  aria-label="Dark mode"
                   checked={dark}
                   className="size-4 accent-[color:var(--primary)]"
                   onChange={(event) => setDark(event.target.checked)}
@@ -328,6 +333,7 @@ function DemoPage() {
               </p>
             )}
             <textarea
+              aria-label="Demo handoff JSON"
               className="max-h-72 min-h-48 w-full resize-y rounded-md bg-[color:var(--popover)] p-3 font-mono text-[color:var(--popover-foreground)] text-xs leading-relaxed outline-none focus:ring-1 focus:ring-[color:var(--ring)]"
               onBlur={() => {
                 setIsEditingJson(false);
@@ -499,6 +505,7 @@ function ColorTokenControl({
           value={toColorInput(value)}
         />
         <input
+          aria-label={`${label} token value`}
           className="min-w-0 flex-1 border-0 bg-transparent font-mono text-xs outline-none"
           onChange={(event) => onChange(event.target.value)}
           value={value}

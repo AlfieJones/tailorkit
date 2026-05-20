@@ -80,14 +80,11 @@ export async function getDemoAuthSession(authUrl = "/api/auth"): Promise<DemoAut
   return (await response.json()) as DemoAuthResponse;
 }
 
-export async function signInDemoUser(
-  userId: string,
-  authUrl = "/api/auth",
-): Promise<DemoAuthResponse> {
+export function signInDemoUser(userId: string, authUrl = "/api/auth"): Promise<DemoAuthResponse> {
   return updateDemoAuthSession(authUrl, { action: "sign-in", userId });
 }
 
-export async function signOutDemoUser(authUrl = "/api/auth"): Promise<DemoAuthResponse> {
+export function signOutDemoUser(authUrl = "/api/auth"): Promise<DemoAuthResponse> {
   return updateDemoAuthSession(authUrl, { action: "sign-out" });
 }
 
