@@ -35,7 +35,7 @@ function DealsPage() {
         <div>
           <h2 className="font-semibold text-lg">Deal list</h2>
           <p className="text-muted-foreground text-sm">
-            Click through to view owner, probability, and next step.
+            Open opportunities by stage, owner, and value.
           </p>
         </div>
         <DealTable />

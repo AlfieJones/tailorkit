@@ -1,10 +1,12 @@
 import { ORPCError, os } from "@orpc/server";
 import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
-import { ratelimitMiddleware } from "@tailorkit/api-utils/rate-limiting";
+import { createRatelimiter, ratelimitMiddleware } from "@tailorkit/api-utils/rate-limiting";
 import { devDelayMiddleware } from "@tailorkit/api-utils/dev-delay";
 import type { Context } from "./context";
 import type { ac } from "@tailorkit/auth/lib/permissions";
+
+const rateLimiter = createRatelimiter({ maxRequests: 100, window: 1000 });
 
 export const o = os.$context<Context>().errors({
   UNAUTHORIZED: {},
@@ -16,7 +18,7 @@ export const o = os.$context<Context>().errors({
 
 export const publicProcedure = o
   .use(devDelayMiddleware)
-  .use(ratelimitMiddleware(({ context }) => context.user?.id ?? `ip:${context.ip}`));
+  .use(ratelimitMiddleware(rateLimiter, ({ context }) => context.user?.id ?? `ip:${context.ip}`));
 
 const requireAuth = o.middleware(({ context, next }) => {
   if (!context.session || !context.user) {

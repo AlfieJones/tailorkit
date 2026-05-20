@@ -1,9 +1,14 @@
 import { Badge } from "@tailorkit/ui/badge";
-import { Button } from "@tailorkit/ui/button";
 import { CardFrame } from "@tailorkit/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@tailorkit/ui/table";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@tailorkit/ui/table";
 import { customers } from "#/lib/crm-data";
 
 export function CustomerTable({ limit }: { limit?: number }) {
@@ -17,17 +22,13 @@ export function CustomerTable({ limit }: { limit?: number }) {
             <TableHead>Customer</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Owner</TableHead>
-            <TableHead>Value</TableHead>
-            <TableHead className="w-px" />
+            <TableHead className="text-right">Value</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {visibleCustomers.map((customer) => (
             <TableRow key={customer.id}>
-              <TableCell>
-                <div className="font-medium">{customer.name}</div>
-                <div className="mt-1 text-muted-foreground text-xs">{customer.company}</div>
-              </TableCell>
+              <TableCell className="font-medium">{customer.name}</TableCell>
               <TableCell>
                 <Badge variant="outline">
                   <span
@@ -38,20 +39,16 @@ export function CustomerTable({ limit }: { limit?: number }) {
                 </Badge>
               </TableCell>
               <TableCell>{customer.owner}</TableCell>
-              <TableCell>{customer.value}</TableCell>
-              <TableCell>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  render={<Link to="/customers/$customerId" params={{ customerId: customer.id }} />}
-                >
-                  View
-                  <ArrowRight aria-hidden="true" />
-                </Button>
-              </TableCell>
+              <TableCell className="text-right">{customer.value}</TableCell>
             </TableRow>
           ))}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={3}>Total Value</TableCell>
+            <TableCell className="text-right">{formatCurrencyTotal(visibleCustomers)}</TableCell>
+          </TableRow>
+        </TableFooter>
       </Table>
     </CardFrame>
   );
@@ -67,4 +64,14 @@ function getStatusIndicatorClassName(status: string) {
   }
 
   return "bg-sky-500";
+}
+
+function formatCurrencyTotal(rows: { value: string }[]) {
+  const total = rows.reduce((sum, row) => sum + Number(row.value.replaceAll(/[$,]/g, "")), 0);
+
+  return new Intl.NumberFormat("en-US", {
+    currency: "USD",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(total);
 }

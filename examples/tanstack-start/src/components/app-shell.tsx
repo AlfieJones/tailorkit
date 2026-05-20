@@ -56,7 +56,7 @@ export function AppShell({
     <tailorClient.ScreenMatch context={{}} pattern="/" screen="/">
       <SidebarProvider className="bg-muted/28">
         <AppSidebar signOut={signOut} user={user} />
-        <SidebarInset className={activeApp ? "me-[21rem]" : undefined}>
+        <SidebarInset className={activeApp ? "me-[21rem]" : "me-12"}>
           <main className="mx-auto w-full max-w-6xl p-6">{children}</main>
         </SidebarInset>
         <AppRail

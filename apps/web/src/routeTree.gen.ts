@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as appRouteRouteImport } from './routes/(app)/route'
-import { Route as appIndexRouteImport } from './routes/(app)/index'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
@@ -55,10 +55,10 @@ const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const appIndexRoute = appIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => appRouteRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -215,6 +215,7 @@ const appOrgSlugChar126orgSettingsBillingRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/logout': typeof LogoutRoute
   '/$orgSlug': typeof appOrgSlugRouteRouteWithChildren
   '/account': typeof appAccountRouteRouteWithChildren
@@ -223,7 +224,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof authLoginRoute
   '/sign-up': typeof authSignUpRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/': typeof appIndexRoute
   '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
   '/account/settings': typeof appAccountSettingsRouteRouteWithChildren
   '/account/invites': typeof appAccountInvitesRoute
@@ -247,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/~/settings/': typeof appOrgSlugChar126orgSettingsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/logout': typeof LogoutRoute
   '/account': typeof appAccountRouteRouteWithChildren
   '/onboarding': typeof appOnboardingRoute
@@ -254,7 +255,6 @@ export interface FileRoutesByTo {
   '/login': typeof authLoginRoute
   '/sign-up': typeof authSignUpRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/': typeof appIndexRoute
   '/account/invites': typeof appAccountInvitesRoute
   '/account/organizations': typeof appAccountOrganizationsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -274,6 +274,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/(app)': typeof appRouteRouteWithChildren
   '/(auth)': typeof authRouteRouteWithChildren
   '/logout': typeof LogoutRoute
@@ -284,7 +285,6 @@ export interface FileRoutesById {
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/sign-up': typeof authSignUpRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
-  '/(app)/': typeof appIndexRoute
   '/(app)/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
   '/(app)/account/settings': typeof appAccountSettingsRouteRouteWithChildren
   '/(app)/account/invites': typeof appAccountInvitesRoute
@@ -310,6 +310,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/logout'
     | '/$orgSlug'
     | '/account'
@@ -318,7 +319,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/sign-up'
     | '/verify-email'
-    | '/'
     | '/$orgSlug/$projectSlug'
     | '/account/settings'
     | '/account/invites'
@@ -342,6 +342,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/~/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/logout'
     | '/account'
     | '/onboarding'
@@ -349,7 +350,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/sign-up'
     | '/verify-email'
-    | '/'
     | '/account/invites'
     | '/account/organizations'
     | '/api/auth/$'
@@ -368,6 +368,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/~/settings'
   id:
     | '__root__'
+    | '/'
     | '/(app)'
     | '/(auth)'
     | '/logout'
@@ -378,7 +379,6 @@ export interface FileRouteTypes {
     | '/(auth)/login'
     | '/(auth)/sign-up'
     | '/(auth)/verify-email'
-    | '/(app)/'
     | '/(app)/$orgSlug/$projectSlug'
     | '/(app)/account/settings'
     | '/(app)/account/invites'
@@ -403,6 +403,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   appRouteRoute: typeof appRouteRouteWithChildren
   authRouteRoute: typeof authRouteRouteWithChildren
   LogoutRoute: typeof LogoutRoute
@@ -434,12 +435,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(app)/': {
-      id: '/(app)/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof appIndexRouteImport
-      parentRoute: typeof appRouteRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(auth)/verify-email': {
       id: '/(auth)/verify-email'
@@ -767,14 +768,12 @@ interface appRouteRouteChildren {
   appOrgSlugRouteRoute: typeof appOrgSlugRouteRouteWithChildren
   appAccountRouteRoute: typeof appAccountRouteRouteWithChildren
   appOnboardingRoute: typeof appOnboardingRoute
-  appIndexRoute: typeof appIndexRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
   appOrgSlugRouteRoute: appOrgSlugRouteRouteWithChildren,
   appAccountRouteRoute: appAccountRouteRouteWithChildren,
   appOnboardingRoute: appOnboardingRoute,
-  appIndexRoute: appIndexRoute,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(
@@ -800,6 +799,7 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   appRouteRoute: appRouteRouteWithChildren,
   authRouteRoute: authRouteRouteWithChildren,
   LogoutRoute: LogoutRoute,
