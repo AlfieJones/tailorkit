@@ -73,15 +73,19 @@ export const env = createEnv({
     PORT: z.number().optional(),
 
     // Email
-    EMAIL_ACCESS_KEY_ID: z.string().min(1).optional(),
     EMAIL_FROM: z.string().min(1),
     EMAIL_FROM_AUTH: z.string().min(1).optional(),
     EMAIL_FROM_INVITE: z.string().min(1).optional(),
-    EMAIL_PROVIDER: z.enum(["ses", "smtp"]),
-    EMAIL_REGION: z.string().min(1).optional(),
     EMAIL_REPLY_TO: z.string().min(1).optional(),
-    EMAIL_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+
+    EMAIL_PROVIDER: z.enum(["ses", "smtp"]),
+
     EMAIL_SMTP_URL: z.string().min(1).optional(),
+
+    EMAIL_ACCESS_KEY_ID: z.string().min(1).optional(),
+    EMAIL_REGION: z.string().min(1).optional(),
+    EMAIL_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+
     // Billing
     POLAR_ACCESS_TOKEN: z.string().min(1),
     // KV
