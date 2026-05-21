@@ -9,9 +9,6 @@ export default defineConfig({
   build: {
     rolldownOptions: {
       external: [/^@base-ui\/utils(\/.*)?$/, "reselect"],
-      output: {
-        codeSplitting: false,
-      },
     },
   },
   ssr: {
