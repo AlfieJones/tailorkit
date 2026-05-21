@@ -6,14 +6,6 @@ import { nitro } from "nitro/vite";
 import babel from "@rolldown/plugin-babel";
 
 export default defineConfig({
-  build: {
-    rolldownOptions: {
-      external: [/^@base-ui\/utils(\/.*)?$/, "reselect"],
-    },
-  },
-  ssr: {
-    external: ["@base-ui/utils/store", "reselect", "@base-ui/utils"],
-  },
   plugins: [
     tailwindcss(),
     tanstackStart(),
