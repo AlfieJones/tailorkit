@@ -1,40 +1,65 @@
 import { Button } from "@tailorkit/ui/button";
 import { Link } from "@tanstack/react-router";
-import pkg from "@rive-app/react-webgl2";
-import type { Alignment, Fit, Layout } from "@rive-app/react-webgl2";
+import { useEffect, useState } from "react";
+import type RiveDefault from "@rive-app/react-webgl2";
+import type { Layout } from "@rive-app/react-webgl2";
 
-const {
-  default: RiveDefault,
-  Layout,
-  Fit,
-  Alignment,
-} = pkg as unknown as {
-  default: typeof pkg;
-  Layout: typeof Layout;
-  Fit: typeof Fit;
-  Alignment: typeof Alignment;
-};
+type RiveComponent = typeof RiveDefault;
 
-const Rive = (RiveDefault as unknown as { default?: typeof RiveDefault }).default ?? RiveDefault;
+function useRiveHero() {
+  const [rive, setRive] = useState<{
+    Component: RiveComponent;
+    layout: Layout;
+  } | null>(null);
 
-const riveTopRight = new Layout({ fit: Fit.Contain, alignment: Alignment.TopRight });
+  useEffect(() => {
+    let cancelled = false;
+
+    import("@rive-app/react-webgl2").then((pkg) => {
+      if (cancelled) {
+        return;
+      }
+
+      const Component =
+        (pkg.default as unknown as { default?: RiveComponent }).default ?? pkg.default;
+      const layout = new pkg.Layout({
+        fit: pkg.Fit.Contain,
+        alignment: pkg.Alignment.TopRight,
+      });
+
+      setRive({ Component, layout });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return rive;
+}
 
 export function HomeHero() {
+  const rive = useRiveHero();
   const riveClass =
     "absolute -top-6 right-0 h-[65%] w-[78%] sm:h-[60%] sm:w-[62%] lg:-top-12 lg:h-[75%] lg:w-[62%] transition-opacity duration-300";
+  const Rive = rive?.Component;
 
   return (
     <section className="relative flex min-h-[540px] flex-col justify-end overflow-hidden bg-background border-b border-border sm:min-h-[600px] lg:min-h-[680px] lg:justify-center xl:min-h-[740px]">
-      <Rive
-        className={`${riveClass} opacity-100 dark:opacity-0`}
-        src="/docs/factory-light.riv"
-        layout={riveTopRight}
-      />
-      <Rive
-        className={`${riveClass} opacity-0 dark:opacity-100`}
-        src="/docs/factory-dark.riv"
-        layout={riveTopRight}
-      />
+      {Rive ? (
+        <>
+          <Rive
+            className={`${riveClass} opacity-100 dark:opacity-0`}
+            src="/docs/factory-light.riv"
+            layout={rive.layout}
+          />
+          <Rive
+            className={`${riveClass} opacity-0 dark:opacity-100`}
+            src="/docs/factory-dark.riv"
+            layout={rive.layout}
+          />
+        </>
+      ) : null}
 
       <div className="relative z-10 flex max-w-2xl flex-col items-start gap-5 px-6 pb-12 pt-6 sm:max-w-[34rem] lg:max-w-2xl lg:px-14 lg:py-0">
         <div className="flex flex-col gap-3">

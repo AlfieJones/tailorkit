@@ -1,4 +1,4 @@
-import { KeyRoundIcon, LayoutDashboardIcon, SettingsIcon } from "lucide-react";
+import { KeyRoundIcon, SettingsIcon } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
