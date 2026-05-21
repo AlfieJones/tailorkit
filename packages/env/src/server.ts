@@ -87,7 +87,7 @@ export const env = createEnv({
     EMAIL_SECRET_ACCESS_KEY: z.string().min(1).optional(),
 
     // Auth
-    BETTER_AUTH_API_KEY: z.string().min(1),
+    BETTER_AUTH_API_KEY: z.string().min(1).optional(),
     // KV
     KV_PROVIDER: z.enum(["upstash", "redis"]).optional(),
     KV_REDIS_URL: z.string().min(1).optional(),
