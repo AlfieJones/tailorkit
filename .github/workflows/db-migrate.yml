@@ -47,6 +47,6 @@ jobs:
           DATABASE_URL: ${{ secrets.PRODUCTION_MIGRATION_DATABASE_URL }}
 
       - name: Run Drizzle migrations
-        run: pnpm turbo -F @tailorkit/db db:migrate
+        run: pnpm -C packages/db db:migrate
         env:
           DATABASE_URL: ${{ secrets.PRODUCTION_MIGRATION_DATABASE_URL }}
