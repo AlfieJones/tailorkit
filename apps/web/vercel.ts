@@ -8,6 +8,7 @@ export const config: VercelConfig = {
         {
           key: "tailorkit.session_token",
           type: "cookie",
+          value: { re: ".+" },
         },
       ],
       destination: "https://tailorkit-docs.vercel.app",
