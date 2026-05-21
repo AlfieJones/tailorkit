@@ -12,12 +12,12 @@ export const config: VercelConfig = {
   rewrites: [
     {
       source: "/",
-      missing: [
-        {
-          key: "tailorkit.session_token",
-          type: "cookie",
-        },
-      ],
+      // missing: [
+      //   {
+      //     key: "tailorkit.session_token",
+      //     type: "cookie",
+      //   },
+      // ],
       destination: "https://tailorkit-docs.vercel.app",
     },
     {
