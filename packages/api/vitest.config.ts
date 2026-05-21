@@ -10,7 +10,6 @@ export default defineConfig({
       EMAIL_PROVIDER: "smtp",
       EMAIL_SMTP_URL: "smtp://localhost:1025",
       NODE_ENV: "test",
-      POLAR_ACCESS_TOKEN: "test-polar-token",
     },
     pool: "forks",
   },

@@ -10,7 +10,6 @@ catalog:
   "@orpc/openapi": 1.14.3
   "@orpc/server": 1.14.3
   "@orpc/zod": ^1.14.2
-  "@polar-sh/better-auth": ^1.8.4
   "@tailwindcss/vite": ^4.2.4
   "@tanstack/react-router": 1.170.3
   "@tanstack/react-router-devtools": 1.167.0

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@better-auth/api-key": "1.6.11",
+    "@better-auth/infra": "^0.2.8",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/email": "workspace:*",
     "@tailorkit/env": "workspace:*",

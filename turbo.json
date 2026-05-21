@@ -18,7 +18,8 @@
     "BLOB_ENDPOINT",
     "BLOB_FORCE_PATH_STYLE",
     "BLOB_SECRET_ACCESS_KEY",
-    "BLOB_ACCESS_KEY_ID"
+    "BLOB_ACCESS_KEY_ID",
+    "BETTER_AUTH_API_KEY"
   ],
   "tasks": {
     "build": {

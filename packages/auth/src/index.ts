@@ -12,6 +12,7 @@ import { emailOTP } from "better-auth/plugins/email-otp";
 import { organization } from "better-auth/plugins/organization";
 import { ac, roles } from "./lib/permissions";
 import { apiKey } from "@better-auth/api-key";
+import { dash } from "@better-auth/infra";
 
 const noopWaitUntil = (promise: Promise<unknown>) => void promise;
 
@@ -118,6 +119,13 @@ export function createAuth() {
               storage: "database" as const,
             }),
       }),
+      ...(env.BETTER_AUTH_API_KEY
+        ? [
+            dash({
+              apiKey: env.BETTER_AUTH_API_KEY,
+            }),
+          ]
+        : []),
       tanstackStartCookies(),
     ],
     secret: env.AUTH_SECRET,

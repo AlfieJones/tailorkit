@@ -12,7 +12,6 @@ Object.assign(process.env, {
   EMAIL_PROVIDER: process.env.EMAIL_PROVIDER ?? "smtp",
   EMAIL_SMTP_URL: process.env.EMAIL_SMTP_URL ?? "smtp://localhost:1025",
   NODE_ENV: process.env.NODE_ENV ?? "development",
-  POLAR_ACCESS_TOKEN: process.env.POLAR_ACCESS_TOKEN ?? "openapi",
 });
 
 const generator = new OpenAPIGenerator({
