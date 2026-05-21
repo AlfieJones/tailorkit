@@ -37,6 +37,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Validate migration database secret
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL is empty. Add PRODUCTION_MIGRATION_DATABASE_URL to the production-platform GitHub Environment."
+            exit 1
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_MIGRATION_DATABASE_URL }}
+
       - name: Run Drizzle migrations
         run: pnpm turbo -F @tailorkit/db db:migrate
         env:
