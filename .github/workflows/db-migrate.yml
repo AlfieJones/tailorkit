@@ -19,7 +19,7 @@ jobs:
   migrate:
     name: Migrate production database
     runs-on: ubuntu-latest
-    environment: production
+    environment: production-platform
 
     env:
       DATABASE_URL: ${{ secrets.PRODUCTION_MIGRATION_DATABASE_URL }}
