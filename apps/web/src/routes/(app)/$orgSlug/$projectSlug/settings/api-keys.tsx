@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@tailorkit/ui/components/dialog";
 import { Field, FieldLabel } from "@tailorkit/ui/components/field";
-import { Input } from "@tailorkit/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@tailorkit/ui/components/input-group";
 import {
   Select,
   SelectItem,
@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@tailorkit/ui/components/select";
+import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { client, orpc } from "@/utils/orpc";
 import { getProjectApiKey, setProjectApiKey } from "@/utils/project-api-key-memory";
@@ -56,34 +57,6 @@ function keyLabel(key: { id: string; prefix?: string | null; start?: string | nu
   return `${key.prefix ?? key.start ?? key.id}${"*".repeat(8)}`;
 }
 
-function maskSecretWithPrefix(value: string, prefix: string) {
-  if (!value.startsWith(prefix)) {
-    return `${prefix}${"*".repeat(8)}`;
-  }
-
-  return `${prefix}${"*".repeat(Math.max(8, value.length - prefix.length))}`;
-}
-
-function getApiKeyDisplayValue({
-  activeKey,
-  showStoredApiKey,
-  storedApiKey,
-}: {
-  activeKey: { id: string; prefix?: string | null; start?: string | null };
-  showStoredApiKey: boolean;
-  storedApiKey: string | null;
-}) {
-  if (!storedApiKey) {
-    return keyLabel(activeKey);
-  }
-
-  if (showStoredApiKey) {
-    return storedApiKey;
-  }
-
-  return maskSecretWithPrefix(storedApiKey, activeKey.prefix ?? activeKey.start ?? "");
-}
-
 function ProjectApiKeysPage() {
   const { orgSlug, projectSlug } = Route.useParams();
   const queryClient = useQueryClient();
@@ -91,6 +64,7 @@ function ProjectApiKeysPage() {
   const [rotateDialogOpen, setRotateDialogOpen] = useState(false);
   const [newApiKeyDialogOpen, setNewApiKeyDialogOpen] = useState(false);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const [showNewApiKey, setShowNewApiKey] = useState(false);
   const [showStoredApiKey, setShowStoredApiKey] = useState(false);
   const [storedApiKey, setStoredApiKey] = useState(() => getProjectApiKey(orgSlug, projectSlug));
   const { data: apiKeys } = useSuspenseQuery(
@@ -106,6 +80,7 @@ function ProjectApiKeysPage() {
       }),
     onSuccess: async (result) => {
       setNewApiKey(result.apiKey.key);
+      setShowNewApiKey(false);
       setStoredApiKey(result.apiKey.key);
       setShowStoredApiKey(false);
       setRotateDialogOpen(false);
@@ -129,6 +104,70 @@ function ProjectApiKeysPage() {
 
   const activeKey = apiKeys.active[0] ?? null;
   const expiringKeys = apiKeys.rotating;
+  const projectKeyPanel = (() => {
+    if (!activeKey) {
+      return <p className="text-muted-foreground text-sm">No API key yet.</p>;
+    }
+
+    if (!storedApiKey) {
+      return (
+        <div className="min-w-0 rounded-lg border bg-muted px-3 py-2">
+          <div className="min-w-0">
+            <p className="truncate font-mono text-sm">{keyLabel(activeKey)}</p>
+            <p className="mt-0.5 text-muted-foreground text-xs">
+              The full key is only shown once. Rotate it if you need a new one.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <InputGroup className="bg-muted">
+        <InputGroupInput
+          aria-label="Project API key"
+          className="font-mono"
+          readOnly
+          type={showStoredApiKey ? "text" : "password"}
+          value={storedApiKey}
+        />
+        <InputGroupAddon align="inline-end" className="gap-1">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  aria-label={showStoredApiKey ? "Hide API key" : "Show API key"}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowStoredApiKey((value) => !value)}
+                />
+              }
+            >
+              {showStoredApiKey ? <EyeOffIcon /> : <EyeIcon />}
+            </TooltipTrigger>
+            <TooltipPopup>{showStoredApiKey ? "Hide API key" : "Show API key"}</TooltipPopup>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  aria-label="Copy API key"
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => copyApiKey(storedApiKey)}
+                />
+              }
+            >
+              <CopyIcon />
+            </TooltipTrigger>
+            <TooltipPopup>Copy API key</TooltipPopup>
+          </Tooltip>
+        </InputGroupAddon>
+      </InputGroup>
+    );
+  })();
 
   return (
     <div className="mx-auto max-w-3xl w-full space-y-6">
@@ -150,28 +189,54 @@ function ProjectApiKeysPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogPanel>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
+            <InputGroup>
+              <InputGroupInput
                 aria-label="New API key"
                 className="font-mono"
                 readOnly
+                type={showNewApiKey ? "text" : "password"}
                 value={newApiKey ?? ""}
               />
-              <Button
-                disabled={!newApiKey}
-                size="sm"
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  if (newApiKey) {
-                    copyApiKey(newApiKey);
-                  }
-                }}
-              >
-                <CopyIcon />
-                Copy
-              </Button>
-            </div>
+              <InputGroupAddon align="inline-end" className="gap-1">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        aria-label={showNewApiKey ? "Hide API key" : "Show API key"}
+                        size="icon-xs"
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setShowNewApiKey((value) => !value)}
+                      />
+                    }
+                  >
+                    {showNewApiKey ? <EyeOffIcon /> : <EyeIcon />}
+                  </TooltipTrigger>
+                  <TooltipPopup>{showNewApiKey ? "Hide API key" : "Show API key"}</TooltipPopup>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        aria-label="Copy API key"
+                        disabled={!newApiKey}
+                        size="icon-xs"
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          if (newApiKey) {
+                            copyApiKey(newApiKey);
+                          }
+                        }}
+                      />
+                    }
+                  >
+                    <CopyIcon />
+                  </TooltipTrigger>
+                  <TooltipPopup>Copy API key</TooltipPopup>
+                </Tooltip>
+              </InputGroupAddon>
+            </InputGroup>
           </DialogPanel>
           <DialogFooter>
             <DialogClose render={<Button type="button" variant="outline" />}>Done</DialogClose>
@@ -245,41 +310,7 @@ function ProjectApiKeysPage() {
           </CardAction>
         </CardHeader>
 
-        <CardPanel className="pt-0">
-          {activeKey ? (
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="flex h-8 min-w-0 flex-1 items-center overflow-x-auto rounded-lg border bg-muted px-3 font-mono text-sm sm:h-7">
-                <p className="whitespace-nowrap">
-                  {getApiKeyDisplayValue({ activeKey, showStoredApiKey, storedApiKey })}
-                </p>
-              </div>
-              {storedApiKey ? (
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                    onClick={() => copyApiKey(storedApiKey)}
-                  >
-                    <CopyIcon />
-                    Copy
-                  </Button>
-                  <Button
-                    aria-label={showStoredApiKey ? "Hide API key" : "Show API key"}
-                    size="icon-sm"
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowStoredApiKey((value) => !value)}
-                  >
-                    {showStoredApiKey ? <EyeOffIcon /> : <EyeIcon />}
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">No API key yet.</p>
-          )}
-        </CardPanel>
+        <CardPanel className="pt-0">{projectKeyPanel}</CardPanel>
       </Card>
 
       {expiringKeys.length > 0 ? (

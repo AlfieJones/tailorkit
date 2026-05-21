@@ -113,7 +113,8 @@ export function SecretTextField({
   const field = useFieldContext<string>();
   const [showSecret, setShowSecret] = useState(false);
   const errors = field.state.meta.errors;
-  const isError = errors.length > 0;
+  const errorMessage = formatFieldErrors(errors);
+  const isError = errorMessage.length > 0;
 
   return (
     <Field disabled={disabled} invalid={isError}>
@@ -152,7 +153,7 @@ export function SecretTextField({
         </InputGroupAddon>
       </InputGroup>
       {description && <FieldDescription>{description}</FieldDescription>}
-      {isError && <FieldError>{formatFieldErrors(errors)}</FieldError>}
+      {isError && <FieldError>{errorMessage}</FieldError>}
     </Field>
   );
 }
@@ -207,6 +208,20 @@ function SubmitButton({
   );
 }
 
+function FormError({ children }: { children?: ReactNode }) {
+  const errorMessage = formatFieldErrors([children]);
+
+  if (!errorMessage) {
+    return null;
+  }
+
+  return (
+    <Field invalid>
+      <FieldError>{errorMessage}</FieldError>
+    </Field>
+  );
+}
+
 export const { useAppForm, withForm } = createFormHook({
   fieldContext,
   formContext,
@@ -219,6 +234,7 @@ export const { useAppForm, withForm } = createFormHook({
     SecretTextField,
   },
   formComponents: {
+    FormError,
     SubmitButton,
   },
 });

@@ -17,8 +17,11 @@ import { useAppForm } from "@tailorkit/ui/form";
 import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useStore } from "@tanstack/react-form";
 import { z } from "zod";
 import { orpc, client } from "@/utils/orpc";
+import { checkOrgSlugAvailability, useOrgSlugAvailability } from "@/lib/org-slug-availability";
+import { OrgSlugAvailabilityIndicator } from "@/components/org-slug-availability-indicator";
 
 function toSlug(name: string) {
   return name
@@ -51,6 +54,7 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [openInternal, setOpenInternal] = useState(false);
+  const [slugSubmitError, setSlugSubmitError] = useState<string | null>(null);
   const slugTouched = useRef(false);
 
   const isControlled = openProp !== undefined;
@@ -75,6 +79,17 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
   const form = useAppForm({
     defaultValues: { name: "", slug: "" },
     onSubmit: async ({ value }) => {
+      const slugAvailability = await checkOrgSlugAvailability(value.slug);
+      if (!slugAvailability.available) {
+        setSlugSubmitError(slugAvailability.message ?? "This organisation slug is already taken.");
+        toastManager.add({
+          title: "Error",
+          description: slugAvailability.message ?? "This organisation slug is already taken.",
+          type: "error",
+        });
+        return;
+      }
+
       try {
         await createMutation.mutateAsync(value);
       } catch {
@@ -84,8 +99,12 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
     validators: { onSubmit: orgSchema },
   });
 
+  const slug = useStore(form.store, (state) => state.values.slug);
+  const slugAvailability = useOrgSlugAvailability(slug);
+
   function resetForm() {
     slugTouched.current = false;
+    setSlugSubmitError(null);
     form.reset();
   }
 
@@ -127,6 +146,7 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
                   type="text"
                   onChange={(e) => {
                     if (!slugTouched.current) {
+                      setSlugSubmitError(null);
                       form.setFieldValue("slug", toSlug(e.target.value));
                     }
                   }}
@@ -139,12 +159,19 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
                 <field.TextField
                   autoComplete="off"
                   description={`tailorkit.com/${field.state.value || "your-slug"}`}
+                  endAdornment={
+                    <OrgSlugAvailabilityIndicator
+                      availability={slugAvailability}
+                      submitError={slugSubmitError}
+                    />
+                  }
                   label="Slug"
                   placeholder="acme-corp"
                   required
                   type="text"
                   onChange={(e) => {
                     slugTouched.current = true;
+                    setSlugSubmitError(null);
                     field.handleChange(toSlug(e.target.value));
                   }}
                 />

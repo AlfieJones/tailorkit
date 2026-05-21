@@ -58,7 +58,7 @@ export function createAuth() {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
-      minPasswordLength: 10,
+      minPasswordLength: 12,
       revokeSessionsOnPasswordReset: true,
     },
     emailVerification: {

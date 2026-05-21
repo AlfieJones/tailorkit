@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@tailorkit/ui/components/card";
 import { Logo } from "@tailorkit/ui/components/logo";
-import { toastManager } from "@tailorkit/ui/components/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
 import { useAppForm } from "@tailorkit/ui/form";
 import { ArrowLeftIcon } from "lucide-react";
@@ -65,9 +64,11 @@ function RouteComponent() {
   const [step, setStep] = useState<Step>("email");
   const [visible, setVisible] = useState(true);
   const [email, setEmail] = useState(emailFromSearch || "");
+  const [detailsError, setDetailsError] = useState<string | null>(null);
 
   const transition = (nextStep: Step, nextEmail?: string) => {
     setVisible(false);
+    setDetailsError(null);
     setTimeout(() => {
       if (nextEmail !== undefined) {
         setEmail(nextEmail);
@@ -91,15 +92,12 @@ function RouteComponent() {
   const detailsForm = useAppForm({
     defaultValues: { name: "", password: "" },
     onSubmit: async ({ value }) => {
+      setDetailsError(null);
       await authClient.signUp.email(
         { email, name: value.name, password: value.password },
         {
           onError: (error) => {
-            toastManager.add({
-              description: error.error.message || error.error.statusText,
-              title: "Sign up failed",
-              type: "error",
-            });
+            setDetailsError(error.error.message || error.error.statusText || "Sign up failed");
           },
           onSuccess: () => {
             navigate({ search: { email, return_to }, to: "/verify-email" });
@@ -110,7 +108,7 @@ function RouteComponent() {
     validators: {
       onSubmit: z.object({
         name: z.string().min(2, "Name must be at least 2 characters"),
-        password: z.string().min(10, "Password must be at least 10 characters"),
+        password: z.string().min(12, "Password must be at least 12 characters"),
       }),
     },
   });
@@ -209,6 +207,8 @@ function RouteComponent() {
                       <span>{email}</span>
                     </button>
 
+                    {detailsError && <detailsForm.FormError>{detailsError}</detailsForm.FormError>}
+
                     <detailsForm.AppField name="name">
                       {(field) => (
                         <field.TextField label="Name" placeholder="Your name" autoFocus />
@@ -216,7 +216,13 @@ function RouteComponent() {
                     </detailsForm.AppField>
 
                     <detailsForm.AppField name="password">
-                      {(field) => <field.SecretTextField label="Password" placeholder="••••••••" />}
+                      {(field) => (
+                        <field.SecretTextField
+                          description="Password must be at least 12 characters"
+                          label="Password"
+                          placeholder="••••••••"
+                        />
+                      )}
                     </detailsForm.AppField>
                   </CardPanel>
 

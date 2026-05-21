@@ -3,6 +3,7 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { Building2Icon, MailIcon, ShieldIcon, UserIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { HeaderActionsProvider } from "@/components/header-actions";
 import { SidebarLayoutHeader } from "@/components/sidebar-layout-header";
 import { SidebarBackButton } from "@/components/sidebar/sidebar-back-button";
 import { SidebarBrand } from "@/components/sidebar/sidebar-brand";
@@ -54,8 +55,8 @@ export function AccountSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={isActive("/account/settings")}
-                render={<Link to="/account/settings" />}
+                isActive={isActive("/account/profile")}
+                render={<Link to="/account/profile" />}
               >
                 <UserIcon />
                 <span>Profile</span>
@@ -63,8 +64,8 @@ export function AccountSidebar() {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={isActive("/account/settings/security")}
-                render={<Link to="/account/settings/security" />}
+                isActive={isActive("/account/security")}
+                render={<Link to="/account/security" />}
               >
                 <ShieldIcon />
                 <span>Security</span>
@@ -101,12 +102,14 @@ export function AccountSidebar() {
 
 export function AccountLayout({ children }: { children?: ReactNode }) {
   return (
-    <SidebarProvider>
-      <AccountSidebar />
-      <SidebarInset>
-        <SidebarLayoutHeader />
-        <main className="flex flex-1 flex-col gap-4 p-4">{children ?? <Outlet />}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <HeaderActionsProvider>
+      <SidebarProvider>
+        <AccountSidebar />
+        <SidebarInset>
+          <SidebarLayoutHeader />
+          <main className="flex flex-1 flex-col gap-4 p-4">{children ?? <Outlet />}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </HeaderActionsProvider>
   );
 }

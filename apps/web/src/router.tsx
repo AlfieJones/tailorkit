@@ -2,6 +2,7 @@ import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 
 import "./index.css";
+import { NotFound } from "./components/not-found";
 import { routeTree } from "./routeTree.gen";
 import { orpc, getQueryClient } from "./utils/orpc";
 
@@ -13,6 +14,7 @@ export const getRouter = () => {
     routeTree,
     scrollRestoration: true,
     defaultPreload: "intent",
+    defaultNotFoundComponent: NotFound,
   });
 
   setupRouterSsrQueryIntegration({

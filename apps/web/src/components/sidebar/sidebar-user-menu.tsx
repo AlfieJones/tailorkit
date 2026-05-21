@@ -80,7 +80,7 @@ export function SidebarUserMenu() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link to="/account/settings" />}>
+          <DropdownMenuItem render={<Link to="/account/profile" />}>
             <UserIcon />
             Account
           </DropdownMenuItem>

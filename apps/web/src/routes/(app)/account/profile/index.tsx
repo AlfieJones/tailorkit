@@ -15,11 +15,11 @@ import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
-export const Route = createFileRoute("/(app)/account/settings/")({
-  component: SettingsProfile,
+export const Route = createFileRoute("/(app)/account/profile/")({
+  component: ProfilePage,
 });
 
-function SettingsProfile() {
+function ProfilePage() {
   const { data: session } = authClient.useSession();
 
   const form = useAppForm({

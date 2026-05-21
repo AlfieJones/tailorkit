@@ -130,7 +130,7 @@ function createProjectApiKey({
       } satisfies ProjectApiKeyMetadata,
       name: `${projectName} host key`,
       organizationId,
-      prefix: `tk_proj_${createApiKeyPrefixSuffix()}_`,
+      prefix: `tk_proj_${createApiKeyPrefixSuffix()}`,
     },
     headers,
   });

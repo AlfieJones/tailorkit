@@ -17,8 +17,8 @@ interface BreadcrumbSegment {
 const accountRouteLabels: Record<string, string> = {
   "/(app)/account/invites": "Invites",
   "/(app)/account/organizations": "Organisations",
-  "/(app)/account/settings/": "Profile",
-  "/(app)/account/settings/security": "Security",
+  "/(app)/account/profile/": "Profile",
+  "/(app)/account/security": "Security",
 };
 
 const settingsRouteLabels: Record<string, string> = {
@@ -68,14 +68,22 @@ function addStaticSegments(
   params: Record<string, string>,
   segments: BreadcrumbSegment[],
 ) {
+  if (id.includes("/account") && !segments.some((s) => s.label === "Account")) {
+    segments.push({ href: "/account/profile", label: "Account" });
+  }
+
   if (id.includes("/projects") && !id.includes("$projectSlug")) {
     segments.push({ label: "Projects" });
   }
   if (id.includes("/support")) {
     segments.push({ label: "Support" });
   }
-  if (id.includes("/settings") && !segments.some((s) => s.label === "Settings")) {
-    let href = "/account/settings";
+  if (
+    id.includes("/settings") &&
+    !id.includes("/account") &&
+    !segments.some((s) => s.label === "Settings")
+  ) {
+    let href = "/account/profile";
     if ("projectSlug" in params) {
       href = `/${params.orgSlug}/${params.projectSlug}/settings`;
     } else if ("orgSlug" in params) {

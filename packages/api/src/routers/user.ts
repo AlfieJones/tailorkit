@@ -25,12 +25,37 @@ export const userRouter = {
     .use(requireOrg())
     .handler(({ context }) => context.org),
 
+  checkOrgSlug: protectedProcedure
+    .input(z.object({ slug: z.string().min(2).max(48) }))
+    .handler(async ({ input, errors }) => {
+      const result = validateOrgSlug(input.slug);
+      if (!result.valid) {
+        throw errors.BAD_REQUEST({ message: result.reason });
+      }
+
+      const existingOrg = await db.query.organization.findFirst({
+        columns: { id: true },
+        where: { slug: input.slug },
+      });
+
+      return { available: !existingOrg };
+    }),
+
   createOrg: protectedProcedure
     .input(z.object({ name: z.string().min(1), slug: z.string().min(2).max(48) }))
     .handler(async ({ input, context, errors }) => {
       const result = validateOrgSlug(input.slug);
       if (!result.valid) {
         throw errors.BAD_REQUEST({ message: result.reason });
+      }
+
+      const existingOrg = await db.query.organization.findFirst({
+        columns: { id: true },
+        where: { slug: input.slug },
+      });
+
+      if (existingOrg) {
+        throw errors.BAD_REQUEST({ message: "This organisation slug is already taken." });
       }
 
       const org = await auth.api.createOrganization({

@@ -7,6 +7,7 @@ import { ThemeProvider, useTheme } from "next-themes";
 import { useEffect, useRef } from "react";
 
 import { authClient } from "@/lib/auth-client";
+import { NotFound } from "@/components/not-found";
 import {
   fallbackTheme,
   getCachedThemeScript,
@@ -26,6 +27,7 @@ export interface RouterAppContext {
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootDocument,
+  notFoundComponent: NotFound,
 
   head: () => ({
     links: [

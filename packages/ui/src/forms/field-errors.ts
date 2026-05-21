@@ -1,8 +1,8 @@
-export function formatFieldErrors(errors: unknown[] = []) {
+export function formatFieldErrors(errors: unknown[] = []): string {
   return errors
-    .map((error) => {
+    .flatMap((error) => {
       if (typeof error === "string") {
-        return error;
+        return [error];
       }
 
       if (
@@ -11,10 +11,30 @@ export function formatFieldErrors(errors: unknown[] = []) {
         "message" in error &&
         typeof error.message === "string"
       ) {
-        return error.message;
+        return [error.message];
       }
 
-      return String(error);
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "issues" in error &&
+        Array.isArray(error.issues)
+      ) {
+        return [formatFieldErrors(error.issues)];
+      }
+
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "errors" in error &&
+        Array.isArray(error.errors)
+      ) {
+        return [formatFieldErrors(error.errors)];
+      }
+
+      return [String(error)];
     })
+    .map((error) => error.trim())
+    .filter(Boolean)
     .join(", ");
 }

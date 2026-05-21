@@ -6,12 +6,14 @@ import type { HTMLInputTypeAttribute, ReactNode } from "react";
 import { Field, FieldDescription, FieldError, FieldLabel } from "../components/field";
 import { formatFieldErrors } from "./field-errors";
 import { Input } from "../components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../components/input-group";
 
 export interface TextFieldProps {
   autoComplete?: InputProps["autoComplete"];
   autoFocus?: boolean;
   description?: string;
   disabled?: boolean;
+  endAdornment?: ReactNode;
   errors?: unknown[];
   label: string;
   labelAction?: ReactNode;
@@ -29,6 +31,7 @@ export function TextField({
   autoFocus,
   description,
   disabled,
+  endAdornment,
   errors = [],
   label,
   labelAction,
@@ -40,7 +43,8 @@ export function TextField({
   type,
   value,
 }: TextFieldProps) {
-  const isError = errors.length > 0;
+  const errorMessage = formatFieldErrors(errors);
+  const isError = errorMessage.length > 0;
 
   return (
     <Field disabled={disabled} invalid={isError}>
@@ -50,22 +54,40 @@ export function TextField({
         </FieldLabel>
         {labelAction && <div className="ml-auto">{labelAction}</div>}
       </div>
-      <Input
-        aria-invalid={isError || undefined}
-        autoComplete={autoComplete}
-        autoFocus={autoFocus}
-        disabled={disabled}
-        onBlur={onBlur}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        type={type}
-        value={value ?? ""}
-      />
+      {endAdornment ? (
+        <InputGroup>
+          <InputGroupInput
+            aria-invalid={isError || undefined}
+            autoComplete={autoComplete}
+            autoFocus={autoFocus}
+            disabled={disabled}
+            onBlur={onBlur}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            type={type}
+            value={value ?? ""}
+          />
+          <InputGroupAddon align="inline-end">{endAdornment}</InputGroupAddon>
+        </InputGroup>
+      ) : (
+        <Input
+          aria-invalid={isError || undefined}
+          autoComplete={autoComplete}
+          autoFocus={autoFocus}
+          disabled={disabled}
+          onBlur={onBlur}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          type={type}
+          value={value ?? ""}
+        />
+      )}
       {description && (!isError || showDescriptionWhenError) && (
         <FieldDescription>{description}</FieldDescription>
       )}
-      {isError && <FieldError>{formatFieldErrors(errors)}</FieldError>}
+      {isError && <FieldError>{errorMessage}</FieldError>}
     </Field>
   );
 }

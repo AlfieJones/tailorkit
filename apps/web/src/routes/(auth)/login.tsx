@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@tailorkit/ui/components/card";
 import { Logo } from "@tailorkit/ui/components/logo";
-import { toastManager } from "@tailorkit/ui/components/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
 import { useAppForm } from "@tailorkit/ui/form";
 import { ArrowLeftIcon } from "lucide-react";
@@ -66,9 +65,11 @@ function RouteComponent() {
   const [step, setStep] = useState<Step>("email");
   const [visible, setVisible] = useState(true);
   const [email, setEmail] = useState(emailFromSearch || "");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const transition = (nextStep: Step, nextEmail?: string) => {
     setVisible(false);
+    setPasswordError(null);
     setTimeout(() => {
       if (nextEmail !== undefined) {
         setEmail(nextEmail);
@@ -94,6 +95,7 @@ function RouteComponent() {
   const passwordForm = useAppForm({
     defaultValues: { password: "" },
     onSubmit: async ({ value }) => {
+      setPasswordError(null);
       await authClient.signIn.email(
         { email, password: value.password },
         {
@@ -102,11 +104,7 @@ function RouteComponent() {
               navigate({ search: { email, return_to }, to: "/verify-email" });
               return;
             }
-            toastManager.add({
-              description: error.error.message || error.error.statusText,
-              title: "Sign in failed",
-              type: "error",
-            });
+            setPasswordError(error.error.message || error.error.statusText || "Sign in failed");
           },
           onSuccess: async () => {
             await queryClient.invalidateQueries();
@@ -121,7 +119,7 @@ function RouteComponent() {
     },
     validators: {
       onSubmit: z.object({
-        password: z.string().min(8, "Password must be at least 8 characters"),
+        password: z.string(),
       }),
     },
   });
@@ -219,6 +217,10 @@ function RouteComponent() {
                       <ArrowLeftIcon className="size-3.5" />
                       <span>{email}</span>
                     </button>
+
+                    {passwordError && (
+                      <passwordForm.FormError>{passwordError}</passwordForm.FormError>
+                    )}
 
                     <passwordForm.AppField name="password">
                       {(field) => (

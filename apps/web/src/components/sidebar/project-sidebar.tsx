@@ -50,16 +50,6 @@ export function ProjectSidebar({ orgSlug, projectSlug }: ProjectSidebarProps) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={pathname === base}
-                render={<Link params={{ orgSlug, projectSlug }} to="/$orgSlug/$projectSlug" />}
-              >
-                <LayoutDashboardIcon />
-                <span>Overview</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton
                 isActive={pathname === `${base}/settings`}
                 render={
                   <Link params={{ orgSlug, projectSlug }} to="/$orgSlug/$projectSlug/settings" />

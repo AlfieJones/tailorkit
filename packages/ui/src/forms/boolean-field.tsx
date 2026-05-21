@@ -29,7 +29,8 @@ export function BooleanField({
   required,
 }: BooleanFieldProps) {
   const id = useId();
-  const isError = errors.length > 0;
+  const errorMessage = formatFieldErrors(errors);
+  const isError = errorMessage.length > 0;
 
   return (
     <Field className="flex-row items-start gap-2" disabled={disabled}>
@@ -45,7 +46,7 @@ export function BooleanField({
           {label} {required && <span className="text-destructive-foreground">*</span>}
         </FieldLabel>
         {description && !isError && <FieldDescription>{description}</FieldDescription>}
-        {isError && <FieldError>{formatFieldErrors(errors)}</FieldError>}
+        {isError && <FieldError>{errorMessage}</FieldError>}
       </div>
     </Field>
   );

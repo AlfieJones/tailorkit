@@ -38,7 +38,8 @@ export function NumberField({
   required,
   value,
 }: NumberFieldProps) {
-  const isError = errors.length > 0;
+  const errorMessage = formatFieldErrors(errors);
+  const isError = errorMessage.length > 0;
 
   return (
     <Field disabled={disabled}>
@@ -63,7 +64,7 @@ export function NumberField({
         </NumberFieldGroup>
       </PrimitiveNumberField>
       {description && <FieldDescription>{description}</FieldDescription>}
-      {isError && <FieldError>{formatFieldErrors(errors)}</FieldError>}
+      {isError && <FieldError>{errorMessage}</FieldError>}
     </Field>
   );
 }

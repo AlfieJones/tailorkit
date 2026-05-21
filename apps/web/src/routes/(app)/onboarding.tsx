@@ -12,9 +12,13 @@ import { Button } from "@tailorkit/ui/components/button";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { useAppForm } from "@tailorkit/ui/form";
 import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useStore } from "@tanstack/react-form";
 import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
 import { z } from "zod";
 import { orpc, client } from "@/utils/orpc";
+import { FieldError } from "@tailorkit/ui/components/field";
+import { checkOrgSlugAvailability, useOrgSlugAvailability } from "@/lib/org-slug-availability";
+import { OrgSlugAvailabilityIndicator } from "@/components/org-slug-availability-indicator";
 
 export const Route = createFileRoute("/(app)/onboarding")({
   component: Onboarding,
@@ -135,13 +139,31 @@ interface CreateOrgCardProps {
 function CreateOrgCard({ onSubmit }: CreateOrgCardProps) {
   const slugTouched = useRef(false);
 
+  const [orgError, setOrgError] = useState<string | null>(null);
+  const [slugSubmitError, setSlugSubmitError] = useState<string | null>(null);
+
   const form = useAppForm({
     defaultValues: { name: "", slug: "" },
     validators: { onSubmit: orgSchema },
     onSubmit: async ({ value }) => {
-      await onSubmit(value);
+      try {
+        const slugAvailability = await checkOrgSlugAvailability(value.slug);
+        if (!slugAvailability.available) {
+          setSlugSubmitError(
+            slugAvailability.message ?? "This organisation slug is already taken.",
+          );
+          return;
+        }
+
+        await onSubmit(value);
+      } catch (error) {
+        setOrgError(error instanceof Error ? error.message : String(error));
+      }
     },
   });
+
+  const slug = useStore(form.store, (state) => state.values.slug);
+  const slugAvailability = useOrgSlugAvailability(slug);
 
   return (
     <CardFrame className="max-w-md">
@@ -159,6 +181,8 @@ function CreateOrgCard({ onSubmit }: CreateOrgCardProps) {
           }}
         >
           <CardPanel className="flex flex-col gap-4">
+            {orgError && <FieldError>{orgError}</FieldError>}
+
             <form.AppField name="name">
               {(field) => (
                 <field.TextField
@@ -166,6 +190,7 @@ function CreateOrgCard({ onSubmit }: CreateOrgCardProps) {
                   placeholder="Acme Corp"
                   onChange={(e) => {
                     if (!slugTouched.current) {
+                      setSlugSubmitError(null);
                       form.setFieldValue("slug", toSlug(e.target.value));
                     }
                   }}
@@ -177,10 +202,17 @@ function CreateOrgCard({ onSubmit }: CreateOrgCardProps) {
               {(field) => (
                 <field.TextField
                   description={`tailorkit.com/${field.state.value || "your-slug"}`}
+                  endAdornment={
+                    <OrgSlugAvailabilityIndicator
+                      availability={slugAvailability}
+                      submitError={slugSubmitError}
+                    />
+                  }
                   label="Slug"
                   placeholder="acme-corp"
                   onChange={(e) => {
                     slugTouched.current = true;
+                    setSlugSubmitError(null);
                     const sanitized = toSlug(e.target.value);
                     field.handleChange(sanitized);
                   }}
@@ -192,7 +224,7 @@ function CreateOrgCard({ onSubmit }: CreateOrgCardProps) {
       </Card>
 
       <CardFrameFooter className="flex gap-4 justify-end">
-        <Button render={<Link to="/account/settings" />} variant={"ghost"}>
+        <Button render={<Link to="/account/organizations" />} variant={"ghost"}>
           Skip for now
         </Button>
 

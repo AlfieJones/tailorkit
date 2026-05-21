@@ -4,6 +4,7 @@ import { Building2Icon, MailIcon, PlusIcon } from "lucide-react";
 
 import { AccountLayout } from "@/components/account-layout";
 import { CreateOrgDialog } from "@/components/create-org-dialog";
+import { SetHeaderActions } from "@/components/header-actions";
 import { orpc } from "@/utils/orpc";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
 import { Badge } from "@tailorkit/ui/components/badge";
@@ -58,30 +59,32 @@ function OrganizationsPage() {
 
   return (
     <AccountLayout>
+      <SetHeaderActions>
+        <div className="flex flex-wrap gap-2">
+          <Button render={<Link to="/account/invites" />} size="sm" variant="outline">
+            <MailIcon />
+            Invites
+            {pendingInviteCount > 0 && (
+              <Badge size="sm" variant="info">
+                {pendingInviteCount}
+              </Badge>
+            )}
+          </Button>
+          <CreateOrgDialog>
+            <Button size="sm">
+              <PlusIcon />
+              New organisation
+            </Button>
+          </CreateOrgDialog>
+        </div>
+      </SetHeaderActions>
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
           <div>
             <h1 className="font-semibold text-2xl tracking-normal">Organisations</h1>
             <p className="mt-1 text-muted-foreground text-sm">
               View your organisations and create a new workspace.
             </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button render={<Link to="/account/invites" />} size="sm" variant="outline">
-              <MailIcon />
-              Invites
-              {pendingInviteCount > 0 && (
-                <Badge size="sm" variant="info">
-                  {pendingInviteCount}
-                </Badge>
-              )}
-            </Button>
-            <CreateOrgDialog>
-              <Button size="sm">
-                <PlusIcon />
-                New organisation
-              </Button>
-            </CreateOrgDialog>
           </div>
         </div>
 

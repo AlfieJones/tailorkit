@@ -36,7 +36,8 @@ export function SelectField({
   required,
   value,
 }: SelectFieldProps) {
-  const isError = errors.length > 0;
+  const errorMessage = formatFieldErrors(errors);
+  const isError = errorMessage.length > 0;
   const isEmpty = items.length === 0;
   const isDisabled = disabled || isEmpty;
   const [open, setOpen] = useState(false);
@@ -89,7 +90,7 @@ export function SelectField({
         </SelectPopup>
       </Select>
       {description && <FieldDescription>{description}</FieldDescription>}
-      {isError && <FieldError>{formatFieldErrors(errors)}</FieldError>}
+      {isError && <FieldError>{errorMessage}</FieldError>}
     </Field>
   );
 }
