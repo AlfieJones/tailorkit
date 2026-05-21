@@ -42,7 +42,6 @@
     "remark-gfm": "^4.0.1",
     "remark-rehype": "^11.1.2",
     "tailwind-merge": "catalog:",
-    "tslib": "^2.8.1",
     "unist-util-visit": "^5.1.0",
     "vite": "catalog:",
     "zod": "catalog:"
