@@ -18,6 +18,9 @@ export default defineConfig({
       prerender: {
         enabled: true,
       },
+      serverFns: {
+        base: "/docs/_serverFn",
+      },
     }),
     react(),
     nitro(),
