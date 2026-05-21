@@ -1,4 +1,4 @@
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Empty,
@@ -8,11 +8,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@tailorkit/ui/components/empty";
-import { ArrowLeftIcon, HomeIcon } from "lucide-react";
+import { HomeIcon } from "lucide-react";
 
 export function NotFound() {
-  const router = useRouter();
-
   return (
     <main className="flex min-h-svh items-center justify-center bg-background px-6 py-16">
       <Empty>
@@ -26,10 +24,6 @@ export function NotFound() {
         </EmptyHeader>
         <EmptyContent>
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => router.back()}>
-              <ArrowLeftIcon className="mr-2" />
-              Go back
-            </Button>
             <Button render={<Link to="/" />}>
               <HomeIcon className="mr-2" />
               Home
