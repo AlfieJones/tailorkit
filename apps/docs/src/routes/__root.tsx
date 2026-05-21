@@ -17,6 +17,27 @@ export const Route = createRootRoute({
         type: "image/svg+xml",
       },
       {
+        href: "/apple-touch-icon.png",
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+      },
+      {
+        href: "/favicon-32x32.png",
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+      },
+      {
+        href: "/favicon-16x16.png",
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+      },
+      {
+        href: "/site.webmanifest",
+        rel: "manifest",
+      },
+      {
         href: "https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap",
         rel: "stylesheet",
       },
