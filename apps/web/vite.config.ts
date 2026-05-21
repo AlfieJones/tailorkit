@@ -7,7 +7,15 @@ import babel from "@rolldown/plugin-babel";
 
 export default defineConfig({
   build: {
-    assetsDir: "web-assets",
+    rolldownOptions: {
+      external: [/^@base-ui\/utils(\/.*)?$/, "reselect"],
+      output: {
+        codeSplitting: false,
+      },
+    },
+  },
+  ssr: {
+    external: ["@base-ui/utils/store", "reselect", "@base-ui/utils"],
   },
   plugins: [
     tailwindcss(),

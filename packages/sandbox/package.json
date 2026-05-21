@@ -16,7 +16,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "preact": "^10.29.1",
+    "preact": "^10.29.2",
     "zod": "catalog:"
   },
   "devDependencies": {

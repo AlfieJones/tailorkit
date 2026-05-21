@@ -28,7 +28,7 @@
     "clsx": "^2.1.1",
     "flexsearch": "^0.8.212",
     "fumadocs-core": "16.8.11",
-    "fumadocs-mdx": "15.0.5",
+    "fumadocs-mdx": "15.0.6",
     "fumadocs-typescript": "^5.2.6",
     "fumadocs-ui": "16.8.11",
     "hast-util-to-jsx-runtime": "^2.3.6",

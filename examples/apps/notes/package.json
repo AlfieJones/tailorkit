@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@tailorkit/app": "workspace:*",
-    "preact": "^10.29.1"
+    "preact": "^10.29.2"
   },
   "devDependencies": {
     "@tailorkit/cli": "workspace:*",
