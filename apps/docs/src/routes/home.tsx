@@ -6,7 +6,7 @@ import { HomeHero } from "@/components/home-hero";
 import { PlatformFeatures } from "@/components/platform-features";
 import { baseOptions } from "@/lib/layout.shared";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/home")({
   component: Home,
 });
 

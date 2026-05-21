@@ -13,9 +13,6 @@ export default defineConfig({
     mdx(await import("./source.config")),
     tailwindcss(),
     tanstackStart({
-      router: {
-        indexToken: "home",
-      },
       prerender: {
         enabled: true,
       },
