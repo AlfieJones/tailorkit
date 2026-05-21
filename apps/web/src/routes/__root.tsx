@@ -112,7 +112,7 @@ function RootDocument() {
 function UserThemeSync() {
   const { setTheme, theme } = useTheme();
   const { data: session, isPending } = authClient.useSession();
-  const lastSyncedTheme = useRef<string | undefined>();
+  const lastSyncedTheme = useRef<string>(null);
   const cachedTheme = isAppTheme(theme) ? theme : fallbackTheme;
   const userTheme = session ? (getUserTheme(session.user) ?? fallbackTheme) : fallbackTheme;
 
