@@ -18,11 +18,11 @@ export const config: VercelConfig = {
       //     type: "cookie",
       //   },
       // ],
-      destination: "https://tailorkit-docs.vercel.app",
+      destination: "https://tailorkit-docs.vercel.app/home",
     },
     {
       source: "/home",
-      destination: "https://tailorkit-docs.vercel.app",
+      destination: "https://tailorkit-docs.vercel.app/home",
     },
     {
       source: "/docs/:path*",
