@@ -1,9 +1,21 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "2cf3a766-8744-4562-84f7-a0525957866f",
-  "prevIds": ["91e2e0e2-1fff-440a-a4ef-28b8f635394d"],
+  "id": "6e04d6d8-98c8-4f72-827c-8f3845e19582",
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
+    {
+      "values": ["uploading", "deploying", "verifying", "published"],
+      "name": "app_deployment_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": ["pending", "approved", "denied"],
+      "name": "cli_auth_session_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
     {
       "isRlsEnabled": false,
       "name": "todo",
@@ -61,6 +73,36 @@
     {
       "isRlsEnabled": false,
       "name": "project",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "app",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "app_deployment",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "app_deployment_file",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "cli_auth_session",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "cli_token",
       "entityType": "tables",
       "schema": "public"
     },
@@ -1157,19 +1199,6 @@
       "table": "project"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "description",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "project"
-    },
-    {
       "type": "timestamp",
       "typeSchema": null,
       "notNull": true,
@@ -1194,6 +1223,565 @@
       "entityType": "columns",
       "schema": "public",
       "table": "project"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "pg_catalog.gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "scope_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "description",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "current_deployment_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "pg_catalog.gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "app_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment"
+    },
+    {
+      "type": "app_deployment_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'deploying'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "client_entry_file_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "pg_catalog.gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "app_deployment_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "object_key",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "app_deployment_file_content_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "content_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "app_deployment_file_encoding",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "encoding",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "content_length",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "checksum",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "app_deployment_file_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'uploading'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "pg_catalog.gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "scope_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "device_code_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_code_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "cli_auth_session_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "last_polled_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "pg_catalog.gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "scope_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "token_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "revoked_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "last_used_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "cli_token"
     },
     {
       "nameExplicit": true,
@@ -1455,6 +2043,265 @@
       "table": "project"
     },
     {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "project_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "scope_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "app_projectId_scopeId_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "app_deployment_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "object_key",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "app_deployment_file_app_deployment_id_object_key_unique",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "project_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "cli_auth_session_project_id_status_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "expires_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "cli_auth_session_expires_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "device_code_hash",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "cli_auth_session_device_code_hash_unique",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_code_hash",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "cli_auth_session_user_code_hash_unique",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "project_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "cli_token_project_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "project_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "scope_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "cli_token_project_id_scope_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "expires_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "cli_token_expires_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "revoked_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "cli_token_revoked_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "token_hash",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "cli_token_token_hash_unique",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
       "nameExplicit": false,
       "columns": ["user_id"],
       "schemaTo": "public",
@@ -1546,6 +2393,97 @@
       "table": "project"
     },
     {
+      "nameExplicit": false,
+      "columns": ["project_id"],
+      "schemaTo": "public",
+      "tableTo": "project",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "app_project_id_project_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["current_deployment_id"],
+      "schemaTo": "public",
+      "tableTo": "app_deployment",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "app_current_deployment_id_app_deployment_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "app"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["app_id"],
+      "schemaTo": "public",
+      "tableTo": "app",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "app_deployment_app_id_app_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "app_deployment"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["client_entry_file_id"],
+      "schemaTo": "public",
+      "tableTo": "app_deployment_file",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "app_deployment_client_entry_file_id_app_deployment_file_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "app_deployment"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["app_deployment_id"],
+      "schemaTo": "public",
+      "tableTo": "app_deployment",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "app_deployment_file_app_deployment_id_app_deployment_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "app_deployment_file"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["project_id"],
+      "schemaTo": "public",
+      "tableTo": "project",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "cli_auth_session_project_id_project_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "cli_auth_session"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["project_id"],
+      "schemaTo": "public",
+      "tableTo": "project",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "cli_token_project_id_project_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "cli_token"
+    },
+    {
       "columns": ["id"],
       "nameExplicit": false,
       "name": "todo_pkey",
@@ -1623,6 +2561,46 @@
       "name": "project_pkey",
       "schema": "public",
       "table": "project",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "app_pkey",
+      "schema": "public",
+      "table": "app",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "app_deployment_pkey",
+      "schema": "public",
+      "table": "app_deployment",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "app_deployment_file_pkey",
+      "schema": "public",
+      "table": "app_deployment_file",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "cli_auth_session_pkey",
+      "schema": "public",
+      "table": "cli_auth_session",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "cli_token_pkey",
+      "schema": "public",
+      "table": "cli_token",
       "entityType": "pks"
     },
     {
