@@ -359,9 +359,6 @@ importers:
       '@ai-sdk/react':
         specifier: 'catalog:'
         version: 3.0.186(react@19.2.6)(zod@4.4.3)
-      '@base-ui/utils':
-        specifier: ^0.2.8
-        version: 0.2.8(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@better-auth/infra':
         specifier: ^0.2.8
         version: 0.2.8(ae009ca3d9f35d5583cbc86a9f9a1d2e)
@@ -452,9 +449,6 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
-      reselect:
-        specifier: ^5.2.0
-        version: 5.2.0
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.0
@@ -14862,7 +14856,7 @@ snapshots:
       rolldown: 1.0.1
       srvx: 0.11.15
       unenv: 2.0.0-rc.24
-      unstorage: 2.0.0-alpha.7(@upstash/redis@1.38.0)(@vercel/blob@2.3.3)(@vercel/functions@3.6.0(@aws-sdk/credential-provider-web-identity@3.972.41))(chokidar@5.0.0)(db0@0.3.4(@electric-sql/pglite@0.4.5)(better-sqlite3@12.10.0)(drizzle-orm@0.41.0(@electric-sql/pglite@0.4.5)(@opentelemetry/api@1.9.1)(@prisma/client@5.22.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.20.0)(better-sqlite3@12.10.0)(kysely@0.28.17)(pg@8.20.0)))(ioredis@5.10.1)(lru-cache@11.3.6)(ofetch@2.0.0-alpha.3)
+      unstorage: 2.0.0-alpha.7(@upstash/redis@1.38.0)(@vercel/blob@2.3.3)(@vercel/functions@3.6.0(@aws-sdk/credential-provider-web-identity@3.972.41))(chokidar@5.0.0)(db0@0.3.4(@electric-sql/pglite@0.4.5)(better-sqlite3@12.10.0))(ioredis@5.10.1)(lru-cache@11.3.6)(ofetch@2.0.0-alpha.3)
     optionalDependencies:
       dotenv: 17.4.2
       giget: 3.2.0
@@ -14915,7 +14909,7 @@ snapshots:
       rolldown: 1.0.1
       srvx: 0.11.15
       unenv: 2.0.0-rc.24
-      unstorage: 2.0.0-alpha.7(@upstash/redis@1.38.0)(@vercel/blob@2.3.3)(@vercel/functions@3.6.0(@aws-sdk/credential-provider-web-identity@3.972.41))(chokidar@5.0.0)(db0@0.3.4(@electric-sql/pglite@0.4.5)(better-sqlite3@12.10.0)(drizzle-orm@0.41.0(@electric-sql/pglite@0.4.5)(@opentelemetry/api@1.9.1)(@prisma/client@5.22.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.20.0)(better-sqlite3@12.10.0)(kysely@0.28.17)(pg@8.20.0)))(ioredis@5.10.1)(lru-cache@11.3.6)(ofetch@2.0.0-alpha.3)
+      unstorage: 2.0.0-alpha.7(@upstash/redis@1.38.0)(@vercel/blob@2.3.3)(@vercel/functions@3.6.0(@aws-sdk/credential-provider-web-identity@3.972.41))(chokidar@5.0.0)(db0@0.3.4(@electric-sql/pglite@0.4.5)(better-sqlite3@12.10.0))(ioredis@5.10.1)(lru-cache@11.3.6)(ofetch@2.0.0-alpha.3)
     optionalDependencies:
       dotenv: 17.4.2
       giget: 3.2.0
@@ -16287,7 +16281,7 @@ snapshots:
       picomatch: 4.0.4
       webpack-virtual-modules: 0.6.2
 
-  unstorage@2.0.0-alpha.7(@upstash/redis@1.38.0)(@vercel/blob@2.3.3)(@vercel/functions@3.6.0(@aws-sdk/credential-provider-web-identity@3.972.41))(chokidar@5.0.0)(db0@0.3.4(@electric-sql/pglite@0.4.5)(better-sqlite3@12.10.0)(drizzle-orm@0.41.0(@electric-sql/pglite@0.4.5)(@opentelemetry/api@1.9.1)(@prisma/client@5.22.0)(@types/better-sqlite3@7.6.13)(@types/pg@8.20.0)(better-sqlite3@12.10.0)(kysely@0.28.17)(pg@8.20.0)))(ioredis@5.10.1)(lru-cache@11.3.6)(ofetch@2.0.0-alpha.3):
+  unstorage@2.0.0-alpha.7(@upstash/redis@1.38.0)(@vercel/blob@2.3.3)(@vercel/functions@3.6.0(@aws-sdk/credential-provider-web-identity@3.972.41))(chokidar@5.0.0)(db0@0.3.4(@electric-sql/pglite@0.4.5)(better-sqlite3@12.10.0))(ioredis@5.10.1)(lru-cache@11.3.6)(ofetch@2.0.0-alpha.3):
     optionalDependencies:
       '@upstash/redis': 1.38.0
       '@vercel/blob': 2.3.3

@@ -11,7 +11,6 @@
     "@ai-sdk/devtools": "^0.0.18",
     "@ai-sdk/google": "^3.0.75",
     "@ai-sdk/react": "catalog:",
-    "@base-ui/utils": "^0.2.8",
     "@better-auth/infra": "^0.2.8",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
@@ -42,7 +41,6 @@
     "nitro": "3.0.260429-beta",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "reselect": "^5.2.0",
     "tailwindcss": "catalog:",
     "zod": "catalog:"
   },
