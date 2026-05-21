@@ -27,12 +27,12 @@ export function HomeHero() {
     <section className="relative flex min-h-[540px] flex-col justify-end overflow-hidden bg-background border-b border-border sm:min-h-[600px] lg:min-h-[680px] lg:justify-center xl:min-h-[740px]">
       <Rive
         className={`${riveClass} opacity-100 dark:opacity-0`}
-        src="/factory-light.riv"
+        src="/docs/factory-light.riv"
         layout={riveTopRight}
       />
       <Rive
         className={`${riveClass} opacity-0 dark:opacity-100`}
-        src="/factory-dark.riv"
+        src="/docs/factory-dark.riv"
         layout={riveTopRight}
       />
 
