@@ -1,6 +1,13 @@
 import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
+  redirects: [
+    {
+      source: "/homepage",
+      destination: "/home",
+      permanent: true,
+    },
+  ],
   rewrites: [
     {
       source: "/",
@@ -8,9 +15,12 @@ export const config: VercelConfig = {
         {
           key: "tailorkit.session_token",
           type: "cookie",
-          value: { re: ".+" },
         },
       ],
+      destination: "https://tailorkit-docs.vercel.app",
+    },
+    {
+      source: "/home",
       destination: "https://tailorkit-docs.vercel.app",
     },
     {

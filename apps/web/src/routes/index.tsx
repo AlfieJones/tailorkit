@@ -1,29 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { createIsomorphicFn } from "@tanstack/react-start";
-import { deleteCookie, getCookie } from "@tanstack/react-start/server";
-
-const sessionCookieNames = ["tailorkit.session_token", "tailorkit-dev.session_token"] as const;
+import { getCookie } from "@tanstack/react-start/server";
 
 const getActiveOrgId = createIsomorphicFn()
   .server(() => getCookie("active-org-id"))
   .client(() => sessionStorage.getItem("active-org-id") ?? "");
-
-const clearSessionCookies = createIsomorphicFn()
-  .server(() => {
-    sessionCookieNames.forEach((name) =>
-      deleteCookie(name, {
-        httpOnly: true,
-        path: "/",
-        sameSite: "lax",
-      }),
-    );
-
-    deleteCookie("active-org-id", {
-      path: "/",
-      sameSite: "lax",
-    });
-  })
-  .client(() => {});
 
 export const Route = createFileRoute("/")({
   component: () => null,
@@ -33,8 +14,6 @@ export const Route = createFileRoute("/")({
     );
 
     if (!session.session) {
-      await clearSessionCookies();
-
       throw redirect({
         replace: true,
         search: { email: undefined, return_to: undefined },
