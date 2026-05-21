@@ -1,9 +1,27 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "6e04d6d8-98c8-4f72-827c-8f3845e19582",
+  "id": "64b86662-e35e-478c-bdb2-daed51bafa9c",
   "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
+    {
+      "values": ["application/javascript"],
+      "name": "app_deployment_file_content_type",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": ["utf-8"],
+      "name": "app_deployment_file_encoding",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": ["uploading", "verifying", "verified", "failed"],
+      "name": "app_deployment_file_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
     {
       "values": ["uploading", "deploying", "verifying", "published"],
       "name": "app_deployment_status",

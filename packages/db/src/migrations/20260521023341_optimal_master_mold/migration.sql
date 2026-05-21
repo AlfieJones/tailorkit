@@ -1,3 +1,6 @@
+CREATE TYPE "app_deployment_file_content_type" AS ENUM('application/javascript');--> statement-breakpoint
+CREATE TYPE "app_deployment_file_encoding" AS ENUM('utf-8');--> statement-breakpoint
+CREATE TYPE "app_deployment_file_status" AS ENUM('uploading', 'verifying', 'verified', 'failed');--> statement-breakpoint
 CREATE TYPE "app_deployment_status" AS ENUM('uploading', 'deploying', 'verifying', 'published');--> statement-breakpoint
 CREATE TYPE "cli_auth_session_status" AS ENUM('pending', 'approved', 'denied');--> statement-breakpoint
 CREATE TABLE "todo" (

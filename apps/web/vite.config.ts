@@ -6,6 +6,9 @@ import { nitro } from "nitro/vite";
 import babel from "@rolldown/plugin-babel";
 
 export default defineConfig({
+  build: {
+    assetsDir: "web-assets",
+  },
   plugins: [
     tailwindcss(),
     tanstackStart(),

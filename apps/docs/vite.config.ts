@@ -8,6 +8,9 @@ import { defineConfig } from "vite";
 import { imagetools } from "vite-imagetools";
 
 export default defineConfig({
+  build: {
+    assetsDir: "docs-assets",
+  },
   plugins: [
     mdx(await import("./source.config")),
     tailwindcss(),

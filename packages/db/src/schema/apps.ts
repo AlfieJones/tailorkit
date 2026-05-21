@@ -83,13 +83,13 @@ export const appDeployment = pgTable("app_deployment", {
 export const AppDeployment = createSelectSchema(appDeployment);
 export type AppDeployment = z.output<typeof AppDeployment>;
 
-const appDeploymentFileContentType = pgEnum("app_deployment_file_content_type", [
+export const appDeploymentFileContentType = pgEnum("app_deployment_file_content_type", [
   "application/javascript",
 ]);
 
-const appDeploymentFileEncoding = pgEnum("app_deployment_file_encoding", ["utf-8"]);
+export const appDeploymentFileEncoding = pgEnum("app_deployment_file_encoding", ["utf-8"]);
 
-const appDeploymentFileStatus = pgEnum("app_deployment_file_status", [
+export const appDeploymentFileStatus = pgEnum("app_deployment_file_status", [
   "uploading",
   "verifying",
   "verified",
