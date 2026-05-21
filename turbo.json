@@ -1,6 +1,25 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "KV_REST_API_READ_ONLY_TOKEN",
+    "KV_URL",
+    "KV_REST_API_TOKEN",
+    "KV_REST_API_URL",
+    "EMAIL_SMTP_URL",
+    "EMAIL_PROVIDER",
+    "EMAIL_FROM",
+    "EMAIL_FROM_AUTH",
+    "EMAIL_FROM_INVITE",
+    "EMAIL_REPLY_TO",
+    "DATABASE_URL",
+    "BLOB_REGION",
+    "BLOB_BUCKET",
+    "BLOB_ENDPOINT",
+    "BLOB_FORCE_PATH_STYLE",
+    "BLOB_SECRET_ACCESS_KEY",
+    "BLOB_ACCESS_KEY_ID"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -31,7 +50,6 @@
     },
     "db:migrate": {
       "cache": false,
-      "env": ["DATABASE_URL"],
       "persistent": true
     },
     "db:studio": {
