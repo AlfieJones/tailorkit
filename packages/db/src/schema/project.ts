@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { organization } from "./auth";
 
 export const project = pgTable(
@@ -20,7 +20,6 @@ export const project = pgTable(
       .notNull(),
   },
   (table) => [
-    index("project_organizationId_idx").on(table.organizationId),
     uniqueIndex("project_organizationId_slug_unique").on(table.organizationId, table.slug),
   ],
 );

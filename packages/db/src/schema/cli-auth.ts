@@ -36,7 +36,6 @@ export const cliToken = pgTable(
       .notNull(),
   },
   (table) => [
-    index("cli_token_project_id_idx").on(table.projectId),
     index("cli_token_project_id_scope_id_idx").on(table.projectId, table.scopeId),
     index("cli_token_expires_at_idx").on(table.expiresAt),
     index("cli_token_revoked_at_idx").on(table.revokedAt),

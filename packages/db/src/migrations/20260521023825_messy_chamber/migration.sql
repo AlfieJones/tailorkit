@@ -1,0 +1,1 @@
+DROP INDEX "project_organizationId_idx";

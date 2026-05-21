@@ -1,0 +1,1 @@
+DROP INDEX "cli_token_project_id_idx";
