@@ -95,6 +95,7 @@ export function createAuth() {
                 type: "string",
                 fieldName: "slug",
                 unique: true,
+                required: true,
               },
             },
           },

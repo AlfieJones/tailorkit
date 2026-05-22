@@ -1,8 +1,8 @@
 import { Separator } from "@tailorkit/ui/components/separator";
 import { SidebarTrigger, useSidebar } from "@tailorkit/ui/components/sidebar";
 
-import { NavBreadcrumb } from "@/components/nav-breadcrumb";
-import { useHeaderActions } from "@/components/header-actions";
+import { NavBreadcrumb } from "#components/nav-breadcrumb";
+import { useHeaderActions } from "#components/header-actions";
 
 export function SidebarLayoutHeader() {
   const { open } = useSidebar();

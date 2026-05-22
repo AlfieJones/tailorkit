@@ -3,11 +3,11 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { Building2Icon, MailIcon, ShieldIcon, UserIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { HeaderActionsProvider } from "@/components/header-actions";
-import { SidebarLayoutHeader } from "@/components/sidebar-layout-header";
-import { SidebarBackButton } from "@/components/sidebar/sidebar-back-button";
-import { SidebarBrand } from "@/components/sidebar/sidebar-brand";
-import { SidebarUserMenu } from "@/components/sidebar/sidebar-user-menu";
+import { HeaderActionsProvider } from "#components/header-actions";
+import { SidebarLayoutHeader } from "#components/sidebar-layout-header";
+import { SidebarBackButton } from "#components/sidebar/sidebar-back-button";
+import { SidebarBrand } from "#components/sidebar/sidebar-brand";
+import { SidebarUserMenu } from "#components/sidebar/sidebar-user-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,7 @@ import {
   SidebarProvider,
   SidebarSeparator,
 } from "@tailorkit/ui/components/sidebar";
+import { orpc } from "#lib/orpc";
 
 export function AccountSidebar() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });

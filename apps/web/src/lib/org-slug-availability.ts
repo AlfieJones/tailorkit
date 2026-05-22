@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
-import { client } from "@/lib/orpc";
+import { client } from "#lib/orpc";
 
 const ORG_SLUG_TAKEN_MESSAGE = "This organisation slug is already taken.";
 const ORG_SLUG_CHECK_DELAY_MS = 250;

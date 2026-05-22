@@ -3,9 +3,6 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "paths": {
-      "@tailorkit/ui/*": ["./src/*"]
-    },
     "strictNullChecks": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

@@ -10,8 +10,8 @@ import {
   TableRow,
 } from "@tailorkit/ui/table";
 import { createFileRoute } from "@tanstack/react-router";
-import { CustomerTable } from "#/components/customer-table";
-import { customers, deals } from "#/lib/crm-data";
+import { CustomerTable } from "#components/customer-table";
+import { customers, deals } from "#lib/crm-data";
 
 export const Route = createFileRoute("/")({ component: Home });
 

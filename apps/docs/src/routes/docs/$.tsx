@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import browserCollections from "collections/browser";
+import browserCollections from "#collections/browser";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import {
@@ -13,10 +13,10 @@ import {
 } from "fumadocs-ui/layouts/docs/page";
 import { Suspense } from "react";
 
-import { useMDXComponents } from "@/components/mdx";
-import { baseOptions } from "@/lib/layout.shared";
-import { gitConfig } from "@/lib/shared";
-import { getPageMarkdownUrl, source } from "@/lib/source";
+import { useMDXComponents } from "#components/mdx";
+import { baseOptions } from "#lib/layout.shared";
+import { gitConfig } from "#lib/shared";
+import { getPageMarkdownUrl, source } from "#lib/source";
 
 export const Route = createFileRoute("/docs/$")({
   component: Page,

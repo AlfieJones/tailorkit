@@ -30,9 +30,6 @@ export default defineConfig(({ mode }) => {
         presets: [reactCompilerPreset()],
       }),
     ],
-    resolve: {
-      tsconfigPaths: true,
-    },
     server: {
       port: 3000,
     },

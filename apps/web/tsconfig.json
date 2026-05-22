@@ -8,6 +8,7 @@
     "types": ["vite/client"],
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "customConditions": ["development"],
     "allowImportingTsExtensions": true,
     "noEmit": true,
     /* Linting */
@@ -16,10 +17,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    "paths": {
-      "@/*": ["./src/*"],
-      "@tailorkit/ui/*": ["../../packages/ui/src/*"]
-    }
+    "noUncheckedSideEffectImports": true
   }
 }

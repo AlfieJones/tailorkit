@@ -4,7 +4,7 @@ import { Banner } from "fumadocs-ui/components/banner";
 
 import { LazyMotion, domMax } from "motion/react";
 
-import appCss from "@/styles/app.css?url";
+import appCss from "#styles/app.css?url";
 
 export const Route = createRootRoute({
   component: RootComponent,

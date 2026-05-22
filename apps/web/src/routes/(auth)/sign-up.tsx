@@ -19,7 +19,7 @@ import { clsx } from "clsx";
 import { useState } from "react";
 import { z } from "zod";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "#lib/auth-client";
 
 export const Route = createFileRoute("/(auth)/sign-up")({
   validateSearch: (search) => ({

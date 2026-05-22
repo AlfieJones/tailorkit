@@ -13,8 +13,8 @@ import {
   mergeTheme,
   shadcnTokenNames,
   toCssVars,
-} from "#/lib/demo-theme";
-import type { DemoAppId, DemoEmbedConfig, DemoHandoff } from "#/lib/demo-theme";
+} from "#lib/demo-theme";
+import type { DemoAppId, DemoEmbedConfig, DemoHandoff } from "#lib/demo-theme";
 import { cn } from "@tailorkit/ui/lib/utils";
 
 function RailTodoIcon() {

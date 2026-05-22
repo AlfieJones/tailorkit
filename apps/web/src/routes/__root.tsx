@@ -20,7 +20,7 @@ import {
 import { TanStackDevtools } from "@tanstack/react-devtools";
 
 import appCss from "../index.css?url";
-import type { orpc } from "@/lib/orpc";
+import type { orpc } from "#lib/orpc";
 
 export interface RouterAppContext {
   orpc: typeof orpc;

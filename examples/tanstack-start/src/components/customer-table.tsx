@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@tailorkit/ui/table";
-import { customers } from "#/lib/crm-data";
+import { customers } from "#lib/crm-data";
 
 export function CustomerTable({ limit }: { limit?: number }) {
   const visibleCustomers = typeof limit === "number" ? customers.slice(0, limit) : customers;

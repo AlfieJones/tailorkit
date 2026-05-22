@@ -1,4 +1,4 @@
-import { gitConfig } from "@/lib/shared";
+import { gitConfig } from "#lib/shared";
 import { Button } from "@tailorkit/ui/button";
 import { Logo } from "@tailorkit/ui/logo";
 import { Link } from "@tanstack/react-router";

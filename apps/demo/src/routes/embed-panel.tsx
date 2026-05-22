@@ -7,8 +7,8 @@ import {
   defaultEmbedConfig,
   defaultTheme,
   toCssVars,
-} from "#/lib/demo-theme";
-import { createDemoTailorClient, demoApps } from "#/lib/tailorkit";
+} from "#lib/demo-theme";
+import { createDemoTailorClient, demoApps } from "#lib/tailorkit";
 
 function TodoIcon() {
   return (

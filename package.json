@@ -19,28 +19,12 @@
     "fix": "ultracite fix",
     "tailorkit": "pnpm --filter @tailorkit/cli build && node ./packages/cli/dist/index.js"
   },
-  "dependencies": {
-    "@tailorkit/env": "workspace:*",
-    "dotenv": "^17.4.2",
-    "vercel": "^54.3.0",
-    "zod": "^4.4.3"
-  },
   "devDependencies": {
-    "@tailorkit/cli": "workspace:*",
-    "@tailorkit/config": "workspace:*",
-    "@types/node": "^24.12.2",
-    "docs": "workspace:*",
     "lefthook": "latest",
     "oxfmt": "0.51.0",
     "oxlint": "1.66.0",
-    "tsdown": "^0.22.0",
-    "tsup": "^8.5.1",
-    "tsx": "^4.22.3",
     "turbo": "^2.9.14",
-    "typescript": "^6.0.3",
-    "ultracite": "7.7.0",
-    "vite-imagetools": "^10.0.0",
-    "vitest": "catalog:"
+    "ultracite": "7.7.0"
   },
   "packageManager": "pnpm@10.20.0"
 }

@@ -1,6 +1,15 @@
 {
   "name": "@tailorkit/kv",
   "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "exports": {
     ".": {
       "development": "./src/index.ts",
@@ -25,6 +34,7 @@
     "@types/node": "catalog:",
     "@upstash/redis": "^1.38.0",
     "ioredis": "^5.0.0",
+    "tsdown": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {

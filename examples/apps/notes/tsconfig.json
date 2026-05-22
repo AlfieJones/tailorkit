@@ -8,6 +8,7 @@
     "lib": ["ESNext", "DOM"],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "customConditions": ["development"],
     "noEmit": true,
     "strict": true,
     "target": "ESNext",

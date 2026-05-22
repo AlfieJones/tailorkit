@@ -25,14 +25,14 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { useTheme } from "next-themes";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "#lib/auth-client";
 import {
   fallbackTheme,
   getUserTheme,
   isAppTheme,
   themeCookieName,
   themeStorageKey,
-} from "@/lib/theme";
+} from "#lib/theme";
 
 export function SidebarUserMenu() {
   const navigate = useNavigate();

@@ -3,7 +3,7 @@ import { Button } from "@tailorkit/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { getDeal } from "#/lib/crm-data";
+import { getDeal } from "#lib/crm-data";
 
 export const Route = createFileRoute("/deals/$dealId")({
   component: DealDetailPage,

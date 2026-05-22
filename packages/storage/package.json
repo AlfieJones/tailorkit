@@ -1,6 +1,15 @@
 {
   "name": "@tailorkit/storage",
   "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "exports": {
     ".": {
       "development": "./src/index.ts",
@@ -25,6 +34,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1052.0",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {

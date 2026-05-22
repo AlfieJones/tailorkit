@@ -1,5 +1,5 @@
 import { getDemoUserFromRequest } from "@examples/shared";
-import { tailorKit } from "#/lib/tailorkit";
+import { tailorKit } from "#lib/tailorkit";
 import { createFileRoute } from "@tanstack/react-router";
 
 const handle = ({ request }: { request: Request }) =>

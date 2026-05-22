@@ -1,5 +1,14 @@
 {
   "name": "@tailorkit/config",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  }
 }

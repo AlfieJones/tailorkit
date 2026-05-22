@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
-import { Footer } from "@/components/footer";
-import { HomeCTA } from "@/components/home-cta";
-import { HomeHero } from "@/components/home-hero";
-import { PlatformFeatures } from "@/components/platform-features";
-import { baseOptions } from "@/lib/layout.shared";
+import { Footer } from "#components/footer";
+import { HomeCTA } from "#components/home-cta";
+import { HomeHero } from "#components/home-hero";
+import { PlatformFeatures } from "#components/platform-features";
+import { baseOptions } from "#lib/layout.shared";
 
 export const Route = createFileRoute("/home")({
   component: Home,

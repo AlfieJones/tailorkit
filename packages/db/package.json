@@ -1,6 +1,15 @@
 {
   "name": "@tailorkit/db",
   "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "exports": {
     ".": {
       "development": "./src/index.ts",
@@ -33,6 +42,7 @@
     "@tailorkit/config": "workspace:*",
     "@types/pg": "catalog:",
     "drizzle-kit": "^1.0.0-rc.2",
+    "tsdown": "catalog:",
     "typescript": "catalog:"
   }
 }

@@ -2,10 +2,10 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { Building2Icon, MailIcon, PlusIcon } from "lucide-react";
 
-import { AccountLayout } from "@/components/account-layout";
-import { CreateOrgDialog } from "@/components/create-org-dialog";
-import { SetHeaderActions } from "@/components/header-actions";
-import { orpc } from "@/lib/orpc";
+import { AccountLayout } from "#components/account-layout";
+import { CreateOrgDialog } from "#components/create-org-dialog";
+import { SetHeaderActions } from "#components/header-actions";
+import { orpc } from "#lib/orpc";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";

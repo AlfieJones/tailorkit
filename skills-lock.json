@@ -21,12 +21,6 @@
       "sourceType": "github",
       "computedHash": "44c9d1c501a8f76c5332740795a2fa0f07dc814cd1a2c4a6103a971eb982db79"
     },
-    "documentation-writer": {
-      "source": "github/awesome-copilot",
-      "sourceType": "github",
-      "skillPath": "skills/documentation-writer/SKILL.md",
-      "computedHash": "ee53d65b163cd7eb953a930c95841cfe398cc2c0bd24c06508bbaa07c432be35"
-    },
     "react-email": {
       "source": "resend/react-email",
       "sourceType": "github",
@@ -40,12 +34,8 @@
     "turborepo": {
       "source": "vercel/turborepo",
       "sourceType": "github",
-      "computedHash": "af51e16468977f0a5db2bad0baa50b6452f690318d81f3c0382f701830acdbdc"
-    },
-    "ultracite": {
-      "source": "haydenbleasel/ultracite",
-      "sourceType": "github",
-      "computedHash": "74f0784eb45e1246471f31331f36b76eb45525f16604dfd8fbdf4c34f731ee67"
+      "skillPath": "skills/turborepo/SKILL.md",
+      "computedHash": "6a23ee82918e35f8848b6fc2ccbea699d740a30fee65f288201adb4e98bf3827"
     },
     "vercel-composition-patterns": {
       "source": "vercel-labs/agent-skills",

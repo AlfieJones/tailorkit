@@ -6,6 +6,15 @@
     "tailorkit": "./dist/index.js"
   },
   "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "exports": {
     ".": "./dist/index.js"
   },
@@ -20,7 +29,8 @@
     "@tailorkit/core": "workspace:*",
     "cac": "^7.0.0",
     "liquidjs": "^10.27.0",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",

@@ -19,7 +19,7 @@ import { clsx } from "clsx";
 import { useState } from "react";
 import { z } from "zod";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "#lib/auth-client";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/(auth)/login")({

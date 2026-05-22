@@ -19,9 +19,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-form";
 import { z } from "zod";
-import { orpc, client } from "@/lib/orpc";
-import { checkOrgSlugAvailability, useOrgSlugAvailability } from "@/lib/org-slug-availability";
-import { OrgSlugAvailabilityIndicator } from "@/components/org-slug-availability-indicator";
+import { orpc, client } from "#lib/orpc";
+import { checkOrgSlugAvailability, useOrgSlugAvailability } from "#lib/org-slug-availability";
+import { OrgSlugAvailabilityIndicator } from "#components/org-slug-availability-indicator";
 
 function toSlug(name: string) {
   return name

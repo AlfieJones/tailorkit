@@ -1,5 +1,5 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
-import { Mermaid } from "@/components/mdx/mermaid";
+import { Mermaid } from "#components/mdx/mermaid";
 import * as TabsComponents from "fumadocs-ui/components/tabs";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import type { MDXComponents } from "mdx/types";

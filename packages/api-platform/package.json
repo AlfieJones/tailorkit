@@ -1,6 +1,15 @@
 {
   "name": "@tailorkit/api-platform",
   "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "exports": {
     ".": {
       "development": "./src/index.ts",
@@ -36,10 +45,13 @@
     "@tailorkit/db": "workspace:*",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/storage": "workspace:*",
-    "drizzle-orm": "catalog:"
+    "drizzle-orm": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
+    "tsdown": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

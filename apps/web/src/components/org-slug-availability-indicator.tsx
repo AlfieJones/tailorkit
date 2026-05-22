@@ -1,7 +1,7 @@
 import { CheckCircle2Icon, XCircleIcon } from "lucide-react";
 import { Spinner } from "@tailorkit/ui/components/spinner";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
-import type { OrgSlugAvailability } from "@/lib/org-slug-availability";
+import type { OrgSlugAvailability } from "#lib/org-slug-availability";
 
 interface OrgSlugAvailabilityIndicatorProps {
   availability: OrgSlugAvailability;

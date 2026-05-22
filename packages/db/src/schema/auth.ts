@@ -88,7 +88,7 @@ export const organization = pgTable("organization", {
     .default(sql`pg_catalog.gen_random_uuid()`)
     .primaryKey(),
   name: text("name").notNull(),
-  slug: text("slug").unique(),
+  slug: text("slug").notNull().unique(),
   logo: text("logo"),
   createdAt: timestamp("created_at").notNull(),
   metadata: text("metadata"),

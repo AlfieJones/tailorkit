@@ -4,6 +4,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "customConditions": ["development"],
     "jsx": "react-jsx",
     "lib": ["ESNext"],
     "verbatimModuleSyntax": true,

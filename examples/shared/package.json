@@ -2,6 +2,15 @@
   "name": "@examples/shared",
   "private": true,
   "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "exports": {
     ".": "./src/index.ts"
   },

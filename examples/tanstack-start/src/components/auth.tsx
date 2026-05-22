@@ -1,7 +1,7 @@
 import { Button } from "@tailorkit/ui/button";
 import { demoUsers } from "@examples/shared";
 
-import { useAuthSession } from "#/lib/auth-client";
+import { useAuthSession } from "#lib/auth-client";
 
 export function AuthScreen() {
   const session = useAuthSession();

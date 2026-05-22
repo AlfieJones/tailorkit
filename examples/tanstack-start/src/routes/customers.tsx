@@ -1,7 +1,7 @@
 import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
 import { Card, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
-import { CustomerTable } from "#/components/customer-table";
-import { customers } from "#/lib/crm-data";
+import { CustomerTable } from "#components/customer-table";
+import { customers } from "#lib/crm-data";
 import { PageHeader } from "./index";
 
 export const Route = createFileRoute("/customers")({ component: CustomersPage });

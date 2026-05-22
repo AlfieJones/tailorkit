@@ -1,6 +1,15 @@
 {
   "name": "@tailorkit/api-utils",
   "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "exports": {
     "./rate-limiting": {
       "development": "./src/rate-limiting.ts",
@@ -32,6 +41,7 @@
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
+    "tsdown": "catalog:",
     "typescript": "catalog:"
   }
 }

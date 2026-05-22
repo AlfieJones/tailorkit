@@ -1,8 +1,8 @@
 import { Outlet, createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { SidebarLayoutHeader } from "@/components/sidebar-layout-header";
-import { HeaderActionsProvider } from "@/components/header-actions";
+import { SidebarLayoutHeader } from "#components/sidebar-layout-header";
+import { HeaderActionsProvider } from "#components/header-actions";
 
 import { CreditCardIcon, FolderIcon, SettingsIcon, UsersIcon } from "lucide-react";
 import {
@@ -24,9 +24,9 @@ import {
   SidebarSeparator,
 } from "@tailorkit/ui/components/sidebar";
 
-import { OrgSwitcher } from "@/components/sidebar/org-switcher";
-import { SidebarBrand } from "@/components/sidebar/sidebar-brand";
-import { SidebarUserMenu } from "@/components/sidebar/sidebar-user-menu";
+import { OrgSwitcher } from "#components/sidebar/org-switcher";
+import { SidebarBrand } from "#components/sidebar/sidebar-brand";
+import { SidebarUserMenu } from "#components/sidebar/sidebar-user-menu";
 
 export const Route = createFileRoute("/(app)/$orgSlug/~/(org)")({
   component: OrgLayout,

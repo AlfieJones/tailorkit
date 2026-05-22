@@ -1,6 +1,15 @@
 {
   "name": "@tailorkit/api",
   "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "exports": {
     ".": {
       "development": "./src/index.ts",
@@ -40,6 +49,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.4.5",
     "@tailorkit/config": "workspace:*",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

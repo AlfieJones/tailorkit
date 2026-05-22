@@ -21,7 +21,7 @@ import { BarChart3, Building2, Handshake, LogOut, Users, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import tailorClient from "#/lib/tailorkit-client";
+import tailorClient from "#lib/tailorkit-client";
 
 const navItems = [
   { icon: BarChart3, label: "Overview", to: "/" },

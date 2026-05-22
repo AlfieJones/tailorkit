@@ -13,8 +13,8 @@ import { useAppForm } from "@tailorkit/ui/form";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { AccountLayout } from "@/components/account-layout";
-import { authClient } from "@/lib/auth-client";
+import { AccountLayout } from "#components/account-layout";
+import { authClient } from "#lib/auth-client";
 
 export const Route = createFileRoute("/(app)/account/security")({
   component: SecurityPage,

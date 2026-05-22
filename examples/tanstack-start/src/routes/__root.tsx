@@ -1,8 +1,8 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 
-import { AppShell as AuthenticatedAppShell } from "#/components/app-shell";
-import { AuthScreen } from "#/components/auth";
-import { useAuthSession } from "#/lib/auth-client";
+import { AppShell as AuthenticatedAppShell } from "#components/app-shell";
+import { AuthScreen } from "#components/auth";
+import { useAuthSession } from "#lib/auth-client";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({

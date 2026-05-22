@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createTailorKit } from "tailorkit";
-import { createDemoSchema } from "#/lib/tailorkit";
-import { defaultTheme } from "#/lib/demo-theme";
+import { createDemoSchema } from "#lib/tailorkit";
+import { defaultTheme } from "#lib/demo-theme";
 
 const tailor = createTailorKit({
   basePath: "/api/tailorkit",

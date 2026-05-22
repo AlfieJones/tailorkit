@@ -17,7 +17,7 @@ import { Logo } from "@tailorkit/ui/components/logo";
 import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/components/otp-field";
 import { toastManager } from "@tailorkit/ui/components/toast";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "#lib/auth-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeftIcon } from "lucide-react";
 

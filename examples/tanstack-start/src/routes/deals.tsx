@@ -1,6 +1,6 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
 import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
-import { deals } from "#/lib/crm-data";
+import { deals } from "#lib/crm-data";
 import { DealTable, PageHeader } from "./index";
 
 export const Route = createFileRoute("/deals")({ component: DealsPage });

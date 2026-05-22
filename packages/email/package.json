@@ -1,6 +1,15 @@
 {
   "name": "@tailorkit/email",
   "type": "module",
+  "imports": {
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "exports": {
     ".": {
       "development": "./src/index.ts",
@@ -28,6 +37,7 @@
     "@tailorkit/config": "workspace:*",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:"
   }
 }
