@@ -1,7 +1,7 @@
 import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
-  framework: "tanstack-start",
+  framework: "nitro",
   redirects: [
     {
       source: "/homepage",
