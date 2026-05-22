@@ -28,7 +28,7 @@ import { useAppForm } from "@tailorkit/ui/form";
 import { validateProjectSlug } from "@tailorkit/db/validate-project-slug";
 import { z } from "zod";
 import { SetHeaderActions } from "@/components/header-actions";
-import { client, orpc } from "@/utils/orpc";
+import { client, orpc } from "@/lib/orpc";
 import { setProjectApiKey } from "@/utils/project-api-key-memory";
 
 export const Route = createFileRoute("/(app)/$orgSlug/~/(org)/projects")({

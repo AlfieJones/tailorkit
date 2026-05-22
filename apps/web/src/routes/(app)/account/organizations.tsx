@@ -5,7 +5,7 @@ import { Building2Icon, MailIcon, PlusIcon } from "lucide-react";
 import { AccountLayout } from "@/components/account-layout";
 import { CreateOrgDialog } from "@/components/create-org-dialog";
 import { SetHeaderActions } from "@/components/header-actions";
-import { orpc } from "@/utils/orpc";
+import { orpc } from "@/lib/orpc";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";

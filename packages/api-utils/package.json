@@ -3,16 +3,23 @@
   "type": "module",
   "exports": {
     "./rate-limiting": {
-      "default": "./src/rate-limiting.ts"
+      "development": "./src/rate-limiting.ts",
+      "types": "./dist/rate-limiting.d.mts",
+      "default": "./dist/rate-limiting.mjs"
     },
     "./hashing": {
-      "default": "./src/hashing.ts"
+      "development": "./src/hashing.ts",
+      "types": "./dist/hashing.d.mts",
+      "default": "./dist/hashing.mjs"
     },
     "./dev-delay": {
-      "default": "./src/dev-delay.ts"
+      "development": "./src/dev-delay.ts",
+      "types": "./dist/dev-delay.d.mts",
+      "default": "./dist/dev-delay.mjs"
     }
   },
   "scripts": {
+    "build": "tsdown src/rate-limiting.ts src/hashing.ts src/dev-delay.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { MailIcon } from "lucide-react";
 
 import { AccountLayout } from "@/components/account-layout";
-import { client, orpc } from "@/utils/orpc";
+import { client, orpc } from "@/lib/orpc";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";
 import {

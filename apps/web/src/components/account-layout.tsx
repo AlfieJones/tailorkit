@@ -8,7 +8,6 @@ import { SidebarLayoutHeader } from "@/components/sidebar-layout-header";
 import { SidebarBackButton } from "@/components/sidebar/sidebar-back-button";
 import { SidebarBrand } from "@/components/sidebar/sidebar-brand";
 import { SidebarUserMenu } from "@/components/sidebar/sidebar-user-menu";
-import { orpc } from "@/utils/orpc";
 import {
   Sidebar,
   SidebarContent,

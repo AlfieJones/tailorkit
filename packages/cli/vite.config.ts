@@ -31,6 +31,8 @@ export default defineConfig({
         "zod",
       ],
       output: {
+        banner:
+          'import { fileURLToPath as __tailorkitFileURLToPath } from "node:url";\nimport { dirname as __tailorkitDirname } from "node:path";\nconst __filename = __tailorkitFileURLToPath(import.meta.url);\nconst __dirname = __tailorkitDirname(__filename);',
         entryFileNames: "index.js",
       },
     },
@@ -38,4 +40,7 @@ export default defineConfig({
     target: "node24",
   },
   plugins: [liquidRawPlugin()],
+  ssr: {
+    noExternal: ["cosmiconfig"],
+  },
 });

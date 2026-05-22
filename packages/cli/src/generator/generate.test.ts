@@ -187,8 +187,8 @@ describe("generateApp", () => {
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(path.join(targetDirectory, "tailorkit.config.ts"), "utf-8");
-    expect(content).toContain('import { defineTailorKitConfig } from "@tailorkit/app/config"');
-    expect(content).toContain("defineTailorKitConfig");
+    expect(content).toContain('satisfies import("@tailorkit/app/config").TailorKitConfig');
+    expect(content).not.toContain("defineTailorKitConfig");
   });
 
   it("generates a default screen for the default schema", async () => {

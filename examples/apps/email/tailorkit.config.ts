@@ -1,7 +1,5 @@
-import { defineTailorKitConfig } from "@tailorkit/app/config";
-
-export default defineTailorKitConfig({
+export default {
   client: {
     entry: "./src/client.ts",
   },
-});
+} satisfies import("@tailorkit/app/config").TailorKitConfig;

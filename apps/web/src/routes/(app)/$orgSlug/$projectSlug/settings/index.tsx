@@ -28,7 +28,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
-import { client, orpc } from "@/utils/orpc";
+import { client, orpc } from "@/lib/orpc";
 
 export const Route = createFileRoute("/(app)/$orgSlug/$projectSlug/settings/")({
   component: ProjectSettingsPage,

@@ -13,7 +13,7 @@ import {
 } from "@tailorkit/ui/components/sidebar";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { orpc } from "@/utils/orpc";
+import { orpc } from "@/lib/orpc";
 
 import { OrgSwitcher } from "./org-switcher";
 import { SidebarBackButton } from "./sidebar-back-button";

@@ -1,13 +1,14 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AnchoredToastProvider, ToastProvider } from "@tailorkit/ui/toast";
 import { ThemeProvider, useTheme } from "next-themes";
 import { useEffect, useRef } from "react";
 
-import { authClient } from "@/lib/auth-client";
-import { NotFound } from "@/components/not-found";
+import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
+
+import { authClient } from "../lib/auth-client";
+import { NotFound } from "../components/not-found";
 import {
   fallbackTheme,
   getCachedThemeScript,
@@ -15,10 +16,11 @@ import {
   isAppTheme,
   themeCookieName,
   themeStorageKey,
-} from "@/lib/theme";
-import type { orpc } from "@/utils/orpc";
+} from "../lib/theme";
+import { TanStackDevtools } from "@tanstack/react-devtools";
 
 import appCss from "../index.css?url";
+import type { orpc } from "@/lib/orpc";
 
 export interface RouterAppContext {
   orpc: typeof orpc;
@@ -26,7 +28,7 @@ export interface RouterAppContext {
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
-  component: RootDocument,
+  shellComponent: RootDocument,
   notFoundComponent: NotFound,
 
   head: () => ({
@@ -77,7 +79,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   }),
 });
 
-function RootDocument() {
+function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -95,14 +97,25 @@ function RootDocument() {
           <UserThemeSync />
           <div className="isolate relative flex min-h-svh flex-col">
             <ToastProvider>
-              <AnchoredToastProvider>
-                <Outlet />
-              </AnchoredToastProvider>
+              <AnchoredToastProvider>{children}</AnchoredToastProvider>
             </ToastProvider>
           </div>
         </ThemeProvider>
-        <TanStackRouterDevtools position="bottom-right" />
-        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+        <TanStackDevtools
+          config={{
+            position: "bottom-right",
+          }}
+          plugins={[
+            {
+              name: "Tanstack Router",
+              render: <TanStackRouterDevtoolsPanel />,
+            },
+            {
+              name: "Tanstack Query",
+              render: <ReactQueryDevtoolsPanel />,
+            },
+          ]}
+        />
         <Scripts />
       </body>
     </html>

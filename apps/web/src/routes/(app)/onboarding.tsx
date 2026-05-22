@@ -15,7 +15,7 @@ import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useStore } from "@tanstack/react-form";
 import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
 import { z } from "zod";
-import { orpc, client } from "@/utils/orpc";
+import { orpc, client } from "@/lib/orpc";
 import { FieldError } from "@tailorkit/ui/components/field";
 import { checkOrgSlugAvailability, useOrgSlugAvailability } from "@/lib/org-slug-availability";
 import { OrgSlugAvailabilityIndicator } from "@/components/org-slug-availability-indicator";

@@ -1,16 +1,15 @@
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 
-import "./index.css";
 import { NotFound } from "./components/not-found";
 import { routeTree } from "./routeTree.gen";
-import { orpc, getQueryClient } from "./utils/orpc";
+import { getQueryClient, orpc } from "./lib/orpc";
 
 export const getRouter = () => {
   const queryClient = getQueryClient();
 
   const router = createRouter({
-    context: { orpc, queryClient },
+    context: { queryClient, orpc },
     routeTree,
     scrollRestoration: true,
     defaultPreload: "intent",

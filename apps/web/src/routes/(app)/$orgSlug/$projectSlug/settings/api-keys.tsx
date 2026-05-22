@@ -33,7 +33,7 @@ import {
 } from "@tailorkit/ui/components/select";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
 import { toastManager } from "@tailorkit/ui/components/toast";
-import { client, orpc } from "@/utils/orpc";
+import { client, orpc } from "@/lib/orpc";
 import { getProjectApiKey, setProjectApiKey } from "@/utils/project-api-key-memory";
 
 export const Route = createFileRoute("/(app)/$orgSlug/$projectSlug/settings/api-keys")({

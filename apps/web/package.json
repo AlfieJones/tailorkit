@@ -4,13 +4,10 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "serve": "vite preview",
+    "preview": "vite preview",
     "dev": "vite dev"
   },
   "dependencies": {
-    "@ai-sdk/devtools": "^0.0.18",
-    "@ai-sdk/google": "^3.0.79",
-    "@ai-sdk/react": "catalog:",
     "@base-ui/react": "^1.5.0",
     "@better-auth/infra": "^0.2.8",
     "@orpc/client": "catalog:",
@@ -27,13 +24,14 @@
     "@tailorkit/env": "workspace:*",
     "@tailorkit/ui": "workspace:*",
     "@tailwindcss/vite": "catalog:",
+    "@tanstack/devtools-vite": "^0.7.0",
+    "@tanstack/react-devtools": "^0.10.5",
     "@tanstack/react-form": "^1.28.0",
     "@tanstack/react-query": "^5.100.11",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-ssr-query": "^1.167.0",
     "@tanstack/react-start": "catalog:",
     "@tanstack/react-table": "^8.21.3",
-    "ai": "catalog:",
     "better-auth": "catalog:",
     "clsx": "^2.1.1",
     "dotenv": "catalog:",
@@ -49,15 +47,11 @@
     "@tailorkit/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.100.11",
     "@tanstack/react-router-devtools": "catalog:",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.2",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vercel/config": "0.5.0",
     "@vitejs/plugin-react": "catalog:",
-    "babel-plugin-react-compiler": "^1.0.0",
     "typescript": "catalog:",
-    "vite": "catalog:",
-    "web-vitals": "^5.2.0"
+    "vite": "catalog:"
   }
 }

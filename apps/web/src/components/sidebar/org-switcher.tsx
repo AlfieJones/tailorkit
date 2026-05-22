@@ -16,7 +16,7 @@ import { SidebarMenuButton } from "@tailorkit/ui/components/sidebar";
 import { useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { orpc } from "@/utils/orpc";
+import { orpc } from "@/lib/orpc";
 import { CreateOrgDialog } from "../create-org-dialog";
 
 interface OrgSwitcherProps {
