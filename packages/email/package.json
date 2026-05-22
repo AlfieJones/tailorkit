@@ -11,17 +11,17 @@
     "dev": "email dev --dir src/templates --port 3003"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.1051.0",
+    "@aws-sdk/client-sesv2": "^3.1052.0",
     "@react-email/components": "^1.0.1",
     "@react-email/render": "^2.0.8",
     "@tailorkit/env": "workspace:*",
     "nodemailer": "^8.0.7",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "react-email": "6.1.5"
+    "react-email": "6.3.0"
   },
   "devDependencies": {
-    "@react-email/ui": "6.1.5",
+    "@react-email/ui": "6.3.0",
     "@tailorkit/config": "workspace:*",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "catalog:",
