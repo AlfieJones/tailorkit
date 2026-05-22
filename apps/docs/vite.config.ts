@@ -14,9 +14,9 @@ export default defineConfig({
     mdx(await import("./source.config")),
     tailwindcss(),
     tanstackStart({
-      prerender: {
-        enabled: true,
-      },
+      // prerender: {
+      //   enabled: true,
+      // },
       serverFns: {
         base: "/docs/_serverFn",
       },
