@@ -9,28 +9,4 @@ export const config: VercelConfig = {
       permanent: true,
     },
   ],
-  rewrites: [
-    {
-      source: "/",
-      missing: [
-        {
-          key: "tailorkit.session_token",
-          type: "cookie",
-        },
-      ],
-      destination: "https://tailorkit-docs.vercel.app/home",
-    },
-    {
-      source: "/home",
-      destination: "https://tailorkit-docs.vercel.app/home",
-    },
-    {
-      source: "/docs/:path*",
-      destination: "https://tailorkit-docs.vercel.app/docs/:path*",
-    },
-    {
-      source: "/docs-assets/:path*",
-      destination: "https://tailorkit-docs.vercel.app/docs-assets/:path*",
-    },
-  ],
 };

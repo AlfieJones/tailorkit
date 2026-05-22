@@ -5,6 +5,7 @@ import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import babel from "@rolldown/plugin-babel";
 import { nitro } from "nitro/vite";
+import { microfrontends } from "@vercel/microfrontends/experimental/vite";
 
 const serverPackages = [
   "@tailorkit/api",
@@ -18,6 +19,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+      microfrontends(),
       devtools(),
       tailwindcss(),
       tanstackStart(),

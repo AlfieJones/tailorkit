@@ -5,11 +5,12 @@ import mdx from "fumadocs-mdx/vite";
 import { defineConfig } from "vite";
 import { imagetools } from "vite-imagetools";
 import { nitro } from "nitro/vite";
+import { microfrontends } from "@vercel/microfrontends/experimental/vite";
 
 export default defineConfig({
-  build: {
-    assetsDir: "docs-assets",
-  },
+  // build: {
+  //   assetsDir: "docs-assets",
+  // },
   environments: {
     nitro: {
       build: {
@@ -27,6 +28,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    microfrontends(),
     mdx(await import("./source.config")),
     tailwindcss(),
     tanstackStart({
