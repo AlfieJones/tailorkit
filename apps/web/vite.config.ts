@@ -9,6 +9,7 @@ import { microfrontends } from "@vercel/microfrontends/experimental/vite";
 
 const serverPackages = [
   "@tailorkit/api",
+  "@tailorkit/api-platform",
   "@tailorkit/api-utils",
   "@tailorkit/auth",
   "@tailorkit/db",
