@@ -9,8 +9,21 @@ import { nitro } from "nitro/vite";
 export default defineConfig({
   build: {
     assetsDir: "docs-assets",
-    rolldownOptions: {
-      external: ["tslib"],
+  },
+  environments: {
+    nitro: {
+      build: {
+        rolldownOptions: {
+          external: ["tslib"],
+        },
+      },
+    },
+    ssr: {
+      build: {
+        rolldownOptions: {
+          external: ["tslib"],
+        },
+      },
     },
   },
   plugins: [
