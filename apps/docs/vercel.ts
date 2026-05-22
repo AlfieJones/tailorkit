@@ -1,6 +1,6 @@
 import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
-  framework: "tanstack-start",
-  outputDirectory: "dist/client",
+  framework: "nitro",
+  // outputDirectory: "dist/client",
 };

@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 import mdx from "fumadocs-mdx/vite";
 import { defineConfig } from "vite";
 import { imagetools } from "vite-imagetools";
+import nitro from "nitro/vite";
 
 export default defineConfig({
   build: {
@@ -20,6 +21,7 @@ export default defineConfig({
         base: "/docs/_serverFn",
       },
     }),
+    nitro(),
     react(),
     imagetools(),
   ],
