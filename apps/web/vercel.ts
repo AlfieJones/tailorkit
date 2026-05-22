@@ -2,11 +2,16 @@ import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
   framework: "nitro",
-  redirects: [
+  rewrites: [
     {
-      source: "/homepage",
+      source: "/",
       destination: "/home",
-      permanent: true,
+      missing: [
+        {
+          type: "cookie",
+          key: "tailorkit.session_token",
+        },
+      ],
     },
   ],
 };

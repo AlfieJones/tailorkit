@@ -39,7 +39,16 @@ export default defineConfig({
         base: "/docs/_serverFn",
       },
     }),
-    nitro(),
+    nitro({
+      routeRules: {
+        "/homepage": {
+          redirect: "/home",
+        },
+        "/": {
+          redirect: "/home",
+        },
+      },
+    }),
     react(),
     imagetools(),
   ],
