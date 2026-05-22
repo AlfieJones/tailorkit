@@ -9,14 +9,17 @@ import { nitro } from "nitro/vite";
 export default defineConfig({
   build: {
     assetsDir: "docs-assets",
+    rolldownOptions: {
+      external: ["tslib"],
+    },
   },
   plugins: [
     mdx(await import("./source.config")),
     tailwindcss(),
     tanstackStart({
-      // prerender: {
-      //   enabled: true,
-      // },
+      prerender: {
+        enabled: true,
+      },
       serverFns: {
         base: "/docs/_serverFn",
       },
@@ -27,6 +30,9 @@ export default defineConfig({
   ],
   resolve: {
     tsconfigPaths: true,
+  },
+  ssr: {
+    external: ["tslib"],
   },
   server: {
     port: 5173,
