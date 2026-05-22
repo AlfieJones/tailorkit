@@ -2,15 +2,17 @@
   "$schema": "https://openapi.vercel.sh/microfrontends.json",
   "applications": {
     "tailorkit-web": {
+      "packageName": "web",
       "development": {
-        "fallback": "TODO: a URL in production that should be used for requests to apps not running locally"
+        "fallback": "tailorkit.dev"
       }
     },
     "tailorkit-docs": {
+      "packageName": "docs",
       "routing": [
         {
           "group": "docs",
-          "paths": ["/docs/:path*"]
+          "paths": ["/", "/docs", "/docs/:path*"]
         }
       ]
     }
