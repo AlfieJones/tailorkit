@@ -64,6 +64,7 @@ export const env = createEnv({
     // Auth
     AUTH_SECRET:
       process.env.NODE_ENV === "production" ? z.string().min(32) : z.string().min(32).optional(),
+    BETTER_AUTH_API_KEY: z.string().min(1).optional(),
 
     // Database
     DATABASE_URL: z.string().min(1),
@@ -86,8 +87,6 @@ export const env = createEnv({
     EMAIL_REGION: z.string().min(1).optional(),
     EMAIL_SECRET_ACCESS_KEY: z.string().min(1).optional(),
 
-    // Auth
-    BETTER_AUTH_API_KEY: z.string().min(1).optional(),
     // KV
     KV_PROVIDER: z.enum(["upstash", "redis"]).optional(),
     KV_REDIS_URL: z.string().min(1).optional(),
