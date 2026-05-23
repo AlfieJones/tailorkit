@@ -5,7 +5,6 @@ import mdx from "fumadocs-mdx/vite";
 import { defineConfig } from "vite";
 import { imagetools } from "vite-imagetools";
 import { nitro } from "nitro/vite";
-import { microfrontends } from "@vercel/microfrontends/experimental/vite";
 import { createHash } from "node:crypto";
 
 function createPrefixedServerFnIdGenerator(prefix: string) {
@@ -26,7 +25,6 @@ function createPrefixedServerFnIdGenerator(prefix: string) {
 
 export default defineConfig({
   plugins: [
-    microfrontends(),
     mdx(await import("./source.config")),
     tailwindcss(),
     tanstackStart({
@@ -34,7 +32,8 @@ export default defineConfig({
         enabled: true,
       },
       serverFns: {
-        generateFunctionId: createPrefixedServerFnIdGenerator("docs"),
+        base: "/docs/_serverFn",
+        // generateFunctionId: createPrefixedServerFnIdGenerator("docs"),
       },
     }),
     nitro({

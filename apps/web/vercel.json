@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nitro",
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "https://tailorkit-docs.vercel.app/home",
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "tailorkit.session_token"
+        }
+      ]
+    },
+    {
+      "source": "/home",
+      "destination": "https://tailorkit-docs.vercel.app/home"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://tailorkit-docs.vercel.app/docs"
+    },
+    {
+      "source": "/docs/:path*",
+      "destination": "https://tailorkit-docs.vercel.app/docs/:path*"
+    }
+  ]
+}

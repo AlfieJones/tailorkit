@@ -17,7 +17,7 @@
     ]
   },
   "scripts": {
-    "dev": "vite dev --port $(turbo get-mfe-port)",
+    "dev": "vite dev --port 3100",
     "build": "vite build",
     "start": "vite preview",
     "preview": "vite preview",
