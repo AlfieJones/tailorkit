@@ -24,6 +24,7 @@ function createPrefixedServerFnIdGenerator(prefix: string) {
 }
 
 export default defineConfig({
+  base: "/docs",
   plugins: [
     mdx(await import("./source.config")),
     tailwindcss(),
