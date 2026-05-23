@@ -7,7 +7,9 @@ import { imagetools } from "vite-imagetools";
 import { nitro } from "nitro/vite";
 
 export default defineConfig({
-  base: "/docs",
+  build: {
+    assetsDir: "docs-assets",
+  },
   plugins: [
     mdx(await import("./source.config")),
     tailwindcss(),
@@ -22,9 +24,6 @@ export default defineConfig({
     nitro({
       routeRules: {
         "/homepage": {
-          redirect: "/home",
-        },
-        "/": {
           redirect: "/home",
         },
       },

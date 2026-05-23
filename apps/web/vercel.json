@@ -27,6 +27,10 @@
     {
       "source": "/_serverFnDocs:path",
       "destination": "https://tailorkit-docs.vercel.app/_serverFnDocs:path"
+    },
+    {
+      "source": "/docs-assets/:path*",
+      "destination": "https://tailorkit-docs.vercel.app/docs-assets/:path*"
     }
   ]
 }
