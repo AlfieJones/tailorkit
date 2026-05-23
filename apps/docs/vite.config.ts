@@ -13,7 +13,7 @@ function createPrefixedServerFnIdGenerator(prefix: string) {
     const filename = opts.filename.replaceAll("\\", "/");
 
     const safePrefix = prefix.replaceAll(/[^a-zA-Z0-9_-]/gu, "_");
-    const safeName = opts.functionName.replaceAll(/[^a-zA-Z0-9_-]/gu, "_").slice(0, 48);
+    const safeName = opts.functionName.replaceAll(/[^a-zA-Z0-9_-]/gu, "_").slice(0, 16);
 
     const hash = createHash("sha256")
       .update(`${filename}:${opts.functionName}`)
