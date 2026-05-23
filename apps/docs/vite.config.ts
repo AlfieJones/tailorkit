@@ -16,6 +16,9 @@ export default defineConfig({
       prerender: {
         enabled: true,
       },
+      serverFns: {
+        base: "/docs/_serverFn",
+      },
     }),
     nitro({
       routeRules: {
