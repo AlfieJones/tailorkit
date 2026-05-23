@@ -14,6 +14,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { authClient } from "#lib/auth-client";
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "#lib/orpc.ts";
 
 export const Route = createFileRoute("/(app)/account/profile/")({
   component: ProfilePage,
@@ -24,7 +26,7 @@ function ProfilePage() {
 
   const form = useAppForm({
     defaultValues: {
-      name: session?.user.name ?? "",
+      name: session?.user?.name ?? "",
     },
     onSubmit: async ({ value }) => {
       const result = await authClient.updateUser({

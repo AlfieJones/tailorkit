@@ -58,7 +58,7 @@ import {
   TableRow,
 } from "@tailorkit/ui/components/table";
 import { toastManager } from "@tailorkit/ui/components/toast";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { SetHeaderActions } from "#components/header-actions";
 import { client, orpc } from "#lib/orpc";
 import { roles } from "@tailorkit/auth/lib/permissions";
