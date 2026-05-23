@@ -5,6 +5,23 @@ import mdx from "fumadocs-mdx/vite";
 import { defineConfig } from "vite";
 import { imagetools } from "vite-imagetools";
 import { nitro } from "nitro/vite";
+import { createHash } from "node:crypto";
+
+function createPrefixedServerFnIdGenerator(prefix: string) {
+  return (opts: { filename: string; functionName: string }) => {
+    const filename = opts.filename.replaceAll("\\", "/");
+
+    const safePrefix = prefix.replaceAll(/[^a-zA-Z0-9_-]/gu, "_");
+    const safeName = opts.functionName.replaceAll(/[^a-zA-Z0-9_-]/gu, "_").slice(0, 16);
+
+    const hash = createHash("sha256")
+      .update(`${filename}:${opts.functionName}`)
+      .digest("base64url")
+      .slice(0, 16);
+
+    return `${safePrefix}_${safeName}_${hash}`;
+  };
+}
 
 export default defineConfig({
   build: {
@@ -18,12 +35,15 @@ export default defineConfig({
         enabled: true,
       },
       serverFns: {
-        base: "/_serverFnDocs",
+        generateFunctionId: createPrefixedServerFnIdGenerator("docs"),
       },
     }),
     nitro({
       routeRules: {
         "/homepage": {
+          redirect: "/home",
+        },
+        "/": {
           redirect: "/home",
         },
       },
