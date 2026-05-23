@@ -41,7 +41,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@better-auth/cli": "latest",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",

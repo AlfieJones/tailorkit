@@ -22,10 +22,10 @@
     "tailorkit": "pnpm --filter @tailorkit/cli build && node ./packages/cli/dist/index.js"
   },
   "devDependencies": {
-    "lefthook": "latest",
+    "lefthook": "2.1.8",
     "oxfmt": "0.51.0",
     "oxlint": "1.66.0",
-    "turbo": "^2.9.14",
+    "turbo": "2.9.14",
     "ultracite": "7.7.0"
   },
   "packageManager": "pnpm@11.2.2"
