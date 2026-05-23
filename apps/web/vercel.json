@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/home",
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "tailorkit.session_token"
+        }
+      ]
+    }
+  ]
+}
