@@ -20,7 +20,7 @@ export const Route = createFileRoute("/(app)/account/profile/")({
 });
 
 function ProfilePage() {
-  const { data: session } = authClient.useSession();
+  const { data: session } = useQuery(orpc.user.getSession.queryOptions());
 
   const form = useAppForm({
     defaultValues: {

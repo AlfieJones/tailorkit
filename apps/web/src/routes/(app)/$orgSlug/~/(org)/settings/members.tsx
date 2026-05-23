@@ -59,7 +59,6 @@ import {
 } from "@tailorkit/ui/components/table";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { authClient } from "#lib/auth-client";
 import { SetHeaderActions } from "#components/header-actions";
 import { client, orpc } from "#lib/orpc";
 import { roles } from "@tailorkit/auth/lib/permissions";
@@ -612,7 +611,7 @@ function InvitationsTable({
 function OrgSettingsMembers() {
   const { orgSlug } = Route.useParams();
   const queryClient = useQueryClient();
-  const { data: session } = authClient.useSession();
+  const { data: session } = useQuery(orpc.user.getSession.queryOptions());
   const { data: members } = useSuspenseQuery(
     orpc.org.getMembers.queryOptions({ input: { orgSlug } }),
   );

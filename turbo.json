@@ -19,6 +19,8 @@
     "KV_REST_API_TOKEN",
     "KV_REST_API_URL",
     "KV_REDIS_URL",
+    "KV_REST_API_READ_ONLY_TOKEN",
+    "KV_URL",
     "BLOB_REGION",
     "BLOB_BUCKET",
     "BLOB_ENDPOINT",

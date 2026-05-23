@@ -26,15 +26,17 @@ import { toastManager } from "@tailorkit/ui/components/toast";
 
 import { authClient } from "#lib/auth-client";
 import { fallbackTheme, getUserTheme, isAppTheme, useTheme } from "#lib/theme";
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "#lib/orpc.ts";
 
 export function SidebarUserMenu() {
   const navigate = useNavigate();
-  const { data: session } = authClient.useSession();
+  const { data: session } = useQuery(orpc.user.getSession.queryOptions());
   const { setTheme, theme } = useTheme();
 
-  const name = session?.user.name ?? "User";
-  const email = session?.user.email ?? "";
-  const image = session?.user.image ?? undefined;
+  const name = session?.user?.name ?? "User";
+  const email = session?.user?.email ?? "";
+  const image = session?.user?.image ?? undefined;
   const selectedTheme = theme ?? getUserTheme(session?.user) ?? fallbackTheme;
   const initials = name
     .split(" ")
