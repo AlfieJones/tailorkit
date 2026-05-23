@@ -1,4 +1,4 @@
-import { Button, Heading, Section, Text } from "@react-email/components";
+import { Button, Heading, Section, Text } from "react-email";
 import { AuthEmailLayout, COMPANY_NAME } from "./shared";
 
 export interface InvitationTemplateProps {

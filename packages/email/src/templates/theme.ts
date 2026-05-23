@@ -1,4 +1,4 @@
-import type { TailwindConfig } from "@react-email/components";
+import type { TailwindConfig } from "react-email";
 
 // Tailwind neutral palette — synced with @packages/ui/src/styles/globals.css
 const neutral = {

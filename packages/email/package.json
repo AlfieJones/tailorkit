@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1053.0",
-    "@react-email/components": "^1.0.1",
     "@react-email/render": "^2.0.8",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/observability": "workspace:*",

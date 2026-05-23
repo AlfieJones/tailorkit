@@ -25,9 +25,6 @@
     "generate": "openapi-ts",
     "check-types": "tsc --noEmit"
   },
-  "dependencies": {
-    "@hey-api/client-fetch": "^0.13.1"
-  },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.97.2",
     "@tailorkit/api-platform": "workspace:*",

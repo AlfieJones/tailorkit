@@ -12,7 +12,7 @@ import {
   Section,
   Tailwind,
   Text,
-} from "@react-email/components";
+} from "react-email";
 import type { ReactNode } from "react";
 import { emailColorSchemeCss, emailTailwindConfig } from "../theme";
 import { TailorKitFonts } from "../theme-fonts";
