@@ -132,12 +132,7 @@ function RouteComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="flex w-full max-w-sm flex-col items-center gap-4">
-        <a
-          className="flex items-center gap-2"
-          href="https://tailorkit.dev"
-          rel="noopener"
-          target="_blank"
-        >
+        <a className="flex items-center gap-2" href="https://tailorkit.dev/home">
           <Logo className="size-6" />
           <span className="font-semibold text-lg">TailorKit</span>
         </a>
