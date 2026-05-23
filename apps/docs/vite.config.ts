@@ -8,25 +8,6 @@ import { nitro } from "nitro/vite";
 import { microfrontends } from "@vercel/microfrontends/experimental/vite";
 
 export default defineConfig({
-  // build: {
-  //   assetsDir: "docs-assets",
-  // },
-  environments: {
-    nitro: {
-      build: {
-        rolldownOptions: {
-          external: ["tslib"],
-        },
-      },
-    },
-    ssr: {
-      build: {
-        rolldownOptions: {
-          external: ["tslib"],
-        },
-      },
-    },
-  },
   plugins: [
     microfrontends(),
     mdx(await import("./source.config")),
@@ -34,9 +15,6 @@ export default defineConfig({
     tanstackStart({
       prerender: {
         enabled: true,
-      },
-      serverFns: {
-        base: "/docs/_serverFn",
       },
     }),
     nitro({
@@ -52,12 +30,6 @@ export default defineConfig({
     react(),
     imagetools(),
   ],
-  resolve: {
-    tsconfigPaths: true,
-  },
-  ssr: {
-    external: ["tslib"],
-  },
   server: {
     port: 5173,
   },
