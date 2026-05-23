@@ -6,11 +6,9 @@ export const Route = createFileRoute("/logout")({
   preload: false,
   component: LogoutPage,
   beforeLoad: async ({ context }) => {
-    try {
-      await authClient.signOut();
-    } catch {
-      // Continue to clear local session state and return to login.
-    }
+    await authClient.signOut().catch((error) => {
+      console.error(error);
+    });
 
     context.queryClient.clear();
     throw redirect({
