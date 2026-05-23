@@ -100,8 +100,8 @@ it for routes that need your app's authenticated user, then passes the returned
 `actionContext` to your action handlers.
 
 ```ts title="app/api/tailorkit/[...tailorkit]/route.ts"
-import { auth } from "~/lib/auth";
-import { tailorKit } from "~/lib/tailorkit";
+import { auth } from "#lib/auth";
+import { tailorKit } from "#lib/tailorkit";
 
 async function handleRequest(request: Request) {
   return tailorKit.handler(request, {

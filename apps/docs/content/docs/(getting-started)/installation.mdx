@@ -109,8 +109,8 @@ routes that need your app's user context; CLI deployment routes use TailorKit's
 deploy-token authentication.
 
 ```ts title="app/api/tailorkit/[...tailorkit]/route.ts" tab="Next.js (App)"
-import { auth } from "~/lib/auth";
-import { tailorKit } from "~/lib/tailorkit";
+import { auth } from "#lib/auth";
+import { tailorKit } from "#lib/tailorkit";
 
 async function handleRequest(request: Request) {
   return tailorKit.handler(request, {
@@ -136,8 +136,8 @@ export const POST = handleRequest;
 ```
 
 ```ts title="routes/api/tailorkit.$.ts" tab="TanStack Start"
-import { auth } from "~/lib/auth";
-import { tailorKit } from "~/lib/tailorkit";
+import { auth } from "#lib/auth";
+import { tailorKit } from "#lib/tailorkit";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/tailorkit/$")({
@@ -170,8 +170,8 @@ async function handleRequest({ request }: { request: Request }) {
 ```
 
 ```ts title="routes/api.tailorkit.$.ts" tab="React Router"
-import { auth } from "~/lib/auth";
-import { tailorKit } from "~/lib/tailorkit";
+import { auth } from "#lib/auth";
+import { tailorKit } from "#lib/tailorkit";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 
 async function handleRequest(request: Request) {
@@ -203,8 +203,8 @@ export async function action({ request }: ActionFunctionArgs) {
 ```
 
 ```ts title="server/api/tailorkit/[...].ts" tab="Nitro"
-import { auth } from "~/lib/auth";
-import { tailorKit } from "~/lib/tailorkit";
+import { auth } from "#lib/auth";
+import { tailorKit } from "#lib/tailorkit";
 import { toWebRequest } from "h3";
 
 export default defineEventHandler(async (event) => {
@@ -230,8 +230,8 @@ export default defineEventHandler(async (event) => {
 
 ```ts title="src/index.ts" tab="Hono"
 import { Hono } from "hono";
-import { auth } from "~/lib/auth";
-import { tailorKit } from "~/lib/tailorkit";
+import { auth } from "#lib/auth";
+import { tailorKit } from "#lib/tailorkit";
 
 const app = new Hono();
 

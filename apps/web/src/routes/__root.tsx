@@ -1,26 +1,25 @@
+import { useQuery } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AnchoredToastProvider, ToastProvider } from "@tailorkit/ui/toast";
-import { ThemeProvider, useTheme } from "next-themes";
+import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 
-import { authClient } from "../lib/auth-client";
 import { NotFound } from "../components/not-found";
 import {
+  ThemeProvider,
   fallbackTheme,
   getCachedThemeScript,
   getUserTheme,
-  isAppTheme,
-  themeCookieName,
-  themeStorageKey,
+  useTheme,
 } from "../lib/theme";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 
 import appCss from "../index.css?url";
-import type { orpc } from "#lib/orpc";
+import { orpc } from "#lib/orpc";
 
 export interface RouterAppContext {
   orpc: typeof orpc;
@@ -79,7 +78,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   }),
 });
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -87,13 +86,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="relative">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme={fallbackTheme}
-          disableTransitionOnChange
-          enableSystem
-          storageKey={themeStorageKey}
-        >
+        <ThemeProvider>
           <UserThemeSync />
           <div className="isolate relative flex min-h-svh flex-col">
             <ToastProvider>
@@ -124,13 +117,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function UserThemeSync() {
   const { setTheme, theme } = useTheme();
-  const { data: session, isPending } = authClient.useSession();
-  const lastSyncedTheme = useRef<string>(null);
-  const cachedTheme = isAppTheme(theme) ? theme : fallbackTheme;
+  const { data: session, isPending } = useQuery(orpc.user.getSession.queryOptions());
+  const lastSyncedTheme = useRef<string | null>(null);
   const userTheme = session ? (getUserTheme(session.user) ?? fallbackTheme) : fallbackTheme;
 
   useEffect(() => {
-    if (isPending) {
+    if (isPending || !session) {
       return;
     }
 
@@ -138,19 +130,12 @@ function UserThemeSync() {
       return;
     }
 
-    if (userTheme !== cachedTheme) {
+    if (userTheme !== theme) {
       setTheme(userTheme);
     }
 
-    localStorage.setItem(themeStorageKey, userTheme);
-    void window.cookieStore?.set({
-      name: themeCookieName,
-      path: "/",
-      sameSite: "lax",
-      value: userTheme,
-    });
     lastSyncedTheme.current = userTheme;
-  }, [cachedTheme, isPending, setTheme, userTheme]);
+  }, [isPending, session, setTheme, theme, userTheme]);
 
   return null;
 }

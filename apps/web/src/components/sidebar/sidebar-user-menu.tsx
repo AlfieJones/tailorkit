@@ -23,16 +23,9 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@tailorkit/ui/components/toggle-group";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toastManager } from "@tailorkit/ui/components/toast";
-import { useTheme } from "next-themes";
 
 import { authClient } from "#lib/auth-client";
-import {
-  fallbackTheme,
-  getUserTheme,
-  isAppTheme,
-  themeCookieName,
-  themeStorageKey,
-} from "#lib/theme";
+import { fallbackTheme, getUserTheme, isAppTheme, useTheme } from "#lib/theme";
 
 export function SidebarUserMenu() {
   const navigate = useNavigate();
@@ -42,7 +35,7 @@ export function SidebarUserMenu() {
   const name = session?.user.name ?? "User";
   const email = session?.user.email ?? "";
   const image = session?.user.image ?? undefined;
-  const selectedTheme = isAppTheme(theme) ? theme : (getUserTheme(session?.user) ?? fallbackTheme);
+  const selectedTheme = theme ?? getUserTheme(session?.user) ?? fallbackTheme;
   const initials = name
     .split(" ")
     .map((w) => w[0])
@@ -120,13 +113,6 @@ export function SidebarUserMenu() {
                 }
 
                 setTheme(nextTheme);
-                localStorage.setItem(themeStorageKey, nextTheme);
-                void window.cookieStore?.set({
-                  name: themeCookieName,
-                  path: "/",
-                  sameSite: "lax",
-                  value: nextTheme,
-                });
                 void authClient
                   .updateUser({ theme: nextTheme } as Parameters<typeof authClient.updateUser>[0])
                   .then((result) => {
