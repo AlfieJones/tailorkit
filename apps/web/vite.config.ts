@@ -22,11 +22,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       devtools(),
       tailwindcss(),
-      tanstackStart({
-        server: {
-          entry: "server.ts",
-        },
-      }),
+      tanstackStart(),
       nitro(),
       viteReact(),
       babel({
