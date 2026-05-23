@@ -16,8 +16,11 @@ export default defineConfig({
       prerender: {
         enabled: true,
       },
-      serverFns: {
-        base: "/docs/_serverFn",
+      spa: {
+        enabled: true,
+        prerender: {
+          enabled: true,
+        },
       },
     }),
     nitro({
