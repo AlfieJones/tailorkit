@@ -27,6 +27,7 @@
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
     "@testing-library/react": "^16.3.0",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "happy-dom": "^20.9.0",
     "react": "catalog:",

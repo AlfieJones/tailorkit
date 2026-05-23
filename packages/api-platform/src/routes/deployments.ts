@@ -11,6 +11,7 @@ import { and, eq } from "drizzle-orm";
 import z from "zod";
 import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
+import { setSpanAttributes } from "@tailorkit/observability";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
 
@@ -46,6 +47,12 @@ const deploymentAssetUpload = z.object({
 
 const requireDeployment = o.middleware(
   async ({ next, context }, input: { deploymentId: string; scopeId: string }) => {
+    setSpanAttributes({
+      "tailorkit.middleware": "require_deployment",
+      "tailorkit.package": "api-platform",
+      "tailorkit.resource_type": "deployment",
+    });
+
     const deploymentWithApp = await db.query.appDeployment.findFirst({
       where: {
         id: input.deploymentId,

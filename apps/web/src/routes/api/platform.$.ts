@@ -4,19 +4,33 @@ import { platformRouter } from "@tailorkit/api-platform";
 import { RatelimitHandlerPlugin } from "@tailorkit/api-utils/rate-limiting";
 import { createFileRoute } from "@tanstack/react-router";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import {
+  initializeObservability,
+  recordException,
+  sanitizeErrorForLog,
+  setSpanAttributes,
+} from "@tailorkit/observability";
 
 const handler = new OpenAPIHandler(platformRouter, {
   plugins: [new RatelimitHandlerPlugin()],
   interceptors: [
     onError((error) => {
-      console.error(error);
+      recordException(error, { "tailorkit.adapter": "orpc-openapi" });
+      console.error("OpenAPI request failed", sanitizeErrorForLog(error));
     }),
   ],
 });
 
 async function handle({ request }: { request: Request }) {
+  await initializeObservability("tailorkit-web");
+  setSpanAttributes({
+    "tailorkit.adapter": "orpc-openapi",
+    "tailorkit.package": "apps-web",
+  });
+
   const context = await createContext({ request }).catch((error) => {
-    console.error(error);
+    recordException(error, { "tailorkit.adapter": "orpc-openapi" });
+    console.error("OpenAPI authorization failed", sanitizeErrorForLog(error));
     throw new Response("Unauthorized", { status: 401 });
   });
 

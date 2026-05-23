@@ -27,7 +27,8 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@tailorkit/env": "workspace:*"
+    "@tailorkit/env": "workspace:*",
+    "@tailorkit/observability": "workspace:*"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",

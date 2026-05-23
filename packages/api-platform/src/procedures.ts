@@ -1,6 +1,7 @@
 import { ORPCError, os } from "@orpc/server";
 import { devDelayMiddleware } from "@tailorkit/api-utils/dev-delay";
 import { createRatelimiter, ratelimitMiddleware } from "@tailorkit/api-utils/rate-limiting";
+import { setSpanAttributes } from "@tailorkit/observability";
 import type { Context } from "./context";
 import { db } from "@tailorkit/db";
 
@@ -17,6 +18,12 @@ export const protectedRouter = o
 
 export const requireApp = o.middleware(
   async ({ context, next }, input: { appId: string; scopeId: string }) => {
+    setSpanAttributes({
+      "tailorkit.middleware": "require_app",
+      "tailorkit.package": "api-platform",
+      "tailorkit.resource_type": "app",
+    });
+
     const app = await db.query.app.findFirst({
       where: { id: input.appId, projectId: context.project.id, scopeId: input.scopeId },
     });

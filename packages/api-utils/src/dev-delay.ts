@@ -1,5 +1,6 @@
 import { os } from "@orpc/server";
 import { env } from "@tailorkit/env/server";
+import { setSpanAttributes } from "@tailorkit/observability";
 
 export const devDelayMiddleware = os.middleware(async ({ path, next }) => {
   const start = Date.now();
@@ -13,7 +14,11 @@ export const devDelayMiddleware = os.middleware(async ({ path, next }) => {
   const result = await next();
 
   const end = Date.now();
-  console.log(`[ORPC] ${path} took ${end - start}ms to execute`);
+  setSpanAttributes({
+    "tailorkit.package": "api-utils",
+    "tailorkit.orpc.path": path,
+    "tailorkit.duration_ms": end - start,
+  });
 
   return result;
 });

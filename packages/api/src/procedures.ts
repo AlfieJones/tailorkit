@@ -3,6 +3,7 @@ import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
 import { createRatelimiter, ratelimitMiddleware } from "@tailorkit/api-utils/rate-limiting";
 import { devDelayMiddleware } from "@tailorkit/api-utils/dev-delay";
+import { setSpanAttributes } from "@tailorkit/observability";
 import type { Context } from "./context";
 import type { ac } from "@tailorkit/auth/lib/permissions";
 
@@ -21,6 +22,11 @@ export const publicProcedure = o
   .use(ratelimitMiddleware(rateLimiter, ({ context }) => context.user?.id ?? `ip:${context.ip}`));
 
 const requireAuth = o.middleware(({ context, next }) => {
+  setSpanAttributes({
+    "tailorkit.middleware": "require_auth",
+    "tailorkit.authenticated": Boolean(context.session && context.user),
+  });
+
   if (!context.session || !context.user) {
     throw new ORPCError("UNAUTHORIZED");
   }
@@ -60,6 +66,13 @@ type OrgPermissions = Partial<{
  */
 export function requireOrg(permissions?: OrgPermissions) {
   return o.middleware(async ({ context, next }, input: { orgSlug: string } | { orgId: string }) => {
+    setSpanAttributes({
+      "tailorkit.middleware": "require_org",
+      "tailorkit.package": "api",
+      "tailorkit.resource_type": "organization",
+      "tailorkit.permission_check": Boolean(permissions),
+    });
+
     if (!context.user) {
       throw new ORPCError("UNAUTHORIZED");
     }
@@ -103,6 +116,13 @@ type ProjectInput = ({ orgSlug: string } | { orgId: string }) &
  */
 export function requireProject(permissions?: OrgPermissions) {
   return o.middleware(async ({ context, next }, input: ProjectInput) => {
+    setSpanAttributes({
+      "tailorkit.middleware": "require_project",
+      "tailorkit.package": "api",
+      "tailorkit.resource_type": "project",
+      "tailorkit.permission_check": Boolean(permissions),
+    });
+
     if (!context.user) {
       throw new ORPCError("UNAUTHORIZED");
     }

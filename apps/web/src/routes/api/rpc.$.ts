@@ -3,18 +3,31 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { createContext } from "@tailorkit/api/context";
 import { appRouter } from "@tailorkit/api/routers/index";
 import { RatelimitHandlerPlugin } from "@tailorkit/api-utils/rate-limiting";
+import {
+  initializeObservability,
+  recordException,
+  sanitizeErrorForLog,
+  setSpanAttributes,
+} from "@tailorkit/observability";
 import { createFileRoute } from "@tanstack/react-router";
 
 const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
     onError((error) => {
-      console.error(error);
+      recordException(error, { "tailorkit.adapter": "orpc-rpc" });
+      console.error("oRPC request failed", sanitizeErrorForLog(error));
     }),
   ],
   plugins: [new RatelimitHandlerPlugin()],
 });
 
 async function handle({ request }: { request: Request }) {
+  await initializeObservability("tailorkit-web");
+  setSpanAttributes({
+    "tailorkit.adapter": "orpc-rpc",
+    "tailorkit.package": "apps-web",
+  });
+
   const rpcResult = await rpcHandler.handle(request, {
     context: await createContext({ request }),
     prefix: "/api/rpc",

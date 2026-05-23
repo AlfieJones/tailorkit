@@ -4,6 +4,7 @@ import { getStorage } from "@tailorkit/storage";
 import type { Storage } from "@tailorkit/storage";
 import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
+import { initializeObservability, setSpanAttributes, withSpan } from "@tailorkit/observability";
 
 export interface Context {
   project: Project;
@@ -12,49 +13,59 @@ export interface Context {
 }
 
 export async function createContext({ request }: { request: Request }): Promise<Context> {
-  const storage = getStorage();
-  if (!storage) {
-    throw new Error("Storage not initialized");
-  }
+  await initializeObservability("tailorkit-web");
 
-  const [scheme, key] = request.headers.get("authorization")?.split(" ") ?? [];
+  return withSpan("api_platform.create_context", async () => {
+    const storage = getStorage();
+    if (!storage) {
+      throw new Error("Storage not initialized");
+    }
 
-  if (!key) {
-    throw new Error("Authorization header not found");
-  }
-  if (scheme !== "Bearer") {
-    throw new Error("Invalid authorization scheme");
-  }
+    const [scheme, key] = request.headers.get("authorization")?.split(" ") ?? [];
 
-  const apiKey = await auth.api.verifyApiKey({ body: { key } });
+    if (!key) {
+      throw new Error("Authorization header not found");
+    }
+    if (scheme !== "Bearer") {
+      throw new Error("Invalid authorization scheme");
+    }
 
-  if (!apiKey || !apiKey.valid) {
-    throw new Error("Invalid API key");
-  }
+    const apiKey = await auth.api.verifyApiKey({ body: { key } });
 
-  const projectId: string = apiKey.key?.metadata?.projectId;
-  if (!projectId) {
-    throw new Error("Project ID not found in API key metadata");
-  }
+    if (!apiKey || !apiKey.valid) {
+      throw new Error("Invalid API key");
+    }
 
-  const project = await db.query.project.findFirst({
-    where: {
-      id: projectId,
-    },
-    with: { organization: true },
+    const projectId: string = apiKey.key?.metadata?.projectId;
+    if (!projectId) {
+      throw new Error("Project ID not found in API key metadata");
+    }
+
+    const project = await db.query.project.findFirst({
+      where: {
+        id: projectId,
+      },
+      with: { organization: true },
+    });
+
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    if (!project.organization) {
+      throw new Error("Organization not found");
+    }
+
+    setSpanAttributes({
+      "tailorkit.package": "api-platform",
+      "tailorkit.resource_type": "project",
+      "tailorkit.authenticated": true,
+    });
+
+    return {
+      project,
+      organization: project.organization,
+      storage,
+    };
   });
-
-  if (!project) {
-    throw new Error("Project not found");
-  }
-
-  if (!project.organization) {
-    throw new Error("Organization not found");
-  }
-
-  return {
-    project,
-    organization: project.organization,
-    storage,
-  };
 }

@@ -1,6 +1,7 @@
 import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import { render } from "@react-email/render";
 import { env, getBaseUrl } from "@tailorkit/env/server";
+import { withSpan } from "@tailorkit/observability";
 import nodemailer from "nodemailer";
 import type Mail from "nodemailer/lib/mailer";
 import type SESTransport from "nodemailer/lib/ses-transport";
@@ -121,11 +122,30 @@ export const sendEmail = async ({ from, html, replyTo, subject, text, to }: Send
     to,
   };
 
-  await transporter.sendMail(message);
+  await withSpan(
+    "email.send",
+    {
+      attributes: {
+        "tailorkit.package": "email",
+        "email.provider": env.EMAIL_PROVIDER,
+      },
+    },
+    () => transporter.sendMail(message),
+  );
 };
 
 export const sendBetterAuthOtpEmail = async ({ email, otp, type }: SendBetterAuthOtpInput) => {
-  const { html, text } = await renderBetterAuthOtpEmail({ otp, type });
+  const { html, text } = await withSpan(
+    "email.render_better_auth_otp",
+    {
+      attributes: {
+        "tailorkit.package": "email",
+        "email.template": "better_auth_otp",
+        "email.otp_type": type,
+      },
+    },
+    () => renderBetterAuthOtpEmail({ otp, type }),
+  );
 
   await sendEmail({
     from: resolveFrom(type),
@@ -155,12 +175,26 @@ export const sendOrganizationInvitationEmail = async ({
     role: role ?? "member",
   });
 
+  const rendered = await withSpan(
+    "email.render_invitation",
+    {
+      attributes: {
+        "tailorkit.package": "email",
+        "email.template": "organization_invitation",
+      },
+    },
+    async () => ({
+      html: await render(component),
+      text: await render(component, { plainText: true }),
+    }),
+  );
+
   await sendEmail({
     from: env.EMAIL_FROM_INVITE ?? env.EMAIL_FROM_AUTH ?? env.EMAIL_FROM,
-    html: await render(component),
+    html: rendered.html,
     replyTo: env.EMAIL_REPLY_TO,
     subject: `${inviterName ?? "Someone"} invited you to join ${organizationName}`,
-    text: await render(component, { plainText: true }),
+    text: rendered.text,
     to: email,
   });
 };

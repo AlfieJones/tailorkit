@@ -1,5 +1,6 @@
 import { auth } from "@tailorkit/auth";
 import type { Session, User } from "@tailorkit/auth";
+import { initializeObservability, setSpanAttributes, withSpan } from "@tailorkit/observability";
 import { ipAddress } from "@vercel/functions";
 
 export interface Context {
@@ -10,14 +11,24 @@ export interface Context {
 }
 
 export async function createContext({ request }: { request: Request }): Promise<Context> {
-  const sessionData = await auth.api.getSession({
-    headers: request.headers,
-  });
+  await initializeObservability("tailorkit-web");
 
-  return {
-    session: sessionData?.session,
-    user: sessionData?.user,
-    ip: ipAddress(request) ?? "unknown",
-    headers: request.headers,
-  };
+  return withSpan("api.create_context", async () => {
+    const sessionData = await auth.api.getSession({
+      headers: request.headers,
+    });
+    const ip = ipAddress(request) ?? "unknown";
+
+    setSpanAttributes({
+      "tailorkit.package": "api",
+      "tailorkit.authenticated": Boolean(sessionData?.user),
+    });
+
+    return {
+      session: sessionData?.session,
+      user: sessionData?.user,
+      ip,
+      headers: request.headers,
+    };
+  });
 }

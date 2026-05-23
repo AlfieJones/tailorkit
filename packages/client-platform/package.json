@@ -32,6 +32,7 @@
     "@hey-api/openapi-ts": "^0.97.2",
     "@tailorkit/api-platform": "workspace:*",
     "@tailorkit/config": "workspace:*",
+    "@types/node": "catalog:",
     "typescript": "catalog:"
   }
 }

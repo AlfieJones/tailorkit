@@ -34,15 +34,16 @@
     "@tailorkit/email": "workspace:*",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
+    "@tailorkit/observability": "workspace:*",
     "@vercel/functions": "^3.6.0",
     "better-auth": "catalog:",
-    "dotenv": "catalog:",
     "uuid": "^14.0.0",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@better-auth/cli": "latest",
     "@tailorkit/config": "workspace:*",
+    "@types/node": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"
   }

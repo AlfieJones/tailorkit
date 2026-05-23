@@ -7,6 +7,7 @@ import {
 } from "@aws-sdk/client-s3";
 import type { S3ClientConfig } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { withSpan } from "@tailorkit/observability";
 import type {
   CreateDownloadUrlInput,
   CreateDownloadUrlOutput,
@@ -51,12 +52,17 @@ export function createS3CompatibleStorage(options: S3CompatibleStorageOptions): 
   return {
     type: "s3",
     head: async (input: HeadObjectInput): Promise<HeadObjectOutput> => {
-      const result = await client.send(
-        new HeadObjectCommand({
-          Bucket: options.bucket,
-          ChecksumMode: "ENABLED",
-          Key: input.key,
-        }),
+      const result = await withSpan(
+        "storage.head",
+        { attributes: { "tailorkit.package": "storage", "storage.type": "s3" } },
+        () =>
+          client.send(
+            new HeadObjectCommand({
+              Bucket: options.bucket,
+              ChecksumMode: "ENABLED",
+              Key: input.key,
+            }),
+          ),
       );
 
       return {
@@ -69,11 +75,16 @@ export function createS3CompatibleStorage(options: S3CompatibleStorageOptions): 
       };
     },
     delete: async (input: DeleteObjectInput): Promise<void> => {
-      await client.send(
-        new DeleteObjectCommand({
-          Bucket: options.bucket,
-          Key: input.key,
-        }),
+      await withSpan(
+        "storage.delete",
+        { attributes: { "tailorkit.package": "storage", "storage.type": "s3" } },
+        () =>
+          client.send(
+            new DeleteObjectCommand({
+              Bucket: options.bucket,
+              Key: input.key,
+            }),
+          ),
       );
     },
     createUploadUrl: async (input: CreateUploadUrlInput): Promise<CreateUploadUrlOutput> => {
@@ -87,9 +98,20 @@ export function createS3CompatibleStorage(options: S3CompatibleStorageOptions): 
 
       return {
         key: input.key,
-        uploadUrl: await getSignedUrl(client, command, {
-          expiresIn: input.expiresInSeconds ?? 300,
-        }),
+        uploadUrl: await withSpan(
+          "storage.create_upload_url",
+          {
+            attributes: {
+              "tailorkit.package": "storage",
+              "storage.type": "s3",
+              "storage.expires_seconds": input.expiresInSeconds ?? 300,
+            },
+          },
+          () =>
+            getSignedUrl(client, command, {
+              expiresIn: input.expiresInSeconds ?? 300,
+            }),
+        ),
         headers: {
           ...(input.contentType ? { "content-type": input.contentType } : {}),
           ...(input.checksumSha256 ? { "x-amz-checksum-sha256": input.checksumSha256 } : {}),
@@ -104,9 +126,20 @@ export function createS3CompatibleStorage(options: S3CompatibleStorageOptions): 
 
       return {
         key: input.key,
-        url: await getSignedUrl(client, command, {
-          expiresIn: input.expiresInSeconds ?? 300,
-        }),
+        url: await withSpan(
+          "storage.create_download_url",
+          {
+            attributes: {
+              "tailorkit.package": "storage",
+              "storage.type": "s3",
+              "storage.expires_seconds": input.expiresInSeconds ?? 300,
+            },
+          },
+          () =>
+            getSignedUrl(client, command, {
+              expiresIn: input.expiresInSeconds ?? 300,
+            }),
+        ),
       };
     },
   };

@@ -33,10 +33,10 @@
   "scripts": {
     "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/procedures.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit",
-    "generate:openapi": "tsx scripts/generate-openapi.ts"
+    "generate:openapi": "tsx scripts/generate-openapi.ts",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
@@ -44,12 +44,15 @@
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/env": "workspace:*",
+    "@tailorkit/observability": "workspace:*",
     "@tailorkit/storage": "workspace:*",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.4.5",
     "@tailorkit/config": "workspace:*",
+    "@types/node": "catalog:",
     "tsdown": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",

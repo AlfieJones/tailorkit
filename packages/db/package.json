@@ -40,6 +40,7 @@
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
+    "@types/node": "catalog:",
     "@types/pg": "catalog:",
     "drizzle-kit": "^1.0.0-rc.2",
     "tsdown": "catalog:",

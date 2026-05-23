@@ -3,6 +3,7 @@ import * as schema from "@tailorkit/db/schema/auth";
 import { sendBetterAuthOtpEmail, sendOrganizationInvitationEmail } from "@tailorkit/email";
 import { env, getBaseUrl } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
+import { initializeObservability } from "@tailorkit/observability";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
@@ -13,6 +14,8 @@ import { organization } from "better-auth/plugins/organization";
 import { ac, roles } from "./lib/permissions";
 import { apiKey } from "@better-auth/api-key";
 import { dash } from "@better-auth/infra";
+
+void initializeObservability("tailorkit-web");
 
 const noopWaitUntil = (promise: Promise<unknown>) => void promise;
 

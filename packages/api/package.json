@@ -29,19 +29,14 @@
   },
   "dependencies": {
     "@orpc/client": "catalog:",
-    "@orpc/experimental-ratelimit": "^1.14.2",
-    "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
-    "@orpc/zod": "catalog:",
     "@tailorkit/api-utils": "workspace:*",
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
-    "@types/pg": "catalog:",
-    "@upstash/ratelimit": "^2.0.0",
+    "@tailorkit/observability": "workspace:*",
     "@vercel/functions": "^3.6.0",
-    "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "nanoid": "^5.1.11",
     "zod": "catalog:"
@@ -49,6 +44,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.4.5",
     "@tailorkit/config": "workspace:*",
+    "@types/node": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

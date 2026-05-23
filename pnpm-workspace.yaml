@@ -1,3 +1,5 @@
+minimumReleaseAge: 0
+
 packages:
   - apps/*
   - examples/*
@@ -7,9 +9,18 @@ packages:
 catalog:
   "@ai-sdk/react": ^3.0.192
   "@orpc/client": ^1.14.2
+  "@orpc/otel": ^1.14.3
   "@orpc/openapi": 1.14.3
   "@orpc/server": 1.14.3
   "@orpc/zod": ^1.14.2
+  "@opentelemetry/api": ^1.9.0
+  "@opentelemetry/exporter-trace-otlp-http": ^0.218.0
+  "@opentelemetry/instrumentation-http": ^0.218.0
+  "@opentelemetry/instrumentation-pg": ^0.70.0
+  "@opentelemetry/instrumentation-undici": ^0.28.0
+  "@opentelemetry/resources": ^2.7.1
+  "@opentelemetry/sdk-node": ^0.218.0
+  "@opentelemetry/sdk-trace-base": ^2.7.1
   "@tailwindcss/vite": ^4.2.4
   "@tanstack/react-router": 1.170.7
   "@tanstack/react-router-devtools": 1.167.0
@@ -19,6 +30,7 @@ catalog:
   "@types/react": ^19.2.15
   "@types/react-dom": ^19.2.3
   "@vitejs/plugin-react": ^6.0.2
+  "@vercel/otel": ^2.1.2
   ai: ^6.0.190
   better-auth: 1.6.11
   class-variance-authority: ^0.7.1
@@ -37,3 +49,12 @@ catalog:
   vite-imagetools: ^10.0.0
   vitest: ^4.1.7
   zod: ^4.1.13
+
+allowBuilds:
+  "@prisma/client": false
+  better-sqlite3: false
+  esbuild: false
+  lefthook: true
+  msw: false
+  protobufjs: false
+  sharp: false

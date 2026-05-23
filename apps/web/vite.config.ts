@@ -13,6 +13,7 @@ const serverPackages = [
   "@tailorkit/api-utils",
   "@tailorkit/auth",
   "@tailorkit/db",
+  "@tailorkit/observability",
 ];
 
 export default defineConfig(({ mode }) => {
@@ -23,7 +24,11 @@ export default defineConfig(({ mode }) => {
       microfrontends(),
       devtools(),
       tailwindcss(),
-      tanstackStart(),
+      tanstackStart({
+        server: {
+          entry: "server.ts",
+        },
+      }),
       nitro(),
       viteReact(),
       babel({

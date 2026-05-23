@@ -20,6 +20,7 @@ jobs:
     name: Migrate production database
     runs-on: ubuntu-latest
     environment: production-platform
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout
@@ -47,6 +48,6 @@ jobs:
           DATABASE_URL: ${{ secrets.PRODUCTION_MIGRATION_DATABASE_URL }}
 
       - name: Run Drizzle migrations
-        run: pnpm turbo -F @tailorkit/db db:migrate
+        run: pnpm turbo run db:migrate --filter=@tailorkit/db
         env:
           DATABASE_URL: ${{ secrets.PRODUCTION_MIGRATION_DATABASE_URL }}
