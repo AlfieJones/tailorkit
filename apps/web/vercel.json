@@ -4,12 +4,6 @@
   "rewrites": [
     {
       "source": "/",
-      "missing": [
-        {
-          "type": "cookie",
-          "key": "tailorkit.session_token"
-        }
-      ],
       "destination": "/home"
     }
   ]
