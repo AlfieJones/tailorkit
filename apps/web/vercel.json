@@ -1,4 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nitro"
+  "framework": "nitro",
+  "rewrites": [
+    {
+      "source": "/",
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "tailorkit.session_token"
+        }
+      ],
+      "destination": "/home"
+    }
+  ]
 }
