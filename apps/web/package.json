@@ -43,7 +43,6 @@
     "@tanstack/react-start": "catalog:",
     "@tanstack/react-table": "^8.21.3",
     "@vercel/functions": "^3.6.0",
-    "@vercel/microfrontends": "^2.3.3",
     "better-auth": "catalog:",
     "clsx": "^2.1.1",
     "lucide-react": "catalog:",
