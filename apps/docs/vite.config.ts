@@ -43,9 +43,9 @@ export default defineConfig({
         "/homepage": {
           redirect: "/home",
         },
-        "/": {
-          redirect: "/home",
-        },
+        // "/": {
+        //   redirect: "/home",
+        // },
       },
     }),
     react(),
