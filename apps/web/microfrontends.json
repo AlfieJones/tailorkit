@@ -19,7 +19,7 @@
       "routing": [
         {
           "group": "docs",
-          "paths": ["/_serverFnDocs/:path*", "/docs", "/docs/:path*", "/home", "/homepage"]
+          "paths": ["/_serverFn/prefix-:docs", "/docs", "/docs/:path*", "/home", "/homepage"]
         }
       ]
     }
