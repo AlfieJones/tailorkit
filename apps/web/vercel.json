@@ -23,6 +23,10 @@
     {
       "source": "/docs/:path*",
       "destination": "https://tailorkit-docs.vercel.app/docs/:path*"
+    },
+    {
+      "source": "/_serverFnDocs:path",
+      "destination": "https://tailorkit-docs.vercel.app/_serverFnDocs:path"
     }
   ]
 }
