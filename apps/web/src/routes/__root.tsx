@@ -1,12 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AnchoredToastProvider, ToastProvider } from "@tailorkit/ui/toast";
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
+import { formDevtoolsPlugin } from "@tanstack/react-form-devtools";
+import { a11yDevtoolsPlugin } from "@tanstack/devtools-a11y/react";
+import { TanStackDevtools } from "@tanstack/react-devtools";
 
 import { NotFound } from "../components/not-found";
 import {
@@ -16,7 +19,6 @@ import {
   getUserTheme,
   useTheme,
 } from "../lib/theme";
-import { TanStackDevtools } from "@tanstack/react-devtools";
 
 import appCss from "../index.css?url";
 import { orpc } from "#lib/orpc";
@@ -107,6 +109,8 @@ function RootDocument({ children }: { children: ReactNode }) {
               name: "Tanstack Query",
               render: <ReactQueryDevtoolsPanel />,
             },
+            formDevtoolsPlugin(),
+            a11yDevtoolsPlugin(),
           ]}
         />
         <Scripts />
