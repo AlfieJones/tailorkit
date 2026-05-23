@@ -1,14 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/microfrontends.json",
+  "options": {
+    "localProxyPort": 3000
+  },
   "applications": {
     "tailorkit-web": {
       "packageName": "web",
       "development": {
-        "fallback": "tailorkit.dev"
+        "fallback": "tailorkit.dev",
+        "local": 3100
       }
     },
     "tailorkit-docs": {
       "packageName": "docs",
+      "development": {
+        "local": 3200
+      },
       "routing": [
         {
           "group": "docs",
