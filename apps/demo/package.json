@@ -38,6 +38,6 @@
     "@vitejs/plugin-react": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "ws": "^8.18.3"
+    "ws": "^8.21.0"
   }
 }

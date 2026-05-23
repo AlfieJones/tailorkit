@@ -10,5 +10,8 @@
       "./src/*/index.ts",
       "./src/*/index.tsx"
     ]
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
   }
 }
