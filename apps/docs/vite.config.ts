@@ -23,35 +23,41 @@ function createPrefixedServerFnIdGenerator(prefix: string) {
   };
 }
 
-export default defineConfig({
-  build: {
-    assetsDir: "docs-assets",
-  },
-  plugins: [
-    mdx(await import("./source.config")),
-    tailwindcss(),
-    tanstackStart({
-      prerender: {
-        enabled: true,
-      },
-      serverFns: {
-        generateFunctionId: createPrefixedServerFnIdGenerator("docs"),
-      },
-    }),
-    nitro({
-      routeRules: {
-        "/homepage": {
-          redirect: "/home",
+export default defineConfig(async ({ command }) => {
+  const isDev = command === "serve";
+
+  return {
+    build: {
+      assetsDir: "docs-assets",
+    },
+    plugins: [
+      mdx(await import("./source.config")),
+      tailwindcss(),
+      tanstackStart({
+        prerender: {
+          enabled: true,
         },
-        // "/": {
-        //   redirect: "/home",
-        // },
-      },
-    }),
-    react(),
-    imagetools(),
-  ],
-  server: {
-    port: 5173,
-  },
+        serverFns: {
+          generateFunctionId: createPrefixedServerFnIdGenerator("docs"),
+        },
+      }),
+      nitro({
+        routeRules: {
+          "/homepage": {
+            redirect: "/home",
+          },
+          ...(isDev && {
+            "/": {
+              redirect: "/home",
+            },
+          }),
+        },
+      }),
+      react(),
+      imagetools(),
+    ],
+    server: {
+      port: 5173,
+    },
+  };
 });
