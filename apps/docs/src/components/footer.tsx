@@ -10,7 +10,7 @@ export function Footer() {
       <div className="flex flex-col gap-10 px-6 py-12 sm:flex-row sm:justify-between lg:px-14">
         {/* Logo + copyright */}
         <div className="flex flex-col gap-3">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/home" className="flex items-center gap-2">
             <Logo className="size-5 text-foreground" />
             <span className="font-semibold text-foreground text-sm">TailorKit</span>
           </Link>
@@ -25,13 +25,13 @@ export function Footer() {
             <p className="text-sm font-medium text-foreground">Pages</p>
             <div className="flex flex-col gap-2.5">
               <Link
-                to="/"
+                to="/home"
                 className="text-sm text-foreground/60 hover:text-foreground transition-colors"
               >
                 Home
               </Link>
               <Link
-                to="/docs/$"
+                to="/docs"
                 className="text-sm text-foreground/60 hover:text-foreground transition-colors"
               >
                 Docs

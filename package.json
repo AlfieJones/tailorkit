@@ -2,7 +2,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "turbo run dev --filter=web --filter=docs",
+    "dev": "turbo run dev --filter=web",
+    "dev:docs": "turbo run dev --filter=docs",
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
