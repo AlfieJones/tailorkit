@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 // biome-ignore lint/correctness/noUnusedVariables: used in JSX descriptions
 function B({ children }: { children: ReactNode }) {
@@ -61,6 +61,9 @@ const FEATURES = [
   },
 ] as const;
 
+const featurePatternMask =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23000' fill-opacity='0.4'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-10 0v-9h-9v9h-9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9z'/%3E%3Cpath d='M6 5V0H5v5H0v1h5v94h1V6h94V5H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")";
+
 export function PlatformFeatures() {
   const [activeId, setActiveId] = useState<string>(FEATURES[0].id);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -93,7 +96,7 @@ export function PlatformFeatures() {
   };
 
   return (
-    <section className="border-b border-border">
+    <section className="border-b border-border bg-background">
       <div className="flex min-h-full">
         {/* Nav column — full height so border-r runs the whole way */}
         <div className="hidden lg:block w-72 flex-shrink-0 border-r border-border">
@@ -120,7 +123,8 @@ export function PlatformFeatures() {
         </div>
 
         {/* Sections */}
-        <div className="flex flex-1 flex-col">
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-muted/25">
+          <FeaturePatternBackdrop />
           {FEATURES.map((feature, i) => (
             <div
               key={feature.id}
@@ -128,7 +132,7 @@ export function PlatformFeatures() {
                 sectionRefs.current[feature.id] = el;
               }}
               className={clsx(
-                "flex flex-col gap-5 px-8 py-14 lg:px-16 lg:py-20 items-center text-center lg:items-start lg:text-left",
+                "relative z-10 flex flex-col gap-5 px-8 py-14 lg:px-16 lg:py-20 items-center text-center lg:items-start lg:text-left bg-background/65 backdrop-blur-[1px]",
                 i < FEATURES.length - 1 && "border-b border-border",
               )}
             >
@@ -146,5 +150,25 @@ export function PlatformFeatures() {
         </div>
       </div>
     </section>
+  );
+}
+
+function FeaturePatternBackdrop() {
+  return (
+    <div className="pointer-events-none absolute inset-0 bg-muted/75">
+      <div
+        className="absolute inset-0 bg-foreground/35 opacity-85 dark:bg-foreground/30 dark:opacity-75"
+        style={
+          {
+            WebkitMaskImage: featurePatternMask,
+            WebkitMaskRepeat: "repeat",
+            WebkitMaskSize: "100px 100px",
+            maskImage: featurePatternMask,
+            maskRepeat: "repeat",
+            maskSize: "100px 100px",
+          } as CSSProperties
+        }
+      />
+    </div>
   );
 }

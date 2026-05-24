@@ -15,6 +15,7 @@ export function baseOptions(): BaseLayoutProps {
           <span>TailorKit</span>
         </span>
       ),
+      url: "/home",
     },
     links: [
       {

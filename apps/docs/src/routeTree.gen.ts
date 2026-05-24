@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
-import { Route as Home2RouteImport } from './routes/home2'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocsRouteRouteImport } from './routes/docs/route'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
@@ -26,11 +25,6 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
 const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
   id: '/llms-full.txt',
   path: '/llms-full.txt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const Home2Route = Home2RouteImport.update({
-  id: '/home2',
-  path: '/home2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeRoute = HomeRouteImport.update({
@@ -62,7 +56,6 @@ const LlmsDotmdxDocsSplatRoute = LlmsDotmdxDocsSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/docs': typeof DocsRouteRouteWithChildren
   '/home': typeof HomeRoute
-  '/home2': typeof Home2Route
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/api/search': typeof ApiSearchRoute
@@ -72,7 +65,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/docs': typeof DocsRouteRouteWithChildren
   '/home': typeof HomeRoute
-  '/home2': typeof Home2Route
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/api/search': typeof ApiSearchRoute
@@ -83,7 +75,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/docs': typeof DocsRouteRouteWithChildren
   '/home': typeof HomeRoute
-  '/home2': typeof Home2Route
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/api/search': typeof ApiSearchRoute
@@ -95,7 +86,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/docs'
     | '/home'
-    | '/home2'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/api/search'
@@ -105,7 +95,6 @@ export interface FileRouteTypes {
   to:
     | '/docs'
     | '/home'
-    | '/home2'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/api/search'
@@ -115,7 +104,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/docs'
     | '/home'
-    | '/home2'
     | '/llms-full.txt'
     | '/llms.txt'
     | '/api/search'
@@ -126,7 +114,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   DocsRouteRoute: typeof DocsRouteRouteWithChildren
   HomeRoute: typeof HomeRoute
-  Home2Route: typeof Home2Route
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   ApiSearchRoute: typeof ApiSearchRoute
@@ -147,13 +134,6 @@ declare module '@tanstack/react-router' {
       path: '/llms-full.txt'
       fullPath: '/llms-full.txt'
       preLoaderRoute: typeof LlmsFullDottxtRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home2': {
-      id: '/home2'
-      path: '/home2'
-      fullPath: '/home2'
-      preLoaderRoute: typeof Home2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -209,7 +189,6 @@ const DocsRouteRouteWithChildren = DocsRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   DocsRouteRoute: DocsRouteRouteWithChildren,
   HomeRoute: HomeRoute,
-  Home2Route: Home2Route,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   ApiSearchRoute: ApiSearchRoute,
