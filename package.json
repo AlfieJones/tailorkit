@@ -29,5 +29,5 @@
     "turbo": "2.9.14",
     "ultracite": "7.7.0"
   },
-  "packageManager": "pnpm@11.2.2"
+  "packageManager": "pnpm@11.3.0"
 }
