@@ -73,6 +73,12 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     PORT: z.number().optional(),
 
+    // Observability
+    OTEL_SERVICE_NAME: z.string().min(1).optional(),
+    OTEL_TRACES_SAMPLER_ARG: z.string().min(1).optional(),
+    TAILORKIT_OTEL_DISABLED: z.stringbool().optional(),
+    TAILORKIT_OTEL_SAMPLE_RATE: z.string().min(1).optional(),
+
     // Email
     EMAIL_FROM: z.string().min(1),
     EMAIL_FROM_AUTH: z.string().min(1).optional(),

@@ -7,14 +7,39 @@ import {
 } from "./index";
 
 const registerOTel = vi.fn();
+const mockEnv = vi.hoisted(() => ({
+  NODE_ENV: "development" as "development" | "production" | "test",
+  OTEL_SERVICE_NAME: undefined as string | undefined,
+  OTEL_TRACES_SAMPLER_ARG: undefined as string | undefined,
+  TAILORKIT_OTEL_DISABLED: false,
+  TAILORKIT_OTEL_SAMPLE_RATE: undefined as string | undefined,
+  VERCEL: undefined as string | undefined,
+  VERCEL_ENV: undefined as "production" | "preview" | "development" | undefined,
+  VERCEL_GIT_COMMIT_SHA: undefined as string | undefined,
+  VERCEL_REGION: undefined as string | undefined,
+}));
 
 vi.mock("@vercel/otel", () => ({
   registerOTel,
 }));
 
+vi.mock("@tailorkit/env/server", () => ({
+  env: mockEnv,
+}));
+
 describe("observability helpers", () => {
   afterEach(async () => {
-    vi.unstubAllEnvs();
+    Object.assign(mockEnv, {
+      NODE_ENV: "development",
+      OTEL_SERVICE_NAME: undefined,
+      OTEL_TRACES_SAMPLER_ARG: undefined,
+      TAILORKIT_OTEL_DISABLED: false,
+      TAILORKIT_OTEL_SAMPLE_RATE: undefined,
+      VERCEL: undefined,
+      VERCEL_ENV: undefined,
+      VERCEL_GIT_COMMIT_SHA: undefined,
+      VERCEL_REGION: undefined,
+    });
     registerOTel.mockReset();
     await shutdownObservability();
   });
@@ -40,16 +65,16 @@ describe("observability helpers", () => {
   });
 
   it("can be disabled in tests without registering an SDK", async () => {
-    vi.stubEnv("TAILORKIT_OTEL_DISABLED", "true");
+    mockEnv.TAILORKIT_OTEL_DISABLED = true;
     await expect(initializeObservability("test-service")).resolves.toBeUndefined();
   });
 
   it("deduplicates concurrent initialization", async () => {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL", "1");
-    vi.stubEnv("VERCEL_ENV", "preview");
-    vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "abc123");
-    vi.stubEnv("TAILORKIT_OTEL_SAMPLE_RATE", "0.25");
+    mockEnv.NODE_ENV = "production";
+    mockEnv.VERCEL = "1";
+    mockEnv.VERCEL_ENV = "preview";
+    mockEnv.VERCEL_GIT_COMMIT_SHA = "abc123";
+    mockEnv.TAILORKIT_OTEL_SAMPLE_RATE = "0.25";
 
     await Promise.all([
       initializeObservability("test-service"),
@@ -71,8 +96,8 @@ describe("observability helpers", () => {
   });
 
   it("resets initialization state after registration failure", async () => {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL", "1");
+    mockEnv.NODE_ENV = "production";
+    mockEnv.VERCEL = "1";
     registerOTel.mockImplementationOnce(() => {
       throw new Error("registration failed");
     });

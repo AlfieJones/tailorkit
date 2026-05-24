@@ -1,21 +1,14 @@
 import { context, SpanStatusCode, trace } from "@opentelemetry/api";
 import type { Attributes, Span, SpanOptions } from "@opentelemetry/api";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
 import { PgInstrumentation } from "@opentelemetry/instrumentation-pg";
 import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import {
-  BatchSpanProcessor,
-  ParentBasedSampler,
-  TraceIdRatioBasedSampler,
-} from "@opentelemetry/sdk-trace-base";
+import { ParentBasedSampler, TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-base";
 import { ORPCInstrumentation } from "@orpc/otel";
+import { env } from "@tailorkit/env/server";
 
 interface TelemetryState {
   initializing?: Promise<void>;
-  sdk?: NodeSDK;
   serviceName?: string;
   started: boolean;
 }
@@ -40,33 +33,19 @@ const globalState = globalThis as typeof globalThis & {
 const state = (globalState[stateKey] ??= { started: false });
 
 function isTracingDisabled() {
-  return (
-    process.env.TAILORKIT_OTEL_DISABLED === "true" ||
-    process.env.OTEL_SDK_DISABLED === "true" ||
-    process.env.NODE_ENV === "test"
-  );
+  return env.TAILORKIT_OTEL_DISABLED || env.NODE_ENV === "test";
 }
 
 function resolveServiceName(serviceName?: string) {
-  return serviceName ?? process.env.OTEL_SERVICE_NAME ?? "tailorkit-web";
+  return serviceName ?? env.OTEL_SERVICE_NAME ?? "tailorkit-web";
 }
 
 function resolveDeploymentEnvironment() {
-  return process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "development";
+  return env.VERCEL_ENV ?? env.NODE_ENV;
 }
 
 function resolveServiceVersion() {
-  return (
-    process.env.VERCEL_GIT_COMMIT_SHA ??
-    process.env.RAILWAY_GIT_COMMIT_SHA ??
-    process.env.RENDER_GIT_COMMIT ??
-    process.env.GITHUB_SHA ??
-    process.env.npm_package_version
-  );
-}
-
-function resolveRuntimeName() {
-  return process.env.NEXT_RUNTIME ?? "nodejs";
+  return env.VERCEL_GIT_COMMIT_SHA;
 }
 
 function createResourceAttributes(serviceName: string): Attributes {
@@ -74,15 +53,13 @@ function createResourceAttributes(serviceName: string): Attributes {
     "service.name": serviceName,
     "service.version": resolveServiceVersion(),
     "deployment.environment.name": resolveDeploymentEnvironment(),
-    "cloud.region": process.env.VERCEL_REGION ?? process.env.AWS_REGION ?? process.env.FLY_REGION,
-    "process.runtime.name": resolveRuntimeName(),
+    "cloud.region": env.VERCEL_REGION,
     "tailorkit.package": "observability",
   });
 }
 
 function resolveSampleRate() {
-  const configuredRate =
-    process.env.TAILORKIT_OTEL_SAMPLE_RATE ?? process.env.OTEL_TRACES_SAMPLER_ARG;
+  const configuredRate = env.TAILORKIT_OTEL_SAMPLE_RATE ?? env.OTEL_TRACES_SAMPLER_ARG;
 
   if (!configuredRate) {
     return 1;
@@ -117,18 +94,6 @@ function createInstrumentations() {
   ];
 }
 
-function createNodeSdk(serviceName: string) {
-  const traceExporter = new OTLPTraceExporter();
-
-  return new NodeSDK({
-    instrumentations: createInstrumentations(),
-    resource: resourceFromAttributes(createResourceAttributes(serviceName)),
-    sampler: createSampler(),
-    serviceName,
-    spanProcessors: [new BatchSpanProcessor(traceExporter)],
-  });
-}
-
 export async function initializeObservability(serviceName?: string) {
   if (state.started) {
     return;
@@ -146,26 +111,23 @@ export async function initializeObservability(serviceName?: string) {
   state.serviceName = resolvedServiceName;
 
   state.initializing = (async () => {
-    if (process.env.VERCEL) {
-      const { registerOTel } = (await import("@vercel/otel")) as VercelOtelModule;
-      registerOTel({
-        attributes: createResourceAttributes(resolvedServiceName),
-        serviceName: resolvedServiceName,
-        traceSampler: createSampler(),
-        instrumentations: createInstrumentations(),
-      });
+    if (!env.VERCEL) {
       return;
     }
 
-    state.sdk = createNodeSdk(resolvedServiceName);
-    state.sdk.start();
+    const { registerOTel } = (await import("@vercel/otel")) as VercelOtelModule;
+    registerOTel({
+      attributes: createResourceAttributes(resolvedServiceName),
+      serviceName: resolvedServiceName,
+      traceSampler: createSampler(),
+      instrumentations: createInstrumentations(),
+    });
   })();
 
   try {
     await state.initializing;
     state.started = true;
   } catch (error) {
-    state.sdk = undefined;
     state.serviceName = undefined;
     throw error;
   } finally {
@@ -173,10 +135,8 @@ export async function initializeObservability(serviceName?: string) {
   }
 }
 
-export async function shutdownObservability() {
-  await state.sdk?.shutdown();
+export function shutdownObservability() {
   state.initializing = undefined;
-  state.sdk = undefined;
   state.started = false;
   state.serviceName = undefined;
 }
