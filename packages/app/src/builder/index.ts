@@ -4,6 +4,13 @@ import { writeFile } from "node:fs/promises";
 import { build as viteBuild } from "vite";
 import { loadTailorKitConfig } from "../config/loader";
 import { assertSupportedPreactVersion } from "../preact-version";
+import { createTailorKitUploadManifest } from "./upload-manifest";
+
+export {
+  createTailorKitUploadManifest,
+  tailorkitUploadManifestSchema,
+  type TailorKitUploadManifest,
+} from "./upload-manifest";
 
 const preactExternal = /^preact(?:\/.*)?$/u;
 
@@ -56,19 +63,7 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
 
   await writeFile(
     path.join(resolvedOutDir, "tailorkit-upload.json"),
-    `${JSON.stringify(
-      {
-        assets: {
-          client: "client.js",
-        },
-        limits: {
-          clientMaxBytes: 1024 * 1024,
-        },
-        version: 1,
-      },
-      null,
-      2,
-    )}\n`,
+    `${JSON.stringify(createTailorKitUploadManifest(), null, 2)}\n`,
     "utf-8",
   );
 

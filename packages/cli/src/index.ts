@@ -3,6 +3,7 @@ import { intro, log, outro } from "@clack/prompts";
 import { cac } from "cac";
 import pc from "picocolors";
 
+import { runLogin, runLogout, runWhoami } from "./auth";
 import { generateTypes } from "./generator/types";
 import { runInit } from "./init";
 import { runExperimentalPreview, toPreviewOptions } from "./preview";
@@ -11,6 +12,80 @@ import { runExperimentalSchema } from "./schema";
 const cli = cac("tailorkit");
 
 cli.option("--cwd <path>", "Working directory", { default: "." });
+
+cli
+  .command("login", "Authenticate the TailorKit CLI with a host app")
+  .option("--config <path>", "Path to tailorkit config")
+  .option("--timeout <seconds>", "Seconds to wait for approval", { default: 1800 })
+  .action(async (options: Record<string, unknown>) => {
+    intro(pc.bold("TailorKit"));
+    try {
+      const timeoutSeconds = Number.parseInt(String(options.timeout ?? "1800"), 10);
+      if (!Number.isInteger(timeoutSeconds) || timeoutSeconds <= 0) {
+        throw new Error("--timeout must be a positive integer.");
+      }
+
+      const result = await runLogin(
+        {
+          configPath: options.config as string | undefined,
+          cwd: String(options.cwd ?? "."),
+          timeout: timeoutSeconds * 1000,
+        },
+        ({ expiresAt, hostUrl, userCode }) => {
+          log.info(`Host: ${pc.cyan(hostUrl)}`);
+          log.info(`Enter this code in the host app: ${pc.bold(userCode)}`);
+          log.info(`Code expires at ${expiresAt.toLocaleString()}.`);
+        },
+      );
+
+      outro(`Logged in to ${pc.cyan(result.hostUrl)} as scope ${pc.cyan(result.scopeId)}.`);
+    } catch (error) {
+      log.error(error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
+
+cli
+  .command("logout", "Remove stored TailorKit CLI credentials for a host app")
+  .option("--config <path>", "Path to tailorkit config")
+  .action(async (options: Record<string, unknown>) => {
+    intro(pc.bold("TailorKit"));
+    try {
+      const result = await runLogout({
+        configPath: options.config as string | undefined,
+        cwd: String(options.cwd ?? "."),
+      });
+
+      outro(
+        result.removed
+          ? `Logged out of ${pc.cyan(result.hostUrl)}.`
+          : `No stored credentials found for ${pc.cyan(result.hostUrl)}.`,
+      );
+    } catch (error) {
+      log.error(error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
+
+cli
+  .command("whoami", "Show the current TailorKit CLI authentication scope")
+  .option("--config <path>", "Path to tailorkit config")
+  .action(async (options: Record<string, unknown>) => {
+    intro(pc.bold("TailorKit"));
+    try {
+      const result = await runWhoami({
+        configPath: options.config as string | undefined,
+        cwd: String(options.cwd ?? "."),
+      });
+
+      log.info(`Host: ${pc.cyan(result.hostUrl)}`);
+      log.info(`Scope: ${pc.cyan(result.scopeId)}`);
+      outro("Authenticated.");
+    } catch (error) {
+      log.error(error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
 
 cli
   .command("build", "Build the TailorKit app")
