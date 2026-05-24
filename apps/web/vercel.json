@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "https://tailorkit-docs.vercel.app/home",
+      "destination": "https://tailorkit-docs.vercel.app",
       "missing": [
         {
           "type": "cookie",

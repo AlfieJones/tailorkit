@@ -18,10 +18,17 @@ const transparentColor = "rgba(0, 0, 0, 0)";
 const darkInkColor = "#c8bdf7";
 
 export const Route = createFileRoute("/home")({
-  component: Home2,
+  component: HomePage,
+  head: homeHead,
 });
 
-function Home2() {
+export function homeHead() {
+  return {
+    links: [{ href: "https://tailorkit.dev/", rel: "canonical" }],
+  };
+}
+
+export function HomePage() {
   const [hue, setHue] = useState(165);
   const [hueIndex, setHueIndex] = useState(0);
   const [autoHue, setAutoHue] = useState(true);

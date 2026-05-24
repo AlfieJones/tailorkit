@@ -13,6 +13,7 @@ import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as DocsRouteRouteImport } from './routes/docs/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as LlmsDotmdxDocsSplatRouteImport } from './routes/llms[.]mdx.docs.$'
@@ -37,6 +38,11 @@ const DocsRouteRoute = DocsRouteRouteImport.update({
   path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsSplatRoute = DocsSplatRouteImport.update({
   id: '/$',
   path: '/$',
@@ -54,6 +60,7 @@ const LlmsDotmdxDocsSplatRoute = LlmsDotmdxDocsSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/docs': typeof DocsRouteRouteWithChildren
   '/home': typeof HomeRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/llms.mdx/docs/$': typeof LlmsDotmdxDocsSplatRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/docs': typeof DocsRouteRouteWithChildren
   '/home': typeof HomeRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
@@ -73,6 +81,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/docs': typeof DocsRouteRouteWithChildren
   '/home': typeof HomeRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
@@ -84,6 +93,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/docs'
     | '/home'
     | '/llms-full.txt'
@@ -93,6 +103,7 @@ export interface FileRouteTypes {
     | '/llms.mdx/docs/$'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/docs'
     | '/home'
     | '/llms-full.txt'
@@ -102,6 +113,7 @@ export interface FileRouteTypes {
     | '/llms.mdx/docs/$'
   id:
     | '__root__'
+    | '/'
     | '/docs'
     | '/home'
     | '/llms-full.txt'
@@ -112,6 +124,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   DocsRouteRoute: typeof DocsRouteRouteWithChildren
   HomeRoute: typeof HomeRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs/$': {
@@ -187,6 +207,7 @@ const DocsRouteRouteWithChildren = DocsRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   DocsRouteRoute: DocsRouteRouteWithChildren,
   HomeRoute: HomeRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
