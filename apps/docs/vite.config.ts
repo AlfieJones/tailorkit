@@ -36,6 +36,7 @@ export default defineConfig(async ({ command }) => {
       tanstackStart({
         prerender: {
           enabled: true,
+          filter: (page) => page.path !== "/",
         },
         serverFns: {
           generateFunctionId: createPrefixedServerFnIdGenerator("docs"),
