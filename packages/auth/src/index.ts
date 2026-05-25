@@ -40,6 +40,7 @@ export function createAuth() {
   const secondaryStorage = createSecondaryStorage();
 
   return betterAuth({
+    appName: "TailorKit",
     account: {
       encryptOAuthTokens: true,
     },
@@ -50,6 +51,9 @@ export function createAuth() {
       cookiePrefix: env.VERCEL_TARGET_ENV === "production" ? "tailorkit" : "tailorkit-dev",
       database: {
         generateId: "uuid",
+      },
+      ipAddress: {
+        ipAddressHeaders: ["x-vercel-forwarded-for", "x-forwarded-for"],
       },
     },
     baseURL: getBaseUrl(),
@@ -78,6 +82,7 @@ export function createAuth() {
           backgroundTaskHandler(sendBetterAuthOtpEmail({ email, otp, type }));
           return Promise.resolve();
         },
+        storeOTP: "hashed",
       }),
       organization({
         ac,
