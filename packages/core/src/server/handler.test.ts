@@ -210,6 +210,87 @@ describe("createTailorKitServer", () => {
     });
   });
 
+  it("serves a built-in CLI auth approval page", async () => {
+    const response = await optionalSchemaTailor.handler(
+      new Request("https://example.com/api/tailorkit/cli-auth/approve?code=ABC-123-XYZ"),
+      { authenticate: () => ({ scopeId: "test" }) },
+    );
+
+    const html = await response.text();
+    expect(response.headers.get("content-type")).toContain("text/html");
+    expect(html).toContain("Approve CLI login");
+    expect(html).toContain('value="ABC123XYZ"');
+    expect(html).toContain("prefers-color-scheme: dark");
+  });
+
+  it("approves CLI auth from the built-in approval page", async () => {
+    const requests: Request[] = [];
+    const server = createTailorKitServer({
+      $internal: {
+        platformBaseUrl: "http://localhost:3000/api/platform",
+        platformFetch: (request, init) => {
+          const platformRequest = request instanceof Request ? request : new Request(request, init);
+          requests.push(platformRequest);
+
+          return Promise.resolve(Response.json({ id: "cli_auth_session_1" }));
+        },
+        platformHeaders: { authorization: "Bearer host-token" },
+      },
+      components: {},
+    });
+    const body = new URLSearchParams({
+      intent: "approve",
+      userCode: "ABC-123-XYZ",
+    });
+    const response = await server.handler(
+      new Request("https://example.com/api/tailorkit/cli-auth/approve", {
+        body,
+        method: "POST",
+      }),
+      { authenticate: () => ({ scopeId: "org:org_1" }) },
+    );
+
+    const html = await response.text();
+    expect(html).toContain("CLI login approved");
+    expect(requests[0]?.url).toBe("http://localhost:3000/api/platform/cli-auth/approve");
+    expect(requests[0]?.headers.get("authorization")).toBe("Bearer host-token");
+    await expect(requests[0]?.json()).resolves.toEqual({
+      scopeId: "org:org_1",
+      userCode: "ABC-123-XYZ",
+    });
+  });
+
+  it("uses projectKey as the default platform authorization header", async () => {
+    const requests: Request[] = [];
+    const server = createTailorKitServer({
+      $internal: {
+        platformBaseUrl: "http://localhost:3000/api/platform",
+        platformFetch: (request, init) => {
+          const platformRequest = request instanceof Request ? request : new Request(request, init);
+          requests.push(platformRequest);
+
+          return Promise.resolve(Response.json({ id: "cli_auth_session_1" }));
+        },
+      },
+      components: {},
+      projectKey: "project-key",
+    });
+    const body = new URLSearchParams({
+      intent: "approve",
+      userCode: "ABC-123-XYZ",
+    });
+
+    await server.handler(
+      new Request("https://example.com/api/tailorkit/cli-auth/approve", {
+        body,
+        method: "POST",
+      }),
+      { authenticate: () => ({ scopeId: "org:org_1" }) },
+    );
+
+    expect(requests[0]?.headers.get("authorization")).toBe("Bearer project-key");
+  });
+
   it("calls the platform client with authorization headers", async () => {
     const requests: Request[] = [];
     const hostRequests: Request[] = [];

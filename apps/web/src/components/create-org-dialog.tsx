@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@tailorkit/ui/components/button";
+import { Alert, AlertDescription, AlertTitle } from "@tailorkit/ui/components/alert";
 import {
   Dialog,
   DialogClose,
@@ -22,6 +23,9 @@ import { z } from "zod";
 import { orpc, client } from "#lib/orpc";
 import { checkOrgSlugAvailability, useOrgSlugAvailability } from "#lib/org-slug-availability";
 import { OrgSlugAvailabilityIndicator } from "#components/org-slug-availability-indicator";
+
+const MANUAL_ORG_ONBOARDING_MESSAGE =
+  "We're currently onboarding users manually. Contact us to create an organisation for your account.";
 
 function toSlug(name: string) {
   return name
@@ -122,9 +126,16 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
         <DialogHeader>
           <DialogTitle>Create organisation</DialogTitle>
           <DialogDescription>
-            Your organisation will get a unique URL based on its slug.
+            Organisation creation is currently managed by the TailorKit team.
           </DialogDescription>
         </DialogHeader>
+
+        <DialogPanel>
+          <Alert variant="info">
+            <AlertTitle>Manual onboarding</AlertTitle>
+            <AlertDescription>{MANUAL_ORG_ONBOARDING_MESSAGE}</AlertDescription>
+          </Alert>
+        </DialogPanel>
 
         <form
           className="contents"
@@ -135,7 +146,7 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
             form.handleSubmit();
           }}
         >
-          <DialogPanel className="flex flex-col gap-4">
+          <DialogPanel className="hidden flex-col gap-4">
             <form.AppField name="name">
               {(field) => (
                 <field.TextField
@@ -181,13 +192,11 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
 
           <DialogFooter>
             <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
-              Cancel
+              Close
             </DialogClose>
-            <form.AppForm>
-              <form.SubmitButton form="create-org-dialog-form" size="sm">
-                Create organisation
-              </form.SubmitButton>
-            </form.AppForm>
+            <Button disabled size="sm" type="button">
+              Create organisation
+            </Button>
           </DialogFooter>
         </form>
       </DialogPopup>

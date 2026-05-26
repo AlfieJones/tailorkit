@@ -3,21 +3,12 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Building2Icon, MailIcon, PlusIcon } from "lucide-react";
 
 import { AccountLayout } from "#components/account-layout";
-import { CreateOrgDialog } from "#components/create-org-dialog";
-import { SetHeaderActions } from "#components/header-actions";
+import { PageLayout } from "#components/page-layout";
 import { orpc } from "#lib/orpc";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardFrame,
-  CardHeader,
-  CardPanel,
-  CardTitle,
-} from "@tailorkit/ui/components/card";
+import { Card, CardFrame } from "@tailorkit/ui/components/card";
 import {
   Empty,
   EmptyContent,
@@ -26,6 +17,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@tailorkit/ui/components/empty";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@tailorkit/ui/components/table";
 
 export const Route = createFileRoute("/(app)/account/organizations")({
   component: OrganizationsPage,
@@ -59,35 +58,27 @@ function OrganizationsPage() {
 
   return (
     <AccountLayout>
-      <SetHeaderActions>
-        <div className="flex flex-wrap gap-2">
-          <Button render={<Link to="/account/invites" />} size="sm" variant="outline">
-            <MailIcon />
-            Invites
-            {pendingInviteCount > 0 && (
-              <Badge size="sm" variant="info">
-                {pendingInviteCount}
-              </Badge>
-            )}
-          </Button>
-          <CreateOrgDialog>
-            <Button size="sm">
+      <PageLayout
+        actions={
+          <>
+            <Button render={<Link to="/account/invites" />} size="sm" variant="outline">
+              <MailIcon />
+              Invites
+              {pendingInviteCount > 0 && (
+                <Badge size="sm" variant="info">
+                  {pendingInviteCount}
+                </Badge>
+              )}
+            </Button>
+            <Button render={<Link to="/account/request-organization" />} size="sm">
               <PlusIcon />
               New organisation
             </Button>
-          </CreateOrgDialog>
-        </div>
-      </SetHeaderActions>
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-        <div>
-          <div>
-            <h1 className="font-semibold text-2xl tracking-normal">Organisations</h1>
-            <p className="mt-1 text-muted-foreground text-sm">
-              View your organisations and create a new workspace.
-            </p>
-          </div>
-        </div>
-
+          </>
+        }
+        description="View your organisations and create a new workspace."
+        title="Organisations"
+      >
         {orgs.length === 0 ? (
           <CardFrame>
             <Card>
@@ -102,56 +93,68 @@ function OrganizationsPage() {
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
-                  <CreateOrgDialog>
-                    <Button size="sm">
-                      <PlusIcon />
-                      Create organisation
-                    </Button>
-                  </CreateOrgDialog>
+                  <Button render={<Link to="/account/request-organization" />} size="sm">
+                    <PlusIcon />
+                    Create organisation
+                  </Button>
                 </EmptyContent>
               </Empty>
             </Card>
           </CardFrame>
         ) : (
-          <CardFrame>
-            {orgs.map((org) => (
-              <Card key={org.id}>
-                <CardHeader>
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar className="size-10 rounded-md">
-                      <AvatarFallback className="rounded-md bg-primary text-primary-foreground">
-                        {orgInitials(org.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <CardTitle className="truncate text-base">{org.name}</CardTitle>
-                      <CardDescription className="truncate">
-                        {org.slug ? `/${org.slug}` : "No slug set"}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  {org.slug && (
-                    <CardAction>
-                      <Button
-                        render={<Link params={{ orgSlug: org.slug }} to="/$orgSlug/~/projects" />}
-                        size="sm"
-                        variant="outline"
-                      >
-                        Open
-                      </Button>
-                    </CardAction>
-                  )}
-                </CardHeader>
-                <CardPanel className="pt-0">
-                  <p className="text-muted-foreground text-sm">
-                    Created {formatDate(org.createdAt)}
-                  </p>
-                </CardPanel>
-              </Card>
-            ))}
+          <CardFrame className="w-full">
+            <Table className="table-fixed" variant="card">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[48%]">Organisation</TableHead>
+                  <TableHead className="w-[24%]">Slug</TableHead>
+                  <TableHead className="w-[18%]">Created</TableHead>
+                  <TableHead className="w-[10%] text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {orgs.map((org) => (
+                  <TableRow key={org.id}>
+                    <TableCell>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar className="size-8 rounded-md">
+                          <AvatarFallback className="rounded-md bg-primary text-primary-foreground text-xs">
+                            {orgInitials(org.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="truncate font-medium text-sm">{org.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="truncate text-muted-foreground">
+                      {org.slug ? `/${org.slug}` : "No slug set"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(org.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        {org.slug ? (
+                          <Button
+                            render={
+                              <Link params={{ orgSlug: org.slug }} to="/$orgSlug/~/projects" />
+                            }
+                            size="sm"
+                            variant="outline"
+                          >
+                            Open
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Unavailable</span>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardFrame>
         )}
-      </div>
+      </PageLayout>
     </AccountLayout>
   );
 }

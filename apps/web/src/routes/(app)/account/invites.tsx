@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { MailIcon } from "lucide-react";
 
 import { AccountLayout } from "#components/account-layout";
+import { PageLayout } from "#components/page-layout";
 import { client, orpc } from "#lib/orpc";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";
@@ -77,14 +78,7 @@ function InvitesPage() {
 
   return (
     <AccountLayout>
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-        <div>
-          <h1 className="font-semibold text-2xl tracking-normal">Invites</h1>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Review your current organisation invitations.
-          </p>
-        </div>
-
+      <PageLayout description="Review your current organisation invitations." title="Invites">
         {invitations.length === 0 ? (
           <CardFrame>
             <Card>
@@ -142,7 +136,7 @@ function InvitesPage() {
             ))}
           </CardFrame>
         )}
-      </div>
+      </PageLayout>
     </AccountLayout>
   );
 }

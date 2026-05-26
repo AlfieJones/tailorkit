@@ -10,7 +10,7 @@ import { InvitationsTable } from "#components/members/invitations-table";
 import type { InvitationRow } from "#components/members/invitations-table";
 import { MembersTable } from "#components/members/members-table";
 import type { MemberRow } from "#components/members/members-table";
-import { SetHeaderActions } from "#components/header-actions";
+import { PageLayout } from "#components/page-layout";
 import { client, orpc } from "#lib/orpc";
 
 export const Route = createFileRoute("/(app)/$orgSlug/~/(org)/settings/members")({
@@ -126,20 +126,13 @@ function OrgSettingsMembers() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Members</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Manage who has access to this organisation.
-        </p>
-      </div>
-
-      {canManage && (
-        <SetHeaderActions>
-          <InviteMembersDialog orgSlug={orgSlug} onSuccess={invalidateAll} />
-        </SetHeaderActions>
-      )}
-
+    <PageLayout
+      actions={
+        canManage ? <InviteMembersDialog orgSlug={orgSlug} onSuccess={invalidateAll} /> : null
+      }
+      description="Manage who has access to this organisation."
+      title="Members"
+    >
       <Tabs defaultValue="members">
         <div className="flex items-center justify-between gap-4">
           <TabsList>
@@ -186,6 +179,6 @@ function OrgSettingsMembers() {
           />
         </TabsPanel>
       </Tabs>
-    </div>
+    </PageLayout>
   );
 }

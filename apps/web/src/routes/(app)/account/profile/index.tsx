@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardFrame,
@@ -13,8 +14,8 @@ import { useAppForm } from "@tailorkit/ui/form";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+import { PageLayout } from "#components/page-layout";
 import { authClient } from "#lib/auth-client";
-import { useQuery } from "@tanstack/react-query";
 import { orpc } from "#lib/orpc.ts";
 
 export const Route = createFileRoute("/(app)/account/profile/")({
@@ -56,7 +57,7 @@ function ProfilePage() {
   });
 
   return (
-    <div className="space-y-6 max-w-5xl w-full mx-auto">
+    <PageLayout description="Manage the name shown across your Tailorkit account." title="Profile">
       <CardFrame className="w-full">
         <Card>
           <CardHeader>
@@ -87,6 +88,6 @@ function ProfilePage() {
           </form.AppForm>
         </CardFrameFooter>
       </CardFrame>
-    </div>
+    </PageLayout>
   );
 }

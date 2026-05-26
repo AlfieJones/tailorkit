@@ -7,7 +7,6 @@ const getActiveOrgId = createIsomorphicFn()
   .client(() => sessionStorage.getItem("active-org-id") ?? "");
 
 export const Route = createFileRoute("/")({
-  component: () => null,
   loader: async ({ context }) => {
     const session = await context.queryClient.ensureQueryData(
       context.orpc.user.getSession.queryOptions(),

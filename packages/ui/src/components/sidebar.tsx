@@ -150,8 +150,8 @@ export function Sidebar({
       />
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left] duration-300 ease-in-out md:flex",
-          !open && "left-[calc(var(--sidebar-width)*-1)]",
+          "fixed inset-y-0 left-0 z-10 hidden h-svh w-(--sidebar-width) opacity-100 transition-[left,opacity] duration-300 ease-in-out md:flex",
+          !open && "left-[calc(var(--sidebar-width)*-1)] opacity-0",
           className,
         )}
         data-slot="sidebar-container"
@@ -174,7 +174,7 @@ export function SidebarInset({
     <main
       className={cn(
         "relative flex w-full flex-1 flex-col bg-background z-20",
-        "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-1 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm/5",
+        "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-2 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm/5",
         "lg:rounded-2xl lg:border not-dark:bg-clip-padding lg:shadow-xs/5",
         "lg:before:pointer-events-none lg:before:absolute lg:before:inset-0 lg:before:rounded-[calc(var(--radius-2xl)-1px)] lg:before:shadow-[0_1px_--theme(--color-black/4%)] dark:lg:before:shadow-[0_-1px_--theme(--color-white/6%)] mt-1 mr-1 mb-1 ml-1",
         className,

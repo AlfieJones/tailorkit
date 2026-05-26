@@ -12,6 +12,8 @@ import {
 import { Field, FieldLabel } from "@tailorkit/ui/components/field";
 import { Input } from "@tailorkit/ui/components/input";
 
+import { PageLayout } from "#components/page-layout";
+
 export const Route = createFileRoute("/(app)/$orgSlug/~/(org)/settings/")({
   component: OrgSettingsGeneral,
 });
@@ -21,12 +23,7 @@ function OrgSettingsGeneral() {
   const orgName = orgSlug.charAt(0).toUpperCase() + orgSlug.slice(1);
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">General</h1>
-        <p className="mt-1 text-muted-foreground text-sm">Manage your organisation settings.</p>
-      </div>
-
+    <PageLayout description="Manage your organisation settings." title="General">
       <CardFrame>
         <Card>
           <CardHeader>
@@ -49,6 +46,6 @@ function OrgSettingsGeneral() {
           <Button size="sm">Save changes</Button>
         </CardFrameFooter>
       </CardFrame>
-    </div>
+    </PageLayout>
   );
 }

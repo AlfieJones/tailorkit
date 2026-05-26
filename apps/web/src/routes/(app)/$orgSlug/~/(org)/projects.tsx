@@ -27,7 +27,7 @@ import { toastManager } from "@tailorkit/ui/components/toast";
 import { useAppForm } from "@tailorkit/ui/form";
 import { validateProjectSlug } from "@tailorkit/db/validate-project-slug";
 import { z } from "zod";
-import { SetHeaderActions } from "#components/header-actions";
+import { PageLayout } from "#components/page-layout";
 import { client, orpc } from "#lib/orpc";
 import { setProjectApiKey } from "#utils/project-api-key-memory";
 
@@ -185,23 +185,18 @@ function ProjectsPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <SetHeaderActions>
+    <PageLayout
+      actions={
         <CreateProjectDialog orgSlug={orgSlug}>
           <Button size="sm">
             <FolderPlusIcon />
             New project
           </Button>
         </CreateProjectDialog>
-      </SetHeaderActions>
-
-      <div>
-        <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Projects</h1>
-          <p className="mt-1 text-muted-foreground text-sm">All projects in this organisation.</p>
-        </div>
-      </div>
-
+      }
+      description="All projects in this organisation."
+      title="Projects"
+    >
       {projects.length === 0 ? (
         <Empty className="mx-auto max-w-md rounded-lg border">
           <EmptyHeader>
@@ -241,6 +236,6 @@ function ProjectsPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 }

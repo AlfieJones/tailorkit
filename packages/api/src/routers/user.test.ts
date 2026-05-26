@@ -166,6 +166,20 @@ describe("userRouter", () => {
     );
   });
 
+  it("does not allow users to create organizations", async () => {
+    await expect(
+      call(
+        userRouter.createOrg,
+        { name: "New Org", slug: "new-org" },
+        { context: createContext() },
+      ),
+    ).rejects.toEqual(
+      expect.objectContaining({ code: "FORBIDDEN" } satisfies Partial<
+        ORPCError<"FORBIDDEN", unknown>
+      >),
+    );
+  });
+
   it("returns pending unexpired invitations for the current user's email", async () => {
     const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000);

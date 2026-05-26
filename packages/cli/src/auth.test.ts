@@ -139,7 +139,7 @@ describe("auth store", () => {
   it("resolves the host URL from tailorkit.config.ts", async () => {
     const homeDirectory = await createTemporaryHome();
     vi.mocked(loadTailorKitConfig).mockResolvedValue({
-      config: { hostBaseUrl: "https://example.com///" },
+      config: { host: "https://example.com///" },
       filepath: path.join(homeDirectory, "tailorkit.config.ts"),
       root: homeDirectory,
     });
@@ -149,10 +149,19 @@ describe("auth store", () => {
     expect(loadTailorKitConfig).toHaveBeenCalledWith(undefined, homeDirectory);
   });
 
+  it("creates a browser approval URL from the host API URL", async () => {
+    const homeDirectory = await createTemporaryHome();
+    const { createCliAuthApprovalUrl } = await loadAuthModule(homeDirectory);
+
+    expect(createCliAuthApprovalUrl("https://example.com/api/tailorkit", "ABC-123-XYZ")).toBe(
+      "https://example.com/api/tailorkit/cli-auth/approve?code=ABC-123-XYZ",
+    );
+  });
+
   it("treats failed token verification as not logged in", async () => {
     const homeDirectory = await createTemporaryHome();
     vi.mocked(loadTailorKitConfig).mockResolvedValue({
-      config: { hostBaseUrl: "https://example.com" },
+      config: { host: "https://example.com" },
       filepath: path.join(homeDirectory, "tailorkit.config.ts"),
       root: homeDirectory,
     });
@@ -174,7 +183,7 @@ describe("auth store", () => {
     const { runWhoami } = await loadAuthModule(homeDirectory);
 
     await expect(runWhoami({ cwd: homeDirectory })).rejects.toThrow(
-      "Not logged in for https://example.com. Run tailorkit login after checking hostBaseUrl in tailorkit.config.ts.",
+      "Not logged in for https://example.com. Run tailorkit login after checking host in tailorkit.config.ts.",
     );
   });
 });

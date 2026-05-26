@@ -81,16 +81,28 @@ const writeAuthStore = async (store: AuthStore): Promise<void> => {
 
 export const resolveHostUrl = async (options: AuthOptions): Promise<string> => {
   const loaded = await loadTailorKitConfig(options.configPath, options.cwd);
-  if (loaded.config.hostBaseUrl) {
-    return normalizeHostUrl(loaded.config.hostBaseUrl);
+  if (loaded.config.host) {
+    return normalizeHostUrl(loaded.config.host);
   }
 
-  throw new Error("Missing TailorKit host URL. Set hostBaseUrl in tailorkit.config.ts.");
+  throw new Error("Missing TailorKit host URL. Set host in tailorkit.config.ts.");
+};
+
+export const createCliAuthApprovalUrl = (hostUrl: string, userCode: string): string => {
+  const url = new URL(hostUrl);
+  const pathname = url.pathname.replace(/\/+$/u, "");
+
+  url.pathname = `${pathname}/cli-auth/approve`;
+  url.search = "";
+  url.searchParams.set("code", userCode);
+  url.hash = "";
+
+  return url.toString();
 };
 
 const createNotLoggedInError = (hostUrl: string): Error =>
   new Error(
-    `Not logged in for ${hostUrl}. Run tailorkit login after checking hostBaseUrl in tailorkit.config.ts.`,
+    `Not logged in for ${hostUrl}. Run tailorkit login after checking host in tailorkit.config.ts.`,
   );
 
 export const saveDeployToken = async (

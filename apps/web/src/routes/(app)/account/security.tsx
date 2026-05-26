@@ -14,6 +14,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { AccountLayout } from "#components/account-layout";
+import { PageLayout } from "#components/page-layout";
 import { authClient } from "#lib/auth-client";
 
 export const Route = createFileRoute("/(app)/account/security")({
@@ -62,7 +63,7 @@ function SecurityPage() {
 
   return (
     <AccountLayout>
-      <div className="space-y-6 max-w-5xl w-full mx-auto">
+      <PageLayout description="Update your password and keep your account secure." title="Security">
         <CardFrame className="w-full">
           <Card>
             <CardHeader>
@@ -105,7 +106,7 @@ function SecurityPage() {
             </form.AppForm>
           </CardFrameFooter>
         </CardFrame>
-      </div>
+      </PageLayout>
     </AccountLayout>
   );
 }

@@ -8,6 +8,7 @@ import type {
 import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
 import { normalizeBasePath } from "./apps";
+import { handleCliAuthApprovalPage } from "./cli-auth-page";
 import { createContext } from "./context";
 import { tailorkitRouter } from "./router";
 import type {
@@ -56,6 +57,9 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
     responseStyle: "data",
     throwOnError: true,
   });
+  const platformHeaders =
+    options.$internal?.platformHeaders ??
+    (options.projectKey ? { authorization: `Bearer ${options.projectKey}` } : undefined);
   const rpcHandler = new RPCHandler(tailorkitRouter);
 
   const handler = async (
@@ -69,11 +73,29 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
       return Response.json(schema.serialize());
     }
 
+    if (url.pathname === `${basePath}/cli-auth/approve`) {
+      const context = await createContext({
+        actions,
+        platform,
+        platformHeaders,
+        request,
+        schema,
+        authenticate: handlerOptions.authenticate,
+      });
+
+      return handleCliAuthApprovalPage({
+        authenticate: context.authenticate,
+        platform: context.platform,
+        platformHeaders: context.platformHeaders,
+        request,
+      });
+    }
+
     const rpcResult = await rpcHandler.handle(request, {
       context: await createContext({
         actions,
         platform,
-        platformHeaders: options.$internal?.platformHeaders,
+        platformHeaders,
         request,
         schema,
         authenticate: handlerOptions.authenticate,

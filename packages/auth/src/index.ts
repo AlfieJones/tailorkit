@@ -86,6 +86,7 @@ export function createAuth() {
       }),
       organization({
         ac,
+        allowUserToCreateOrganization: false,
         roles,
         sendInvitationEmail: async (data) => {
           await sendOrganizationInvitationEmail({

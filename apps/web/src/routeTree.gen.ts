@@ -25,6 +25,7 @@ import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as ApiPlatformSplatRouteImport } from './routes/api/platform.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as appAccountSecurityRouteImport } from './routes/(app)/account/security'
+import { Route as appAccountRequestOrganizationRouteImport } from './routes/(app)/account/request-organization'
 import { Route as appAccountOrganizationsRouteImport } from './routes/(app)/account/organizations'
 import { Route as appAccountInvitesRouteImport } from './routes/(app)/account/invites'
 import { Route as appAccountProfileRouteRouteImport } from './routes/(app)/account/profile/route'
@@ -120,6 +121,12 @@ const appAccountSecurityRoute = appAccountSecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => appAccountRouteRoute,
 } as any)
+const appAccountRequestOrganizationRoute =
+  appAccountRequestOrganizationRouteImport.update({
+    id: '/request-organization',
+    path: '/request-organization',
+    getParentRoute: () => appAccountRouteRoute,
+  } as any)
 const appAccountOrganizationsRoute = appAccountOrganizationsRouteImport.update({
   id: '/organizations',
   path: '/organizations',
@@ -227,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/account/profile': typeof appAccountProfileRouteRouteWithChildren
   '/account/invites': typeof appAccountInvitesRoute
   '/account/organizations': typeof appAccountOrganizationsRoute
+  '/account/request-organization': typeof appAccountRequestOrganizationRoute
   '/account/security': typeof appAccountSecurityRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/platform/$': typeof ApiPlatformSplatRoute
@@ -256,6 +264,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof authVerifyEmailRoute
   '/account/invites': typeof appAccountInvitesRoute
   '/account/organizations': typeof appAccountOrganizationsRoute
+  '/account/request-organization': typeof appAccountRequestOrganizationRoute
   '/account/security': typeof appAccountSecurityRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/platform/$': typeof ApiPlatformSplatRoute
@@ -288,6 +297,7 @@ export interface FileRoutesById {
   '/(app)/account/profile': typeof appAccountProfileRouteRouteWithChildren
   '/(app)/account/invites': typeof appAccountInvitesRoute
   '/(app)/account/organizations': typeof appAccountOrganizationsRoute
+  '/(app)/account/request-organization': typeof appAccountRequestOrganizationRoute
   '/(app)/account/security': typeof appAccountSecurityRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/platform/$': typeof ApiPlatformSplatRoute
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/account/profile'
     | '/account/invites'
     | '/account/organizations'
+    | '/account/request-organization'
     | '/account/security'
     | '/api/auth/$'
     | '/api/platform/$'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/account/invites'
     | '/account/organizations'
+    | '/account/request-organization'
     | '/account/security'
     | '/api/auth/$'
     | '/api/platform/$'
@@ -382,6 +394,7 @@ export interface FileRouteTypes {
     | '/(app)/account/profile'
     | '/(app)/account/invites'
     | '/(app)/account/organizations'
+    | '/(app)/account/request-organization'
     | '/(app)/account/security'
     | '/api/auth/$'
     | '/api/platform/$'
@@ -523,6 +536,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/account/security'
       preLoaderRoute: typeof appAccountSecurityRouteImport
+      parentRoute: typeof appAccountRouteRoute
+    }
+    '/(app)/account/request-organization': {
+      id: '/(app)/account/request-organization'
+      path: '/request-organization'
+      fullPath: '/account/request-organization'
+      preLoaderRoute: typeof appAccountRequestOrganizationRouteImport
       parentRoute: typeof appAccountRouteRoute
     }
     '/(app)/account/organizations': {
@@ -749,6 +769,7 @@ interface appAccountRouteRouteChildren {
   appAccountProfileRouteRoute: typeof appAccountProfileRouteRouteWithChildren
   appAccountInvitesRoute: typeof appAccountInvitesRoute
   appAccountOrganizationsRoute: typeof appAccountOrganizationsRoute
+  appAccountRequestOrganizationRoute: typeof appAccountRequestOrganizationRoute
   appAccountSecurityRoute: typeof appAccountSecurityRoute
 }
 
@@ -756,6 +777,7 @@ const appAccountRouteRouteChildren: appAccountRouteRouteChildren = {
   appAccountProfileRouteRoute: appAccountProfileRouteRouteWithChildren,
   appAccountInvitesRoute: appAccountInvitesRoute,
   appAccountOrganizationsRoute: appAccountOrganizationsRoute,
+  appAccountRequestOrganizationRoute: appAccountRequestOrganizationRoute,
   appAccountSecurityRoute: appAccountSecurityRoute,
 }
 

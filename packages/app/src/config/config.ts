@@ -17,7 +17,7 @@ const tailorkitConfigSchema = z.object({
   build: buildConfigSchema.optional(),
   client: clientConfigSchema.optional(),
   deploy: deployConfigSchema.optional(),
-  hostBaseUrl: z.string().url().optional(),
+  host: z.string().url().optional(),
 });
 
 export type TailorKitConfig = z.input<typeof tailorkitConfigSchema>;

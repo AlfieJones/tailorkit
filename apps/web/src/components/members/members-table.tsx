@@ -10,6 +10,7 @@ import { MoreHorizontalIcon, TrashIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";
+import { CardFrame } from "@tailorkit/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from "@tailorkit/ui/components/dropdown-menu";
 import { DateAgo } from "@tailorkit/ui/date";
-import { Frame } from "@tailorkit/ui/components/frame";
 import {
   Table,
   TableBody,
@@ -161,7 +161,7 @@ export function MembersTable({
   });
 
   return (
-    <Frame className="w-full">
+    <CardFrame className="w-full">
       <Table variant="card" className="table-fixed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -200,6 +200,6 @@ export function MembersTable({
           )}
         </TableBody>
       </Table>
-    </Frame>
+    </CardFrame>
   );
 }

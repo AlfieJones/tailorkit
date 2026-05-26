@@ -3,7 +3,7 @@ import { intro, log, outro } from "@clack/prompts";
 import { cac } from "cac";
 import pc from "picocolors";
 
-import { runLogin, runLogout, runWhoami } from "./auth";
+import { createCliAuthApprovalUrl, runLogin, runLogout, runWhoami } from "./auth";
 import { generateTypes } from "./generator/types";
 import { runInit } from "./init";
 import { runExperimentalPreview, toPreviewOptions } from "./preview";
@@ -34,6 +34,7 @@ cli
         ({ expiresAt, hostUrl, userCode }) => {
           log.info(`Host: ${pc.cyan(hostUrl)}`);
           log.info(`Enter this code in the host app: ${pc.bold(userCode)}`);
+          log.info(`Approval URL: ${pc.cyan(createCliAuthApprovalUrl(hostUrl, userCode))}`);
           log.info(`Code expires at ${expiresAt.toLocaleString()}.`);
         },
       );

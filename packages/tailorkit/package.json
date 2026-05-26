@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "bin": {
-    "tailorkit": "./dist/cli.js"
+    "tailorkit": "./node_modules/@tailorkit/cli/dist/index.js"
   },
   "type": "module",
   "imports": {
