@@ -5,6 +5,7 @@ import { Building2Icon, MailIcon, PlusIcon } from "lucide-react";
 import { AccountLayout } from "#components/account-layout";
 import { CreateOrgDialog } from "#components/create-org-dialog";
 import { PageLayout } from "#components/page-layout";
+import { isOrgCreationManaged } from "#lib/org-creation";
 import { orpc } from "#lib/orpc";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
 import { Badge } from "@tailorkit/ui/components/badge";
@@ -71,12 +72,19 @@ function OrganizationsPage() {
                 </Badge>
               )}
             </Button>
-            <CreateOrgDialog>
-              <Button size="sm" type="button">
+            {isOrgCreationManaged ? (
+              <Button render={<Link to="/account/request-organization" />} size="sm">
                 <PlusIcon />
                 New organisation
               </Button>
-            </CreateOrgDialog>
+            ) : (
+              <CreateOrgDialog>
+                <Button size="sm" type="button">
+                  <PlusIcon />
+                  New organisation
+                </Button>
+              </CreateOrgDialog>
+            )}
           </>
         }
         description="View your organisations and create a new workspace."
@@ -96,12 +104,19 @@ function OrganizationsPage() {
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
-                  <CreateOrgDialog>
-                    <Button size="sm" type="button">
+                  {isOrgCreationManaged ? (
+                    <Button render={<Link to="/account/request-organization" />} size="sm">
                       <PlusIcon />
                       Create organisation
                     </Button>
-                  </CreateOrgDialog>
+                  ) : (
+                    <CreateOrgDialog>
+                      <Button size="sm" type="button">
+                        <PlusIcon />
+                        Create organisation
+                      </Button>
+                    </CreateOrgDialog>
+                  )}
                 </EmptyContent>
               </Empty>
             </Card>

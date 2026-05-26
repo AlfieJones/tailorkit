@@ -12,10 +12,11 @@ import {
   ComboboxValue,
 } from "@tailorkit/ui/components/combobox";
 import { SidebarMenuButton } from "@tailorkit/ui/components/sidebar";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { CreateOrgDialog } from "#components/create-org-dialog";
+import { isOrgCreationManaged } from "#lib/org-creation";
 import { orpc } from "#lib/orpc";
 
 interface OrgSwitcherProps {
@@ -98,12 +99,23 @@ export function OrgSwitcher({ orgSlug }: OrgSwitcherProps) {
           )}
         </ComboboxList>
         <div className="border-t p-2">
-          <CreateOrgDialog>
-            <Button className="w-full justify-start" type="button" variant="ghost">
+          {isOrgCreationManaged ? (
+            <Button
+              className="w-full justify-start"
+              render={<Link to="/account/request-organization" />}
+              variant="ghost"
+            >
               <PlusIcon className="mr-2 size-4" />
               Create org
             </Button>
-          </CreateOrgDialog>
+          ) : (
+            <CreateOrgDialog>
+              <Button className="w-full justify-start" type="button" variant="ghost">
+                <PlusIcon className="mr-2 size-4" />
+                Create org
+              </Button>
+            </CreateOrgDialog>
+          )}
         </div>
       </ComboboxPopup>
     </Combobox>

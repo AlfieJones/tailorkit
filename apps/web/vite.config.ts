@@ -19,6 +19,9 @@ export default defineConfig(({ mode }) => {
   const isDev = mode === "development";
 
   return {
+    define: {
+      "import.meta.env.VITE_VERCEL_ENV": JSON.stringify(process.env.VERCEL_ENV),
+    },
     plugins: [
       devtools(),
       tailwindcss(),
