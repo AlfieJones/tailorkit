@@ -1,5 +1,6 @@
 import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
+import { env } from "@tailorkit/env/server";
 import { publicProcedure, protectedProcedure, requireOrg } from "../procedures";
 import z from "zod";
 import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
@@ -46,27 +47,30 @@ export const userRouter = {
 
   createOrg: protectedProcedure
     .input(z.object({ name: z.string().min(1), slug: z.string().min(2).max(48) }))
-    .handler(({ errors }) => {
-      // const result = validateOrgSlug(input.slug);
-      // if (!result.valid) {
-      //   throw errors.BAD_REQUEST({ message: result.reason });
-      // }
+    .handler(async ({ input, context, errors }) => {
+      if (env.VERCEL_ENV === "production") {
+        throw errors.FORBIDDEN({ message: MANUAL_ORG_ONBOARDING_MESSAGE });
+      }
 
-      // const existingOrg = await db.query.organization.findFirst({
-      //   columns: { id: true },
-      //   where: { slug: input.slug },
-      // });
+      const result = validateOrgSlug(input.slug);
+      if (!result.valid) {
+        throw errors.BAD_REQUEST({ message: result.reason });
+      }
 
-      // if (existingOrg) {
-      //   throw errors.BAD_REQUEST({ message: "This organisation slug is already taken." });
-      // }
+      const existingOrg = await db.query.organization.findFirst({
+        columns: { id: true },
+        where: { slug: input.slug },
+      });
 
-      // const org = await auth.api.createOrganization({
-      //   body: { name: input.name, slug: input.slug, userId: context.user.id },
-      // });
+      if (existingOrg) {
+        throw errors.BAD_REQUEST({ message: "This organisation slug is already taken." });
+      }
 
-      // return org;
-      throw errors.FORBIDDEN({ message: MANUAL_ORG_ONBOARDING_MESSAGE });
+      const org = await auth.api.createOrganization({
+        body: { name: input.name, slug: input.slug, userId: context.user.id },
+      });
+
+      return org;
     }),
 
   getPendingInvitations: protectedProcedure.handler(async ({ context }) => {

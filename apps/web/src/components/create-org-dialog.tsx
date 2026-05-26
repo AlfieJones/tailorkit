@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@tailorkit/ui/components/button";
-import { Alert, AlertDescription, AlertTitle } from "@tailorkit/ui/components/alert";
 import {
   Dialog,
   DialogClose,
@@ -23,9 +22,6 @@ import { z } from "zod";
 import { orpc, client } from "#lib/orpc";
 import { checkOrgSlugAvailability, useOrgSlugAvailability } from "#lib/org-slug-availability";
 import { OrgSlugAvailabilityIndicator } from "#components/org-slug-availability-indicator";
-
-const MANUAL_ORG_ONBOARDING_MESSAGE =
-  "We're currently onboarding users manually. Contact us to create an organisation for your account.";
 
 function toSlug(name: string) {
   return name
@@ -125,17 +121,8 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
       <DialogPopup className="max-w-md">
         <DialogHeader>
           <DialogTitle>Create organisation</DialogTitle>
-          <DialogDescription>
-            Organisation creation is currently managed by the TailorKit team.
-          </DialogDescription>
+          <DialogDescription>Set up a workspace for your team and projects.</DialogDescription>
         </DialogHeader>
-
-        <DialogPanel>
-          <Alert variant="info">
-            <AlertTitle>Manual onboarding</AlertTitle>
-            <AlertDescription>{MANUAL_ORG_ONBOARDING_MESSAGE}</AlertDescription>
-          </Alert>
-        </DialogPanel>
 
         <form
           className="contents"
@@ -146,7 +133,7 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
             form.handleSubmit();
           }}
         >
-          <DialogPanel className="hidden flex-col gap-4">
+          <DialogPanel className="flex flex-col gap-4">
             <form.AppField name="name">
               {(field) => (
                 <field.TextField
@@ -194,7 +181,12 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
             <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
               Close
             </DialogClose>
-            <Button disabled size="sm" type="button">
+            <Button
+              disabled={createMutation.isPending || slugAvailability.available === false}
+              form="create-org-dialog-form"
+              size="sm"
+              type="submit"
+            >
               Create organisation
             </Button>
           </DialogFooter>

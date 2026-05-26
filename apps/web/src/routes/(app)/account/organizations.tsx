@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Building2Icon, MailIcon, PlusIcon } from "lucide-react";
 
 import { AccountLayout } from "#components/account-layout";
+import { CreateOrgDialog } from "#components/create-org-dialog";
 import { PageLayout } from "#components/page-layout";
 import { orpc } from "#lib/orpc";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
@@ -70,10 +71,12 @@ function OrganizationsPage() {
                 </Badge>
               )}
             </Button>
-            <Button render={<Link to="/account/request-organization" />} size="sm">
-              <PlusIcon />
-              New organisation
-            </Button>
+            <CreateOrgDialog>
+              <Button size="sm" type="button">
+                <PlusIcon />
+                New organisation
+              </Button>
+            </CreateOrgDialog>
           </>
         }
         description="View your organisations and create a new workspace."
@@ -93,10 +96,12 @@ function OrganizationsPage() {
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
-                  <Button render={<Link to="/account/request-organization" />} size="sm">
-                    <PlusIcon />
-                    Create organisation
-                  </Button>
+                  <CreateOrgDialog>
+                    <Button size="sm" type="button">
+                      <PlusIcon />
+                      Create organisation
+                    </Button>
+                  </CreateOrgDialog>
                 </EmptyContent>
               </Empty>
             </Card>

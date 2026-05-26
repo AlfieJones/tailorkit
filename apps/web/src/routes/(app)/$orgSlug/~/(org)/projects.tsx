@@ -254,7 +254,7 @@ function ProjectsPage() {
       title="Projects"
     >
       {projects.length === 0 ? (
-        <Empty className="mx-auto max-w-md rounded-lg border">
+        <Empty className="mx-auto w-full rounded-lg border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <FolderPlusIcon />

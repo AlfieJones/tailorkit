@@ -7,6 +7,9 @@ import type { Context } from "../context";
 
 const testState = vi.hoisted(() => ({
   db: undefined as unknown,
+  env: {
+    VERCEL_ENV: undefined as "production" | "preview" | "development" | undefined,
+  },
 }));
 
 vi.mock("@tailorkit/db", () => ({
@@ -28,7 +31,12 @@ vi.mock("@tailorkit/auth", () => ({
   },
 }));
 
+vi.mock("@tailorkit/env/server", () => ({
+  env: testState.env,
+}));
+
 const { userRouter } = await import("./user");
+const { auth } = await import("@tailorkit/auth");
 
 const userId = "11111111-1111-4111-8111-111111111111";
 const otherUserId = "22222222-2222-4222-8222-222222222222";
@@ -73,6 +81,8 @@ describe("userRouter", () => {
     client = testDb.client;
     db = testDb.db;
     testState.db = db;
+    testState.env.VERCEL_ENV = undefined;
+    vi.mocked(auth.api.createOrganization).mockReset();
 
     await db.insert(user).values([
       {
@@ -166,7 +176,9 @@ describe("userRouter", () => {
     );
   });
 
-  it("does not allow users to create organizations", async () => {
+  it("does not allow users to create organizations in production", async () => {
+    testState.env.VERCEL_ENV = "production";
+
     await expect(
       call(
         userRouter.createOrg,
@@ -178,6 +190,35 @@ describe("userRouter", () => {
         ORPCError<"FORBIDDEN", unknown>
       >),
     );
+  });
+
+  it("allows users to create organizations outside production", async () => {
+    testState.env.VERCEL_ENV = "development";
+    vi.mocked(auth.api.createOrganization).mockResolvedValue({
+      createdAt: new Date("2026-01-04T00:00:00.000Z"),
+      id: "77777777-7777-4777-8777-777777777777",
+      members: [],
+      metadata: null,
+      name: "New Org",
+      slug: "new-org",
+    });
+
+    await expect(
+      call(
+        userRouter.createOrg,
+        { name: "New Org", slug: "new-org" },
+        { context: createContext() },
+      ),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        id: "77777777-7777-4777-8777-777777777777",
+        slug: "new-org",
+      }),
+    );
+
+    expect(auth.api.createOrganization).toHaveBeenCalledWith({
+      body: { name: "New Org", slug: "new-org", userId },
+    });
   });
 
   it("returns pending unexpired invitations for the current user's email", async () => {

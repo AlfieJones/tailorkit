@@ -164,6 +164,10 @@ function renderCard(state: ApprovalPageState): string {
         <button class="button secondary" name="intent" value="deny" type="submit">Deny</button>
       </div>
     </form>
+    <div class="loading-overlay" id="loadingOverlay" aria-live="polite" hidden>
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <p id="loadingMessage">Loading...</p>
+    </div>
   </section>`;
 }
 
@@ -252,6 +256,7 @@ body {
 }
 
 .card {
+  position: relative;
   width: min(100%, 430px);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -419,6 +424,43 @@ legend {
   text-decoration: underline;
 }
 
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 12px;
+  place-items: center;
+  align-content: center;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  color: var(--foreground);
+}
+
+.loading-overlay[hidden] {
+  display: none;
+}
+
+.loading-overlay p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--foreground);
+  border-radius: 999px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 420px) {
   .card {
     padding: 22px;
@@ -443,6 +485,9 @@ legend {
 const script = `
 const inputs = Array.from(document.querySelectorAll(".otp-input"));
 const hiddenInput = document.getElementById("userCode");
+const form = document.querySelector("form");
+const loadingOverlay = document.getElementById("loadingOverlay");
+const loadingMessage = document.getElementById("loadingMessage");
 
 function normalize(value) {
   return value.replace(/[^a-zA-Z0-9]/g, "").slice(0, inputs.length).toUpperCase();
@@ -513,6 +558,34 @@ for (const [index, input] of inputs.entries()) {
     fill(event.clipboardData?.getData("text") ?? "", index);
   });
 }
+
+form?.addEventListener("submit", (event) => {
+  const submitter = event.submitter;
+  const intent = submitter instanceof HTMLButtonElement ? submitter.value : "";
+  const message = intent === "deny" ? "Denying login..." : "Approving login...";
+  let intentInput = form.querySelector('input[name="intent"][type="hidden"]');
+
+  if (!(intentInput instanceof HTMLInputElement)) {
+    intentInput = document.createElement("input");
+    intentInput.type = "hidden";
+    intentInput.name = "intent";
+    form.append(intentInput);
+  }
+
+  intentInput.value = intent;
+  if (loadingMessage) {
+    loadingMessage.textContent = message;
+  }
+  if (loadingOverlay) {
+    loadingOverlay.hidden = false;
+  }
+  for (const input of inputs) {
+    input.disabled = true;
+  }
+  for (const button of form.querySelectorAll("button")) {
+    button.disabled = true;
+  }
+});
 
 syncHidden();
 inputs.find((input) => !input.value)?.focus();
