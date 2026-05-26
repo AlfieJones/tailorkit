@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/server";
 import {
   cliAuthApprove,
   cliAuthDeny,
@@ -7,51 +8,73 @@ import {
 import { z } from "zod";
 import { getTailorKitScopeId, o, requireCliDeployToken, requireHostAuth } from "../procedures";
 
+const runPlatformCliAuthRequest = async <T>(request: Promise<T>): Promise<T> => {
+  try {
+    return await request;
+  } catch (error) {
+    if (typeof error === "string" && error.toLowerCase() === "unauthorized") {
+      throw new ORPCError("UNAUTHORIZED", {
+        message: "TailorKit platform rejected the host project key. Check TAILORKIT_PROJECT_KEY.",
+      });
+    }
+
+    throw error;
+  }
+};
+
 export const cliAuthRouter = {
   approve: o
     .use(requireHostAuth)
     .input(z.object({ userCode: z.string().min(1) }))
     .handler(
       async ({ context, input }) =>
-        await cliAuthApprove({
-          body: {
-            scopeId: getTailorKitScopeId(context),
-            userCode: input.userCode,
-          },
-          client: context.platform,
-          headers: context.platformHeaders,
-        }),
+        await runPlatformCliAuthRequest(
+          cliAuthApprove({
+            body: {
+              scopeId: getTailorKitScopeId(context),
+              userCode: input.userCode,
+            },
+            client: context.platform,
+            headers: context.platformHeaders,
+          }),
+        ),
     ),
   deny: o
     .use(requireHostAuth)
     .input(z.object({ userCode: z.string().min(1) }))
     .handler(
       async ({ context, input }) =>
-        await cliAuthDeny({
+        await runPlatformCliAuthRequest(
+          cliAuthDeny({
+            body: {
+              userCode: input.userCode,
+            },
+            client: context.platform,
+            headers: context.platformHeaders,
+          }),
+        ),
+    ),
+  poll: o.input(z.object({ deviceCode: z.string().min(1) })).handler(
+    async ({ context, input }) =>
+      await runPlatformCliAuthRequest(
+        cliAuthPoll({
           body: {
-            userCode: input.userCode,
+            deviceCode: input.deviceCode,
           },
           client: context.platform,
           headers: context.platformHeaders,
         }),
-    ),
-  poll: o.input(z.object({ deviceCode: z.string().min(1) })).handler(
-    async ({ context, input }) =>
-      await cliAuthPoll({
-        body: {
-          deviceCode: input.deviceCode,
-        },
-        client: context.platform,
-        headers: context.platformHeaders,
-      }),
+      ),
   ),
   start: o.input(z.object({})).handler(
     async ({ context }) =>
-      await cliAuthStart({
-        body: {},
-        client: context.platform,
-        headers: context.platformHeaders,
-      }),
+      await runPlatformCliAuthRequest(
+        cliAuthStart({
+          body: {},
+          client: context.platform,
+          headers: context.platformHeaders,
+        }),
+      ),
   ),
   verifyToken: o
     .input(z.object({}))

@@ -15,6 +15,8 @@ const projectInput = z.object({
 });
 
 const projectApiKeyConfigId = "project-host";
+const projectApiKeyRateLimitMax = 1000;
+const projectApiKeyRateLimitWindowMs = 1000;
 const createApiKeyPrefixSuffix = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 4);
 
 const projectApiKeyMetadataSchema = z.object({
@@ -111,15 +113,13 @@ async function listAllProjectApiKeys({
 }
 
 function createProjectApiKey({
-  headers,
   organizationId,
   projectId,
-  projectName,
+  userId,
 }: {
-  headers: Headers;
   organizationId: string;
   projectId: string;
-  projectName: string;
+  userId: string;
 }) {
   return auth.api.createApiKey({
     body: {
@@ -128,11 +128,14 @@ function createProjectApiKey({
         projectId,
         status: "active",
       } satisfies ProjectApiKeyMetadata,
-      name: `${projectName} host key`,
+      name: "Project host key",
       organizationId,
       prefix: `tk_proj_${createApiKeyPrefixSuffix()}`,
+      rateLimitEnabled: true,
+      rateLimitMax: projectApiKeyRateLimitMax,
+      rateLimitTimeWindow: projectApiKeyRateLimitWindowMs,
+      userId,
     },
-    headers,
   });
 }
 
@@ -192,10 +195,9 @@ export const projectRouter = {
 
       try {
         const apiKey = await createProjectApiKey({
-          headers: context.headers,
           organizationId: context.org.id,
           projectId: createdProject.id,
-          projectName: createdProject.name,
+          userId: context.user.id,
         });
 
         return { ...createdProject, apiKey };
@@ -309,10 +311,9 @@ export const projectRouter = {
       });
 
       const apiKey = await createProjectApiKey({
-        headers: context.headers,
         organizationId: context.org.id,
         projectId: context.project.id,
-        projectName: context.project.name,
+        userId: context.user.id,
       });
 
       const rotatedAt = new Date().toISOString();

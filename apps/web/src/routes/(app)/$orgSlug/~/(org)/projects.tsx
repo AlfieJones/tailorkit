@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useStore } from "@tanstack/react-form";
 import { FolderIcon, FolderPlusIcon } from "lucide-react";
 import { Button } from "@tailorkit/ui/components/button";
 import {
@@ -25,9 +26,9 @@ import {
 } from "@tailorkit/ui/components/dialog";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { useAppForm } from "@tailorkit/ui/form";
-import { validateProjectSlug } from "@tailorkit/db/validate-project-slug";
 import { z } from "zod";
 import { PageLayout } from "#components/page-layout";
+import { OrgSlugAvailabilityIndicator } from "#components/org-slug-availability-indicator";
 import { client, orpc } from "#lib/orpc";
 import { setProjectApiKey } from "#utils/project-api-key-memory";
 
@@ -49,25 +50,56 @@ function toSlug(name: string) {
 
 const projectSchema = z.object({
   name: z.string().min(1, "Name is required."),
-  slug: z.string().superRefine((value, ctx) => {
-    const result = validateProjectSlug(value);
-    if (!result.valid) {
-      ctx.addIssue({
-        code: "custom",
-        message: result.reason ?? "Enter a valid slug.",
-      });
-    }
-  }),
+  slug: z
+    .string()
+    .min(3, "Slug must be at least 3 characters long.")
+    .max(64, "Slug must be at most 64 characters long."),
 });
+
+type ProjectSlugAvailability =
+  | { status: "idle"; message: string | null }
+  | { status: "checking"; message: string | null }
+  | { status: "available"; message: null }
+  | { status: "unavailable"; message: string }
+  | { status: "error"; message: string };
+
+function getProjectSlugAvailability(
+  slug: string,
+  existingProjectSlugs: ReadonlySet<string>,
+): ProjectSlugAvailability {
+  if (!slug) {
+    return { status: "idle", message: null };
+  }
+
+  if (slug.length < 3) {
+    return { status: "unavailable", message: "Slug must be at least 3 characters long." };
+  }
+
+  if (slug.length > 64) {
+    return { status: "unavailable", message: "Slug must be at most 64 characters long." };
+  }
+
+  if (existingProjectSlugs.has(slug)) {
+    return { status: "unavailable", message: "This project slug is already taken." };
+  }
+
+  return { status: "available", message: null };
+}
 
 interface CreateProjectDialogProps {
   children: ReactNode;
+  existingProjectSlugs: ReadonlySet<string>;
   orgSlug: string;
 }
 
-function CreateProjectDialog({ children, orgSlug }: CreateProjectDialogProps) {
+function CreateProjectDialog({
+  children,
+  existingProjectSlugs,
+  orgSlug,
+}: CreateProjectDialogProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [slugSubmitError, setSlugSubmitError] = useState<string | null>(null);
   const slugTouched = useRef(false);
 
   const createMutation = useMutation({
@@ -96,6 +128,17 @@ function CreateProjectDialog({ children, orgSlug }: CreateProjectDialogProps) {
   const form = useAppForm({
     defaultValues: { name: "", slug: "" },
     onSubmit: async ({ value }) => {
+      const submitAvailability = getProjectSlugAvailability(value.slug, existingProjectSlugs);
+      if (submitAvailability.status !== "available") {
+        setSlugSubmitError(submitAvailability.message ?? "This project slug is not available.");
+        toastManager.add({
+          title: "Error",
+          description: submitAvailability.message ?? "This project slug is not available.",
+          type: "error",
+        });
+        return;
+      }
+
       try {
         await createMutation.mutateAsync(value);
       } catch {
@@ -105,8 +148,12 @@ function CreateProjectDialog({ children, orgSlug }: CreateProjectDialogProps) {
     validators: { onSubmit: projectSchema },
   });
 
+  const slug = useStore(form.store, (state) => state.values.slug);
+  const slugAvailability = getProjectSlugAvailability(slug, existingProjectSlugs);
+
   function resetForm() {
     slugTouched.current = false;
+    setSlugSubmitError(null);
     form.reset();
   }
 
@@ -138,6 +185,7 @@ function CreateProjectDialog({ children, orgSlug }: CreateProjectDialogProps) {
                   type="text"
                   onChange={(event) => {
                     if (!slugTouched.current) {
+                      setSlugSubmitError(null);
                       form.setFieldValue("slug", toSlug(event.target.value));
                     }
                   }}
@@ -150,11 +198,18 @@ function CreateProjectDialog({ children, orgSlug }: CreateProjectDialogProps) {
                 <field.TextField
                   autoComplete="off"
                   description={`tailorkit.com/${orgSlug}/${field.state.value || "project-slug"}`}
+                  endAdornment={
+                    <OrgSlugAvailabilityIndicator
+                      availability={slugAvailability}
+                      submitError={slugSubmitError}
+                    />
+                  }
                   label="Slug"
                   placeholder="amazing-project"
                   type="text"
                   onChange={(event) => {
                     slugTouched.current = true;
+                    setSlugSubmitError(null);
                     field.handleChange(toSlug(event.target.value));
                   }}
                 />
@@ -183,11 +238,12 @@ function ProjectsPage() {
   const { data: projects } = useSuspenseQuery(
     orpc.project.list.queryOptions({ input: { orgSlug } }),
   );
+  const existingProjectSlugs = new Set(projects.map((project) => project.slug));
 
   return (
     <PageLayout
       actions={
-        <CreateProjectDialog orgSlug={orgSlug}>
+        <CreateProjectDialog existingProjectSlugs={existingProjectSlugs} orgSlug={orgSlug}>
           <Button size="sm">
             <FolderPlusIcon />
             New project
@@ -209,7 +265,7 @@ function ProjectsPage() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <CreateProjectDialog orgSlug={orgSlug}>
+            <CreateProjectDialog existingProjectSlugs={existingProjectSlugs} orgSlug={orgSlug}>
               <Button size="sm">
                 <FolderPlusIcon />
                 Create project

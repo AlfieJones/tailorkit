@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { intro, log, outro } from "@clack/prompts";
+import { intro, log, outro, spinner } from "@clack/prompts";
 import { cac } from "cac";
 import pc from "picocolors";
 
@@ -8,6 +8,7 @@ import { generateTypes } from "./generator/types";
 import { runInit } from "./init";
 import { runExperimentalPreview, toPreviewOptions } from "./preview";
 import { runExperimentalSchema } from "./schema";
+import { openUrlInBrowser } from "./utils/open-browser";
 
 const cli = cac("tailorkit");
 
@@ -16,9 +17,12 @@ cli.option("--cwd <path>", "Working directory", { default: "." });
 cli
   .command("login", "Authenticate the TailorKit CLI with a host app")
   .option("--config <path>", "Path to tailorkit config")
+  .option("--open", "Open the approval URL in the default browser", { default: true })
   .option("--timeout <seconds>", "Seconds to wait for approval", { default: 1800 })
   .action(async (options: Record<string, unknown>) => {
     intro(pc.bold("TailorKit"));
+    const approvalSpinner = spinner();
+    let isWaitingForApproval = false;
     try {
       const timeoutSeconds = Number.parseInt(String(options.timeout ?? "1800"), 10);
       if (!Number.isInteger(timeoutSeconds) || timeoutSeconds <= 0) {
@@ -32,15 +36,28 @@ cli
           timeout: timeoutSeconds * 1000,
         },
         ({ expiresAt, hostUrl, userCode }) => {
-          log.info(`Host: ${pc.cyan(hostUrl)}`);
+          const approvalUrl = createCliAuthApprovalUrl(hostUrl, userCode);
+          if (options.open !== false) {
+            void openUrlInBrowser(approvalUrl);
+          }
+
           log.info(`Enter this code in the host app: ${pc.bold(userCode)}`);
-          log.info(`Approval URL: ${pc.cyan(createCliAuthApprovalUrl(hostUrl, userCode))}`);
+          log.info(`Approval URL: ${pc.cyan(approvalUrl)}`);
           log.info(`Code expires at ${expiresAt.toLocaleString()}.`);
+          log.info("Waiting for approval...");
+          approvalSpinner.start("Checking approval status");
+          isWaitingForApproval = true;
         },
       );
 
-      outro(`Logged in to ${pc.cyan(result.hostUrl)} as scope ${pc.cyan(result.scopeId)}.`);
+      if (isWaitingForApproval) {
+        approvalSpinner.stop("Approved.");
+      }
+      outro("Authenticated successfully.");
     } catch (error) {
+      if (isWaitingForApproval) {
+        approvalSpinner.stop("Approval failed.");
+      }
       log.error(error instanceof Error ? error.message : String(error));
       process.exit(1);
     }

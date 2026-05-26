@@ -1,5 +1,6 @@
 import type { ORPCError } from "@orpc/server";
 import { call } from "@orpc/server";
+import { auth } from "@tailorkit/auth";
 import { organization, member, user } from "@tailorkit/db/schema/auth";
 import { project } from "@tailorkit/db/schema/project";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -164,5 +165,55 @@ describe("projectRouter", () => {
         ORPCError<"BAD_REQUEST", unknown>
       >),
     );
+  });
+
+  it("creates reusable host project API keys from the server auth instance", async () => {
+    await call(
+      projectRouter.create,
+      { name: "Analyzer", orgSlug: "analytical-engines", slug: "analyzer" },
+      { context: createContext() },
+    );
+
+    expect(auth.api.createApiKey).toHaveBeenCalledWith({
+      body: expect.objectContaining({
+        configId: "project-host",
+        userId,
+      }),
+    });
+  });
+
+  it("uses a high backstop rate limit on host project API keys", async () => {
+    await call(
+      projectRouter.create,
+      { name: "Analyzer", orgSlug: "analytical-engines", slug: "analyzer" },
+      { context: createContext() },
+    );
+
+    expect(auth.api.createApiKey).toHaveBeenCalledWith({
+      body: expect.objectContaining({
+        configId: "project-host",
+        rateLimitEnabled: true,
+        rateLimitMax: 1000,
+        rateLimitTimeWindow: 1000,
+      }),
+    });
+  });
+
+  it("uses a stable generated API key name independent of project names", async () => {
+    await call(
+      projectRouter.create,
+      {
+        name: "A very long project name that should still be allowed",
+        orgSlug: "analytical-engines",
+        slug: "long-project-name",
+      },
+      { context: createContext() },
+    );
+
+    expect(auth.api.createApiKey).toHaveBeenCalledWith({
+      body: expect.objectContaining({
+        name: "Project host key",
+      }),
+    });
   });
 });

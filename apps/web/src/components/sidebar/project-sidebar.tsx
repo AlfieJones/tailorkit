@@ -50,17 +50,6 @@ export function ProjectSidebar({ orgSlug, projectSlug }: ProjectSidebarProps) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={pathname === `${base}/settings`}
-                render={
-                  <Link params={{ orgSlug, projectSlug }} to="/$orgSlug/$projectSlug/settings" />
-                }
-              >
-                <SettingsIcon />
-                <span>Settings</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
                 isActive={isActive(`${base}/settings/api-keys`)}
                 render={
                   <Link
@@ -71,6 +60,17 @@ export function ProjectSidebar({ orgSlug, projectSlug }: ProjectSidebarProps) {
               >
                 <KeyRoundIcon />
                 <span>API keys</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname === `${base}/settings`}
+                render={
+                  <Link params={{ orgSlug, projectSlug }} to="/$orgSlug/$projectSlug/settings" />
+                }
+              >
+                <SettingsIcon />
+                <span>Settings</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

@@ -14,7 +14,7 @@ export function SidebarBackButton({ label, ...props }: SidebarBackButtonProps) {
       variant="ghost"
     >
       <ChevronLeftIcon className="size-4" />
-      <span className="grow">{label}</span>
+      <span className="grow truncate">{label}</span>
       <span className="size-4" aria-hidden="true" />
     </Button>
   );

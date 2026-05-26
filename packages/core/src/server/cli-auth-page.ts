@@ -119,6 +119,7 @@ function renderHtml(state: ApprovalPageState): string {
 <body>
   <main class="page">
     ${renderCard(state)}
+    <p class="footer-link">Powered by <a href="https://tailorkit.dev/home">TailorKit</a></p>
   </main>
   ${state.status === "idle" ? `<script>${script}</script>` : ""}
 </body>
@@ -128,16 +129,14 @@ function renderHtml(state: ApprovalPageState): string {
 function renderCard(state: ApprovalPageState): string {
   if (state.status === "approved") {
     return `<section class="card" aria-labelledby="title">
-      <div class="status-icon success" aria-hidden="true">✓</div>
-      <h1 id="title">CLI login approved</h1>
+      <h1 id="title" class="status-title"><span class="status-icon success" aria-hidden="true">✓</span>CLI login approved</h1>
       <p class="description">You can close this tab and return to your terminal.</p>
     </section>`;
   }
 
   if (state.status === "denied") {
     return `<section class="card" aria-labelledby="title">
-      <div class="status-icon denied" aria-hidden="true">×</div>
-      <h1 id="title">CLI login denied</h1>
+      <h1 id="title" class="status-title"><span class="status-icon denied" aria-hidden="true">×</span>CLI login denied</h1>
       <p class="description">You can close this tab and return to your terminal.</p>
     </section>`;
   }
@@ -145,9 +144,8 @@ function renderCard(state: ApprovalPageState): string {
   const code = normalizeCode(state.code);
 
   return `<section class="card" aria-labelledby="title">
-    <p class="eyebrow">TailorKit CLI</p>
     <h1 id="title">Approve CLI login</h1>
-    <p class="description">Enter the code shown in your terminal to authorize this CLI for your account.</p>
+    <p class="description">Enter the code from your terminal.</p>
     ${state.error ? `<p class="error" role="alert">${escapeHtml(state.error)}</p>` : ""}
     <form method="post" novalidate>
       <fieldset>
@@ -155,10 +153,10 @@ function renderCard(state: ApprovalPageState): string {
         <div class="otp" role="group" aria-label="Confirmation code">
           ${renderOtpInputs(code)}
         </div>
-        <input id="userCode" name="userCode" type="hidden" value="${escapeHtml(code)}">
+        <input id="userCode" name="userCode" type="hidden" value="${escapeHtml(formatCode(code))}">
         <noscript>
           <label class="fallback-label" for="fallback-code">Code</label>
-          <input id="fallback-code" class="fallback-input" name="userCode" value="${escapeHtml(code)}" autocomplete="one-time-code">
+          <input id="fallback-code" class="fallback-input" name="userCode" value="${escapeHtml(formatCode(code))}" autocomplete="one-time-code">
         </noscript>
       </fieldset>
       <div class="actions">
@@ -173,8 +171,10 @@ function renderOtpInputs(code: string): string {
   return Array.from({ length: 9 }, (_, index) => {
     const autocomplete = index === 0 ? "one-time-code" : "off";
     const character = code[index] ?? "";
+    const separator =
+      index === 2 || index === 5 ? `<span class="otp-separator" aria-hidden="true">-</span>` : "";
 
-    return `<input class="otp-input" type="text" inputmode="text" autocomplete="${autocomplete}" maxlength="1" aria-label="Code character ${index + 1}" value="${escapeHtml(character)}">`;
+    return `<input class="otp-input" type="text" inputmode="text" autocomplete="${autocomplete}" maxlength="1" aria-label="Code character ${index + 1}" value="${escapeHtml(character)}">${separator}`;
   }).join("");
 }
 
@@ -183,6 +183,10 @@ function normalizeCode(code: string): string {
     .replaceAll(/[^a-zA-Z0-9]/gu, "")
     .slice(0, 9)
     .toUpperCase();
+}
+
+function formatCode(code: string): string {
+  return normalizeCode(code).replaceAll(/(.{3})(?=.)/gu, "$1-");
 }
 
 function escapeHtml(value: string): string {
@@ -197,31 +201,33 @@ function escapeHtml(value: string): string {
 const styles = `
 :root {
   color-scheme: light;
-  --background: #f8fafc;
-  --card: #ffffff;
-  --border: #d7dde8;
-  --foreground: #111827;
-  --muted: #5f6b7a;
-  --primary: #111827;
-  --primary-foreground: #ffffff;
-  --ring: #2563eb;
-  --error: #b42318;
-  --success: #067647;
+  --background: hsl(0, 0%, 96%);
+  --card: hsl(0, 0%, 94.7%);
+  --border: hsla(0, 0%, 80%, 50%);
+  --foreground: hsl(0, 0%, 3.9%);
+  --muted: hsl(0, 0%, 96.1%);
+  --muted-foreground: hsl(0, 0%, 45.1%);
+  --primary: hsl(0, 0%, 3.9%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(0, 0%, 3.9%);
+  --destructive: oklch(63.7% 0.237 25.331);
+  --success: oklch(72.3% 0.219 149.579);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --background: #0b1020;
-    --card: #111827;
-    --border: #2d3748;
-    --foreground: #f8fafc;
-    --muted: #a0aabe;
-    --primary: #f8fafc;
-    --primary-foreground: #111827;
-    --ring: #60a5fa;
-    --error: #f97066;
-    --success: #32d583;
+    --background: #111111;
+    --card: #141414;
+    --border: hsla(0, 0%, 40%, 20%);
+    --foreground: hsl(0, 0%, 92%);
+    --muted: hsl(0, 0%, 12.9%);
+    --muted-foreground: hsla(0, 0%, 70%, 0.8);
+    --primary: hsl(0, 0%, 100%);
+    --primary-foreground: hsl(0, 0%, 9%);
+    --ring: hsl(0, 0%, 100%);
+    --destructive: oklch(63.7% 0.237 25.331);
+    --success: oklch(72.3% 0.219 149.579);
   }
 }
 
@@ -233,30 +239,24 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Geist Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .page {
   display: grid;
+  align-content: center;
+  gap: 16px;
   min-height: 100vh;
-  place-items: center;
+  justify-items: center;
   padding: 24px;
 }
 
 .card {
   width: min(100%, 430px);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--card);
   padding: 28px;
-  box-shadow: 0 18px 48px rgb(15 23 42 / 0.10);
-}
-
-.eyebrow {
-  margin: 0 0 8px;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
 }
 
 h1 {
@@ -268,17 +268,17 @@ h1 {
 
 .description {
   margin: 10px 0 0;
-  color: var(--muted);
+  color: var(--muted-foreground);
   font-size: 14px;
   line-height: 1.55;
 }
 
 .error {
   margin: 18px 0 0;
-  border: 1px solid color-mix(in srgb, var(--error) 35%, transparent);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--error) 8%, transparent);
-  color: var(--error);
+  background: transparent;
+  color: var(--destructive);
   font-size: 14px;
   padding: 10px 12px;
 }
@@ -302,8 +302,16 @@ legend {
 
 .otp {
   display: grid;
-  grid-template-columns: repeat(9, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto repeat(3, minmax(0, 1fr)) auto repeat(3, minmax(0, 1fr));
   gap: 6px;
+}
+
+.otp-separator {
+  display: grid;
+  place-items: center;
+  color: var(--muted-foreground);
+  font-size: 18px;
+  line-height: 1;
 }
 
 .otp-input,
@@ -312,7 +320,7 @@ legend {
   min-width: 0;
   height: 42px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: var(--foreground);
   font: inherit;
@@ -355,7 +363,7 @@ legend {
   height: 42px;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--border);
   cursor: pointer;
   font: inherit;
@@ -374,25 +382,41 @@ legend {
   color: var(--foreground);
 }
 
+.status-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .status-icon {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  margin-bottom: 16px;
-  place-items: center;
-  border-radius: 999px;
-  font-size: 28px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 24px;
   font-weight: 700;
+  line-height: 1;
 }
 
 .status-icon.success {
-  background: color-mix(in srgb, var(--success) 12%, transparent);
   color: var(--success);
 }
 
 .status-icon.denied {
-  background: color-mix(in srgb, var(--error) 12%, transparent);
-  color: var(--error);
+  color: var(--destructive);
+}
+
+.footer-link {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.footer-link a {
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.footer-link a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 420px) {
@@ -424,8 +448,12 @@ function normalize(value) {
   return value.replace(/[^a-zA-Z0-9]/g, "").slice(0, inputs.length).toUpperCase();
 }
 
+function format(value) {
+  return normalize(value).replace(/(.{3})(?=.)/g, "$1-");
+}
+
 function syncHidden() {
-  hiddenInput.value = inputs.map((input) => input.value).join("");
+  hiddenInput.value = format(inputs.map((input) => input.value).join(""));
 }
 
 function fill(value, startIndex = 0) {
@@ -440,22 +468,43 @@ function fill(value, startIndex = 0) {
   inputs[nextIndex]?.focus();
 }
 
+function focusInput(index) {
+  const input = inputs[index];
+  input?.focus();
+  input?.select();
+}
+
 for (const [index, input] of inputs.entries()) {
   input.addEventListener("input", () => {
-    fill(input.value, index);
+    const characters = normalize(input.value);
+    if (characters.length > 1) {
+      input.value = "";
+      fill(characters, index);
+      return;
+    }
+
+    input.value = characters;
+    syncHidden();
+
+    if (characters && index < inputs.length - 1) {
+      focusInput(index + 1);
+    }
   });
 
   input.addEventListener("keydown", (event) => {
     if (event.key === "Backspace" && !input.value && index > 0) {
-      inputs[index - 1].focus();
+      event.preventDefault();
+      inputs[index - 1].value = "";
+      syncHidden();
+      focusInput(index - 1);
     }
     if (event.key === "ArrowLeft" && index > 0) {
       event.preventDefault();
-      inputs[index - 1].focus();
+      focusInput(index - 1);
     }
     if (event.key === "ArrowRight" && index < inputs.length - 1) {
       event.preventDefault();
-      inputs[index + 1].focus();
+      focusInput(index + 1);
     }
   });
 

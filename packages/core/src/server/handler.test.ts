@@ -219,7 +219,7 @@ describe("createTailorKitServer", () => {
     const html = await response.text();
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(html).toContain("Approve CLI login");
-    expect(html).toContain('value="ABC123XYZ"');
+    expect(html).toContain('value="ABC-123-XYZ"');
     expect(html).toContain("prefers-color-scheme: dark");
   });
 
@@ -289,6 +289,33 @@ describe("createTailorKitServer", () => {
     );
 
     expect(requests[0]?.headers.get("authorization")).toBe("Bearer project-key");
+  });
+
+  it("surfaces rejected project keys during CLI auth start", async () => {
+    const server = createTailorKitServer({
+      $internal: {
+        platformBaseUrl: "http://localhost:3000/api/platform",
+        platformFetch: () => Promise.resolve(new Response("Unauthorized", { status: 401 })),
+      },
+      components: {},
+      projectKey: "invalid-project-key",
+    });
+    const client = createTailorKitClient({
+      fetch: (request, init) => {
+        const hostRequest = request instanceof Request ? request : new Request(request, init);
+
+        return Promise.resolve(
+          server.handler(hostRequest, {
+            authenticate: () => ({ scopeId: "org:org_1" }),
+          }),
+        );
+      },
+      url: "https://example.com/api/tailorkit",
+    });
+
+    await expect(client.cliAuth.start({})).rejects.toThrow(
+      "TailorKit platform rejected the host project key. Check TAILORKIT_PROJECT_KEY.",
+    );
   });
 
   it("calls the platform client with authorization headers", async () => {
