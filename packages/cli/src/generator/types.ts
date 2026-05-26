@@ -220,18 +220,16 @@ const renderResponsiveType = (
     return undefined;
   }
 
-  const scalarOption =
-    firstOption.type === "object"
-      ? secondOption
-      : secondOption.type === "object"
-        ? firstOption
-        : undefined;
-  const responsiveOption =
-    firstOption.type === "object"
-      ? firstOption
-      : secondOption.type === "object"
-        ? secondOption
-        : undefined;
+  let scalarOption: JsonSchema | undefined;
+  let responsiveOption: JsonSchema | undefined;
+
+  if (firstOption.type === "object") {
+    scalarOption = secondOption;
+    responsiveOption = firstOption;
+  } else if (secondOption.type === "object") {
+    scalarOption = firstOption;
+    responsiveOption = secondOption;
+  }
 
   if (scalarOption === undefined || responsiveOption === undefined) {
     return undefined;
@@ -279,18 +277,13 @@ const collectFieldTypeAliases = (
 
       if (seenType !== type) {
         conflictedAliases.add(alias);
-        delete aliases[key];
       }
     }
   }
 
-  for (const [key, alias] of Object.entries(aliases)) {
-    if (conflictedAliases.has(alias)) {
-      delete aliases[key];
-    }
-  }
-
-  return aliases;
+  return Object.fromEntries(
+    Object.entries(aliases).filter(([, alias]) => !conflictedAliases.has(alias)),
+  );
 };
 
 const renderTypeAliases = (
