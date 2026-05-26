@@ -137,7 +137,7 @@ export interface BoxProps {
   };
 }
 
-export const Box = createRemoteComponent<BoxProps, readonly ["default"]>("Box", {
+export const Box = /* @__PURE__ */ createRemoteComponent<BoxProps, readonly ["default"]>("Box", {
   slots: ["default"] as const,
 });
 
@@ -280,7 +280,7 @@ export interface FlexProps {
   };
 }
 
-export const Flex = createRemoteComponent<FlexProps, readonly ["default"]>("Flex", {
+export const Flex = /* @__PURE__ */ createRemoteComponent<FlexProps, readonly ["default"]>("Flex", {
   slots: ["default"] as const,
 });
 
@@ -407,7 +407,7 @@ export interface GridProps {
   };
 }
 
-export const Grid = createRemoteComponent<GridProps, readonly ["default"]>("Grid", {
+export const Grid = /* @__PURE__ */ createRemoteComponent<GridProps, readonly ["default"]>("Grid", {
   slots: ["default"] as const,
 });
 
@@ -486,7 +486,7 @@ export interface InlineProps {
   };
 }
 
-export const Inline = createRemoteComponent<InlineProps, readonly ["default"]>("Inline", {
+export const Inline = /* @__PURE__ */ createRemoteComponent<InlineProps, readonly ["default"]>("Inline", {
   slots: ["default"] as const,
 });
 
@@ -495,7 +495,7 @@ export interface ButtonProps {
   onClick?: () => void;
 }
 
-export const Button = createRemoteComponent<ButtonProps, readonly ["default"]>("Button", {
+export const Button = /* @__PURE__ */ createRemoteComponent<ButtonProps, readonly ["default"]>("Button", {
   slots: ["default"] as const,
   callbacks: { "onClick": 0 },
 });
@@ -504,7 +504,7 @@ export interface LinkProps {
   href?: string;
 }
 
-export const Link = createRemoteComponent<LinkProps, readonly ["default"]>("Link", {
+export const Link = /* @__PURE__ */ createRemoteComponent<LinkProps, readonly ["default"]>("Link", {
   slots: ["default"] as const,
 });
 
@@ -518,7 +518,7 @@ export interface InputProps {
   onFocus?: () => void;
 }
 
-export const Input = createRemoteComponent<InputProps, readonly ["default"]>("Input", {
+export const Input = /* @__PURE__ */ createRemoteComponent<InputProps, readonly ["default"]>("Input", {
   slots: ["default"] as const,
   callbacks: { "onChange": 0, "onBlur": 0, "onFocus": 0 },
 });
@@ -529,7 +529,7 @@ export interface TabsProps {
   onValueChange?: (value1: string) => void;
 }
 
-export const Tabs = createRemoteComponent<TabsProps, readonly ["default"]>("Tabs", {
+export const Tabs = /* @__PURE__ */ createRemoteComponent<TabsProps, readonly ["default"]>("Tabs", {
   slots: ["default"] as const,
   callbacks: { "onValueChange": 1 },
 });
@@ -538,7 +538,7 @@ export interface TabsListProps {
   variant?: "default" | "underline";
 }
 
-export const TabsList = createRemoteComponent<TabsListProps, readonly ["default"]>("TabsList", {
+export const TabsList = /* @__PURE__ */ createRemoteComponent<TabsListProps, readonly ["default"]>("TabsList", {
   slots: ["default"] as const,
 });
 
@@ -546,7 +546,7 @@ export interface TabsTabProps {
   value?: string;
 }
 
-export const TabsTab = createRemoteComponent<TabsTabProps, readonly ["default"]>("TabsTab", {
+export const TabsTab = /* @__PURE__ */ createRemoteComponent<TabsTabProps, readonly ["default"]>("TabsTab", {
   slots: ["default"] as const,
 });
 
@@ -554,6 +554,6 @@ export interface TabsPanelProps {
   value?: string;
 }
 
-export const TabsPanel = createRemoteComponent<TabsPanelProps, readonly ["default"]>("TabsPanel", {
+export const TabsPanel = /* @__PURE__ */ createRemoteComponent<TabsPanelProps, readonly ["default"]>("TabsPanel", {
   slots: ["default"] as const,
 });

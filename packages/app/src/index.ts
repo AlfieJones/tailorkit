@@ -2,7 +2,6 @@ import { createContext, h, render } from "preact";
 import type { ComponentChild, ComponentChildren, ComponentType, VNode } from "preact";
 import { useContext } from "preact/hooks";
 import { version as preactVersion } from "preact/package.json";
-import { assertSupportedPreactVersion } from "./preact-version.js";
 
 // oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
 export interface TailorKitScreens {}
@@ -78,8 +77,6 @@ export type TailorKitClientWithMeta<TScreens extends ScreenDefinitions = ScreenD
     $runtime: TailorKitClientRuntime;
   };
 
-assertSupportedPreactVersion(preactVersion);
-
 export const createScreen = <const TPath extends AppScreenPath>(
   path: TPath,
   options: { component: View<Record<string, never>> },
@@ -145,12 +142,19 @@ export const createRemoteComponent = <TProps extends object, TSlots extends read
   options: { callbacks?: Record<string, number>; slots: TSlots },
 ): View<TProps & { children?: ComponentChildren }> => {
   const tagName = toComponentTagName(name);
+  const callbacks = options.callbacks;
+
+  if (!callbacks || Object.keys(callbacks).length === 0) {
+    return function RemoteComponent({ children, ...props }) {
+      return h(tagName, props, children);
+    };
+  }
 
   return function RemoteComponent({ children, ...props }) {
     const nextProps = { ...props } as Record<string, unknown>;
     const callbackMap: Record<string, { callback: string; inputCount: number }> = {};
 
-    for (const [key, inputCount] of Object.entries(options.callbacks ?? {})) {
+    for (const [key, inputCount] of Object.entries(callbacks)) {
       const callback = nextProps[key];
       Reflect.deleteProperty(nextProps, key);
       if (typeof callback !== "function") {

@@ -45,7 +45,7 @@ export const requireCliDeployToken = o.middleware(async ({ context, next }) => {
 });
 
 export const requireHostAuth = o.middleware(async ({ context, next }) => {
-  const tailorkit = await context.authenticate(context.request);
+  const tailorkit = await context.authenticate({ request: context.request });
 
   if (!tailorkit) {
     throw new ORPCError("UNAUTHORIZED", { message: "Unauthorized." });

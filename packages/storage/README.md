@@ -10,6 +10,8 @@ Start the local S3-compatible SeaweedFS service:
 pnpm services:start
 ```
 
+Browse local files in the SeaweedFS Filer UI at http://localhost:4010.
+
 Use these environment variables:
 
 ```env

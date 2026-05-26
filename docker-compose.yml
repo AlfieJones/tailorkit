@@ -37,6 +37,7 @@ services:
     ports:
       - "8333:8333" # S3-compatible API
       - "9333:9333" # Master API
+      - "4010:8888" # Filer UI
     volumes:
       - seaweedfs_data:/data
     command: >

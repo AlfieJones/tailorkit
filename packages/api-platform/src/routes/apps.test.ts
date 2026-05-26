@@ -1,8 +1,9 @@
 import type { ORPCError } from "@orpc/server";
 import { call } from "@orpc/server";
-import { app as appTable } from "@tailorkit/db/schema/apps";
+import { app as appTable, appDeployment } from "@tailorkit/db/schema/apps";
 import { organization, user } from "@tailorkit/db/schema/auth";
 import { project as projectTable } from "@tailorkit/db/schema/project";
+import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Context } from "../context";
 import { createTestDb } from "../test/pglite";
@@ -143,6 +144,47 @@ describe("platform appRouter", () => {
 
     expect(result.body.items).toHaveLength(1);
     expect(result.body.items[0]).toEqual(expect.objectContaining({ id: created.body.id }));
+  });
+
+  it("returns the current published deployment", async () => {
+    const context = createContext();
+    const [createdApp] = await db
+      .insert(appTable)
+      .values({
+        name: "Notes",
+        projectId,
+        scopeId: "production",
+      })
+      .returning();
+
+    if (!createdApp) {
+      throw new Error("Expected test app to be created.");
+    }
+
+    const [deployment] = await db
+      .insert(appDeployment)
+      .values({
+        appId: createdApp.id,
+        status: "published",
+      })
+      .returning();
+
+    if (!deployment) {
+      throw new Error("Expected test deployment to be created.");
+    }
+
+    await db
+      .update(appTable)
+      .set({ currentDeploymentId: deployment.id })
+      .where(eq(appTable.id, createdApp.id));
+
+    const result = await call(
+      appRouter.list,
+      { query: { page: 1, pageSize: 10, scopeId: "production" } },
+      { context },
+    );
+
+    expect(result.body.items[0]?.currentDeployment?.id).toBe(deployment.id);
   });
 
   it("does not resolve apps outside the current project or scope", async () => {

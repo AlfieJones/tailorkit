@@ -188,6 +188,11 @@ const toIdentifier = (name: string): string => {
 
 const toPropsName = (componentName: string): string => `${toIdentifier(componentName)}Props`;
 
+const toTypeName = (name: string): string => {
+  const identifier = toIdentifier(name);
+  return `${identifier.charAt(0).toUpperCase()}${identifier.slice(1)}`;
+};
+
 const getComponentFields = (component: SerializedComponent): Record<string, JsonSchema> => {
   if (component.fields?.properties !== undefined) {
     return component.fields.properties;
@@ -200,6 +205,117 @@ const getComponentFields = (component: SerializedComponent): Record<string, Json
   }
 
   return fields;
+};
+
+const renderResponsiveType = (
+  schema: JsonSchema | undefined,
+  depth: number,
+): string | undefined => {
+  if (schema?.anyOf === undefined || schema.anyOf.length !== 2) {
+    return undefined;
+  }
+
+  const [firstOption, secondOption] = schema.anyOf.filter((option) => !isNeverSchema(option));
+  if (firstOption === undefined || secondOption === undefined) {
+    return undefined;
+  }
+
+  const scalarOption =
+    firstOption.type === "object"
+      ? secondOption
+      : secondOption.type === "object"
+        ? firstOption
+        : undefined;
+  const responsiveOption =
+    firstOption.type === "object"
+      ? firstOption
+      : secondOption.type === "object"
+        ? secondOption
+        : undefined;
+
+  if (scalarOption === undefined || responsiveOption === undefined) {
+    return undefined;
+  }
+
+  const scalarType = toTypeScriptType(scalarOption, depth);
+  if (scalarType === "never") {
+    return "never";
+  }
+
+  const properties = Object.values(responsiveOption.properties ?? {});
+  if (properties.length === 0) {
+    return undefined;
+  }
+
+  const responsiveTypes = properties.map((property) => toTypeScriptType(property, depth));
+  if (responsiveTypes.some((type) => type !== scalarType && type !== "never")) {
+    return undefined;
+  }
+
+  return `Responsive<${scalarType}>`;
+};
+
+const renderFieldType = (schema: JsonSchema | undefined, depth: number): string =>
+  renderResponsiveType(schema, depth) ?? toTypeScriptType(schema, depth);
+
+const collectFieldTypeAliases = (
+  components: Record<string, SerializedComponent>,
+): Record<string, string> => {
+  const aliases: Record<string, string> = {};
+  const seenByAlias = new Map<string, string>();
+  const conflictedAliases = new Set<string>();
+
+  for (const component of Object.values(components)) {
+    for (const [key, schema] of Object.entries(getComponentFields(component))) {
+      const alias = toTypeName(key);
+      const type = renderFieldType(schema, 0);
+      const seenType = seenByAlias.get(alias);
+
+      if (seenType === undefined) {
+        seenByAlias.set(alias, type);
+        aliases[key] = alias;
+        continue;
+      }
+
+      if (seenType !== type) {
+        conflictedAliases.add(alias);
+        delete aliases[key];
+      }
+    }
+  }
+
+  for (const [key, alias] of Object.entries(aliases)) {
+    if (conflictedAliases.has(alias)) {
+      delete aliases[key];
+    }
+  }
+
+  return aliases;
+};
+
+const renderTypeAliases = (
+  components: Record<string, SerializedComponent>,
+  aliases: Record<string, string>,
+): string => {
+  const lines = [
+    'export type Breakpoint = "base" | "sm" | "md" | "lg" | "xl" | "2xl";',
+    "export type Responsive<TValue> = TValue | Partial<Record<Breakpoint, TValue>>;",
+  ];
+  const emitted = new Set<string>();
+
+  for (const component of Object.values(components)) {
+    for (const [key, schema] of Object.entries(getComponentFields(component))) {
+      const alias = aliases[key];
+      if (alias === undefined || emitted.has(alias)) {
+        continue;
+      }
+
+      emitted.add(alias);
+      lines.push(`export type ${alias} = ${renderFieldType(schema, 0)};`);
+    }
+  }
+
+  return lines.join("\n");
 };
 
 const renderScreenProps = (screens: Record<string, SerializedScreen>): string => {
@@ -226,7 +342,11 @@ const renderScreenProps = (screens: Record<string, SerializedScreen>): string =>
   return lines.join("\n");
 };
 
-const renderComponent = (name: string, component: SerializedComponent): string => {
+const renderComponent = (
+  name: string,
+  component: SerializedComponent,
+  fieldAliases: Record<string, string>,
+): string => {
   const propsName = toPropsName(name);
   const fields = getComponentFields(component);
   const callbacks = component.callbacks ?? {};
@@ -234,7 +354,7 @@ const renderComponent = (name: string, component: SerializedComponent): string =
   const lines = [`export interface ${propsName} {`];
 
   for (const [key, schema] of Object.entries(fields)) {
-    lines.push(`  ${toPropertyKey(key)}?: ${toTypeScriptType(schema, 2)};`);
+    lines.push(`  ${toPropertyKey(key)}?: ${fieldAliases[key] ?? renderFieldType(schema, 2)};`);
   }
 
   for (const [key, callback] of Object.entries(callbacks)) {
@@ -256,7 +376,7 @@ const renderComponent = (name: string, component: SerializedComponent): string =
     callbackEntries.length > 0 ? `,\n  callbacks: { ${callbackEntries.join(", ")} }` : "";
 
   lines.push(
-    `export const ${toIdentifier(name)} = createRemoteComponent<${propsName}, ${slotsType}>(${quote(name)}, {`,
+    `export const ${toIdentifier(name)} = /* @__PURE__ */ createRemoteComponent<${propsName}, ${slotsType}>(${quote(name)}, {`,
   );
   lines.push(`  slots: ${slotsValue}${callbackOptions},`);
   lines.push("});");
@@ -323,6 +443,8 @@ const renderActionRuntime = (actions: SerializedActions, pathParts: string[] = [
 
 export const renderGeneratedTypes = (schema: TailorKitSchemaFile): string => {
   const actionsType = renderActions(schema.actions ?? {});
+  const components = schema.components ?? {};
+  const fieldAliases = collectFieldTypeAliases(components);
   const chunks = [
     generatedHeader,
     renderScreenProps(schema.screens ?? {}),
@@ -334,10 +456,11 @@ export type ScreenPath = keyof ScreenPropsByPath & string;
 export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
 export type TailorKitActions = ${actionsType};
 export const actions = ${renderActionRuntime(schema.actions ?? {})} as TailorKitActions;`,
+    renderTypeAliases(components, fieldAliases),
   ];
 
-  for (const [name, component] of Object.entries(schema.components ?? {})) {
-    chunks.push(renderComponent(name, component));
+  for (const [name, component] of Object.entries(components)) {
+    chunks.push(renderComponent(name, component, fieldAliases));
   }
 
   return `${chunks.join("\n\n")}\n`;

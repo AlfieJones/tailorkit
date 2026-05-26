@@ -20,7 +20,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
-      "import.meta.env.VITE_VERCEL_ENV": JSON.stringify(process.env.VERCEL_ENV),
+      "import.meta.env.VITE_ORG_CREATION_MANAGED": JSON.stringify(
+        process.env.VERCEL_ENV === "production",
+      ),
     },
     plugins: [
       devtools(),

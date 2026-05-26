@@ -67,8 +67,10 @@ describe("renderGeneratedTypes", () => {
       screens: {},
     });
 
-    expect(output).toContain("disabled?: boolean;");
-    expect(output).toContain("label?: string;");
+    expect(output).toContain("export type Disabled = boolean;");
+    expect(output).toContain("export type Label = string;");
+    expect(output).toContain("disabled?: Disabled;");
+    expect(output).toContain("label?: Label;");
     expect(output).toContain("onClick?: () => void;");
     expect(output).toContain("onValueChange?: (value1: string) => void;");
     expect(output).toContain('createRemoteComponent<ButtonProps, readonly ["default"]>');
@@ -87,7 +89,8 @@ describe("renderGeneratedTypes", () => {
       screens: {},
     });
 
-    expect(output).toContain("variant?: unknown;");
+    expect(output).toContain("export type Variant = unknown;");
+    expect(output).toContain("variant?: Variant;");
   });
 
   it("generates primitive component props from serialized fields", () => {
@@ -111,7 +114,8 @@ describe("renderGeneratedTypes", () => {
     });
 
     expect(output).toContain("export interface BoxProps");
-    expect(output).toContain('padding?: "sm" | "md" | "lg";');
+    expect(output).toContain('export type Padding = "sm" | "md" | "lg";');
+    expect(output).toContain("padding?: Padding;");
     expect(output).toContain('createRemoteComponent<BoxProps, readonly ["default"]>');
   });
 
@@ -153,9 +157,14 @@ describe("renderGeneratedTypes", () => {
       screens: {},
     });
 
-    expect(output).toContain('margin?: "lg" | "xl" | {');
-    expect(output).toContain('base?: "lg" | "xl";');
-    expect(output).toContain('md?: "lg" | "xl";');
+    expect(output).toContain(
+      'export type Breakpoint = "base" | "sm" | "md" | "lg" | "xl" | "2xl";',
+    );
+    expect(output).toContain(
+      "export type Responsive<TValue> = TValue | Partial<Record<Breakpoint, TValue>>;",
+    );
+    expect(output).toContain('export type Margin = Responsive<"lg" | "xl">;');
+    expect(output).toContain("margin?: Margin;");
   });
 
   it("generates never for primitive props with no configured tokens", () => {
@@ -193,7 +202,8 @@ describe("renderGeneratedTypes", () => {
       screens: {},
     });
 
-    expect(output).toContain("background?: never;");
+    expect(output).toContain("export type Background = never;");
+    expect(output).toContain("background?: Background;");
   });
 
   it("generates typed action callers without request context", () => {

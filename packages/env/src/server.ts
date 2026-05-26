@@ -103,7 +103,6 @@ export const env = createEnv({
     BLOB_ENDPOINT: z.url().optional(),
     BLOB_REGION: z.string().min(1).optional(),
     BLOB_FORCE_PATH_STYLE: z.stringbool().optional(),
-    BLOB_PUBLIC_BASE_URL: z.url().optional(),
 
     BLOB_ACCESS_KEY_ID: z.string().min(1).optional(),
     BLOB_SECRET_ACCESS_KEY: z.string().min(1).optional(),

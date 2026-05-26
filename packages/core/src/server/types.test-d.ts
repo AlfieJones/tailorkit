@@ -16,9 +16,12 @@ expectTypeOf<TailorKitHostContext<never>>().toMatchTypeOf<{
 }>();
 
 expectTypeOf<TailorKitHandlerOptions<UserContext>>().toMatchTypeOf<{
-  authenticate: (
-    request: Request,
-  ) => TailorKitHostContext<UserContext> | null | Promise<TailorKitHostContext<UserContext> | null>;
+  authenticate: (ctx: {
+    request: Request;
+  }) =>
+    | TailorKitHostContext<UserContext>
+    | null
+    | Promise<TailorKitHostContext<UserContext> | null>;
 }>();
 
 const contextlessHandlerContext: TailorKitHostContext<never> = {

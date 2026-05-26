@@ -2,7 +2,6 @@ import type { ComponentType, VNode } from "preact";
 import { createContext, h, render } from "preact";
 import { useContext } from "preact/hooks";
 import { version as preactVersion } from "preact/package.json";
-import { assertSupportedPreactVersion } from "../preact-version.js";
 
 // oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
 export interface TailorKitScreens {}
@@ -77,8 +76,6 @@ export type TailorKitClientWithMeta<TScreens extends ScreenDefinitions = ScreenD
     $meta: TailorKitClientMeta;
     $runtime: TailorKitClientRuntime;
   };
-
-assertSupportedPreactVersion(preactVersion);
 
 export const createScreen = <const TPath extends AppScreenPath>(
   path: TPath,

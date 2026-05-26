@@ -59,7 +59,7 @@
     "web#dev": {
       "cache": false,
       "persistent": true,
-      "with": ["//#services:watch"]
+      "with": ["//#services:watch", "@tailorkit/db#db:studio"]
     },
     "generate": {
       "cache": false

@@ -29,6 +29,14 @@ export type AppsListResponses = {
       currentDeploymentId: string | null;
       createdAt: string;
       updatedAt: string;
+      currentDeployment: {
+        id: string;
+        appId: string;
+        status: "uploading" | "deploying" | "verifying" | "published";
+        clientEntryFileId: string | null;
+        createdAt: string;
+        updatedAt: string;
+      } | null;
     }>;
     pagination: {
       hasMore: boolean;
@@ -64,6 +72,14 @@ export type AppsCreateResponses = {
     currentDeploymentId: string | null;
     createdAt: string;
     updatedAt: string;
+    currentDeployment: {
+      id: string;
+      appId: string;
+      status: "uploading" | "deploying" | "verifying" | "published";
+      clientEntryFileId: string | null;
+      createdAt: string;
+      updatedAt: string;
+    } | null;
   };
 };
 
@@ -115,6 +131,14 @@ export type AppsGetResponses = {
     currentDeploymentId: string | null;
     createdAt: string;
     updatedAt: string;
+    currentDeployment: {
+      id: string;
+      appId: string;
+      status: "uploading" | "deploying" | "verifying" | "published";
+      clientEntryFileId: string | null;
+      createdAt: string;
+      updatedAt: string;
+    } | null;
   };
 };
 
@@ -147,6 +171,14 @@ export type AppsUpdateResponses = {
     currentDeploymentId: string | null;
     createdAt: string;
     updatedAt: string;
+    currentDeployment: {
+      id: string;
+      appId: string;
+      status: "uploading" | "deploying" | "verifying" | "published";
+      clientEntryFileId: string | null;
+      createdAt: string;
+      updatedAt: string;
+    } | null;
   };
 };
 
@@ -178,6 +210,14 @@ export type AppsDeployResponses = {
     currentDeploymentId: string | null;
     createdAt: string;
     updatedAt: string;
+    currentDeployment: {
+      id: string;
+      appId: string;
+      status: "uploading" | "deploying" | "verifying" | "published";
+      clientEntryFileId: string | null;
+      createdAt: string;
+      updatedAt: string;
+    } | null;
   };
 };
 

@@ -13,6 +13,8 @@ export {
 } from "./upload-manifest";
 
 const preactExternal = /^preact(?:\/.*)?$/u;
+const preactPackageJson = "preact/package.json";
+const preactPackageJsonModuleId = "\0tailorkit-preact-package-json";
 
 export interface BuildAppOptions {
   configPath?: string;
@@ -44,7 +46,8 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
       watch: options.watch ? {} : null,
       minify: "oxc",
       rollupOptions: {
-        external: (id) => preactExternal.test(id),
+        external: (id) =>
+          id !== preactPackageJson && id !== preactPackageJsonModuleId && preactExternal.test(id),
         output: {
           comments: {
             annotation: false,
@@ -58,6 +61,28 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
     },
     configFile: false,
     mode: options.mode,
+    plugins: [
+      {
+        name: "tailorkit-preact-package-json",
+        enforce: "pre",
+        resolveId(id) {
+          if (id === preactPackageJson) {
+            return preactPackageJsonModuleId;
+          }
+
+          return null;
+        },
+        load(id) {
+          if (id === preactPackageJsonModuleId) {
+            const version = JSON.stringify(preactVersion);
+
+            return `export const version = ${version}; export default { version: ${version} };`;
+          }
+
+          return null;
+        },
+      },
+    ],
     root: loaded.root,
   });
 

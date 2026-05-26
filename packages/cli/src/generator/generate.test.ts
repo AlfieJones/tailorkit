@@ -22,6 +22,8 @@ const defaultOptions = {
     oxfmt: "1.0.0",
     oxlint: "1.0.0",
     preact: "10.0.0",
+    tailorkit: "1.2.3",
+    tailorkitApp: "4.5.6",
     typescript: "5.0.0",
   },
   useWorkspaceDependencies: false,
@@ -111,16 +113,16 @@ describe("generateApp", () => {
 
     const content = await readFile(path.join(targetDirectory, "package.json"), "utf-8");
     expect(content).toContain('"@tailorkit/app": "workspace:*"');
-    expect(content).toContain('"@tailorkit/cli": "workspace:*"');
+    expect(content).toContain('"tailorkit": "workspace:*"');
   });
 
-  it("uses latest dependency version when useWorkspaceDependencies is false", async () => {
+  it("uses resolved dependency versions when useWorkspaceDependencies is false", async () => {
     const targetDirectory = await createTempDir();
     await generateApp({ ...defaultOptions, targetDirectory, useWorkspaceDependencies: false });
 
     const content = await readFile(path.join(targetDirectory, "package.json"), "utf-8");
-    expect(content).toContain('"@tailorkit/app": "latest"');
-    expect(content).toContain('"@tailorkit/cli": "latest"');
+    expect(content).toContain('"@tailorkit/app": "4.5.6"');
+    expect(content).toContain('"tailorkit": "1.2.3"');
   });
 
   it("includes lint and format scripts when both are enabled", async () => {

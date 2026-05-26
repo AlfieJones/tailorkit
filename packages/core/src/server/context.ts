@@ -14,9 +14,9 @@ export interface Context {
   request: Request;
   schema: TailorKitSchema;
   tailorkit?: TailorKitRuntimeContext;
-  authenticate: (
-    request: Request,
-  ) => TailorKitRuntimeContext | null | Promise<TailorKitRuntimeContext | null>;
+  authenticate: (ctx: {
+    request: Request;
+  }) => TailorKitRuntimeContext | null | Promise<TailorKitRuntimeContext | null>;
 }
 
 export interface CreateContextOptions {
@@ -25,9 +25,9 @@ export interface CreateContextOptions {
   platformHeaders?: TailorKitPlatformOptions["headers"];
   request: Request;
   schema: TailorKitSchema;
-  authenticate: (
-    request: Request,
-  ) => TailorKitRuntimeContext | null | Promise<TailorKitRuntimeContext | null>;
+  authenticate: (ctx: {
+    request: Request;
+  }) => TailorKitRuntimeContext | null | Promise<TailorKitRuntimeContext | null>;
 }
 
 export async function createContext(options: CreateContextOptions): Promise<Context> {

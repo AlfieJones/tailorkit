@@ -16,11 +16,11 @@
     "fix": "{{ fixScript }}"{% endif %}
   },
   "dependencies": {
-    "@tailorkit/app": "{{ tailorkitVersion }}",
+    "@tailorkit/app": "{{ tailorkitAppVersion }}",
     "preact": "{{ preactVersion }}"
   },
   "devDependencies": {
-    "@tailorkit/cli": "{{ tailorkitVersion }}"{% if linting %},
+    "tailorkit": "{{ tailorkitVersion }}"{% if linting %},
     "oxlint": "{{ oxlintVersion }}"{% endif %}{% if formatting %},
     "oxfmt": "{{ oxfmtVersion }}"{% endif %},
     "typescript": "{{ typescriptVersion }}"

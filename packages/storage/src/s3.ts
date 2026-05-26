@@ -26,7 +26,6 @@ export interface S3CompatibleStorageOptions {
   accessKeyId?: string;
   secretAccessKey?: string;
   forcePathStyle?: boolean;
-  publicBaseUrl?: string;
 }
 
 function createS3Client(options: S3CompatibleStorageOptions): S3Client {

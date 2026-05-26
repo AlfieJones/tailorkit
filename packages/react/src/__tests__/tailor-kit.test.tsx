@@ -1,7 +1,7 @@
-import { act, render, screen as testingScreen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen as testingScreen, waitFor } from "@testing-library/react";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTailorKitServer } from "@tailorkit/core/server";
 import type { WorkerUiHost } from "@tailorkit/sandbox/host";
 import type { HostToWorkerPayload, RemoteNode } from "@tailorkit/sandbox/protocol";
@@ -89,10 +89,10 @@ function ScreenMatchHost({
           screen="/user"
           context={{ userId: "user_1" }}
         >
-          <tailor.Screen app={{ id: "todo" }} />
+          <tailor.Screen app={{ clientPath: "/apps/todo.js", id: "todo" }} />
         </tailor.ScreenMatch>
       )}
-      {!nested && <tailor.Screen app={{ id: "todo" }} />}
+      {!nested && <tailor.Screen app={{ clientPath: "/apps/todo.js", id: "todo" }} />}
     </tailor.ScreenMatch>
   );
 }
@@ -101,7 +101,16 @@ describe("tailorKitClient React adapter", () => {
   beforeEach(() => {
     hostRecords.length = 0;
     vi.restoreAllMocks();
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json(schema.serialize()));
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({
+        assetsBaseUrl: "http://assets.test/",
+        schema: schema.serialize(),
+      }),
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("fetches and caches apps", async () => {
@@ -159,6 +168,7 @@ describe("tailorKitClient React adapter", () => {
   });
 
   it("renders the current match for multiple direct app props", async () => {
+    hostRecords.length = 0;
     const tailor = createTailorKitClient<typeof server>({
       baseUrl: "http://runtime.test",
       components,
@@ -166,8 +176,14 @@ describe("tailorKitClient React adapter", () => {
 
     render(
       <tailor.ScreenMatch pattern="/" screen="/home" context={{ page: "home" }}>
-        <tailor.Screen app={{ clientUrl: "http://cdn.test/a.js", id: "a" }} />
         <tailor.Screen app={{ clientPath: "/apps/b.js", id: "b" }} />
+        <tailor.Screen
+          app={{
+            currentDeployment: { id: "deployment_1" },
+            id: "a",
+            projectId: "project_1",
+          }}
+        />
       </tailor.ScreenMatch>,
     );
 
@@ -175,8 +191,8 @@ describe("tailorKitClient React adapter", () => {
       expect(hostRecords).toHaveLength(2);
     });
     expect(hostRecords.map((record) => record.appUrl)).toEqual([
-      "http://cdn.test/a.js",
       "http://runtime.test/apps/b.js",
+      "http://assets.test/projects/project_1/apps/a/deployments/deployment_1/files/client.js",
     ]);
     expect(hostRecords.map((record) => record.props?.screen)).toEqual(["/home", "/home"]);
   });

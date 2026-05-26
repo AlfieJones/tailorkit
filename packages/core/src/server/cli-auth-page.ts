@@ -8,9 +8,9 @@ interface TailorKitRuntimeContext {
 }
 
 export interface CliAuthApprovalPageOptions {
-  authenticate: (
-    request: Request,
-  ) => TailorKitRuntimeContext | null | Promise<TailorKitRuntimeContext | null>;
+  authenticate: (ctx: {
+    request: Request;
+  }) => TailorKitRuntimeContext | null | Promise<TailorKitRuntimeContext | null>;
   platform: PlatformClient;
   platformHeaders: HeaderInput;
   request: Request;
@@ -51,7 +51,7 @@ export async function handleCliAuthApprovalPage({
     });
   }
 
-  const tailorkit = await authenticate(request);
+  const tailorkit = await authenticate({ request });
   if (!tailorkit) {
     return renderCliAuthApprovalPage({
       code: userCode,

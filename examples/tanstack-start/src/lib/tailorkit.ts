@@ -16,6 +16,7 @@ const Button = {
 const action = createActions().context<{ user: DemoUser }>();
 
 export const tailorKit = createTailorKit({
+  assetsBaseUrl: process.env.TAILORKIT_ASSETS_BASE_URL ?? "http://localhost:8333/tailorkit",
   projectKey: process.env.TAILORKIT_PROJECT_KEY,
   $internal: {
     platformBaseUrl:

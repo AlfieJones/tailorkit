@@ -1,10 +1,12 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@tailorkit/db";
-import { App, app } from "@tailorkit/db/schema/apps";
+import { App, app, AppDeployment } from "@tailorkit/db/schema/apps";
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
+
+const AppWithCurrentDeployment = App.extend({ currentDeployment: AppDeployment.nullable() });
 
 const listApps = protectedRouter
   .route({
@@ -12,7 +14,7 @@ const listApps = protectedRouter
     method: "GET",
   })
   .input(z.object({ query: paginationQuery.extend({ scopeId: z.string() }) }))
-  .output(paginatedOutput(App))
+  .output(paginatedOutput(AppWithCurrentDeployment))
   .handler(async ({ context, input }) => {
     const { page, pageSize, scopeId } = input.query;
     const apps = await db.query.app.findMany({
@@ -22,6 +24,13 @@ const listApps = protectedRouter
       },
       orderBy: {
         createdAt: "desc",
+      },
+      with: {
+        currentDeployment: {
+          where: {
+            status: "published",
+          },
+        },
       },
       limit: pageSize + 1,
       offset: (page - 1) * pageSize,
@@ -52,7 +61,7 @@ const getApp = protectedRouter
       }),
     }),
   )
-  .output(z.object({ body: App }))
+  .output(z.object({ body: AppWithCurrentDeployment }))
   .use(requireApp, ({ params: { appId }, query: { scopeId } }) => ({ appId, scopeId }))
   .handler(({ context }) => ({ body: context.app }));
 
@@ -66,7 +75,7 @@ const createApp = protectedRouter
       body: App.pick({ name: true, description: true, scopeId: true }),
     }),
   )
-  .output(z.object({ body: App }))
+  .output(z.object({ body: AppWithCurrentDeployment }))
   .handler(async ({ context, input }) => {
     const [createdApp] = await db
       .insert(app)
@@ -82,7 +91,12 @@ const createApp = protectedRouter
       throw new ORPCError("BAD_REQUEST", { message: "Failed to create app." });
     }
 
-    return { body: createdApp };
+    return {
+      body: {
+        ...createdApp,
+        currentDeployment: null,
+      },
+    };
   });
 
 const deleteApp = protectedRouter
@@ -116,7 +130,7 @@ const updateApp = protectedRouter
       query: z.object({ scopeId: z.string() }),
     }),
   )
-  .output(z.object({ body: App }))
+  .output(z.object({ body: AppWithCurrentDeployment }))
   .use(requireApp, ({ params: { appId }, query: { scopeId } }) => ({ appId, scopeId }))
   .handler(async ({ context, input }) => {
     const [updatedApp] = await db
@@ -133,7 +147,12 @@ const updateApp = protectedRouter
       throw new ORPCError("BAD_REQUEST", { message: "Failed to update app." });
     }
 
-    return { body: updatedApp };
+    return {
+      body: {
+        ...updatedApp,
+        currentDeployment: null,
+      },
+    };
   });
 
 const deploy = protectedRouter
@@ -148,7 +167,7 @@ const deploy = protectedRouter
       query: z.object({ scopeId: z.string() }),
     }),
   )
-  .output(z.object({ body: App }))
+  .output(z.object({ body: AppWithCurrentDeployment }))
   .use(requireApp, ({ params: { appId }, query: { scopeId } }) => ({ appId, scopeId }))
   .handler(async ({ context, input }) => {
     const deployment = await db.query.appDeployment.findFirst({
@@ -172,7 +191,12 @@ const deploy = protectedRouter
       throw new ORPCError("BAD_REQUEST", { message: "Failed to deploy app." });
     }
 
-    return { body: updatedApp };
+    return {
+      body: {
+        ...updatedApp,
+        currentDeployment: deployment,
+      },
+    };
   });
 
 export const appRouter = o.prefix("/apps").router({

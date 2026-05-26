@@ -140,19 +140,23 @@ const todoApp = tailor.getApp("todo");
 
 ## App URL Resolution
 
-`tailor.Screen` resolves an app client URL from the app registry item.
+`tailor.Screen` resolves deployed app clients from the TailorKit metadata
+`assetsBaseUrl` and the app registry item's current deployment.
 
 ```ts
-app.clientUrl ?? new URL(app.clientPath ?? `/${app.id}/client.js`, baseUrl);
+new URL(
+  `projects/${app.projectId}/apps/${app.id}/deployments/${app.currentDeployment.id}/files/client.js`,
+  assetsBaseUrl,
+);
 ```
 
-Pass an app directly to bypass registry lookup:
+Local apps can still provide a client path directly:
 
 ```tsx
 <tailor.Screen
   app={{
     id: "todo",
-    clientUrl: "https://example.com/tailorkit/todo/client.js",
+    clientPath: "/tailorkit/todo/client.js",
   }}
 />
 ```

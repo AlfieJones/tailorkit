@@ -27,6 +27,7 @@ export interface TailorKitServerBaseOptions {
    * @default process.env.TAILORKIT_PROJECT_KEY
    */
   projectKey?: string;
+  assetsBaseUrl?: string;
   basePath?: string;
   /**
    * Internal TailorKit implementation options.
@@ -86,9 +87,9 @@ export type TailorKitHostContext<TActionContext = never> = {
   : { actionContext: TActionContext });
 
 export interface TailorKitHandlerOptions<TActionContext = never> {
-  authenticate: (
-    request: Request,
-  ) =>
+  authenticate: (ctx: {
+    request: Request;
+  }) =>
     | TailorKitHostContext<TActionContext>
     | null
     | Promise<TailorKitHostContext<TActionContext> | null>;
@@ -117,6 +118,7 @@ export interface TailorKitServer<
    * @internal
    */
   $internal: {
+    assetsBaseUrl?: string;
     platformBaseUrl: string;
     router: TailorKitRouter;
     schema: TailorKitSchema<TComponents, TScreens, TActions>;

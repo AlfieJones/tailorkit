@@ -26,6 +26,7 @@ export const requireApp = o.middleware(
 
     const app = await db.query.app.findFirst({
       where: { id: input.appId, projectId: context.project.id, scopeId: input.scopeId },
+      with: { currentDeployment: { where: { status: "published" } } },
     });
 
     if (!app) {

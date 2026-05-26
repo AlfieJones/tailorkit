@@ -8,16 +8,11 @@ const buildConfigSchema = z.object({
   outDir: z.string().default(".tailorkit"),
 });
 
-const deployConfigSchema = z.object({
-  appId: z.string().optional(),
-  authToken: z.string().optional(),
-});
-
 const tailorkitConfigSchema = z.object({
+  appId: z.string().min(1).optional(),
   build: buildConfigSchema.optional(),
   client: clientConfigSchema.optional(),
-  deploy: deployConfigSchema.optional(),
-  host: z.string().url().optional(),
+  host: z.string().url(),
 });
 
 export type TailorKitConfig = z.input<typeof tailorkitConfigSchema>;

@@ -111,6 +111,59 @@
                             "type": "string",
                             "format": "date-time",
                             "x-native-type": "date"
+                          },
+                          "currentDeployment": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "appId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "status": {
+                                    "enum": ["uploading", "deploying", "verifying", "published"],
+                                    "type": "string"
+                                  },
+                                  "clientEntryFileId": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "format": "uuid"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "createdAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "x-native-type": "date"
+                                  },
+                                  "updatedAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "x-native-type": "date"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "appId",
+                                  "status",
+                                  "clientEntryFileId",
+                                  "createdAt",
+                                  "updatedAt"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -121,7 +174,8 @@
                           "description",
                           "currentDeploymentId",
                           "createdAt",
-                          "updatedAt"
+                          "updatedAt",
+                          "currentDeployment"
                         ]
                       }
                     },
@@ -241,6 +295,59 @@
                       "type": "string",
                       "format": "date-time",
                       "x-native-type": "date"
+                    },
+                    "currentDeployment": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "appId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "status": {
+                              "enum": ["uploading", "deploying", "verifying", "published"],
+                              "type": "string"
+                            },
+                            "clientEntryFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "x-native-type": "date"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "x-native-type": "date"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "appId",
+                            "status",
+                            "clientEntryFileId",
+                            "createdAt",
+                            "updatedAt"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -251,7 +358,8 @@
                     "description",
                     "currentDeploymentId",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "currentDeployment"
                   ]
                 }
               }
@@ -338,6 +446,59 @@
                       "type": "string",
                       "format": "date-time",
                       "x-native-type": "date"
+                    },
+                    "currentDeployment": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "appId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "status": {
+                              "enum": ["uploading", "deploying", "verifying", "published"],
+                              "type": "string"
+                            },
+                            "clientEntryFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "x-native-type": "date"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "x-native-type": "date"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "appId",
+                            "status",
+                            "clientEntryFileId",
+                            "createdAt",
+                            "updatedAt"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -348,7 +509,8 @@
                     "description",
                     "currentDeploymentId",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "currentDeployment"
                   ]
                 }
               }
@@ -503,6 +665,59 @@
                       "type": "string",
                       "format": "date-time",
                       "x-native-type": "date"
+                    },
+                    "currentDeployment": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "appId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "status": {
+                              "enum": ["uploading", "deploying", "verifying", "published"],
+                              "type": "string"
+                            },
+                            "clientEntryFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "x-native-type": "date"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "x-native-type": "date"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "appId",
+                            "status",
+                            "clientEntryFileId",
+                            "createdAt",
+                            "updatedAt"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -513,7 +728,8 @@
                     "description",
                     "currentDeploymentId",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "currentDeployment"
                   ]
                 }
               }
@@ -616,6 +832,59 @@
                       "type": "string",
                       "format": "date-time",
                       "x-native-type": "date"
+                    },
+                    "currentDeployment": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "appId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "status": {
+                              "enum": ["uploading", "deploying", "verifying", "published"],
+                              "type": "string"
+                            },
+                            "clientEntryFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "x-native-type": "date"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "x-native-type": "date"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "appId",
+                            "status",
+                            "clientEntryFileId",
+                            "createdAt",
+                            "updatedAt"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -626,7 +895,8 @@
                     "description",
                     "currentDeploymentId",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "currentDeployment"
                   ]
                 }
               }

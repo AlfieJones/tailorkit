@@ -1,5 +1,7 @@
 import type { StorageBody, UploadToUrlInput } from "./types.js";
 
+type FetchBody = NonNullable<RequestInit["body"]>;
+
 function getBodySize(body: StorageBody): number | undefined {
   if (body instanceof Blob) {
     return body.size;
@@ -16,6 +18,14 @@ function getBodySize(body: StorageBody): number | undefined {
   return undefined;
 }
 
+function toFetchBody(body: StorageBody): FetchBody {
+  if (body instanceof Buffer) {
+    return new Uint8Array(body);
+  }
+
+  return body as FetchBody;
+}
+
 export async function uploadToUrl(input: UploadToUrlInput): Promise<void> {
   const size = getBodySize(input.body);
   if (input.maxBytes !== undefined && size !== undefined && size > input.maxBytes) {
@@ -28,7 +38,7 @@ export async function uploadToUrl(input: UploadToUrlInput): Promise<void> {
   }
 
   const response = await fetch(input.uploadUrl, {
-    body: input.body,
+    body: toFetchBody(input.body),
     headers,
     method: "PUT",
   });

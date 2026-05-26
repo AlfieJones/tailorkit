@@ -1,4 +1,5 @@
 import { RPCHandler } from "@orpc/server/fetch";
+import { appsList } from "@tailorkit/client-platform/client";
 import { createClient } from "@tailorkit/client-platform/client/client/index";
 import type {
   NoComponentFieldCallbackConflicts,
@@ -50,6 +51,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
     screens: options.screens,
   });
   const platformBaseUrl = options.$internal?.platformBaseUrl ?? defaultPlatformBaseUrl;
+  const assetsBaseUrl = options.assetsBaseUrl;
   const actions = flattenActionRouter(options.actions);
   const platform = createClient({
     baseUrl: platformBaseUrl,
@@ -71,6 +73,43 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
     const url = new URL(request.url);
     if (url.pathname === `${basePath}/schema`) {
       return Response.json(schema.serialize());
+    }
+
+    if (url.pathname === `${basePath}/meta`) {
+      return Response.json({
+        assetsBaseUrl: assetsBaseUrl ?? null,
+        schema: schema.serialize(),
+      });
+    }
+
+    if (request.method === "GET" && url.pathname === `${basePath}/apps`) {
+      const context = await createContext({
+        actions,
+        platform,
+        platformHeaders,
+        request,
+        schema,
+        authenticate: handlerOptions.authenticate,
+      });
+      const tailorkit = await context.authenticate({ request });
+
+      if (!tailorkit) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      const result = await appsList({
+        client: context.platform,
+        headers: context.platformHeaders,
+        query: {
+          page: 1,
+          pageSize: 100,
+          scopeId: tailorkit.scopeId,
+        },
+      });
+      const data = "data" in result ? result.data : result;
+      const body = data && typeof data === "object" && "body" in data ? data.body : data;
+
+      return Response.json(body && typeof body === "object" && "items" in body ? body.items : []);
     }
 
     if (url.pathname === `${basePath}/cli-auth/approve`) {
@@ -111,7 +150,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
   };
 
   return {
-    $internal: { platformBaseUrl, router: tailorkitRouter, schema },
+    $internal: { assetsBaseUrl, platformBaseUrl, router: tailorkitRouter, schema },
     handler,
   };
 }

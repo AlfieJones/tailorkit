@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { intro, log, outro, spinner } from "@clack/prompts";
+import { confirm, intro, isCancel, log, outro, spinner } from "@clack/prompts";
 import { cac } from "cac";
 import pc from "picocolors";
 
 import { createCliAuthApprovalUrl, runLogin, runLogout, runWhoami } from "./auth";
+import { runDeploy } from "./deploy";
 import { generateTypes } from "./generator/types";
 import { runInit } from "./init";
 import { runExperimentalPreview, toPreviewOptions } from "./preview";
@@ -11,6 +12,23 @@ import { runExperimentalSchema } from "./schema";
 import { openUrlInBrowser } from "./utils/open-browser";
 
 const cli = cac("tailorkit");
+
+const formatBytes = (bytes: number): string => {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  const units = ["KB", "MB", "GB"];
+  let value = bytes / 1024;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${value.toFixed(value >= 10 ? 1 : 2)} ${units[unitIndex]}`;
+};
 
 cli.option("--cwd <path>", "Working directory", { default: "." });
 
@@ -100,6 +118,67 @@ cli
       log.info(`Scope: ${pc.cyan(result.scopeId)}`);
       outro("Authenticated.");
     } catch (error) {
+      log.error(error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
+
+cli
+  .command("deploy", "Build and deploy the TailorKit app")
+  .option("--config <path>", "Path to tailorkit config")
+  .option("--entry <path>", "Client entry file")
+  .option("--out-dir <path>", "Build output directory")
+  .option("--mode <mode>", "Vite mode")
+  .action(async (options: Record<string, unknown>) => {
+    intro(pc.bold("TailorKit"));
+    const deploySpinner = spinner();
+    try {
+      deploySpinner.start("Building and deploying app");
+      const result = await runDeploy({
+        configPath: options.config as string | undefined,
+        cwd: String(options.cwd ?? "."),
+        entry: options.entry as string | undefined,
+        mode: options.mode as string | undefined,
+        onMissingAppId: async ({ appName, configPath, hostUrl }) => {
+          deploySpinner.stop("App not linked.");
+          log.info(`No appId found in ${pc.cyan(configPath)}.`);
+          log.info(`Host: ${pc.cyan(hostUrl)}`);
+          const shouldCreate = await confirm({
+            initialValue: true,
+            message: `Create a TailorKit app named ${appName}?`,
+          });
+
+          if (isCancel(shouldCreate)) {
+            return false;
+          }
+
+          if (shouldCreate) {
+            deploySpinner.start("Creating app and deploying");
+          }
+
+          return shouldCreate;
+        },
+        outDir: options.outDir as string | undefined,
+      });
+      deploySpinner.stop("Deployed app.");
+      if (result.createdApp) {
+        log.info(`Created app and updated tailorkit.config.ts with ${pc.cyan(result.appId)}.`);
+      }
+      log.info(`Host: ${pc.cyan(result.hostUrl)}`);
+      log.info(`App: ${pc.cyan(result.appId)}`);
+      log.info(`Deployment: ${pc.cyan(result.deploymentId)}`);
+      log.info("Uploaded files:");
+      for (const file of result.uploadedFiles) {
+        log.info(
+          `  ${pc.cyan(file.path)} ${pc.dim(`${formatBytes(file.size)} raw, ${formatBytes(file.gzipSize)} gzip`)}`,
+        );
+      }
+      if (result.status) {
+        log.info(`Status: ${pc.cyan(result.status)}`);
+      }
+      outro("Deployment published.");
+    } catch (error) {
+      deploySpinner.stop("Deployment failed.");
       log.error(error instanceof Error ? error.message : String(error));
       process.exit(1);
     }

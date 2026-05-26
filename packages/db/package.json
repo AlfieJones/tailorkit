@@ -28,7 +28,7 @@
     "drizzle-kit": "node --preserve-symlinks-main ./node_modules/drizzle-kit/bin.cjs",
     "db:push": "pnpm drizzle-kit push",
     "db:generate": "pnpm drizzle-kit generate",
-    "db:studio": "pnpm drizzle-kit studio",
+    "db:studio": "pnpm drizzle-kit studio --port 4020",
     "db:migrate": "pnpm drizzle-kit migrate"
   },
   "dependencies": {

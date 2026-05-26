@@ -28,9 +28,9 @@
     "preact": "^10.29.2"
   },
   "devDependencies": {
-    "@tailorkit/cli": "workspace:*",
     "oxfmt": "0.51.0",
     "oxlint": "1.66.0",
+    "tailorkit": "workspace:*",
     "typescript": "^6.0.3"
   }
 }

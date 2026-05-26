@@ -37,9 +37,12 @@ type ComponentRenderers<TComponents extends Record<string, AnyComponentDefinitio
 
 export interface TailorKitApp {
   clientPath?: string;
-  clientUrl?: string;
   description?: string;
   id: string;
+  projectId?: string;
+  currentDeployment?: {
+    id: string;
+  } | null;
   name?: string;
 }
 
@@ -49,7 +52,8 @@ interface TailorKitAppsSnapshot {
   status: "error" | "idle" | "loading" | "ready";
 }
 
-interface TailorKitSchemaSnapshot {
+interface TailorKitMetaSnapshot {
+  assetsBaseUrl: string | null;
   error: Error | null;
   schema: TailorKitSchemaSpecType | null;
   status: "error" | "idle" | "loading" | "ready";
@@ -274,9 +278,22 @@ function createReactTailorKitClient<
             },
       [match],
     );
-    const appUrl = useMemo(() => resolveAppUrl(app, store.baseUrl), [app]);
+    const meta = useSyncExternalStore(
+      store.subscribe,
+      store.getMetaSnapshot,
+      store.getMetaSnapshot,
+    );
+    const assetsBaseUrl = app.clientPath ? null : meta.assetsBaseUrl;
+    const appUrl = useMemo(
+      () => resolveAppUrl(app, store.baseUrl, assetsBaseUrl),
+      [app, assetsBaseUrl],
+    );
 
-    if (match === null) {
+    useEffect(() => {
+      void store.fetchMeta();
+    }, []);
+
+    if (match === null || appUrl === null) {
       return null;
     }
 
@@ -317,14 +334,15 @@ function createTailorKitStore(baseUrlInput: string | URL) {
     error: null,
     status: "idle",
   };
-  let schemaSnapshot: TailorKitSchemaSnapshot = {
+  let metaSnapshot: TailorKitMetaSnapshot = {
+    assetsBaseUrl: null,
     error: null,
     schema: null,
     status: "idle",
   };
   let currentMatch: ScreenMatchEntry | null = null;
   let fetchAppsPromise: Promise<void> | null = null;
-  let fetchSchemaPromise: Promise<void> | null = null;
+  let fetchMetaPromise: Promise<void> | null = null;
   let nextOrder = 0;
 
   const emit = (): void => {
@@ -381,43 +399,48 @@ function createTailorKitStore(baseUrlInput: string | URL) {
 
       return fetchAppsPromise;
     },
-    fetchSchema: (): Promise<void> => {
-      if (fetchSchemaPromise) {
-        return fetchSchemaPromise;
+    fetchMeta: (): Promise<void> => {
+      if (fetchMetaPromise) {
+        return fetchMetaPromise;
       }
 
-      schemaSnapshot = { ...schemaSnapshot, status: "loading" };
+      metaSnapshot = { ...metaSnapshot, status: "loading" };
       emit();
 
-      fetchSchemaPromise = fetch(new URL("schema", baseUrl))
+      fetchMetaPromise = fetch(new URL("meta", baseUrl))
         .then(async (response) => {
           if (!response.ok) {
-            throw new Error(`Unable to fetch TailorKit schema from ${baseUrl.toString()}.`);
+            throw new Error(`Unable to fetch TailorKit metadata from ${baseUrl.toString()}.`);
           }
-          schemaSnapshot = {
+          const meta = (await response.json()) as {
+            assetsBaseUrl?: string | null;
+            schema: TailorKitSchemaSpecType;
+          };
+          metaSnapshot = {
+            assetsBaseUrl: meta.assetsBaseUrl ?? null,
             error: null,
-            schema: (await response.json()) as TailorKitSchemaSpecType,
+            schema: meta.schema,
             status: "ready",
           };
           emit();
         })
         .catch((error: unknown) => {
-          schemaSnapshot = {
-            ...schemaSnapshot,
+          metaSnapshot = {
+            ...metaSnapshot,
             error: error instanceof Error ? error : new Error(String(error)),
             status: "error",
           };
           emit();
         });
 
-      return fetchSchemaPromise;
+      return fetchMetaPromise;
     },
     getApp: (id: string): TailorKitApp | undefined =>
       appsSnapshot.apps.find((app) => app.id === id),
     getApps: (): TailorKitApp[] => appsSnapshot.apps,
     getAppsSnapshot: (): TailorKitAppsSnapshot => appsSnapshot,
     getCurrentMatch: (): ScreenMatchEntry | null => currentMatch,
-    getSchemaSnapshot: (): TailorKitSchemaSnapshot => schemaSnapshot,
+    getMetaSnapshot: (): TailorKitMetaSnapshot => metaSnapshot,
     registerMatch: (entry: Omit<ScreenMatchEntry, "order">): void => {
       const existing = matches.get(entry.id);
       matches.set(entry.id, {
@@ -444,8 +467,19 @@ function createTailorKitStore(baseUrlInput: string | URL) {
   };
 }
 
-function resolveAppUrl(app: TailorKitApp, baseUrl: URL): URL {
-  return new URL(app.clientUrl ?? app.clientPath ?? `/${app.id}/client.js`, baseUrl);
+function resolveAppUrl(app: TailorKitApp, baseUrl: URL, assetsBaseUrl: string | null): URL | null {
+  if (app.clientPath) {
+    return new URL(app.clientPath, baseUrl);
+  }
+
+  if (!assetsBaseUrl || !app.projectId || !app.currentDeployment?.id) {
+    return null;
+  }
+
+  return new URL(
+    `projects/${app.projectId}/apps/${app.id}/deployments/${app.currentDeployment.id}/files/client.js`,
+    toBaseUrl(assetsBaseUrl),
+  );
 }
 
 function toBaseUrl(value: string | URL): URL {

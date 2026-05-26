@@ -18,7 +18,6 @@ function createStorage(): StorageInstance {
     accessKeyId: env.BLOB_ACCESS_KEY_ID,
     secretAccessKey: env.BLOB_SECRET_ACCESS_KEY,
     forcePathStyle: env.BLOB_FORCE_PATH_STYLE ?? Boolean(env.BLOB_ENDPOINT),
-    publicBaseUrl: env.BLOB_PUBLIC_BASE_URL,
   });
 }
 
