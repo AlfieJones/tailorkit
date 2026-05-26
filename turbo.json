@@ -2,6 +2,8 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "globalEnv": [
+    "VERCEL",
+    "VERCEL_*",
     "AUTH_SECRET",
     "BETTER_AUTH_API_KEY",
     "DATABASE_URL",
