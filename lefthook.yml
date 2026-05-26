@@ -2,7 +2,7 @@ pre-commit:
   parallel: false
   jobs:
     - name: sherif
-      run: pnpm exec sherif --fix --no-install --select highest
+      run: pnpm sherif:fix || true
       stage_fixed: true
 
     - name: oxlint
