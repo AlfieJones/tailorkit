@@ -81,7 +81,7 @@ export function SidebarUserMenu() {
           </DropdownMenuItem>
           <DropdownMenuItem
             render={
-              <a href="https://tailorkit.dev" rel="noopener" target="_blank">
+              <a href="https://tailorkit.dev/home" rel="noopener" target="_blank">
                 <HomeIcon />
                 <span className="w-full">Homepage</span>
                 <ExternalLinkIcon />

@@ -41,7 +41,6 @@ import { Route as appOrgSlugChar126orgProjectsRouteImport } from './routes/(app)
 import { Route as appOrgSlugProjectSlugSettingsApiKeysRouteImport } from './routes/(app)/$orgSlug/$projectSlug/settings/api-keys'
 import { Route as appOrgSlugChar126orgSettingsIndexRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings/index'
 import { Route as appOrgSlugChar126orgSettingsMembersRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings/members'
-import { Route as appOrgSlugChar126orgSettingsBillingRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings/billing'
 
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
@@ -213,12 +212,6 @@ const appOrgSlugChar126orgSettingsMembersRoute =
     path: '/members',
     getParentRoute: () => appOrgSlugChar126orgSettingsRoute,
   } as any)
-const appOrgSlugChar126orgSettingsBillingRoute =
-  appOrgSlugChar126orgSettingsBillingRouteImport.update({
-    id: '/billing',
-    path: '/billing',
-    getParentRoute: () => appOrgSlugChar126orgSettingsRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -249,7 +242,6 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/~/settings': typeof appOrgSlugChar126orgSettingsRouteWithChildren
   '/$orgSlug/$projectSlug/settings/': typeof appOrgSlugProjectSlugSettingsIndexRoute
   '/$orgSlug/~/': typeof appOrgSlugChar126orgIndexRoute
-  '/$orgSlug/~/settings/billing': typeof appOrgSlugChar126orgSettingsBillingRoute
   '/$orgSlug/~/settings/members': typeof appOrgSlugChar126orgSettingsMembersRoute
   '/$orgSlug/~/settings/': typeof appOrgSlugChar126orgSettingsIndexRoute
 }
@@ -276,7 +268,6 @@ export interface FileRoutesByTo {
   '/$orgSlug/~/projects': typeof appOrgSlugChar126orgProjectsRoute
   '/$orgSlug/$projectSlug/settings': typeof appOrgSlugProjectSlugSettingsIndexRoute
   '/$orgSlug/~': typeof appOrgSlugChar126orgIndexRoute
-  '/$orgSlug/~/settings/billing': typeof appOrgSlugChar126orgSettingsBillingRoute
   '/$orgSlug/~/settings/members': typeof appOrgSlugChar126orgSettingsMembersRoute
   '/$orgSlug/~/settings': typeof appOrgSlugChar126orgSettingsIndexRoute
 }
@@ -312,7 +303,6 @@ export interface FileRoutesById {
   '/(app)/$orgSlug/~/(org)/settings': typeof appOrgSlugChar126orgSettingsRouteWithChildren
   '/(app)/$orgSlug/$projectSlug/settings/': typeof appOrgSlugProjectSlugSettingsIndexRoute
   '/(app)/$orgSlug/~/(org)/': typeof appOrgSlugChar126orgIndexRoute
-  '/(app)/$orgSlug/~/(org)/settings/billing': typeof appOrgSlugChar126orgSettingsBillingRoute
   '/(app)/$orgSlug/~/(org)/settings/members': typeof appOrgSlugChar126orgSettingsMembersRoute
   '/(app)/$orgSlug/~/(org)/settings/': typeof appOrgSlugChar126orgSettingsIndexRoute
 }
@@ -347,7 +337,6 @@ export interface FileRouteTypes {
     | '/$orgSlug/~/settings'
     | '/$orgSlug/$projectSlug/settings/'
     | '/$orgSlug/~/'
-    | '/$orgSlug/~/settings/billing'
     | '/$orgSlug/~/settings/members'
     | '/$orgSlug/~/settings/'
   fileRoutesByTo: FileRoutesByTo
@@ -374,7 +363,6 @@ export interface FileRouteTypes {
     | '/$orgSlug/~/projects'
     | '/$orgSlug/$projectSlug/settings'
     | '/$orgSlug/~'
-    | '/$orgSlug/~/settings/billing'
     | '/$orgSlug/~/settings/members'
     | '/$orgSlug/~/settings'
   id:
@@ -409,7 +397,6 @@ export interface FileRouteTypes {
     | '/(app)/$orgSlug/~/(org)/settings'
     | '/(app)/$orgSlug/$projectSlug/settings/'
     | '/(app)/$orgSlug/~/(org)/'
-    | '/(app)/$orgSlug/~/(org)/settings/billing'
     | '/(app)/$orgSlug/~/(org)/settings/members'
     | '/(app)/$orgSlug/~/(org)/settings/'
   fileRoutesById: FileRoutesById
@@ -650,13 +637,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appOrgSlugChar126orgSettingsMembersRouteImport
       parentRoute: typeof appOrgSlugChar126orgSettingsRoute
     }
-    '/(app)/$orgSlug/~/(org)/settings/billing': {
-      id: '/(app)/$orgSlug/~/(org)/settings/billing'
-      path: '/billing'
-      fullPath: '/$orgSlug/~/settings/billing'
-      preLoaderRoute: typeof appOrgSlugChar126orgSettingsBillingRouteImport
-      parentRoute: typeof appOrgSlugChar126orgSettingsRoute
-    }
   }
 }
 
@@ -696,15 +676,12 @@ const appOrgSlugProjectSlugRouteRouteWithChildren =
   )
 
 interface appOrgSlugChar126orgSettingsRouteChildren {
-  appOrgSlugChar126orgSettingsBillingRoute: typeof appOrgSlugChar126orgSettingsBillingRoute
   appOrgSlugChar126orgSettingsMembersRoute: typeof appOrgSlugChar126orgSettingsMembersRoute
   appOrgSlugChar126orgSettingsIndexRoute: typeof appOrgSlugChar126orgSettingsIndexRoute
 }
 
 const appOrgSlugChar126orgSettingsRouteChildren: appOrgSlugChar126orgSettingsRouteChildren =
   {
-    appOrgSlugChar126orgSettingsBillingRoute:
-      appOrgSlugChar126orgSettingsBillingRoute,
     appOrgSlugChar126orgSettingsMembersRoute:
       appOrgSlugChar126orgSettingsMembersRoute,
     appOrgSlugChar126orgSettingsIndexRoute:

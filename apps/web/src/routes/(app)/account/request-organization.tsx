@@ -31,7 +31,14 @@ function RequestOrganizationPage() {
                   View invites
                 </Button>
                 <Button
-                  render={<a aria-label="Contact us" href="mailto:hello@tailorkit.com" />}
+                  render={
+                    <a
+                      aria-label="Contact us"
+                      href="https://cal.com/alfiejones"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
+                  }
                   size="sm"
                 >
                   Contact us

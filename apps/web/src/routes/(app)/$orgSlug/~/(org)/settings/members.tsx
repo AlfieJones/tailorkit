@@ -147,11 +147,12 @@ function OrgSettingsMembers() {
             </TabsTab>
           </TabsList>
 
-          <div className="relative max-w-xs">
-            <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <div className="relative w-64 max-w-full">
+            <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="pl-8"
+              className="bg-popover [&_[data-slot=input]]:pl-8"
               placeholder="Search"
+              type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />

@@ -26,7 +26,6 @@ const settingsRouteLabels: Record<string, string> = {
   "/(app)/$orgSlug/$projectSlug/settings/api-keys": "API Keys",
   "/(app)/$orgSlug/~/(org)/settings/": "General",
   "/(app)/$orgSlug/~/(org)/settings/members": "Members",
-  "/(app)/$orgSlug/~/(org)/settings/billing": "Billing",
 };
 
 function toLabel(segment: string) {

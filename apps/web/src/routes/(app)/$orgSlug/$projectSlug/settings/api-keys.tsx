@@ -33,6 +33,7 @@ import {
 } from "@tailorkit/ui/components/select";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
 import { toastManager } from "@tailorkit/ui/components/toast";
+import { PageLayout } from "#components/page-layout";
 import { client, orpc } from "#lib/orpc";
 import { getProjectApiKey, setProjectApiKey } from "#utils/project-api-key-memory";
 
@@ -170,14 +171,10 @@ function ProjectApiKeysPage() {
   })();
 
   return (
-    <div className="mx-auto max-w-3xl w-full space-y-6">
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">API keys</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Manage the secret key used to authenticate your backend with this project.
-        </p>
-      </div>
-
+    <PageLayout
+      description="Manage the secret key used to authenticate your backend with this project."
+      title="API keys"
+    >
       {/* New key reveal dialog */}
       <Dialog open={newApiKeyDialogOpen} onOpenChange={setNewApiKeyDialogOpen}>
         <DialogPopup>
@@ -337,6 +334,6 @@ function ProjectApiKeysPage() {
           </div>
         </div>
       ) : null}
-    </div>
+    </PageLayout>
   );
 }

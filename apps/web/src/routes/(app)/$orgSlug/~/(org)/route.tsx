@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { SidebarLayoutHeader } from "#components/sidebar-layout-header";
 import { HeaderActionsProvider } from "#components/header-actions";
 
-import { CreditCardIcon, FolderIcon, SettingsIcon, UsersIcon } from "lucide-react";
+import { FolderIcon, SettingsIcon, UsersIcon } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -104,16 +104,6 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
                   >
                     <UsersIcon />
                     <span>Members</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={isActive(`${orgBase}/settings/billing`)}
-                    render={<Link params={{ orgSlug }} to="/$orgSlug/~/settings/billing" />}
-                  >
-                    <CreditCardIcon />
-                    <span>Billing</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

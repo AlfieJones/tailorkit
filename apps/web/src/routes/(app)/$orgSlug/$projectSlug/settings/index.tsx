@@ -28,6 +28,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
+import { PageLayout } from "#components/page-layout";
 import { client, orpc } from "#lib/orpc";
 
 export const Route = createFileRoute("/(app)/$orgSlug/$projectSlug/settings/")({
@@ -129,14 +130,7 @@ function ProjectSettingsPage() {
   const canDelete = deleteConfirmation === project.slug;
 
   return (
-    <div className="mx-auto max-w-3xl w-full space-y-6">
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Settings</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Manage this project&apos;s identity and lifecycle.
-        </p>
-      </div>
-
+    <PageLayout description="Manage this project's identity and lifecycle." title="Settings">
       <CardFrame className="w-full">
         <Card>
           <CardHeader>
@@ -244,6 +238,6 @@ function ProjectSettingsPage() {
           </DialogFooter>
         </DialogPopup>
       </Dialog>
-    </div>
+    </PageLayout>
   );
 }
