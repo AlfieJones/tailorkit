@@ -58,6 +58,12 @@ const authStoreSchema = z
 const sleep = (milliseconds: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
 
+const throwRpcError = (result: unknown) => {
+  if (result && typeof result === "object" && "error" in result && result.error !== undefined) {
+    throw result.error;
+  }
+};
+
 const readAuthStore = async (): Promise<AuthStore> => {
   try {
     return authStoreSchema.parse(JSON.parse(await readFile(authStorePath, "utf-8")));
@@ -149,11 +155,7 @@ export const runLogin = async (
   const hostUrl = await resolveHostUrl(options);
   const client = createTailorKitClient({ url: hostUrl });
   const startResult = await client.cliAuth.start({});
-  if (startResult && typeof startResult === "object" && "error" in startResult) {
-    if (startResult.error !== undefined) {
-      throw startResult.error;
-    }
-  }
+  throwRpcError(startResult);
 
   const started = ("data" in startResult ? startResult.data : startResult) as CliAuthStartResult;
   const expiresAt = new Date(started.expiresAt);
@@ -164,11 +166,7 @@ export const runLogin = async (
   while (Date.now() < timeoutAt && Date.now() < expiresAt.getTime()) {
     await sleep(pollIntervalMs);
     const pollResult = await client.cliAuth.poll({ deviceCode: started.deviceCode });
-    if (pollResult && typeof pollResult === "object" && "error" in pollResult) {
-      if (pollResult.error !== undefined) {
-        throw pollResult.error;
-      }
-    }
+    throwRpcError(pollResult);
 
     const result = ("data" in pollResult ? pollResult.data : pollResult) as CliAuthPollResult;
 
@@ -193,6 +191,9 @@ export const runLogin = async (
           scopeId: result.scopeId,
         };
       }
+      default: {
+        throw new Error("Unexpected CLI login status.");
+      }
     }
   }
 
@@ -216,11 +217,7 @@ export const runWhoami = async (
   let result: CliAuthVerifyResult;
   try {
     const verifyResult = await client.cliAuth.verifyToken({});
-    if (verifyResult && typeof verifyResult === "object" && "error" in verifyResult) {
-      if (verifyResult.error !== undefined) {
-        throw verifyResult.error;
-      }
-    }
+    throwRpcError(verifyResult);
 
     result = ("data" in verifyResult ? verifyResult.data : verifyResult) as CliAuthVerifyResult;
   } catch {

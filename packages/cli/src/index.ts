@@ -29,7 +29,7 @@ cli
         throw new Error("--timeout must be a positive integer.");
       }
 
-      const result = await runLogin(
+      await runLogin(
         {
           configPath: options.config as string | undefined,
           cwd: String(options.cwd ?? "."),

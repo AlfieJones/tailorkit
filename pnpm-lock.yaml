@@ -131,6 +131,9 @@ importers:
       oxlint:
         specifier: 1.66.0
         version: 1.66.0
+      sherif:
+        specifier: ^1.11.1
+        version: 1.11.1
       turbo:
         specifier: 2.9.14
         version: 2.9.14
@@ -389,7 +392,7 @@ importers:
         specifier: ^0.10.5
         version: 0.10.5(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(csstype@3.2.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(solid-js@1.9.13)
       '@tanstack/react-form':
-        specifier: ^1.28.0
+        specifier: ^1.29.1
         version: 1.32.0(@tanstack/react-start@1.168.10(crossws@0.4.5(srvx@0.11.16))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vite@8.0.14(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.3)(yaml@2.9.0)))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@tanstack/react-form-devtools':
         specifier: ^0.2.27
@@ -465,6 +468,8 @@ importers:
         specifier: 'catalog:'
         version: 8.0.14(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.3)(yaml@2.9.0)
 
+  examples/apps: {}
+
   examples/apps/email:
     dependencies:
       '@tailorkit/app':
@@ -478,10 +483,10 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/cli
       oxfmt:
-        specifier: ^0.51.0
+        specifier: 0.51.0
         version: 0.51.0
       oxlint:
-        specifier: ^1.66.0
+        specifier: 1.66.0
         version: 1.66.0
       typescript:
         specifier: ^6.0.3
@@ -500,10 +505,10 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/cli
       oxfmt:
-        specifier: ^0.51.0
+        specifier: 0.51.0
         version: 0.51.0
       oxlint:
-        specifier: ^1.66.0
+        specifier: 1.66.0
         version: 1.66.0
       typescript:
         specifier: ^6.0.3
@@ -917,7 +922,7 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
       valibot:
-        specifier: ^1.3.1
+        specifier: ^1.4.0
         version: 1.4.0(typescript@6.0.3)
       vitest:
         specifier: 'catalog:'
@@ -1136,7 +1141,7 @@ importers:
         specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 19.2.6
         version: 19.2.6(react@19.2.6)
       typescript:
         specifier: 'catalog:'
@@ -1161,7 +1166,7 @@ importers:
         specifier: 'catalog:'
         version: 24.12.4
       happy-dom:
-        specifier: ^20.0.10
+        specifier: ^20.9.0
         version: 20.9.0
       typescript:
         specifier: 'catalog:'
@@ -7890,6 +7895,50 @@ packages:
   shell-quote@1.8.3:
     resolution: {integrity: sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw==}
     engines: {node: '>= 0.4'}
+
+  sherif-darwin-arm64@1.11.1:
+    resolution: {integrity: sha512-VoMrUv5QY6hQ2rByNa3AAhr/KGQsCb6pvAUNKa1iCh1jvnY836hQr6zNBw9hYCDkVv6t9sITFGJljwdTCQD4xw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  sherif-darwin-x64@1.11.1:
+    resolution: {integrity: sha512-7j3yOCBkvVbltVT3lXoiazGfG2nb36FteYT5VZPEBSf8sTn1pPTScukAQ1Fdl+MphadGyici7XlRbDrtZ/wnvA==}
+    cpu: [x64]
+    os: [darwin]
+
+  sherif-linux-arm64-musl@1.11.1:
+    resolution: {integrity: sha512-DCf87RFqBh8ZrYgu3y+fv0x4kFn/np84m2jAEgygznwozH/VCfrXbHFVdhxW7762JCYkXbHO9dUj/ff5fkvkvw==}
+    cpu: [arm64]
+    os: [linux]
+
+  sherif-linux-arm64@1.11.1:
+    resolution: {integrity: sha512-vCZFS7RxhZ/8g9bdj3UPNVPTcZiKiWigW+FIlVQEUKEKfG0MfSOMBJqEWPVVUniyJa3rdIxtmZKSdWkG0e1x3w==}
+    cpu: [arm64]
+    os: [linux]
+
+  sherif-linux-x64-musl@1.11.1:
+    resolution: {integrity: sha512-f8xitqXdHObUFPZo4QVbz3o30Y4+gHA3B5ZobsOWocnSfJBaUGutBzJsUsjG6w2tccSRn6+mugiMUGKIbIPZmQ==}
+    cpu: [x64]
+    os: [linux]
+
+  sherif-linux-x64@1.11.1:
+    resolution: {integrity: sha512-9t+p1X3SyhU75BrJNHBbj9i/aQxHC/sF+Mdkf17V5AlokCznFgYKQUXq5EVmcmRDDhDl69RMzCTLD95EBqUSYA==}
+    cpu: [x64]
+    os: [linux]
+
+  sherif-windows-arm64@1.11.1:
+    resolution: {integrity: sha512-Dnffgcyz9zLq/8UTY2REchJzRJWcWAuMWo5Vl5O17IZGkhl71dwa7/Vi2wC3EQd8WAVK/O82yArOYggWA0dj5w==}
+    cpu: [arm64]
+    os: [win32]
+
+  sherif-windows-x64@1.11.1:
+    resolution: {integrity: sha512-xjfYUL/IQ65DwHkRsWIxiZWtglKtL5/E3UHpnLwOui3jqW1V2K88SMct415dnlBQiL3U9VEIVUo1i+KmToOBgQ==}
+    cpu: [x64]
+    os: [win32]
+
+  sherif@1.11.1:
+    resolution: {integrity: sha512-HBFce8NGaPuWPg5NXb6+aI7hJQFjTilhtbrgo+Y/BvtGlkuJAzLnkmC8nyD+p3v7oIAq4KQeA8qySKGga28xZg==}
+    hasBin: true
 
   shiki@4.0.2:
     resolution: {integrity: sha512-eAVKTMedR5ckPo4xne/PjYQYrU3qx78gtJZ+sHlXEg5IHhhoQhMfZVzetTYuaJS0L2Ef3AcCRzCHV8T0WI6nIQ==}
@@ -15784,6 +15833,41 @@ snapshots:
   shebang-regex@3.0.0: {}
 
   shell-quote@1.8.3: {}
+
+  sherif-darwin-arm64@1.11.1:
+    optional: true
+
+  sherif-darwin-x64@1.11.1:
+    optional: true
+
+  sherif-linux-arm64-musl@1.11.1:
+    optional: true
+
+  sherif-linux-arm64@1.11.1:
+    optional: true
+
+  sherif-linux-x64-musl@1.11.1:
+    optional: true
+
+  sherif-linux-x64@1.11.1:
+    optional: true
+
+  sherif-windows-arm64@1.11.1:
+    optional: true
+
+  sherif-windows-x64@1.11.1:
+    optional: true
+
+  sherif@1.11.1:
+    optionalDependencies:
+      sherif-darwin-arm64: 1.11.1
+      sherif-darwin-x64: 1.11.1
+      sherif-linux-arm64: 1.11.1
+      sherif-linux-arm64-musl: 1.11.1
+      sherif-linux-x64: 1.11.1
+      sherif-linux-x64-musl: 1.11.1
+      sherif-windows-arm64: 1.11.1
+      sherif-windows-x64: 1.11.1
 
   shiki@4.0.2:
     dependencies:

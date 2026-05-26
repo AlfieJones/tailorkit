@@ -16,6 +16,8 @@
     "services:down": "docker compose down",
     "check": "turbo run quality",
     "fix": "turbo run quality:fix",
+    "sherif": "sherif -r packages-without-package-json",
+    "sherif:fix": "sherif -r packages-without-package-json --fix --select highest --no-install",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "format": "oxfmt --check",
@@ -26,6 +28,7 @@
     "lefthook": "2.1.8",
     "oxfmt": "0.51.0",
     "oxlint": "1.66.0",
+    "sherif": "^1.11.1",
     "turbo": "2.9.14",
     "ultracite": "7.7.0"
   },

@@ -1,5 +1,6 @@
 import { chmod, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import type * as nodeOs from "node:os";
 import path from "node:path";
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
 import { createTailorKitClient } from "@tailorkit/core/server";
@@ -21,10 +22,10 @@ const createTemporaryHome = async (): Promise<string> => {
   return directory;
 };
 
-const loadAuthModule = async (homeDirectory: string) => {
+const loadAuthModule = (homeDirectory: string) => {
   vi.resetModules();
   vi.doMock("node:os", async (importOriginal) => ({
-    ...(await importOriginal<typeof import("node:os")>()),
+    ...(await importOriginal<typeof nodeOs>()),
     homedir: () => homeDirectory,
   }));
 
@@ -119,7 +120,8 @@ describe("auth store", () => {
       scopeId: "scope-id",
     });
 
-    expect((await stat(authStorePath(homeDirectory))).mode & 0o777).toBe(0o600);
+    const fileStat = await stat(authStorePath(homeDirectory));
+    expect(fileStat.mode % 0o1000).toBe(0o600);
   });
 
   it("tightens permissions on an existing auth.json file", async () => {
@@ -133,7 +135,8 @@ describe("auth store", () => {
       scopeId: "scope-id",
     });
 
-    expect((await stat(filePath)).mode & 0o777).toBe(0o600);
+    const fileStat = await stat(filePath);
+    expect(fileStat.mode % 0o1000).toBe(0o600);
   });
 
   it("resolves the host URL from tailorkit.config.ts", async () => {

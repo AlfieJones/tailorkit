@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 // biome-ignore lint/correctness/noUnusedVariables: used in JSX descriptions
 function B({ children }: { children: ReactNode }) {

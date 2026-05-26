@@ -121,7 +121,6 @@ export function HomePage() {
             </div>
 
             <ChameleonDither
-              autoHue={autoHue}
               hue={currentHue}
               showCowboyHat={showCowboyHat}
               showMonocle={showMonocle}
@@ -139,12 +138,10 @@ export function HomePage() {
 }
 
 function ChameleonDither({
-  autoHue,
   hue,
   showCowboyHat,
   showMonocle,
 }: {
-  autoHue: boolean;
   hue: number;
   showCowboyHat: boolean;
   showMonocle: boolean;
@@ -337,14 +334,22 @@ function ChameleonControls({
           sideOffset={12}
         >
           <div className="flex flex-col gap-3">
-            <label className="flex items-center justify-between gap-4 text-sm text-foreground/70">
+            <div className="flex items-center justify-between gap-4 text-sm text-foreground/70">
               <span>Monocle</span>
-              <Switch checked={showMonocle} onCheckedChange={onMonocleChange} />
-            </label>
-            <label className="flex items-center justify-between gap-4 text-sm text-foreground/70">
+              <Switch
+                aria-label="Monocle"
+                checked={showMonocle}
+                onCheckedChange={onMonocleChange}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4 text-sm text-foreground/70">
               <span>Cowboy hat</span>
-              <Switch checked={showCowboyHat} onCheckedChange={onCowboyHatChange} />
-            </label>
+              <Switch
+                aria-label="Cowboy hat"
+                checked={showCowboyHat}
+                onCheckedChange={onCowboyHatChange}
+              />
+            </div>
             <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3">
               <span className="text-sm text-foreground/70">Hue</span>
               <Slider
@@ -360,10 +365,10 @@ function ChameleonControls({
                 className="size-5 rounded-full border border-border"
                 style={{ backgroundColor: hueToHex(hue, false) }}
               />
-              <label className="flex items-center gap-2 text-sm text-foreground/70">
-                <Switch checked={autoHue} onCheckedChange={onAutoHueChange} />
+              <div className="flex items-center gap-2 text-sm text-foreground/70">
+                <Switch aria-label="Auto hue" checked={autoHue} onCheckedChange={onAutoHueChange} />
                 Auto
-              </label>
+              </div>
             </div>
           </div>
         </PopoverPopup>
@@ -401,20 +406,22 @@ function hslToHex(hue: number, saturation: number, lightness: number) {
   const c = (1 - Math.abs(2 * l - 1)) * s;
   const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
   const m = l - c / 2;
-  const [r, g, b] =
-    hue < 60
-      ? [c, x, 0]
-      : hue < 120
-        ? [x, c, 0]
-        : hue < 180
-          ? [0, c, x]
-          : hue < 240
-            ? [0, x, c]
-            : hue < 300
-              ? [x, 0, c]
-              : [c, 0, x];
+  let rgb: number[];
+  if (hue < 60) {
+    rgb = [c, x, 0];
+  } else if (hue < 120) {
+    rgb = [x, c, 0];
+  } else if (hue < 180) {
+    rgb = [0, c, x];
+  } else if (hue < 240) {
+    rgb = [0, x, c];
+  } else if (hue < 300) {
+    rgb = [x, 0, c];
+  } else {
+    rgb = [c, 0, x];
+  }
 
-  return `#${[r, g, b]
+  return `#${rgb
     .map((channel) =>
       Math.round((channel + m) * 255)
         .toString(16)

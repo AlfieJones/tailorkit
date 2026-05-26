@@ -1,10 +1,23 @@
 import { spawn } from "node:child_process";
 import { platform } from "node:os";
 
-export const openUrlInBrowser = async (url: string): Promise<boolean> =>
+const getBrowserCommand = (url: string) => {
+  const currentPlatform = platform();
+
+  if (currentPlatform === "darwin") {
+    return { args: [url], command: "open" };
+  }
+
+  if (currentPlatform === "win32") {
+    return { args: ["/c", "start", "", url], command: "cmd" };
+  }
+
+  return { args: [url], command: "xdg-open" };
+};
+
+export const openUrlInBrowser = (url: string): Promise<boolean> =>
   new Promise((resolve) => {
-    const command = platform() === "darwin" ? "open" : platform() === "win32" ? "cmd" : "xdg-open";
-    const args = platform() === "win32" ? ["/c", "start", "", url] : [url];
+    const { args, command } = getBrowserCommand(url);
     const child = spawn(command, args, {
       detached: true,
       stdio: "ignore",

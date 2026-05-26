@@ -31,7 +31,7 @@
     "@types/react": "catalog:",
     "happy-dom": "^20.9.0",
     "react": "catalog:",
-    "react-dom": "^19.2.6",
+    "react-dom": "19.2.6",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

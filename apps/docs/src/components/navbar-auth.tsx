@@ -66,10 +66,10 @@ export function NavbarAuth() {
   if (!session?.user) {
     return (
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="ghost" render={<a href={authLinks.login} />}>
+        <Button size="sm" variant="ghost" render={<a aria-label="Login" href={authLinks.login} />}>
           Login
         </Button>
-        <Button size="sm" render={<a href={authLinks.signUp} />}>
+        <Button size="sm" render={<a aria-label="Sign up" href={authLinks.signUp} />}>
           Sign up
         </Button>
       </div>
@@ -77,7 +77,7 @@ export function NavbarAuth() {
   }
 
   return (
-    <Button size="sm" render={<a href={authLinks.dashboard} />}>
+    <Button size="sm" render={<a aria-label="Dashboard" href={authLinks.dashboard} />}>
       Dashboard
     </Button>
   );
