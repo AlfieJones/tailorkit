@@ -8,7 +8,7 @@
       "missing": [
         {
           "type": "cookie",
-          "key": "tailorkit.session_token"
+          "key": "__Secure-tailorkit.session_token"
         }
       ]
     },
