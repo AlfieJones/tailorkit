@@ -1,4 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nitro"
+  "framework": "nitro",
+  "regions": ["iad1", "sfo1", "fra1", "syd1"]
 }
