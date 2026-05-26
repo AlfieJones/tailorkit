@@ -84,7 +84,9 @@ function Page() {
   return (
     <DocsLayout
       {...base}
-      links={links?.filter((link) => "url" in link && link.url !== "/docs")}
+      links={links?.filter((link) => !("url" in link) || link.url !== "/docs")}
+      themeSwitch={{ enabled: true }}
+      searchToggle={{ enabled: true }}
       tree={pageTree}
     >
       <Suspense>{clientLoader.useContent(path, { markdownUrl, path })}</Suspense>

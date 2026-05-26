@@ -30,7 +30,7 @@ export async function createContext({ request }: { request: Request }): Promise<
       throw new Error("Invalid authorization scheme");
     }
 
-    const apiKey = await auth.api.verifyApiKey({ body: { key } });
+    const apiKey = await auth.api.verifyApiKey({ body: { configId: "project-host", key } });
 
     if (!apiKey || !apiKey.valid) {
       throw new Error("Invalid API key");

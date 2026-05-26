@@ -17,6 +17,10 @@ const action = createActions().context<{ user: DemoUser }>();
 
 export const tailorKit = createTailorKit({
   projectKey: process.env.TAILORKIT_PROJECT_KEY,
+  $internal: {
+    platformBaseUrl:
+      process.env.TAILORKIT_PLATFORM_BASE_URL ?? "http://localhost:3000/api/platform",
+  },
 
   components: {
     ...primitives({

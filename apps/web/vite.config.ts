@@ -23,7 +23,28 @@ export default defineConfig(({ mode }) => {
       devtools(),
       tailwindcss(),
       tanstackStart(),
-      nitro(),
+      nitro({
+        routeRules: {
+          "/signup": {
+            redirect: {
+              to: "/sign-up",
+              status: 308,
+            },
+          },
+          "/signin": {
+            redirect: {
+              to: "/login",
+              status: 308,
+            },
+          },
+          "/sign-in": {
+            redirect: {
+              to: "/login",
+              status: 308,
+            },
+          },
+        },
+      }),
       viteReact(),
       babel({
         presets: [reactCompilerPreset()],

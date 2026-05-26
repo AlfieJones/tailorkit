@@ -150,8 +150,8 @@ export function Sidebar({
       />
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-10 hidden h-svh w-(--sidebar-width) opacity-100 transition-[left,opacity] duration-300 ease-in-out md:flex",
-          !open && "left-[calc(var(--sidebar-width)*-1)] opacity-0",
+          "fixed inset-y-0 left-0 z-10 hidden h-svh w-(--sidebar-width) opacity-100 transition-opacity duration-300 ease-in-out md:flex",
+          !open && "opacity-0",
           className,
         )}
         data-slot="sidebar-container"
