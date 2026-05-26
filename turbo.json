@@ -41,7 +41,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", ".tailorkit/**"]
+      "outputs": ["dist/**", ".output/**", ".vercel/output/**", ".tailorkit/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]
