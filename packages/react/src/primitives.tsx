@@ -1,6 +1,7 @@
 import { createContext, useContext, useId, useMemo } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { TailorKitTheme } from "@tailorkit/core/schema";
+import { resolveTheme } from "@tailorkit/core/primitives/theme";
 
 type Responsive<T> = T | Record<string, T | undefined>;
 type PrimitiveValue = number | string;
@@ -68,6 +69,9 @@ const declarationsForProp = (prop: string, value: PrimitiveValue): string[] => {
   const tokenDeclaration = tokenDeclarations[prop];
   if (tokenDeclaration) {
     const [group, property] = tokenDeclaration;
+    if (prop === "border") {
+      return [`border-style: ${toCssValue(group, value)};`, "border-width: 1px;"];
+    }
     return [`${property}: ${toCssValue(group, value)};`];
   }
   if (prop === "gap" || prop === "margin" || prop === "padding") {
@@ -183,9 +187,10 @@ const buildPrimitiveCss = ({
 export const buildThemeCss = (screenId: string, theme: TailorKitTheme): string => {
   const selector = `[data-tailorkit-screen="${cssEscape(screenId)}"]`;
   const declarations: string[] = [];
+  const resolvedTheme = resolveTheme(theme);
 
   for (const group of tokenGroups) {
-    for (const [name, value] of Object.entries(theme.tokens?.[group] ?? {})) {
+    for (const [name, value] of Object.entries(resolvedTheme.tokens?.[group] ?? {})) {
       declarations.push(`--tailorkit-${group}-${cssEscape(name)}: ${value};`);
     }
   }

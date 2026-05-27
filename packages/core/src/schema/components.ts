@@ -120,5 +120,5 @@ export const resolveComponentMetadata = (
   };
 };
 
-export type Component = ComponentDefinition;
+export type Component = AnyComponentDefinition;
 export type Components = ComponentDefinitions;

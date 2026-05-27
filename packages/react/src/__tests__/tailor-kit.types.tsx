@@ -49,6 +49,21 @@ createTailorKitClient<typeof slotsServer>({
   },
 });
 
+const requiredComponentsServer = createTailorKitServer({
+  components: {
+    Button: {},
+    Input: {},
+  },
+});
+
+createTailorKitClient<typeof requiredComponentsServer>({
+  baseUrl: "http://runtime.test",
+  // @ts-expect-error all server components must have client renderers when components are provided
+  components: {
+    Button: () => null,
+  },
+});
+
 components(slotsSchema, {
   Button: ({ props, slots }) => {
     const typedProps = props satisfies Record<string, never>;
@@ -81,29 +96,20 @@ components(callbackServer.$internal.schema, {
   },
 });
 
-<tailor.ScreenMatch
-  pattern="/"
-  screen="/home"
-  context={{ page: { title: "Home" }, user: { id: "user_1" } }}
-/>;
+<tailor.ScreenMatch screen="/home" context={{ page: { title: "Home" }, user: { id: "user_1" } }} />;
 
-<tailor.ScreenMatch pattern="/users/:userId" screen="/user" isLoading />;
+<tailor.ScreenMatch screen="/user" isLoading />;
 
-<tailor.ScreenMatch
-  pattern="/users/:userId"
-  screen="/user"
-  isLoading
-  context={{ userId: "user_1" }}
-/>;
+<tailor.ScreenMatch screen="/user" isLoading context={{ userId: "user_1" }} />;
 
 // @ts-expect-error invalid screen name
-<tailor.ScreenMatch pattern="/" screen="missing" context={{}} />;
+<tailor.ScreenMatch screen="missing" context={{}} />;
 
 // @ts-expect-error invalid context shape for selected screen
-<tailor.ScreenMatch pattern="/" screen="/user" context={{ page: { title: "Home" } }} />;
+<tailor.ScreenMatch screen="/user" context={{ page: { title: "Home" } }} />;
 
 // @ts-expect-error ready matches require context
-<tailor.ScreenMatch pattern="/" screen="/home" />;
+<tailor.ScreenMatch screen="/home" />;
 
 // @ts-expect-error isLoading false requires full context
-<tailor.ScreenMatch pattern="/" screen="/home" isLoading={false} />;
+<tailor.ScreenMatch screen="/home" isLoading={false} />;

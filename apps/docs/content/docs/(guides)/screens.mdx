@@ -9,17 +9,12 @@ read `window.location`, or mutate browser history.
 
 ## Declare A Match
 
-Place `tailor.ScreenMatch` inside the host route that owns the active data and
-params. `pattern` is metadata for identity and debugging. `params` are explicit
-route params from your router.
+Place `tailor.ScreenMatch` inside the host route or layout that owns the active
+data. `screen` is the stable TailorKit surface key, and `context` is the data
+for that surface.
 
 ```tsx
-<tailor.ScreenMatch
-  pattern="/users/:userId"
-  params={{ userId }}
-  screen="/user"
-  context={{ userId, user }}
->
+<tailor.ScreenMatch screen="/users/detail" context={{ user }}>
   {children}
 </tailor.ScreenMatch>
 ```
@@ -33,9 +28,8 @@ selected screen's context schema.
 const schema = defineSchema({
   components: {},
   screens: {
-    "/user": screen({
+    "/users/detail": screen({
       context: z.object({
-        userId: z.string(),
         user: z.object({
           id: z.string(),
           name: z.string(),
@@ -50,11 +44,8 @@ This match type-checks:
 
 ```tsx
 <tailor.ScreenMatch
-  pattern="/users/:userId"
-  params={{ userId }}
-  screen="/user"
+  screen="/users/detail"
   context={{
-    userId,
     user,
   }}
 />
@@ -69,11 +60,9 @@ matches can omit `context`.
 
 ```tsx
 <tailor.ScreenMatch
-  pattern="/users/:userId"
-  params={{ userId }}
-  screen="/user"
+  screen="/users/detail"
   isLoading={isLoading}
-  context={isLoading ? undefined : { userId, user }}
+  context={isLoading ? undefined : { user }}
 >
   {children}
 </tailor.ScreenMatch>
@@ -89,25 +78,27 @@ is still loading.
 
 ## Nested Matches
 
-When multiple matches are mounted, the deepest mounted match wins.
+When multiple matches are mounted, the deepest mounted match is preferred.
+TailorKit passes the mounted chain to each app. If an app does not implement the
+deepest screen, the worker walks back through parent matches until it finds a
+screen the app implements.
 
 ```tsx
-<tailor.ScreenMatch pattern="/projects/:projectId" screen="/project" context={projectContext}>
+<tailor.ScreenMatch screen="/projects" context={projectContext}>
   <ProjectLayout>
-    <tailor.ScreenMatch
-      pattern="/projects/:projectId/issues/:issueId"
-      params={{ issueId, projectId }}
-      screen="issue"
-      context={issueContext}
-    >
+    <tailor.ScreenMatch screen="/projects/issues/detail" context={issueContext}>
       <IssuePage />
     </tailor.ScreenMatch>
   </ProjectLayout>
 </tailor.ScreenMatch>
 ```
 
-When the nested issue route unmounts, TailorKit falls back to the parent project
-match.
+When the nested issue route unmounts, TailorKit uses the parent project match.
+If both matches are mounted but an app only implements `/projects`, it receives
+the parent match and its parent context.
+
+Sibling matches at the same depth are ambiguous. TailorKit warns in development
+and selects one by mount order so production keeps rendering.
 
 ## Render The Current Match
 
@@ -117,7 +108,7 @@ match.
 const { apps } = tailor.useApps();
 
 return (
-  <tailor.ScreenMatch pattern="/" screen="/home" context={context}>
+  <tailor.ScreenMatch screen="/home" context={context}>
     {apps.map((app) => (
       <tailor.Screen key={app.id} app={app} />
     ))}
@@ -166,7 +157,6 @@ Local apps can still provide a client path directly:
 The host app owns:
 
 - routing.
-- route params.
 - loading state.
 - data fetching.
 - choosing the active TailorKit screen.
@@ -175,5 +165,5 @@ TailorKit owns:
 
 - fetching and caching the app registry.
 - tracking mounted `ScreenMatch` entries.
-- selecting the deepest active match.
-- rendering that match into one or more TailorKit apps.
+- selecting the deepest active match chain.
+- rendering the first implemented match into each TailorKit app.

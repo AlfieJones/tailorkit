@@ -1,4 +1,5 @@
 import {
+  Component,
   Fragment,
   createElement,
   memo,
@@ -17,6 +18,36 @@ import { NodeStore } from "./node-store";
 import { RemoteUIContext } from "./remote-context";
 import type { RemoteViewContext } from "./remote-context";
 
+const formatError = (error: Error): string => error.message;
+
+interface RemoteErrorBoundaryProps {
+  children?: ReactNode;
+}
+
+interface RemoteErrorBoundaryState {
+  error: Error | null;
+}
+
+class RemoteErrorBoundary extends Component<RemoteErrorBoundaryProps, RemoteErrorBoundaryState> {
+  state: RemoteErrorBoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: Error): RemoteErrorBoundaryState {
+    return { error };
+  }
+
+  static componentDidCatch(error: Error): void {
+    console.error("TailorKit remote app failed", error);
+  }
+
+  render(): ReactNode {
+    if (this.state.error) {
+      return createElement("div", null, formatError(this.state.error));
+    }
+
+    return this.props.children;
+  }
+}
+
 interface RemoteViewHostProps {
   appUrl: string | URL;
   components: Record<string, unknown>;
@@ -32,11 +63,17 @@ export function RemoteViewHost({
   props,
   workerUrl,
 }: RemoteViewHostProps): ReactNode {
+  const appKey = appUrl.toString();
   const storeRef = useRef<NodeStore | null>(null);
   if (storeRef.current === null) {
     storeRef.current = new NodeStore();
   }
   const store = storeRef.current;
+  const appKeyRef = useRef(appKey);
+  if (appKeyRef.current !== appKey) {
+    appKeyRef.current = appKey;
+    store.clear();
+  }
 
   const dispatchRef = useRef<((payload: HostToWorkerPayload) => void) | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -57,9 +94,13 @@ export function RemoteViewHost({
     return createElement(
       RemoteUIContext.Provider,
       { value: ctx },
-      createElement(RemoteRoot, { store: ctx.store }),
+      createElement(
+        RemoteErrorBoundary,
+        { key: appKey },
+        createElement(RemoteRoot, { store: ctx.store }),
+      ),
     );
-  }, []);
+  }, [appKey]);
 
   useEffect(() => {
     const host = createWorkerUiHost(appUrl, {
@@ -95,14 +136,7 @@ export function RemoteViewHost({
   }, [appUrl, createWorker, props, workerUrl, store]);
 
   if (status === "error" && error) {
-    return createElement(
-      "div",
-      {
-        className:
-          "rounded-md border border-red-200 bg-red-50 p-3 font-mono text-red-800 text-xs whitespace-pre-wrap",
-      },
-      error.message,
-    );
+    return createElement("div", null, formatError(error));
   }
 
   return ui;

@@ -12,8 +12,8 @@ const deviceCodeBytes = 32;
 const deployTokenBytes = 32;
 const userCodeLength = 9;
 const userCodeSections = 3;
-const authExpiresInMilliseconds = 30 * 60 * 1000; // 5 minutes
-const tokenExpiresInMilliseconds = 30 * 24 * 60 * 60 * 1000; // 30 days
+const authExpiresInMilliseconds = 5 * 60 * 1000; // 5 minutes
+const tokenExpiresInMilliseconds = 12 * 60 * 60 * 1000; // 12 hours
 
 // Skip out some characters to avoid confusion with similar characters (e.g. 0/O, 1/I, etc.)
 const userCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

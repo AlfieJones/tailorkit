@@ -1,8 +1,8 @@
 import type { DemoUser } from "@examples/shared";
 import { Link } from "@tanstack/react-router";
+import { AppPanel as TailorAppPanel, AppRail as TailorAppRail } from "tailorkit/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@tailorkit/ui/avatar";
 import { Badge } from "@tailorkit/ui/badge";
-import { Button } from "@tailorkit/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@tailorkit/ui/menu";
 import {
   Sidebar,
@@ -39,6 +39,7 @@ export function AppShell({
   user: DemoUser;
 }) {
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
+  const [isAppPanelOpen, setIsAppPanelOpen] = useState(false);
   const appsSnapshot = tailorClient.useApps();
   const apps = appsSnapshot.apps;
   const activeApp = useMemo(
@@ -49,27 +50,39 @@ export function AppShell({
   useEffect(() => {
     if (activeAppId && !apps.some((app) => app.id === activeAppId)) {
       setActiveAppId(null);
+      setIsAppPanelOpen(false);
     }
   }, [activeAppId, apps]);
 
   return (
-    <tailorClient.ScreenMatch context={{}} pattern="/" screen="/">
-      <SidebarProvider className="bg-muted/28">
-        <AppSidebar signOut={signOut} user={user} />
-        <SidebarInset className={activeApp ? "me-[21rem]" : "me-12"}>
-          <main className="mx-auto w-full max-w-6xl p-6">{children}</main>
-        </SidebarInset>
-        <AppRail
-          activeAppId={activeAppId}
-          apps={apps}
-          errorMessage={appsSnapshot.error?.message}
-          status={appsSnapshot.status}
-          onSelectApp={(appId) => {
-            setActiveAppId((currentAppId) => (currentAppId === appId ? null : appId));
-          }}
-        />
-        {activeApp ? <AppPanel app={activeApp} onClose={() => setActiveAppId(null)} /> : null}
-      </SidebarProvider>
+    <tailorClient.ScreenMatch
+      context={{
+        user,
+      }}
+      screen="/"
+    >
+      <TailorAppPanel.Root
+        apps={apps}
+        onOpenChange={setIsAppPanelOpen}
+        onValueChange={setActiveAppId}
+        open={isAppPanelOpen}
+        openMode="select"
+        tailor={tailorClient}
+        value={activeAppId}
+      >
+        <SidebarProvider className="bg-muted/28">
+          <AppSidebar signOut={signOut} user={user} />
+          <SidebarInset className={isAppPanelOpen && activeApp ? "me-[21rem]" : "me-12"}>
+            <main className="mx-auto w-full max-w-6xl p-6">{children}</main>
+          </SidebarInset>
+          <AppRailPreview
+            apps={apps}
+            errorMessage={appsSnapshot.error?.message}
+            status={appsSnapshot.status}
+          />
+          <AppPanelPreview app={isAppPanelOpen ? activeApp : null} />
+        </SidebarProvider>
+      </TailorAppPanel.Root>
     </tailorClient.ScreenMatch>
   );
 }
@@ -173,38 +186,33 @@ function useThemeMode() {
   return { isDark, toggleTheme };
 }
 
-function AppRail({
-  activeAppId,
+function AppRailPreview({
   apps,
   errorMessage,
   status,
-  onSelectApp,
 }: {
-  activeAppId: string | null;
   apps: ReturnType<typeof tailorClient.getApps>;
   errorMessage?: string;
   status: "error" | "idle" | "loading" | "ready";
-  onSelectApp: (appId: string) => void;
 }) {
   return (
     <aside className="fixed inset-y-0 right-0 z-30 flex w-12 flex-col items-center gap-2 border-l bg-background px-1 py-3">
-      {apps.map((app) => {
-        const label = app.name ?? app.id;
-        const isActive = activeAppId === app.id;
+      <TailorAppRail.List className="flex flex-col items-center gap-2">
+        {apps.map((app) => {
+          const label = app.name ?? app.id;
 
-        return (
-          <Button
-            aria-pressed={isActive}
-            key={app.id}
-            onClick={() => onSelectApp(app.id)}
-            size="icon"
-            title={label}
-            variant={isActive ? "default" : "outline"}
-          >
-            {getInitials(label)}
-          </Button>
-        );
-      })}
+          return (
+            <TailorAppRail.Item app={app} key={app.id}>
+              <TailorAppRail.Trigger
+                className="inline-flex size-10 items-center justify-center rounded-md border border-input bg-background font-medium text-sm shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[state=open]:border-primary data-[state=open]:bg-primary data-[state=open]:text-primary-foreground"
+                title={label}
+              >
+                {getInitials(label)}
+              </TailorAppRail.Trigger>
+            </TailorAppRail.Item>
+          );
+        })}
+      </TailorAppRail.List>
       {apps.length === 0 ? <AppRailStatus errorMessage={errorMessage} status={status} /> : null}
     </aside>
   );
@@ -253,32 +261,31 @@ function getAppRailStatusVariant(status: "error" | "idle" | "loading" | "ready")
   return "outline";
 }
 
-function AppPanel({
-  app,
-  onClose,
-}: {
-  app: ReturnType<typeof tailorClient.getApps>[number];
-  onClose: () => void;
-}) {
-  const label = app.name ?? app.id;
+function AppPanelPreview({ app }: { app: ReturnType<typeof tailorClient.getApps>[number] | null }) {
+  if (!app) {
+    return null;
+  }
 
   return (
-    <aside className="fixed inset-y-0 right-12 z-20 flex w-80 flex-col border-l bg-background">
-      <header className="flex items-center justify-between border-b p-3">
+    <TailorAppPanel.Content className="fixed inset-y-0 right-12 z-20 flex w-80 flex-col border-l bg-background">
+      <TailorAppPanel.Header className="flex items-center justify-between border-b p-3">
         <div className="min-w-0">
-          <p className="truncate font-medium text-sm">{label}</p>
+          <TailorAppPanel.Title className="truncate font-medium text-sm" />
           {app.description ? (
             <p className="truncate text-muted-foreground text-xs">{app.description}</p>
           ) : null}
         </div>
-        <Button aria-label="Close app panel" onClick={onClose} size="icon" variant="ghost">
+        <TailorAppPanel.Close
+          aria-label="Close app panel"
+          className="inline-flex size-9 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        >
           <X aria-hidden="true" />
-        </Button>
-      </header>
+        </TailorAppPanel.Close>
+      </TailorAppPanel.Header>
       <div className="min-h-0 flex-1 overflow-auto p-4">
-        <tailorClient.Screen app={app} />
+        <TailorAppPanel.Screen />
       </div>
-    </aside>
+    </TailorAppPanel.Content>
   );
 }
 

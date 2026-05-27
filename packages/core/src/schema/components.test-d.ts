@@ -1,6 +1,7 @@
 import { expectTypeOf } from "vitest";
 import type { z } from "zod";
 import type {
+  Component,
   ComponentProps,
   ComponentSlots,
   NoComponentFieldCallbackConflicts,
@@ -25,6 +26,15 @@ expectTypeOf<ComponentSlots<Button>>().toEqualTypeOf<{
   default: unknown;
   icon: unknown;
 }>();
+
+const annotatedComponent: Component = {
+  callbacks: {
+    onValueChange: {
+      input: {} as z.ZodObject<{ value: z.ZodString }>,
+    },
+  },
+};
+void annotatedComponent;
 
 expectTypeOf<
   NoComponentFieldCallbackConflicts<{

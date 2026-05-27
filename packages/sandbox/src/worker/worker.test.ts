@@ -161,6 +161,61 @@ describe("worker runtime", () => {
     });
   });
 
+  it("renders the first implemented screen from the mounted match chain", async () => {
+    vi.stubGlobal("self", {
+      addEventListener(type: string, handler: (event: MessageEvent<unknown>) => void) {
+        listeners.push({ handler, type });
+      },
+      postMessage(message: unknown) {
+        messages.push(message);
+      },
+    });
+    const appUrl = `data:text/javascript,${encodeURIComponent(`
+      function UsersScreen({ context, screen }) {
+        return screen + ":" + context.count;
+      }
+
+      export default {
+        $meta: {
+          preactVersion: "10.0.0"
+        },
+        screens: {
+          "/users": {
+            component: UsersScreen
+          }
+        }
+      };
+    `)}`;
+
+    await import("./worker.js");
+    emitWorkerMessage({
+      data: {
+        appUrl,
+        props: {
+          matches: [
+            { context: { userId: "user_1" }, isLoading: false, screen: "/users/detail" },
+            { context: { count: 3 }, isLoading: false, screen: "/users" },
+          ],
+        },
+      },
+      type: "init",
+    });
+
+    await vi.waitFor(() => {
+      expect(messages).toContainEqual({
+        data: {
+          revision: 1,
+          tree: {
+            children: [{ id: "n:1", kind: "text", text: "/users:3" }],
+            id: "n:2",
+            kind: "fragment",
+          },
+        },
+        type: "snapshot",
+      });
+    });
+  });
+
   it("serializes numeric JSX children as text nodes", async () => {
     vi.stubGlobal("self", {
       addEventListener(type: string, handler: (event: MessageEvent<unknown>) => void) {

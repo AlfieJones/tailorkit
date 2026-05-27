@@ -77,7 +77,7 @@ const callbacks = createTailorKitSchema({
     Dialog: {
       callbacks: {
         onSave: {
-          input: [z.object({ title: z.string() }), z.number()] as const,
+          input: z.object({ title: z.string(), version: z.number() }),
           output: z.object({ saved: z.boolean() }),
         },
         onClose: {},
@@ -91,9 +91,8 @@ const callbacks = createTailorKitSchema({
 });
 
 const dialogProps: ComponentProps<typeof callbacks.components.Dialog> = {
-  onSave: (args_0, args_1) => {
-    expectTypeOf(args_0).toEqualTypeOf<{ title: string }>();
-    expectTypeOf(args_1).toEqualTypeOf<number>();
+  onSave: (input) => {
+    expectTypeOf(input).toEqualTypeOf<{ title: string; version: number }>();
     return { saved: true };
   },
   onClose: () => {},
@@ -101,7 +100,7 @@ const dialogProps: ComponentProps<typeof callbacks.components.Dialog> = {
 };
 void dialogProps;
 expectTypeOf<ComponentProps<typeof callbacks.components.Dialog>>().toMatchTypeOf<{
-  onSave: (args_0: { title: string }, args_1: number) => { saved: boolean };
+  onSave: (input: { title: string; version: number }) => { saved: boolean };
   onClose: () => void;
   onLoad: () => Promise<{ ready: true }>;
 }>();

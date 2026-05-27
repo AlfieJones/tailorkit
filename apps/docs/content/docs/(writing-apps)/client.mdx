@@ -39,8 +39,9 @@ export default function HomeScreen({ context }: HomeScreenProps) {
 }
 ```
 
-The host passes `{ screen, context, isLoading }` when rendering the app. The app
-client selects the matching screen and renders it with those props.
+The host passes the mounted screen match chain when rendering the app. The app
+client selects the first screen it implements and renders it with that match's
+`{ screen, context, isLoading }` props.
 
 ## Runtime Behavior
 
@@ -51,7 +52,8 @@ When a host renders:
 ```
 
 TailorKit resolves the app's client URL, loads the client in the worker, and
-renders the current screen match into the app.
+renders the current screen match chain into the app.
 
-If the selected screen is not implemented by the app client, the worker reports
-an error for that app.
+If the deepest screen is not implemented by the app client, the worker walks
+back through parent matches. If none of the mounted matches are implemented, the
+worker reports an error for that app.

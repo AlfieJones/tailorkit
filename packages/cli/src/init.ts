@@ -5,12 +5,14 @@ import path from "node:path";
 import { cancel, confirm, isCancel, select, spinner, text } from "@clack/prompts";
 import pc from "picocolors";
 import { generateApp, resolveTemplatePackageVersions } from "./generator";
+import { normalizeHostUrl } from "./utils/url";
 
 export interface InitOptions {
   cwd: string;
   directory?: string;
   force?: boolean;
   formatting?: boolean;
+  host?: string;
   install?: boolean;
   linting?: boolean;
   name?: string;
@@ -93,6 +95,36 @@ const promptFormatting = async (given: boolean | undefined): Promise<boolean> =>
   ) as boolean;
 };
 
+const validateHostUrl = (value: string | undefined): string | undefined => {
+  try {
+    normalizeHostUrl(value ?? "");
+    return undefined;
+  } catch {
+    return "Enter a valid host URL.";
+  }
+};
+
+const promptHostUrl = async (given: string | undefined): Promise<string> => {
+  if (given !== undefined) {
+    const error = validateHostUrl(given);
+    if (error !== undefined) {
+      throw new Error(error);
+    }
+    return normalizeHostUrl(given);
+  }
+
+  const defaultValue = "https://example.com/api/tailorkit";
+  const answer = abortIfCancelled(
+    await text({
+      defaultValue,
+      message: "Host URL",
+      placeholder: defaultValue,
+      validate: validateHostUrl,
+    }),
+  );
+  return normalizeHostUrl(answer);
+};
+
 const promptInstall = async (given: boolean | undefined): Promise<boolean> => {
   if (given !== undefined) {
     return given;
@@ -150,6 +182,7 @@ export const runInit = async (options: InitOptions): Promise<string> => {
 
   const force = await promptForce(targetDirectory, options.force ?? false);
   const packageManager = await promptPackageManager(options.packageManager);
+  const hostUrl = await promptHostUrl(options.host);
   const linting = await promptLinting(options.linting);
   const formatting = await promptFormatting(options.formatting);
   const install = await promptInstall(options.install);
@@ -161,7 +194,15 @@ export const runInit = async (options: InitOptions): Promise<string> => {
 
   await mkdir(targetDirectory, { recursive: true });
 
-  await generateApp({ force, formatting, linting, packageName, packageVersions, targetDirectory });
+  await generateApp({
+    force,
+    formatting,
+    hostUrl,
+    linting,
+    packageName,
+    packageVersions,
+    targetDirectory,
+  });
 
   if (install) {
     await runInstall(targetDirectory, packageManager);

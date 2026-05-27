@@ -1,18 +1,21 @@
-import { createTailorKit } from "tailorkit";
+import { createActions } from "tailorkit";
+import type { Component, Screens } from "tailorkit";
 import { primitives } from "tailorkit/zod";
 import { z } from "zod";
 
+import type { DemoUser } from "./auth";
 export * from "./auth";
 
 const Button = {
   fields: z.object({
-    variant: z.enum(["default", "secondary"]),
+    size: z.enum(["default", "sm", "lg", "icon", "icon-sm", "icon-lg"]).optional(),
+    variant: z.enum(["default", "secondary", "ghost", "outline", "destructive"]).optional(),
   }),
   callbacks: {
     onClick: {},
   },
-  slots: ["default"] as const,
-} as const;
+  slots: ["default"],
+} as const satisfies Component;
 
 const Tabs = {
   fields: z.object({
@@ -20,29 +23,29 @@ const Tabs = {
   }),
   callbacks: {
     onValueChange: {
-      input: [z.string()] as const,
+      input: z.object({ value: z.string() }),
     },
   },
-  slots: ["default"] as const,
-} as const;
+  slots: ["default"],
+} as const satisfies Component;
 
 const TabsList = {
-  slots: ["default"] as const,
-} as const;
+  slots: ["default"],
+} as const satisfies Component;
 
 const TabsTab = {
   fields: z.object({
     value: z.string(),
   }),
-  slots: ["default"] as const,
-} as const;
+  slots: ["default"],
+} as const satisfies Component;
 
 const TabsPanel = {
   fields: z.object({
     value: z.string(),
   }),
-  slots: ["default"] as const,
-} as const;
+  slots: ["default"],
+} as const satisfies Component;
 
 const Input = {
   fields: z.object({
@@ -50,37 +53,88 @@ const Input = {
   }),
   callbacks: {
     onValueChange: {
-      input: [z.string()] as const,
+      input: z.object({ value: z.string() }),
     },
   },
-  slots: ["default"] as const,
-} as const;
+  slots: ["default"],
+} as const satisfies Component;
 
-// This is the contract between the your platform and apps
-// Try to avoid breaking changes as this can break any apps which rely on the schema
-export const tailor = createTailorKit({
-  components: {
-    ...primitives({
-      // See https://tailorkit.dev/docs/styling#theme
-      tokens: {
-        borderColor: {
-          default: "var(--border)",
-        },
-        textColor: {
-          default: "var(--text)",
-        },
-      },
-    }),
-    Button,
-    Tabs,
-    TabsList,
-    TabsTab,
-    TabsPanel,
-    Input,
+const TextArea = {
+  fields: z.object({
+    value: z.string(),
+    size: z.union([z.enum(["sm", "default", "lg"]), z.number()]),
+  }),
+  callbacks: {
+    onValueChange: {
+      input: z.object({ value: z.string() }),
+    },
   },
-  screens: {
-    "/": {},
+  slots: ["default"],
+} as const satisfies Component;
+
+export const primitiveTheme = {
+  tokens: {
+    borderColor: {
+      default: "var(--border)",
+    },
+    background: {
+      muted: "var(--muted)",
+      surface: "var(--card)",
+    },
+    textColor: {
+      default: "var(--text)",
+    },
   },
+};
+
+export const components = {
+  ...primitives(primitiveTheme),
+  Button,
+  Tabs,
+  TabsList,
+  TabsTab,
+  TabsPanel,
+  Input,
+  TextArea,
+};
+
+const user = z.object({
+  id: z.string(),
+  name: z.string(),
 });
 
-export const schema = tailor.$internal.schema;
+const customer = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export const screens = {
+  "/": {
+    context: z.object({
+      user,
+    }),
+  },
+  "/customers": {
+    context: z.object({
+      user,
+      customers: z.array(customer),
+    }),
+  },
+  "/customers/detail": {
+    context: z.object({
+      user,
+      customer,
+    }),
+  },
+} satisfies Screens;
+
+const action = createActions().context<{ user: DemoUser }>();
+
+const echoAction = action
+  .input(z.string())
+  .output(z.string())
+  .handler(({ input, context }) => `${context.user.name} said '${input}'`);
+
+export const actions = {
+  echo: echoAction,
+};

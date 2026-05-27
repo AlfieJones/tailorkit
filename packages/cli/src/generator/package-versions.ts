@@ -2,7 +2,7 @@ export interface TemplatePackageVersions {
   oxfmt: string;
   oxlint: string;
   preact: string;
-  tailorkit: string;
+  tailorkitCLI: string;
   tailorkitApp: string;
   typescript: string;
 }
@@ -27,7 +27,7 @@ const REQUESTS = {
   oxfmt: { fallback: "^0.46.0", matcher: "^0", packageName: "oxfmt" },
   oxlint: { fallback: "^1.61.0", matcher: "^1", packageName: "oxlint" },
   preact: { fallback: "^10.29.1", matcher: "^10", packageName: "preact" },
-  tailorkit: { fallback: "latest", matcher: "^0", packageName: "tailorkit" },
+  tailorkitCLI: { fallback: "latest", matcher: "^0", packageName: "@tailorkit/cli" },
   tailorkitApp: {
     fallback: "latest",
     matcher: "^0",
@@ -99,13 +99,13 @@ const resolvePackageVersion = async ({
 };
 
 export const resolveTemplatePackageVersions = async (): Promise<TemplatePackageVersions> => {
-  const [oxfmt, oxlint, preact, tailorkit, tailorkitApp, typescript] = await Promise.all([
+  const [oxfmt, oxlint, preact, tailorkitCLI, tailorkitApp, typescript] = await Promise.all([
     resolvePackageVersion(REQUESTS.oxfmt),
     resolvePackageVersion(REQUESTS.oxlint),
     resolvePackageVersion(REQUESTS.preact),
-    resolvePackageVersion(REQUESTS.tailorkit),
+    resolvePackageVersion(REQUESTS.tailorkitCLI),
     resolvePackageVersion(REQUESTS.tailorkitApp),
     resolvePackageVersion(REQUESTS.typescript),
   ]);
-  return { oxfmt, oxlint, preact, tailorkit, tailorkitApp, typescript };
+  return { oxfmt, oxlint, preact, tailorkitCLI, tailorkitApp, typescript };
 };

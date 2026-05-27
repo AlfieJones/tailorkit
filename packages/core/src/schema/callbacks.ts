@@ -7,17 +7,11 @@ export type Callbacks = CallbackMap;
 
 type VoidResult = ReturnType<() => void>;
 
-type InferCallbackInputTuple<TInput extends readonly unknown[]> = {
-  [K in keyof TInput]: TInput[K] extends StandardSchemaV1
-    ? StandardSchemaV1.InferOutput<TInput[K]>
-    : never;
-};
-
 type InferCallbackInput<TCallback> = TCallback extends {
   input?: infer TInput;
 }
-  ? TInput extends readonly Schema[]
-    ? InferCallbackInputTuple<TInput>
+  ? TInput extends Schema
+    ? StandardSchemaV1.InferOutput<TInput>
     : never
   : never;
 
@@ -34,7 +28,7 @@ type CallbackReturn<TCallback> = TCallback extends { async: true }
 export type InferCallback<TCallback> =
   InferCallbackInput<TCallback> extends never
     ? () => CallbackReturn<TCallback>
-    : (...args: InferCallbackInput<TCallback>) => CallbackReturn<TCallback>;
+    : (input: InferCallbackInput<TCallback>) => CallbackReturn<TCallback>;
 
 export type InferCallbacks<TCallbacks> =
   TCallbacks extends Record<string, unknown>
@@ -48,7 +42,7 @@ export type InferCallbacks<TCallbacks> =
     : EmptyObject;
 
 export interface CallbackDefinition<
-  TInput extends readonly Schema[] | undefined = readonly Schema[] | undefined,
+  TInput extends Schema | undefined = Schema | undefined,
   TOutput extends Schema | undefined = Schema | undefined,
   TAsync extends boolean | undefined = boolean | undefined,
 > {

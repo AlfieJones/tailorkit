@@ -20,13 +20,3 @@ export const serializeSchema = (
   schemaSerializer: SchemaSerializer | undefined,
 ): Record<string, unknown> | undefined =>
   schema === undefined || schemaSerializer === undefined ? undefined : schemaSerializer(schema);
-
-export const serializeSchemaTuple = (
-  schemas: readonly Schema[] | undefined,
-  schemaSerializer: SchemaSerializer | undefined,
-): Record<string, unknown>[] | undefined =>
-  schemas === undefined || schemaSerializer === undefined
-    ? undefined
-    : schemas
-        .map(schemaSerializer)
-        .filter((entry): entry is Record<string, unknown> => entry !== undefined);

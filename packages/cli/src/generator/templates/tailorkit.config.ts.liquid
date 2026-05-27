@@ -1,6 +1,10 @@
-export default {
-  host: "http://localhost:5010/api/tailorkit",
+import type { TailorKitConfig } from "@tailorkit/app/config";
+
+const config = {
+  host: "{{ hostUrl }}",
   client: {
     entry: "./src/client.ts",
   },
-} satisfies import("@tailorkit/app/config").TailorKitConfig;
+} satisfies TailorKitConfig;
+
+export default config;

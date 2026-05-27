@@ -8,7 +8,6 @@ import { runDeploy } from "./deploy";
 import { generateTypes } from "./generator/types";
 import { runInit } from "./init";
 import { runExperimentalPreview, toPreviewOptions } from "./preview";
-import { runExperimentalSchema } from "./schema";
 import { openUrlInBrowser } from "./utils/open-browser";
 
 const cli = cac("tailorkit");
@@ -139,13 +138,20 @@ cli
         cwd: String(options.cwd ?? "."),
         entry: options.entry as string | undefined,
         mode: options.mode as string | undefined,
-        onMissingAppId: async ({ appName, configPath, hostUrl }) => {
+        onMissingAppId: async ({ appName, configPath, hostUrl, reason }) => {
           deploySpinner.stop("App not linked.");
-          log.info(`No appId found in ${pc.cyan(configPath)}.`);
+          log.info(
+            reason === "missing"
+              ? `No appId found in ${pc.cyan(configPath)}.`
+              : `The appId in ${pc.cyan(configPath)} does not exist.`,
+          );
           log.info(`Host: ${pc.cyan(hostUrl)}`);
           const shouldCreate = await confirm({
             initialValue: true,
-            message: `Create a TailorKit app named ${appName}?`,
+            message:
+              reason === "missing"
+                ? `Create a TailorKit app named ${appName}?`
+                : `Create a new TailorKit app named ${appName} and update the config?`,
           });
 
           if (isCancel(shouldCreate)) {
@@ -157,6 +163,28 @@ cli
           }
 
           return shouldCreate;
+        },
+        onTypecheckFailed: async ({ command, output }) => {
+          deploySpinner.stop("Type check failed.");
+          log.error(`Type check failed while running ${pc.cyan(command)}.`);
+          if (output) {
+            log.error(output);
+          }
+
+          const shouldUpload = await confirm({
+            initialValue: false,
+            message: "Type check failed, but the app built successfully. Upload anyway?",
+          });
+
+          if (isCancel(shouldUpload)) {
+            return false;
+          }
+
+          if (shouldUpload) {
+            deploySpinner.start("Uploading app");
+          }
+
+          return shouldUpload;
         },
         outDir: options.outDir as string | undefined,
       });
@@ -227,36 +255,16 @@ cli
   });
 
 cli
-  .command("experimental-schema <path>", "Serialize and print the TailorKit schema from a module")
-  .action(async (filePath: string, options: Record<string, unknown>) => {
-    intro(pc.bold("TailorKit"));
-    try {
-      await runExperimentalSchema({
-        cwd: String(options.cwd ?? "."),
-        filePath,
-      });
-    } catch (error) {
-      log.error(error instanceof Error ? error.message : String(error));
-      process.exit(1);
-    }
-  });
-
-cli
   .command("generate", "Generate TailorKit app bindings")
-  .option("--schema <path>", "Path to tailorkit schema JSON")
+  .option("--config <path>", "Path to tailorkit config")
   .option("--out <path>", "Generated TypeScript output file")
-  .option(
-    "--experimental-schema-file <path>",
-    "Path to a TypeScript module that exports a TailorKit schema",
-  )
   .action(async (options: Record<string, unknown>) => {
     intro(pc.bold("TailorKit"));
     try {
       const outPath = await generateTypes({
+        configPath: options.config as string | undefined,
         cwd: String(options.cwd ?? "."),
-        experimentalSchemaFile: options.experimentalSchemaFile as string | undefined,
         outFile: options.out as string | undefined,
-        schemaFile: options.schema as string | undefined,
       });
       outro(`Generated ${pc.cyan(outPath)}.`);
     } catch (error) {
@@ -268,6 +276,7 @@ cli
 cli
   .command("init [directory]", "Create a new TailorKit app")
   .option("--name <name>", "Package name")
+  .option("--host <url>", "TailorKit host URL")
   .option("--package-manager <pm>", "Package manager: bun, yarn, pnpm, or npm")
   .option("--lint", "Add oxlint (use --no-lint to skip)")
   .option("--format", "Add oxfmt (use --no-format to skip)")
@@ -282,6 +291,7 @@ cli
         directory,
         force: options.force as boolean | undefined,
         formatting: options.format as boolean | undefined,
+        host: options.host as string | undefined,
         install: options.install as boolean | undefined,
         linting: options.lint as boolean | undefined,
         name: options.name as string | undefined,

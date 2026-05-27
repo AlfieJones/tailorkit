@@ -3,7 +3,7 @@ import { JsonSchema } from "./json-schema";
 
 export const SerializedCallback = z.object({
   async: z.boolean().optional(),
-  input: z.array(JsonSchema).optional(),
+  input: JsonSchema.optional(),
   output: JsonSchema.optional(),
 });
 

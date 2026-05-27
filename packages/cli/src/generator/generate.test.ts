@@ -16,13 +16,14 @@ const createTempDir = async (): Promise<string> => {
 const defaultOptions = {
   force: false,
   formatting: false,
+  hostUrl: "https://host.example.com/api/tailorkit",
   linting: false,
   packageName: "test-app",
   packageVersions: {
     oxfmt: "1.0.0",
     oxlint: "1.0.0",
     preact: "10.0.0",
-    tailorkit: "1.2.3",
+    tailorkitCLI: "1.2.3",
     tailorkitApp: "4.5.6",
     typescript: "5.0.0",
   },
@@ -44,7 +45,6 @@ describe("generateApp", () => {
       "package.json",
       "tsconfig.json",
       "tailorkit.config.ts",
-      "tailorkit.schema.json",
       ".gitignore",
       path.join("src", "client.ts"),
       path.join("src", "screens", "default.tsx"),
@@ -113,7 +113,7 @@ describe("generateApp", () => {
 
     const content = await readFile(path.join(targetDirectory, "package.json"), "utf-8");
     expect(content).toContain('"@tailorkit/app": "workspace:*"');
-    expect(content).toContain('"tailorkit": "workspace:*"');
+    expect(content).toContain('"@tailorkit/cli": "workspace:*"');
   });
 
   it("uses resolved dependency versions when useWorkspaceDependencies is false", async () => {
@@ -122,7 +122,7 @@ describe("generateApp", () => {
 
     const content = await readFile(path.join(targetDirectory, "package.json"), "utf-8");
     expect(content).toContain('"@tailorkit/app": "4.5.6"');
-    expect(content).toContain('"tailorkit": "1.2.3"');
+    expect(content).toContain('"@tailorkit/cli": "1.2.3"');
   });
 
   it("includes lint and format scripts when both are enabled", async () => {
@@ -189,7 +189,9 @@ describe("generateApp", () => {
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(path.join(targetDirectory, "tailorkit.config.ts"), "utf-8");
-    expect(content).toContain('satisfies import("@tailorkit/app/config").TailorKitConfig');
+    expect(content).toContain('import type { TailorKitConfig } from "@tailorkit/app/config"');
+    expect(content).toContain("satisfies TailorKitConfig");
+    expect(content).toContain('host: "https://host.example.com/api/tailorkit"');
     expect(content).not.toContain("defineTailorKitConfig");
   });
 
@@ -224,20 +226,6 @@ describe("generateApp", () => {
     const content = await readFile(path.join(targetDirectory, "src", "tailorkit.gen.ts"), "utf-8");
     expect(content).not.toContain("FallbackScreenProps");
     expect(content).not.toContain("DefaultScreenProps");
-  });
-
-  it("generates a valid schema file", async () => {
-    const targetDirectory = await createTempDir();
-    await generateApp({ ...defaultOptions, targetDirectory });
-
-    const content = await readFile(path.join(targetDirectory, "tailorkit.schema.json"), "utf-8");
-    const schema = JSON.parse(content);
-    expect(schema.version).toBe(1);
-    expect(schema.components).toHaveProperty("Button");
-    expect(schema.components).toHaveProperty("Card");
-    expect(schema.screens["/"].context.properties.user.properties.name.type).toBe("string");
-    expect(schema.screens["/"].context.required).toEqual(["user"]);
-    expect(schema.screens["/"].context.properties.user.required).toEqual(["name"]);
   });
 
   it("generates a valid generated types file", async () => {

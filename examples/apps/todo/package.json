@@ -1,5 +1,5 @@
 {
-  "name": "email",
+  "name": "todo",
   "private": true,
   "description": "A TailorKit.dev app that embeds in a host app to extend what it can do.",
   "type": "module",

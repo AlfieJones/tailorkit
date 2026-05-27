@@ -8,7 +8,7 @@ import type {
 } from "./components";
 import { resolveComponentMetadata } from "./components";
 import type { ResolvedScreenMetadata, ScreenDefinitions } from "./screens";
-import { jsonSchemaSerializer, serializeSchema, serializeSchemaTuple } from "./shared";
+import { jsonSchemaSerializer, serializeSchema } from "./shared";
 import type { SchemaSerializer } from "./shared";
 
 type EmptyActionMap = Record<never, never>;
@@ -81,7 +81,7 @@ export const createTailorKitSchema = <
         }
         callbacks[callbackName] = {
           async: callback.async,
-          input: serializeSchemaTuple(callback.input, schemaSerializer),
+          input: serializeSchema(callback.input, schemaSerializer),
           output: serializeSchema(callback.output, schemaSerializer),
         };
       }

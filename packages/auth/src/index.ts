@@ -4,7 +4,7 @@ import { sendBetterAuthOtpEmail, sendOrganizationInvitationEmail } from "@tailor
 import { env, getBaseUrl } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
 import { initializeObservability } from "@tailorkit/observability";
-import { betterAuth } from "better-auth";
+import { betterAuth } from "better-auth/minimal";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { waitUntil as vercelWaitUntil } from "@vercel/functions";

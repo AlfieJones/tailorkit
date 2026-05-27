@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { StandardJSONSchemaV1 } from "@standard-schema/spec";
 import type { TailorKitSchemaSpecType } from "@tailorkit/core/spec";
 import type {
+  TailorKitTheme,
   ActionTree,
   CallbackMap,
   ComponentDefinition,
@@ -35,6 +36,10 @@ type ComponentRenderers<TComponents extends Record<string, AnyComponentDefinitio
   [TName in keyof TComponents]?: ComponentRenderer<TComponents[TName]>;
 };
 
+type CompleteComponentRenderers<TComponents extends Record<string, AnyComponentDefinition>> = {
+  [TName in keyof TComponents]-?: ComponentRenderer<TComponents[TName]>;
+};
+
 export interface TailorKitApp {
   clientPath?: string;
   description?: string;
@@ -65,8 +70,7 @@ interface ScreenMatchEntry {
   id: symbol;
   isLoading: boolean;
   order: number;
-  params?: Record<string, string | undefined>;
-  pattern: string;
+  parentId: symbol | null;
   screen: string;
 }
 
@@ -86,8 +90,6 @@ interface ScreenMatchLoadingProps<
   children?: ReactNode;
   context?: ScreenContext<TScreens[TScreen]>;
   isLoading: true;
-  params?: Record<string, string | undefined>;
-  pattern: string;
   screen: TScreen;
 }
 
@@ -98,8 +100,6 @@ interface ScreenMatchReadyProps<
   children?: ReactNode;
   context: ScreenContext<TScreens[TScreen]>;
   isLoading?: false;
-  params?: Record<string, string | undefined>;
-  pattern: string;
   screen: TScreen;
 }
 
@@ -118,7 +118,10 @@ interface ScreenProps {
 }
 
 const componentTagPrefix = "tailorkit-";
-const ScreenMatchDepthContext = createContext(0);
+const ScreenMatchContext = createContext<{ depth: number; id: symbol | null }>({
+  depth: 0,
+  id: null,
+});
 
 const toComponentTagName = (name: string): string =>
   `${componentTagPrefix}${name
@@ -182,7 +185,8 @@ export function createTailorKitClient<
   TTailor extends { $internal: { schema: AnyServerSchema } },
 >(options: {
   baseUrl: string | URL;
-  components?: ComponentRenderers<ServerComponents<TTailor>>;
+  components?: CompleteComponentRenderers<ServerComponents<TTailor>>;
+  theme?: TailorKitTheme;
 }): TailorKitInstance<ServerScreens<TTailor>> {
   return createReactTailorKitClient<ServerComponents<TTailor>, ServerScreens<TTailor>>(options);
 }
@@ -193,9 +197,11 @@ function createReactTailorKitClient<
 >(options: {
   baseUrl: string | URL;
   components?: ComponentRenderers<TComponents>;
+  theme?: TailorKitTheme;
 }): TailorKitInstance<TScreens> {
   const wrappedComponents: Record<string, unknown> = {};
   const store = createTailorKitStore(options.baseUrl);
+  const theme = options.theme ?? {};
 
   for (const [name, renderer] of Object.entries(options.components ?? {})) {
     if (renderer) {
@@ -231,13 +237,11 @@ function createReactTailorKitClient<
     children,
     context,
     isLoading = false,
-    params,
-    pattern,
     screen,
   }: ScreenMatchProps<TScreens, TScreen>): ReactNode => {
     const id = useMemo(() => Symbol("tailorkit-screen-match"), []);
-    const parentDepth = useContext(ScreenMatchDepthContext);
-    const depth = parentDepth + 1;
+    const parent = useContext(ScreenMatchContext);
+    const depth = parent.depth + 1;
 
     useEffect(() => {
       store.registerMatch({
@@ -245,18 +249,17 @@ function createReactTailorKitClient<
         depth,
         id,
         isLoading,
-        params,
-        pattern,
+        parentId: parent.id,
         screen,
       });
 
       return () => {
         store.unregisterMatch(id);
       };
-    }, [context, depth, id, isLoading, params, pattern, screen]);
+    }, [context, depth, id, isLoading, parent.id, screen]);
 
     return (
-      <ScreenMatchDepthContext.Provider value={depth}>{children}</ScreenMatchDepthContext.Provider>
+      <ScreenMatchContext.Provider value={{ depth, id }}>{children}</ScreenMatchContext.Provider>
     );
   };
 
@@ -272,9 +275,11 @@ function createReactTailorKitClient<
         match === null
           ? undefined
           : {
-              context: match.context,
-              isLoading: match.isLoading,
-              screen: match.screen,
+              matches: store.getMatchChain(match.id).map((entry) => ({
+                context: entry.context,
+                isLoading: entry.isLoading,
+                screen: entry.screen,
+              })),
             },
       [match],
     );
@@ -297,7 +302,6 @@ function createReactTailorKitClient<
       return null;
     }
 
-    const theme = {};
     const screenId = `tailorkit-screen-${reactId.replaceAll(":", "")}`;
 
     return (
@@ -353,15 +357,32 @@ function createTailorKitStore(baseUrlInput: string | URL) {
 
   const selectCurrentMatch = (): void => {
     let selected: ScreenMatchEntry | null = null;
+
     for (const match of matches.values()) {
-      if (
-        selected === null ||
-        match.depth > selected.depth ||
-        (match.depth === selected.depth && match.order > selected.order)
-      ) {
+      if (selected === null || match.depth > selected.depth) {
+        selected = match;
+      }
+
+      if (selected !== null && match.depth === selected.depth && match.order > selected.order) {
         selected = match;
       }
     }
+
+    const deepestMatches =
+      selected === null
+        ? []
+        : [...matches.values()].filter((match) => match.depth === selected.depth);
+
+    if (typeof console !== "undefined" && selected !== null && deepestMatches.length > 1) {
+      console.warn(
+        `TailorKit found multiple active ScreenMatch components at the same depth: ${deepestMatches
+          .map((match) => `"${match.screen}"`)
+          .join(", ")}. TailorKit selected "${
+          selected.screen
+        }" by mount order, but same-depth matches are ambiguous. Nest related matches or render one match conditionally.`,
+      );
+    }
+
     currentMatch = selected;
   };
 
@@ -440,6 +461,17 @@ function createTailorKitStore(baseUrlInput: string | URL) {
     getApps: (): TailorKitApp[] => appsSnapshot.apps,
     getAppsSnapshot: (): TailorKitAppsSnapshot => appsSnapshot,
     getCurrentMatch: (): ScreenMatchEntry | null => currentMatch,
+    getMatchChain: (id: symbol): ScreenMatchEntry[] => {
+      const chain: ScreenMatchEntry[] = [];
+      let next = matches.get(id) ?? null;
+
+      while (next !== null) {
+        chain.push(next);
+        next = next.parentId === null ? null : (matches.get(next.parentId) ?? null);
+      }
+
+      return chain;
+    },
     getMetaSnapshot: (): TailorKitMetaSnapshot => metaSnapshot,
     registerMatch: (entry: Omit<ScreenMatchEntry, "order">): void => {
       const existing = matches.get(entry.id);

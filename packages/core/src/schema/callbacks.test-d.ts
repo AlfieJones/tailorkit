@@ -3,7 +3,7 @@ import type { z } from "zod";
 import type { InferCallback, InferCallbacks } from "./callbacks";
 
 interface SaveCallback {
-  input: readonly [z.ZodObject<{ title: z.ZodString }>, z.ZodNumber];
+  input: z.ZodObject<{ title: z.ZodString; version: z.ZodNumber }>;
   output: z.ZodObject<{ saved: z.ZodBoolean }>;
 }
 
@@ -13,7 +13,7 @@ interface LoadCallback {
 }
 
 expectTypeOf<InferCallback<SaveCallback>>().toEqualTypeOf<
-  (args_0: { title: string }, args_1: number) => { saved: boolean }
+  (input: { title: string; version: number }) => { saved: boolean }
 >();
 
 expectTypeOf<InferCallback<LoadCallback>>().toEqualTypeOf<() => Promise<{ ready: true }>>();

@@ -12,7 +12,6 @@ import {
   oxlintConfigTemplate,
   packageJsonTemplate,
   tailorkitConfigTemplate,
-  tailorkitSchemaTemplate,
   tsconfigTemplate,
 } from "./templates/index";
 
@@ -20,13 +19,14 @@ export interface GenerateAppOptions {
   targetDirectory: string;
   force: boolean;
   formatting: boolean;
+  hostUrl: string;
   linting: boolean;
   packageName: string;
   packageVersions: {
     oxfmt: string;
     oxlint: string;
     preact: string;
-    tailorkit: string;
+    tailorkitCLI: string;
     tailorkitApp: string;
     typescript: string;
   };
@@ -57,6 +57,7 @@ export const generateApp = async (options: GenerateAppOptions): Promise<void> =>
     targetDirectory,
     force,
     formatting,
+    hostUrl,
     linting,
     packageName,
     packageVersions,
@@ -66,7 +67,9 @@ export const generateApp = async (options: GenerateAppOptions): Promise<void> =>
   const tailorkitAppVersion = useWorkspaceDependencies
     ? "workspace:*"
     : packageVersions.tailorkitApp;
-  const tailorkitVersion = useWorkspaceDependencies ? "workspace:*" : packageVersions.tailorkit;
+  const tailorkitCLIVersion = useWorkspaceDependencies
+    ? "workspace:*"
+    : packageVersions.tailorkitCLI;
 
   const checkParts: string[] = [];
   const fixParts: string[] = [];
@@ -83,13 +86,14 @@ export const generateApp = async (options: GenerateAppOptions): Promise<void> =>
     checkScript: checkParts.join(" && "),
     fixScript: fixParts.join(" && "),
     formatting,
+    hostUrl,
     linting,
     oxfmtVersion: packageVersions.oxfmt,
     oxlintVersion: packageVersions.oxlint,
     packageName,
     preactVersion: packageVersions.preact,
     tailorkitAppVersion,
-    tailorkitVersion,
+    tailorkitCLIVersion,
     typescriptVersion: packageVersions.typescript,
   };
 
@@ -99,7 +103,6 @@ export const generateApp = async (options: GenerateAppOptions): Promise<void> =>
     { template: packageJsonTemplate, dest: "package.json" },
     { template: tsconfigTemplate, dest: "tsconfig.json" },
     { template: tailorkitConfigTemplate, dest: "tailorkit.config.ts" },
-    { template: tailorkitSchemaTemplate, dest: "tailorkit.schema.json" },
     { template: gitignoreTemplate, dest: ".gitignore" },
     { template: oxlintConfigTemplate, dest: "oxlint.config.ts", condition: linting },
     { template: oxfmtConfigTemplate, dest: "oxfmt.config.ts", condition: formatting },

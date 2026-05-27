@@ -17,6 +17,7 @@
     "./server/types": "./src/server/types.ts",
     "./schema": "./src/schema/index.ts",
     "./spec": "./src/spec/index.ts",
+    "./primitives/theme": "./src/primitives/theme.ts",
     "./primitives/zod": "./src/primitives/zod.ts",
     "./primitives/valibot": "./src/primitives/valibot.ts",
     "./primitives/arktype": "./src/primitives/arktype.ts"

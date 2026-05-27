@@ -1,13 +1,22 @@
 import { createHash } from "node:crypto";
+import { createRequire } from "node:module";
+import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { gzip } from "node:zlib";
 import type { TailorKitUploadManifest } from "@tailorkit/app/builder";
+import type { LoadedTailorKitConfig } from "@tailorkit/app/config/loader";
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
 import { createTailorKitClient } from "@tailorkit/core/server";
 import type { z } from "zod";
 import { getDeployToken, runWhoami } from "./auth";
+
+export interface TypecheckFailure {
+  command: string;
+  exitCode: number | null;
+  output: string;
+}
 
 interface DeployOptions {
   configPath?: string;
@@ -18,7 +27,9 @@ interface DeployOptions {
     appName: string;
     configPath: string;
     hostUrl: string;
+    reason: "missing" | "not-found";
   }) => Promise<boolean>;
+  onTypecheckFailed?: (failure: TypecheckFailure) => Promise<boolean>;
   outDir?: string;
 }
 
@@ -71,6 +82,22 @@ const unwrapRpcResult = <T>(result: unknown): T => {
 
   return body as T;
 };
+
+const getErrorMessage = (error: unknown): string | undefined => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" ? message : undefined;
+  }
+};
+
+const isNotFoundError = (error: unknown): boolean =>
+  getErrorMessage(error)?.toLowerCase().includes("not found") ?? false;
 
 const readUploadManifest = async (
   outDir: string,
@@ -150,6 +177,149 @@ const uploadAsset = async (asset: DeploymentAssetUpload, content: Buffer): Promi
   }
 };
 
+const resolveTsconfig = (root: string): string | undefined => {
+  for (const filename of ["tsconfig.json", "jsconfig.json"]) {
+    const filepath = path.join(root, filename);
+    if (existsSync(filepath)) {
+      return filepath;
+    }
+  }
+};
+
+interface TypeScriptModule {
+  createCompilerHost(options: unknown): unknown;
+  createProgram(options: { options: unknown; rootNames: string[]; host: unknown }): {
+    emit(): { diagnostics: readonly unknown[] };
+  };
+  flattenDiagnosticMessageText(messageText: unknown, newLine: string): string;
+  getLineAndCharacterOfPosition(
+    sourceFile: unknown,
+    position: number,
+  ): {
+    character: number;
+    line: number;
+  };
+  getPreEmitDiagnostics(program: unknown): readonly unknown[];
+  parseJsonConfigFileContent(
+    json: unknown,
+    host: unknown,
+    basePath: string,
+    existingOptions?: Record<string, unknown>,
+    configFileName?: string,
+  ): {
+    errors: readonly unknown[];
+    options: unknown;
+  };
+  readConfigFile(
+    configFileName: string,
+    readFile: (path: string) => string | undefined,
+  ): {
+    config?: unknown;
+    error?: unknown;
+  };
+  sys: {
+    fileExists: (path: string) => boolean;
+    readDirectory: unknown;
+    readFile: (path: string) => string | undefined;
+    useCaseSensitiveFileNames: boolean;
+  };
+}
+
+interface TypeScriptDiagnostic {
+  category: number;
+  code: number;
+  file?: {
+    fileName: string;
+  };
+  messageText: unknown;
+  start?: number;
+}
+
+const loadTypeScript = (root: string): TypeScriptModule | undefined => {
+  const requireFromApp = createRequire(path.join(root, "package.json"));
+  try {
+    return requireFromApp("typescript") as TypeScriptModule;
+  } catch {
+    return undefined;
+  }
+};
+
+const formatDiagnostics = (
+  ts: TypeScriptModule,
+  diagnostics: readonly unknown[],
+  root: string,
+): string =>
+  diagnostics
+    .map((diagnostic) => {
+      const typedDiagnostic = diagnostic as TypeScriptDiagnostic;
+      const message = ts.flattenDiagnosticMessageText(typedDiagnostic.messageText, "\n");
+      if (typedDiagnostic.file === undefined || typedDiagnostic.start === undefined) {
+        return `TS${typedDiagnostic.code}: ${message}`;
+      }
+
+      const position = ts.getLineAndCharacterOfPosition(
+        typedDiagnostic.file,
+        typedDiagnostic.start,
+      );
+      const fileName = path.relative(root, typedDiagnostic.file.fileName);
+      return `${fileName}(${position.line + 1},${position.character + 1}): error TS${typedDiagnostic.code}: ${message}`;
+    })
+    .join("\n");
+
+const typecheckClientEntry = (
+  loaded: LoadedTailorKitConfig,
+  options: DeployOptions,
+): TypecheckFailure | undefined => {
+  const ts = loadTypeScript(loaded.root);
+  const baseTsconfig = resolveTsconfig(loaded.root);
+  if (ts === undefined || baseTsconfig === undefined) {
+    return undefined;
+  }
+
+  const entry = options.entry ?? loaded.config.client?.entry ?? "./src/client.ts";
+  const entryPath = path.resolve(loaded.root, entry);
+  const readResult = ts.readConfigFile(baseTsconfig, ts.sys.readFile);
+  if (readResult.error !== undefined) {
+    return {
+      command: `tsc --noEmit ${path.relative(loaded.root, entryPath)}`,
+      exitCode: 1,
+      output: formatDiagnostics(ts, [readResult.error], loaded.root),
+    };
+  }
+
+  const parsed = ts.parseJsonConfigFileContent(
+    readResult.config,
+    ts.sys,
+    loaded.root,
+    { noEmit: true },
+    baseTsconfig,
+  );
+  if (parsed.errors.length > 0) {
+    return {
+      command: `tsc --noEmit ${path.relative(loaded.root, entryPath)}`,
+      exitCode: 1,
+      output: formatDiagnostics(ts, parsed.errors, loaded.root),
+    };
+  }
+
+  const host = ts.createCompilerHost(parsed.options);
+  const program = ts.createProgram({
+    host,
+    options: parsed.options,
+    rootNames: [entryPath],
+  });
+  const diagnostics = [...ts.getPreEmitDiagnostics(program), ...program.emit().diagnostics];
+  if (diagnostics.length === 0) {
+    return undefined;
+  }
+
+  return {
+    command: `tsc --noEmit ${path.relative(loaded.root, entryPath)}`,
+    exitCode: 1,
+    output: formatDiagnostics(ts, diagnostics, loaded.root),
+  };
+};
+
 export const runDeploy = async (options: DeployOptions): Promise<DeployResult> => {
   const loaded = await loadTailorKitConfig(options.configPath, options.cwd);
   let appId = loaded.config.appId;
@@ -165,7 +335,25 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
   }
 
   const { buildApp, tailorkitUploadManifestSchema } = await import("@tailorkit/app/builder");
-  await buildApp(options);
+  const [buildResult, typecheckResult] = await Promise.allSettled([
+    buildApp(options),
+    typecheckClientEntry(loaded, options),
+  ]);
+
+  if (buildResult.status === "rejected") {
+    throw buildResult.reason;
+  }
+
+  if (typecheckResult.status === "rejected") {
+    throw typecheckResult.reason;
+  }
+
+  if (typecheckResult.value !== undefined) {
+    const shouldContinue = await options.onTypecheckFailed?.(typecheckResult.value);
+    if (!shouldContinue) {
+      throw new Error("Deployment cancelled because type check failed.");
+    }
+  }
 
   const outDir = path.resolve(
     loaded.root,
@@ -181,16 +369,17 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
     url: auth.hostUrl,
   });
 
-  if (!appId) {
+  const createLinkedApp = async (reason: "missing" | "not-found"): Promise<string> => {
     const appName = await readAppName(loaded.root);
     const shouldCreateApp = await options.onMissingAppId?.({
       appName,
       configPath: loaded.filepath,
       hostUrl: auth.hostUrl,
+      reason,
     });
 
     if (!shouldCreateApp) {
-      throw new Error("Missing appId in tailorkit.config.ts. Deployment cancelled.");
+      throw new Error("Deployment cancelled.");
     }
 
     const app = unwrapRpcResult<AppCreateResult>(
@@ -203,22 +392,40 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
     appId = app.id;
     createdApp = true;
     await writeAppIdToConfig(loaded.filepath, appId);
+    return appId;
+  };
+
+  if (!appId) {
+    appId = await createLinkedApp("missing");
   }
 
-  const created = unwrapRpcResult<DeploymentCreateResult>(
-    await client.deployments.create({
-      appId,
-      assets: [
-        {
-          checksum: sha256Hex(clientAsset),
-          contentLength: clientAsset.byteLength,
-          contentType: "application/javascript",
-          encoding: "utf-8",
-          objectKey: manifest.assets.client,
-        },
-      ],
-    }),
-  );
+  const createDeployment = async (targetAppId: string): Promise<DeploymentCreateResult> =>
+    unwrapRpcResult<DeploymentCreateResult>(
+      await client.deployments.create({
+        appId: targetAppId,
+        assets: [
+          {
+            checksum: sha256Hex(clientAsset),
+            contentLength: clientAsset.byteLength,
+            contentType: "application/javascript",
+            encoding: "utf-8",
+            objectKey: manifest.assets.client,
+          },
+        ],
+      }),
+    );
+
+  let created: DeploymentCreateResult;
+  try {
+    created = await createDeployment(appId);
+  } catch (error) {
+    if (!isNotFoundError(error)) {
+      throw error;
+    }
+
+    appId = await createLinkedApp("not-found");
+    created = await createDeployment(appId);
+  }
 
   await uploadAsset(created.assets[0], clientAsset);
 

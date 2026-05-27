@@ -4,7 +4,9 @@ export interface ScreenDefinition<TContext extends Schema | undefined = Schema |
   context?: TContext;
 }
 
-export type ScreenDefinitions = Record<string, ScreenDefinition>;
+export type ScreenRoute = `/${string}`;
+
+export type ScreenDefinitions = Record<ScreenRoute, ScreenDefinition>;
 
 export interface ResolvedScreenMetadata {
   context?: Schema;

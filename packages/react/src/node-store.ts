@@ -36,6 +36,30 @@ export class NodeStore {
   private rootListeners = new Set<Listener>();
   private rootId: string | null = null;
 
+  clear(): void {
+    const nodeIds = [...this.nodeListeners.keys()];
+    const hadRoot = this.rootId !== null;
+
+    this.nodes = new Map();
+    this.signatures = new Map();
+    this.rootId = null;
+
+    for (const id of nodeIds) {
+      const subs = this.nodeListeners.get(id);
+      if (subs) {
+        for (const l of subs) {
+          l();
+        }
+      }
+    }
+
+    if (hadRoot) {
+      for (const l of this.rootListeners) {
+        l();
+      }
+    }
+  }
+
   setSnapshot(tree: RemoteNode): void {
     const next = new Map<string, RemoteNode>();
     flattenTree(tree, next);

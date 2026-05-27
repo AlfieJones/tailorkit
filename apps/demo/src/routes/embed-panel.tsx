@@ -81,7 +81,7 @@ function EmbedPanel() {
   }
 
   return (
-    <tailorClient.ScreenMatch context={{}} pattern="/" screen="/">
+    <tailorClient.ScreenMatch context={{}} screen="/">
       <main className="h-screen flex flex-col" style={cssVars}>
         {/* Panel header */}
         <div

@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "tailorkit build",
-    "generate": "tailorkit generate --experimental-schema-file ../../shared/src/index.ts",
+    "generate": "tailorkit generate",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt --check",

@@ -1,23 +1,6 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { generateTypes, renderGeneratedTypes } from "./types";
-
-const testDirectories: string[] = [];
-
-const createTempDir = async (): Promise<string> => {
-  const directory = await mkdtemp(path.join(tmpdir(), "tailorkit-types-"));
-  testDirectories.push(directory);
-  return directory;
-};
-
-afterEach(async () => {
-  for (const directory of testDirectories.splice(0)) {
-    await rm(directory, { force: true, recursive: true });
-  }
-});
+import { renderGeneratedTypes } from "./types";
 
 describe("renderGeneratedTypes", () => {
   it("generates screen props from schema screens", () => {
@@ -45,7 +28,16 @@ describe("renderGeneratedTypes", () => {
           callbacks: {
             onClick: {},
             onValueChange: {
-              input: [{ type: "string" }],
+              input: {
+                additionalProperties: false,
+                properties: {
+                  value: {
+                    type: "string",
+                  },
+                },
+                required: ["value"],
+                type: "object",
+              },
             },
           },
           fields: {
@@ -67,12 +59,13 @@ describe("renderGeneratedTypes", () => {
       screens: {},
     });
 
-    expect(output).toContain("export type Disabled = boolean;");
-    expect(output).toContain("export type Label = string;");
-    expect(output).toContain("disabled?: Disabled;");
-    expect(output).toContain("label?: Label;");
+    expect(output).not.toContain("export type Disabled = boolean;");
+    expect(output).not.toContain("export type Label = string;");
+    expect(output).toContain("disabled?: boolean;");
+    expect(output).toContain("label?: string;");
     expect(output).toContain("onClick?: () => void;");
-    expect(output).toContain("onValueChange?: (value1: string) => void;");
+    expect(output).toContain("onValueChange?: (input: {");
+    expect(output).toContain("value: string;");
     expect(output).toContain('createRemoteComponent<ButtonProps, readonly ["default"]>');
     expect(output).toContain('callbacks: { "onClick": 0, "onValueChange": 1 }');
   });
@@ -89,8 +82,8 @@ describe("renderGeneratedTypes", () => {
       screens: {},
     });
 
-    expect(output).toContain("export type Variant = unknown;");
-    expect(output).toContain("variant?: Variant;");
+    expect(output).not.toContain("export type Variant = unknown;");
+    expect(output).toContain("variant?: unknown;");
   });
 
   it("generates primitive component props from serialized fields", () => {
@@ -167,6 +160,61 @@ describe("renderGeneratedTypes", () => {
     expect(output).toContain("margin?: Margin;");
   });
 
+  it("generates literal responsive primitive props from const unions", () => {
+    const responsiveConstUnion = (...values: string[]) => ({
+      anyOf: [
+        {
+          anyOf: values.map((value) => ({ const: value, type: "string" })),
+        },
+        {
+          additionalProperties: false,
+          properties: {
+            base: {
+              anyOf: values.map((value) => ({ const: value, type: "string" })),
+            },
+            md: {
+              anyOf: values.map((value) => ({ const: value, type: "string" })),
+            },
+          },
+          type: "object",
+        },
+      ],
+    });
+
+    const output = renderGeneratedTypes({
+      components: {
+        Flex: {
+          callbacks: {},
+          fields: {
+            properties: {
+              align: responsiveConstUnion("start", "center", "end", "stretch"),
+              direction: responsiveConstUnion("row", "column"),
+              grow: responsiveConstUnion("0", "1"),
+              justify: responsiveConstUnion("start", "center", "end", "between"),
+              shrink: responsiveConstUnion("0", "1"),
+              wrap: responsiveConstUnion("wrap", "nowrap", "wrap-reverse"),
+            },
+            type: "object",
+          },
+          slots: ["default"],
+        },
+      },
+      screens: {},
+    });
+
+    expect(output).toContain('export type Grow = Responsive<"0" | "1">;');
+    expect(output).toContain('export type Shrink = Responsive<"0" | "1">;');
+    expect(output).toContain(
+      'export type Align = Responsive<"start" | "center" | "end" | "stretch">;',
+    );
+    expect(output).toContain('export type Direction = Responsive<"row" | "column">;');
+    expect(output).toContain(
+      'export type Justify = Responsive<"start" | "center" | "end" | "between">;',
+    );
+    expect(output).toContain('export type Wrap = Responsive<"wrap" | "nowrap" | "wrap-reverse">;');
+    expect(output).toContain("direction?: Direction;");
+  });
+
   it("generates never for primitive props with no configured tokens", () => {
     const output = renderGeneratedTypes({
       components: {
@@ -240,33 +288,5 @@ describe("renderGeneratedTypes", () => {
     expect(output).toContain("}) => Promise<{");
     expect(output).toContain("id: string;");
     expect(output).not.toContain("requestContext");
-  });
-});
-
-describe("generateTypes", () => {
-  it("writes generated types from tailorkit.schema.json", async () => {
-    const targetDirectory = await createTempDir();
-    await writeFile(
-      path.join(targetDirectory, "tailorkit.schema.json"),
-      JSON.stringify({
-        components: {},
-        screens: {
-          "/test": {
-            context: {
-              additionalProperties: false,
-              properties: {},
-              type: "object",
-            },
-          },
-        },
-        version: 1,
-      }),
-      "utf-8",
-    );
-
-    await generateTypes({ cwd: targetDirectory });
-
-    const output = await readFile(path.join(targetDirectory, "src", "tailorkit.gen.ts"), "utf-8");
-    expect(output).toContain('"/test": {');
   });
 });

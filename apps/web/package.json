@@ -37,7 +37,7 @@
     "@tanstack/react-devtools": "^0.10.5",
     "@tanstack/react-form": "^1.29.1",
     "@tanstack/react-form-devtools": "^0.2.27",
-    "@tanstack/react-query": "^5.100.13",
+    "@tanstack/react-query": "^5.100.14",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-ssr-query": "^1.167.0",
     "@tanstack/react-start": "catalog:",
@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
-    "@tanstack/react-query-devtools": "^5.100.13",
+    "@tanstack/react-query-devtools": "^5.100.14",
     "@tanstack/react-router-devtools": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

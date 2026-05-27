@@ -1,8 +1,6 @@
 import { createScreen } from "@tailorkit/app";
 import { useState } from "preact/hooks";
-import { Box, Button, Flex, Tabs, TabsList, TabsPanel, TabsTab } from "#tailorkit";
-
-type View = "notes" | "tasks";
+import { Box, Button, Flex, Input, TextArea } from "#tailorkit";
 
 interface Note {
   id: string;
@@ -10,23 +8,17 @@ interface Note {
   body: string;
 }
 
-interface Task {
-  id: string;
-  text: string;
-  done: boolean;
-}
-
 const starterNotes: Note[] = [
   {
     id: "note-welcome",
     title: "Welcome note",
-    body: "A small place for notes and tasks.",
+    body: "Capture the decision, not the whole meeting.",
   },
-];
-
-const starterTasks: Task[] = [
-  { id: "task-review", text: "Review today's notes", done: false },
-  { id: "task-plan", text: "Pick the next task", done: true },
+  {
+    id: "note-follow-up",
+    title: "Follow up",
+    body: "Send the revised plan after todos are updated.",
+  },
 ];
 
 const screen = createScreen("/", {
@@ -34,174 +26,132 @@ const screen = createScreen("/", {
 });
 
 function ScreenComponent() {
-  const [view, setView] = useState<View>("notes");
   const [notes, setNotes] = useState<Note[]>(starterNotes);
-  const [tasks, setTasks] = useState<Task[]>(starterTasks);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const selectedNote = notes.find((note) => note.id === selectedNoteId);
 
   return (
-    <Box background="muted" padding="lg" width="full">
-      <Flex direction="column" gap="lg">
-        <AppHeader name="Acmes" />
-
-        <Tabs value={view} onValueChange={(nextView) => setView(nextView as View)}>
-          <Flex justify="between" align="center" gap="md">
-            <TabsList variant="underline">
-              <TabsTab value="notes">Notes</TabsTab>
-              <TabsTab value="tasks">Tasks</TabsTab>
-            </TabsList>
-            {view === "notes" ? (
-              <Button variant="default" onClick={addNote}>
-                Add note
-              </Button>
-            ) : (
-              <Button variant="default" onClick={addTask}>
-                Add task
-              </Button>
-            )}
-          </Flex>
-
-          <TabsPanel value="notes">
-            <NotesPanel notes={notes} onDelete={deleteNote} />
-          </TabsPanel>
-          <TabsPanel value="tasks">
-            <TasksPanel tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} />
-          </TabsPanel>
-        </Tabs>
-      </Flex>
+    <Box width="full" overflowWrap="anywhere">
+      {selectedNote ? (
+        <NoteView
+          note={selectedNote}
+          onBack={() => setSelectedNoteId(null)}
+          onDelete={deleteNote}
+          onUpdate={updateNote}
+        />
+      ) : (
+        <NotesList notes={notes} onAdd={addNote} onSelect={setSelectedNoteId} />
+      )}
     </Box>
   );
 
   function addNote() {
     const count = notes.length + 1;
+    const note: Note = {
+      id: createId("note"),
+      title: `Note ${count}`,
+      body: "",
+    };
 
-    setNotes((current) => [
-      {
-        id: createId("note"),
-        title: `Note ${count}`,
-        body: "A quick note added from the example app.",
-      },
-      ...current,
-    ]);
+    setNotes((current) => [note, ...current]);
+    setSelectedNoteId(note.id);
+  }
+
+  function updateNote(id: string, changes: Partial<Pick<Note, "title" | "body">>) {
+    setNotes((current) => current.map((note) => (note.id === id ? { ...note, ...changes } : note)));
   }
 
   function deleteNote(id: string) {
     setNotes((current) => current.filter((note) => note.id !== id));
-  }
-
-  function addTask() {
-    const count = tasks.length + 1;
-
-    setTasks((current) => [
-      {
-        id: createId("task"),
-        text: `Task ${count}`,
-        done: false,
-      },
-      ...current,
-    ]);
-  }
-
-  function toggleTask(id: string) {
-    setTasks((current) =>
-      current.map((task) => (task.id === id ? { ...task, done: !task.done } : task)),
-    );
-  }
-
-  function deleteTask(id: string) {
-    setTasks((current) => current.filter((task) => task.id !== id));
+    setSelectedNoteId(null);
   }
 }
 
-function AppHeader({ name }: { name?: string }) {
+function NotesList({
+  notes,
+  onAdd,
+  onSelect,
+}: {
+  notes: Note[];
+  onAdd: () => void;
+  onSelect: (id: string) => void;
+}) {
   return (
-    <Flex direction="column" gap="xs">
-      <Flex direction="column" gap="2xs">
-        <Box>{name ? `${name}'s workspace` : "Notes workspace"}</Box>
-        <Box>Simple notes and tasks</Box>
-      </Flex>
-    </Flex>
-  );
-}
+    <Flex direction="column" gap="lg">
+      <Button variant="default" onClick={onAdd}>
+        Add note
+      </Button>
 
-function NotesPanel({ notes, onDelete }: { notes: Note[]; onDelete: (id: string) => void }) {
-  return (
-    <Flex direction="column" gap="md">
-      <Flex justify="between" align="center" gap="md">
-        <Box>{notes.length} notes</Box>
-      </Flex>
-
-      <Flex direction="column" gap="sm">
+      <Flex direction="column" gap="md">
         {notes.map((note) => (
-          <NoteCard key={note.id} note={note} onDelete={onDelete} />
+          <NoteListItem key={note.id} note={note} onSelect={onSelect} />
         ))}
       </Flex>
     </Flex>
   );
 }
 
-function NoteCard({ note, onDelete }: { note: Note; onDelete: (id: string) => void }) {
+function NoteListItem({ note, onSelect }: { note: Note; onSelect: (id: string) => void }) {
   return (
-    <Box background="surface" border="solid" borderColor="default" padding="md" radius="md">
-      <Flex direction="column" gap="sm">
-        <Flex justify="between" align="center" gap="md">
-          <Box>{note.title}</Box>
-          <Button variant="destructive" onClick={() => onDelete(note.id)}>
-            Delete
-          </Button>
-        </Flex>
-        <Box>{note.body}</Box>
+    <Box
+      background="surface"
+      border="solid"
+      borderColor="default"
+      padding="md"
+      radius="md"
+      width="full"
+    >
+      <Flex direction="column" gap="md">
+        <Box>{note.title || "Untitled note"}</Box>
+        <Box>{note.body || "No note text yet."}</Box>
+        <Button variant="secondary" onClick={() => onSelect(note.id)}>
+          Open
+        </Button>
       </Flex>
     </Box>
   );
 }
 
-function TasksPanel({
-  tasks,
-  onToggle,
+function NoteView({
+  note,
+  onBack,
   onDelete,
+  onUpdate,
 }: {
-  tasks: Task[];
-  onToggle: (id: string) => void;
+  note: Note;
+  onBack: () => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, changes: Partial<Pick<Note, "title" | "body">>) => void;
 }) {
   return (
-    <Flex direction="column" gap="md">
-      <Flex justify="between" align="center" gap="md">
-        <Box>{tasks.filter((task) => !task.done).length} open tasks</Box>
+    <Flex direction="column" gap="lg">
+      <Flex direction="column" gap="lg">
+        <Flex align="center" gap="md" justify="between">
+          <Box>{note.title || "Untitled note"}</Box>
+          <Button size="icon-sm" variant="destructive" onClick={() => onDelete(note.id)}>
+            X
+          </Button>
+        </Flex>
+        <Input
+          value={note.title}
+          onValueChange={({ value }) => onUpdate(note.id, { title: value })}
+        />
+        <TextArea
+          size="lg"
+          value={note.body}
+          onValueChange={({ value }) => onUpdate(note.id, { body: value })}
+        />
       </Flex>
 
-      <Flex direction="column" gap="sm">
-        {tasks.map((task) => (
-          <TaskRow key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} />
-        ))}
+      <Flex gap="md">
+        <Button variant="secondary" onClick={onBack}>
+          Cancel
+        </Button>
+        <Button variant="default" onClick={onBack}>
+          Save
+        </Button>
       </Flex>
     </Flex>
-  );
-}
-
-function TaskRow({
-  task,
-  onToggle,
-  onDelete,
-}: {
-  task: Task;
-  onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
-}) {
-  return (
-    <Box background="surface" border="solid" borderColor="default" padding="md" radius="md">
-      <Flex justify="between" align="center" gap="md">
-        <Box>{task.done ? `Done: ${task.text}` : task.text}</Box>
-        <Flex gap="sm">
-          <Button variant="default" onClick={() => onToggle(task.id)}>
-            {task.done ? "Undo" : "Done"}
-          </Button>
-          <Button variant="destructive" onClick={() => onDelete(task.id)}>
-            Delete
-          </Button>
-        </Flex>
-      </Flex>
-    </Box>
   );
 }
 

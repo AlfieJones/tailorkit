@@ -54,7 +54,7 @@ const BadgeComponent = component({
 const CheckboxComponent = component({
   callbacks: {
     onCheckedChange: {
-      input: [z.boolean()],
+      input: z.boolean(),
     },
   },
   fields: z.object({
@@ -72,7 +72,7 @@ const CardFooterComponent = component({ slots: ["default"] });
 const InputComponent = component({
   callbacks: {
     onValueChange: {
-      input: [z.string()],
+      input: z.string(),
     },
   },
   fields: z.object({
@@ -87,7 +87,7 @@ const TabsComponent = component({
   }),
   callbacks: {
     onValueChange: {
-      input: [z.string()],
+      input: z.string(),
     },
   },
   slots: ["default"],

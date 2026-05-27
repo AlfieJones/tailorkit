@@ -34,6 +34,7 @@ describe("react primitives", () => {
   it("builds screen-scoped theme variables", () => {
     const css = buildThemeCss("screen-1", theme);
     expect(css).toContain('[data-tailorkit-screen="screen-1"]');
+    expect(css).toContain("--tailorkit-border-solid: solid;");
     expect(css).toContain("--tailorkit-space-md: 8px;");
     expect(css).toContain("--tailorkit-background-surface: var(--background);");
     expect(css).toContain("--tailorkit-textColor-muted: var(--muted-foreground);");
@@ -45,6 +46,7 @@ describe("react primitives", () => {
         {primitives.Flex({
           props: {
             direction: { base: "column", lg: "row" },
+            border: "solid",
             gap: "md",
             padding: { base: "md", lg: "lg" },
             textColor: { base: "muted", lg: "foreground" },
@@ -59,6 +61,8 @@ describe("react primitives", () => {
     const style = node?.querySelector("style");
     expect(node?.tagName).toBe("DIV");
     expect(style?.textContent).toContain("display: flex;");
+    expect(style?.textContent).toContain("border-style: var(--tailorkit-border-solid);");
+    expect(style?.textContent).toContain("border-width: 1px;");
     expect(style?.textContent).toContain("padding: var(--tailorkit-space-md);");
     expect(style?.textContent).toContain("color: var(--tailorkit-textColor-muted);");
     expect(style?.textContent).toContain("@media (min-width: 1024px)");

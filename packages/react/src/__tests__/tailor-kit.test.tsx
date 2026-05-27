@@ -21,7 +21,7 @@ vi.mock("@tailorkit/sandbox/host", () => ({
       id: `root-${hostRecords.length}`,
       kind: "element",
       props: {},
-      type: "Button",
+      type: appUrl.toString().includes("missing-component") ? "MissingComponent" : "Button",
     };
     let listener: (() => void) | null = null;
 
@@ -81,14 +81,9 @@ function ScreenMatchHost({
   tailor: ReturnType<typeof createTailorKitClient<typeof server>>;
 }) {
   return (
-    <tailor.ScreenMatch pattern="/" screen="/home" context={{ page: "home" }}>
+    <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
       {nested && (
-        <tailor.ScreenMatch
-          pattern="/users/:userId"
-          params={{ userId: "user_1" }}
-          screen="/user"
-          context={{ userId: "user_1" }}
-        >
+        <tailor.ScreenMatch screen="/user" context={{ userId: "user_1" }}>
           <tailor.Screen app={{ clientPath: "/apps/todo.js", id: "todo" }} />
         </tailor.ScreenMatch>
       )}
@@ -148,9 +143,18 @@ describe("tailorKitClient React adapter", () => {
 
     await waitFor(() => {
       expect(hostRecords.at(-1)?.props).toMatchObject({
-        context: { userId: "user_1" },
-        isLoading: false,
-        screen: "/user",
+        matches: [
+          {
+            context: { userId: "user_1" },
+            isLoading: false,
+            screen: "/user",
+          },
+          {
+            context: { page: "home" },
+            isLoading: false,
+            screen: "/home",
+          },
+        ],
       });
     });
 
@@ -160,9 +164,13 @@ describe("tailorKitClient React adapter", () => {
 
     await waitFor(() => {
       expect(hostRecords.at(-1)?.props).toMatchObject({
-        context: { page: "home" },
-        isLoading: false,
-        screen: "/home",
+        matches: [
+          {
+            context: { page: "home" },
+            isLoading: false,
+            screen: "/home",
+          },
+        ],
       });
     });
   });
@@ -175,7 +183,7 @@ describe("tailorKitClient React adapter", () => {
     });
 
     render(
-      <tailor.ScreenMatch pattern="/" screen="/home" context={{ page: "home" }}>
+      <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
         <tailor.Screen app={{ clientPath: "/apps/b.js", id: "b" }} />
         <tailor.Screen
           app={{
@@ -194,6 +202,112 @@ describe("tailorKitClient React adapter", () => {
       "http://runtime.test/apps/b.js",
       "http://assets.test/projects/project_1/apps/a/deployments/deployment_1/files/client.js",
     ]);
-    expect(hostRecords.map((record) => record.props?.screen)).toEqual(["/home", "/home"]);
+    expect(hostRecords.map((record) => record.props?.matches)).toEqual([
+      [{ context: { page: "home" }, isLoading: false, screen: "/home" }],
+      [{ context: { page: "home" }, isLoading: false, screen: "/home" }],
+    ]);
+  });
+
+  it("warns when sibling ScreenMatch components are active at the same depth", async () => {
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: "http://runtime.test",
+      components,
+    });
+
+    render(
+      <>
+        <tailor.ScreenMatch screen="/home" context={{ page: "home" }} />
+        <tailor.ScreenMatch screen="/user" context={{ userId: "user_1" }}>
+          <tailor.Screen app={{ clientPath: "/apps/todo.js", id: "todo" }} />
+        </tailor.ScreenMatch>
+      </>,
+    );
+
+    await waitFor(() => {
+      expect(consoleWarn).toHaveBeenCalledWith(expect.stringContaining('"/home", "/user"'));
+    });
+  });
+
+  it("passes primitive theme tokens into mounted screens", async () => {
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: "http://runtime.test",
+      components,
+      theme: {
+        tokens: {
+          background: {
+            surface: "var(--card)",
+          },
+        },
+      },
+    });
+
+    render(
+      <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
+        <tailor.Screen app={{ clientPath: "/apps/todo.js", id: "todo" }} />
+      </tailor.ScreenMatch>,
+    );
+
+    await waitFor(() => {
+      expect(hostRecords).toHaveLength(1);
+    });
+    expect(document.querySelector("[data-tailorkit-theme-style]")?.textContent).toContain(
+      "--tailorkit-background-surface: var(--card);",
+    );
+  });
+
+  it("renders missing component errors inside the app container", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: "http://runtime.test",
+    });
+
+    render(
+      <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
+        <tailor.Screen app={{ clientPath: "/apps/todo.js", id: "todo" }} />
+      </tailor.ScreenMatch>,
+    );
+
+    await waitFor(() => {
+      expect(
+        testingScreen.getByText('TailorKit component "Button" is not registered.'),
+      ).toBeTruthy();
+    });
+    expect(consoleError).toHaveBeenCalled();
+  });
+
+  it("clears a missing component error when switching apps", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: "http://runtime.test",
+      components,
+    });
+
+    const view = render(
+      <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
+        <tailor.Screen app={{ clientPath: "/apps/missing-component.js", id: "bad" }} />
+      </tailor.ScreenMatch>,
+    );
+
+    await waitFor(() => {
+      expect(
+        testingScreen.getByText('TailorKit component "MissingComponent" is not registered.'),
+      ).toBeTruthy();
+    });
+
+    await act(() => {
+      view.rerender(
+        <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
+          <tailor.Screen app={{ clientPath: "/apps/email.js", id: "email" }} />
+        </tailor.ScreenMatch>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        testingScreen.queryByText('TailorKit component "MissingComponent" is not registered.'),
+      ).toBeNull();
+      expect(testingScreen.getByRole("button").textContent).toContain("/apps/email.js");
+    });
   });
 });

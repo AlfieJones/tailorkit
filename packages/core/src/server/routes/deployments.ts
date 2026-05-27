@@ -4,6 +4,7 @@ import {
   deploymentsList,
   deploymentsPublish,
 } from "@tailorkit/client-platform/client";
+import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 import { getTailorKitScopeId, o, requireCliDeployToken } from "../procedures";
 
@@ -20,13 +21,37 @@ const deploymentAssetInput = z.object({
   objectKey: z.string(),
 });
 
+const getErrorMessage = (error: unknown): string | undefined => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" ? message : undefined;
+  }
+};
+
+const isNotFoundError = (error: unknown): boolean =>
+  getErrorMessage(error)?.toLowerCase().includes("not found") ?? false;
+
+const preservePlatformNotFound = (error: unknown): never => {
+  if (isNotFoundError(error)) {
+    throw new ORPCError("NOT_FOUND", { message: "App not found." });
+  }
+
+  throw error;
+};
+
 export const deploymentRouter = {
   create: o
     .use(requireCliDeployToken)
     .input(z.object({ appId: z.string(), assets: z.tuple([deploymentAssetInput]) }))
-    .handler(
-      async ({ context, input }) =>
-        await deploymentsCreate({
+    .handler(async ({ context, input }) => {
+      try {
+        return await deploymentsCreate({
           body: {
             appId: input.appId,
             assets: input.assets,
@@ -34,8 +59,11 @@ export const deploymentRouter = {
           },
           client: context.platform,
           headers: context.platformHeaders,
-        }),
-    ),
+        });
+      } catch (error) {
+        preservePlatformNotFound(error);
+      }
+    }),
   get: o
     .use(requireCliDeployToken)
     .input(z.object({ deploymentId: z.string() }))

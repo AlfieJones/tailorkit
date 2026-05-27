@@ -269,6 +269,12 @@ interface TailorKitScreenDefinition {
   path?: string;
 }
 
+interface TailorKitScreenMatchPayload {
+  context?: unknown;
+  isLoading?: boolean;
+  screen?: unknown;
+}
+
 function assertAppPreactVersion(
   appExport: ComponentType<Record<string, unknown>> | TailorKitAppClient | undefined,
 ): void {
@@ -295,15 +301,26 @@ function renderTailorKitClient(client: TailorKitAppClient, props: Record<string,
     throw new Error("TailorKit app client is missing screens.");
   }
 
-  let requestedScreen = Object.keys(screens)[0];
-  if (typeof props.screen === "string") {
-    requestedScreen = props.screen;
-  } else if (typeof props.path === "string") {
-    requestedScreen = props.path;
+  const requestedMatches = Array.isArray(props.matches)
+    ? (props.matches as TailorKitScreenMatchPayload[])
+    : [];
+
+  let requestedScreen = "";
+  let selectedProps = props;
+  for (const match of requestedMatches) {
+    if (typeof match.screen === "string" && screens[match.screen] !== undefined) {
+      requestedScreen = match.screen;
+      selectedProps = {
+        context: match.context,
+        isLoading: match.isLoading ?? false,
+        screen: match.screen,
+      };
+      break;
+    }
   }
 
   if (!requestedScreen) {
-    throw new Error("TailorKit app client does not define any screens.");
+    throw new Error("TailorKit app client does not define any mounted screen.");
   }
 
   const screen = screens[requestedScreen];
@@ -319,5 +336,5 @@ function renderTailorKitClient(client: TailorKitAppClient, props: Record<string,
   const appH = client.$runtime?.h ?? h;
   const appRender = client.$runtime?.render ?? render;
 
-  appRender(appH(Screen, props), worker.root);
+  appRender(appH(Screen, selectedProps), worker.root);
 }

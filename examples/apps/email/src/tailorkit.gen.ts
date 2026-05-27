@@ -11,22 +11,7 @@ import { createRemoteComponent } from "@tailorkit/app";
 
 export interface ScreenPropsByPath {
   "/": {
-    context: {
-      page: {
-        title: string;
-      };
-    };
-  };
-  "/users/:userId": {
-    context: {
-      params: {
-        userId: string;
-      };
-      user: {
-        id: string;
-        name?: string;
-      };
-    };
+    context: Record<string, never>;
   };
 }
 
@@ -36,358 +21,204 @@ declare module "@tailorkit/app" {
 
 export type ScreenPath = keyof ScreenPropsByPath & string;
 export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
+export type TailorKitActions = {
+  echo: (input: string) => Promise<string>;
+};
+export const actions = {
+  echo: async (input: unknown) => {
+    const response = await fetch("/api/tailorkit/actions/echo", {
+      body: JSON.stringify(input),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return response.json();
+  },
+} as TailorKitActions;
+
+export type Breakpoint = "base" | "sm" | "md" | "lg" | "xl" | "2xl";
+export type Responsive<TValue> = TValue | Partial<Record<Breakpoint, TValue>>;
+export type Background = never;
+export type Basis = Responsive<"0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit">;
+export type Border = Responsive<"solid" | "dashed" | "dotted" | "double">;
+export type BorderColor = Responsive<"default">;
+export type Grow = Responsive<string>;
+export type Height = Responsive<"0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit">;
+export type Margin = Responsive<"none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl">;
+export type MinHeight = Responsive<"0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit">;
+export type MinWidth = Responsive<"0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit">;
+export type Overflow = Responsive<"visible" | "hidden" | "clip" | "scroll" | "auto">;
+export type OverflowWrap = Responsive<"normal" | "breakWord" | "anywhere">;
+export type Padding = Responsive<"none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl">;
+export type Radius = Responsive<"none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl">;
+export type Shrink = Responsive<string>;
+export type TextAlign = Responsive<"left" | "right" | "start" | "end" | "center" | "justify">;
+export type TextColor = Responsive<"default">;
+export type TextOverflow = Responsive<"clip" | "ellipsis">;
+export type TextTransform = Responsive<"capitalize" | "uppercase" | "lowercase" | "none">;
+export type Width = Responsive<"0" | "1/2" | "1/3" | "2/3" | "1/4" | "2/4" | "3/4" | "1/5" | "2/5" | "3/5" | "4/5" | "1/6" | "2/6" | "3/6" | "4/6" | "5/6" | "1/12" | "2/12" | "3/12" | "4/12" | "5/12" | "6/12" | "7/12" | "8/12" | "9/12" | "10/12" | "11/12" | "full" | "min" | "max" | "fit">;
+export type Align = Responsive<string>;
+export type Direction = Responsive<string>;
+export type Gap = Responsive<"none" | "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl">;
+export type Justify = Responsive<string>;
+export type Wrap = Responsive<string>;
+export type Columns = Responsive<number>;
 
 export interface BoxProps {
-  background?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  border?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  borderColor?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  height?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
-  };
-  margin?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  overflow?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  padding?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  radius?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  width?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
-  };
+  background?: Background;
+  basis?: Basis;
+  border?: Border;
+  borderColor?: BorderColor;
+  grow?: Grow;
+  height?: Height;
+  margin?: Margin;
+  minHeight?: MinHeight;
+  minWidth?: MinWidth;
+  overflow?: Overflow;
+  overflowWrap?: OverflowWrap;
+  padding?: Padding;
+  radius?: Radius;
+  shrink?: Shrink;
+  textAlign?: TextAlign;
+  textColor?: TextColor;
+  textOverflow?: TextOverflow;
+  textTransform?: TextTransform;
+  width?: Width;
 }
 
-export const Box = createRemoteComponent<BoxProps, readonly ["default"]>("Box", {
+export const Box = /* @__PURE__ */ createRemoteComponent<BoxProps, readonly ["default"]>("Box", {
   slots: ["default"] as const,
 });
 
 export interface FlexProps {
-  background?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  border?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  borderColor?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  height?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
-  };
-  margin?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  overflow?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  padding?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  radius?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  width?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
-  };
-  align?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  direction?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  gap?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  justify?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
+  background?: Background;
+  basis?: Basis;
+  border?: Border;
+  borderColor?: BorderColor;
+  grow?: Grow;
+  height?: Height;
+  margin?: Margin;
+  minHeight?: MinHeight;
+  minWidth?: MinWidth;
+  overflow?: Overflow;
+  overflowWrap?: OverflowWrap;
+  padding?: Padding;
+  radius?: Radius;
+  shrink?: Shrink;
+  textAlign?: TextAlign;
+  textColor?: TextColor;
+  textOverflow?: TextOverflow;
+  textTransform?: TextTransform;
+  width?: Width;
+  align?: Align;
+  direction?: Direction;
+  gap?: Gap;
+  justify?: Justify;
+  wrap?: Wrap;
 }
 
-export const Flex = createRemoteComponent<FlexProps, readonly ["default"]>("Flex", {
+export const Flex = /* @__PURE__ */ createRemoteComponent<FlexProps, readonly ["default"]>("Flex", {
   slots: ["default"] as const,
 });
 
 export interface GridProps {
-  background?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  border?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  borderColor?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  height?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
-  };
-  margin?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  overflow?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  padding?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  radius?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  width?: string | number | {
-    base?: string | number;
-    sm?: string | number;
-    md?: string | number;
-    lg?: string | number;
-    xl?: string | number;
-    "2xl"?: string | number;
-  };
-  columns?: number | number | number | number | number | number | {
-    base?: number | number | number | number | number | number;
-    sm?: number | number | number | number | number | number;
-    md?: number | number | number | number | number | number;
-    lg?: number | number | number | number | number | number;
-    xl?: number | number | number | number | number | number;
-    "2xl"?: number | number | number | number | number | number;
-  };
-  gap?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
+  background?: Background;
+  basis?: Basis;
+  border?: Border;
+  borderColor?: BorderColor;
+  grow?: Grow;
+  height?: Height;
+  margin?: Margin;
+  minHeight?: MinHeight;
+  minWidth?: MinWidth;
+  overflow?: Overflow;
+  overflowWrap?: OverflowWrap;
+  padding?: Padding;
+  radius?: Radius;
+  shrink?: Shrink;
+  textAlign?: TextAlign;
+  textColor?: TextColor;
+  textOverflow?: TextOverflow;
+  textTransform?: TextTransform;
+  width?: Width;
+  columns?: Columns;
+  gap?: Gap;
 }
 
-export const Grid = createRemoteComponent<GridProps, readonly ["default"]>("Grid", {
+export const Grid = /* @__PURE__ */ createRemoteComponent<GridProps, readonly ["default"]>("Grid", {
   slots: ["default"] as const,
 });
 
 export interface InlineProps {
-  background?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  borderColor?: unknown | {
-    base?: unknown;
-    sm?: unknown;
-    md?: unknown;
-    lg?: unknown;
-    xl?: unknown;
-    "2xl"?: unknown;
-  };
-  margin?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  padding?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
-  radius?: string | {
-    base?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
-    "2xl"?: string;
-  };
+  background?: Background;
+  borderColor?: BorderColor;
+  margin?: Margin;
+  overflowWrap?: OverflowWrap;
+  padding?: Padding;
+  radius?: Radius;
+  textAlign?: TextAlign;
+  textColor?: TextColor;
+  textOverflow?: TextOverflow;
+  textTransform?: TextTransform;
 }
 
-export const Inline = createRemoteComponent<InlineProps, readonly ["default"]>("Inline", {
+export const Inline = /* @__PURE__ */ createRemoteComponent<InlineProps, readonly ["default"]>("Inline", {
   slots: ["default"] as const,
 });
 
 export interface ButtonProps {
-  variant?: string;
+  variant?: "default" | "secondary";
   onClick?: () => void;
 }
 
-export const Button = createRemoteComponent<ButtonProps, readonly ["default"]>("Button", {
+export const Button = /* @__PURE__ */ createRemoteComponent<ButtonProps, readonly ["default"]>("Button", {
+  slots: ["default"] as const,
+  callbacks: { "onClick": 0 },
+});
+
+export interface TabsProps {
+  value?: string;
+  onValueChange?: (input: {
+    value: string;
+  }) => void;
+}
+
+export const Tabs = /* @__PURE__ */ createRemoteComponent<TabsProps, readonly ["default"]>("Tabs", {
+  slots: ["default"] as const,
+  callbacks: { "onValueChange": 1 },
+});
+
+export interface TabsListProps {
+}
+
+export const TabsList = /* @__PURE__ */ createRemoteComponent<TabsListProps, readonly ["default"]>("TabsList", {
+  slots: ["default"] as const,
+});
+
+export interface TabsTabProps {
+  value?: string;
+}
+
+export const TabsTab = /* @__PURE__ */ createRemoteComponent<TabsTabProps, readonly ["default"]>("TabsTab", {
+  slots: ["default"] as const,
+});
+
+export interface TabsPanelProps {
+  value?: string;
+}
+
+export const TabsPanel = /* @__PURE__ */ createRemoteComponent<TabsPanelProps, readonly ["default"]>("TabsPanel", {
   slots: ["default"] as const,
 });
 
 export interface InputProps {
-  type?: string;
-  placeholder?: string;
   value?: string;
-  disabled?: boolean;
-  onChange?: () => void;
-  onBlur?: () => void;
-  onFocus?: () => void;
+  onValueChange?: (input: {
+    value: string;
+  }) => void;
 }
 
-export const Input = createRemoteComponent<InputProps, readonly ["default"]>("Input", {
+export const Input = /* @__PURE__ */ createRemoteComponent<InputProps, readonly ["default"]>("Input", {
   slots: ["default"] as const,
+  callbacks: { "onValueChange": 1 },
 });

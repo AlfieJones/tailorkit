@@ -1,11 +1,12 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { loadSchemaFromModule } from "../schema";
+import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
 
 interface JsonSchema {
   additionalProperties?: boolean | JsonSchema;
   anyOf?: JsonSchema[];
+  const?: unknown;
   enum?: unknown[];
   items?: JsonSchema;
   not?: JsonSchema;
@@ -15,7 +16,7 @@ interface JsonSchema {
 }
 
 interface SerializedCallback {
-  input?: JsonSchema[];
+  input?: JsonSchema;
   output?: JsonSchema;
 }
 
@@ -46,10 +47,9 @@ interface TailorKitSchemaFile {
 }
 
 export interface GenerateTypesOptions {
+  configPath?: string;
   cwd?: string;
   outFile?: string;
-  schemaFile?: string;
-  experimentalSchemaFile?: string;
 }
 
 const generatedHeader = `/* eslint-disable */
@@ -64,6 +64,7 @@ import { createRemoteComponent } from "@tailorkit/app";
 `;
 
 const fallbackObjectType = "Record<string, never>";
+const primitiveComponentNames = new Set(["Box", "Flex", "Grid", "Inline"]);
 
 const quote = (value: string): string => JSON.stringify(value);
 
@@ -93,6 +94,10 @@ const toTypeScriptType = (schema: JsonSchema | undefined, depth = 0): string => 
 
   if (isNeverSchema(schema)) {
     return "never";
+  }
+
+  if (schema.const !== undefined) {
+    return toLiteralType(schema.const);
   }
 
   if (schema.enum !== undefined && schema.enum.length > 0) {
@@ -263,7 +268,11 @@ const collectFieldTypeAliases = (
   const seenByAlias = new Map<string, string>();
   const conflictedAliases = new Set<string>();
 
-  for (const component of Object.values(components)) {
+  for (const [componentName, component] of Object.entries(components)) {
+    if (!primitiveComponentNames.has(componentName)) {
+      continue;
+    }
+
     for (const [key, schema] of Object.entries(getComponentFields(component))) {
       const alias = toTypeName(key);
       const type = renderFieldType(schema, 0);
@@ -296,7 +305,11 @@ const renderTypeAliases = (
   ];
   const emitted = new Set<string>();
 
-  for (const component of Object.values(components)) {
+  for (const [componentName, component] of Object.entries(components)) {
+    if (!primitiveComponentNames.has(componentName)) {
+      continue;
+    }
+
     for (const [key, schema] of Object.entries(getComponentFields(component))) {
       const alias = aliases[key];
       if (alias === undefined || emitted.has(alias)) {
@@ -351,9 +364,8 @@ const renderComponent = (
   }
 
   for (const [key, callback] of Object.entries(callbacks)) {
-    const parameters = (callback.input ?? [])
-      .map((schema, index) => `value${index + 1}: ${toTypeScriptType(schema, 2)}`)
-      .join(", ");
+    const parameters =
+      callback.input === undefined ? "" : `input: ${toTypeScriptType(callback.input, 2)}`;
     lines.push(`  ${toPropertyKey(key)}?: (${parameters}) => void;`);
   }
 
@@ -363,7 +375,7 @@ const renderComponent = (
   const slotsType = `readonly [${slots.map(quote).join(", ")}]`;
   const slotsValue = `[${slots.map(quote).join(", ")}] as const`;
   const callbackEntries = Object.entries(callbacks).map(
-    ([key, callback]) => `${quote(key)}: ${callback.input?.length ?? 0}`,
+    ([key, callback]) => `${quote(key)}: ${callback.input === undefined ? 0 : 1}`,
   );
   const callbackOptions =
     callbackEntries.length > 0 ? `,\n  callbacks: { ${callbackEntries.join(", ")} }` : "";
@@ -459,20 +471,28 @@ export const actions = ${renderActionRuntime(schema.actions ?? {})} as TailorKit
   return `${chunks.join("\n\n")}\n`;
 };
 
+const joinUrlPath = (baseUrl: string, pathName: string): string => {
+  const url = new URL(baseUrl);
+  url.pathname = `${url.pathname.replace(/\/$/u, "")}/${pathName.replace(/^\//u, "")}`;
+  return url.toString();
+};
+
+const fetchSchemaFromHost = async (host: string): Promise<TailorKitSchemaFile> => {
+  const schemaUrl = joinUrlPath(host, "schema");
+  const response = await fetch(schemaUrl);
+
+  if (!response.ok) {
+    throw new Error(`Unable to fetch TailorKit schema from ${schemaUrl}: ${response.statusText}`);
+  }
+
+  return (await response.json()) as TailorKitSchemaFile;
+};
+
 export const generateTypes = async (options: GenerateTypesOptions = {}): Promise<string> => {
   const root = path.resolve(options.cwd ?? ".");
   const outPath = path.resolve(root, options.outFile ?? path.join("src", "tailorkit.gen.ts"));
-
-  let schema: TailorKitSchemaFile;
-  if (options.experimentalSchemaFile) {
-    schema = (await loadSchemaFromModule({
-      cwd: root,
-      filePath: options.experimentalSchemaFile,
-    })) as TailorKitSchemaFile;
-  } else {
-    const schemaPath = path.resolve(root, options.schemaFile ?? "tailorkit.schema.json");
-    schema = JSON.parse(await readFile(schemaPath, "utf-8")) as TailorKitSchemaFile;
-  }
+  const loaded = await loadTailorKitConfig(options.configPath, root);
+  const schema = await fetchSchemaFromHost(loaded.config.host);
 
   const output = renderGeneratedTypes(schema);
 

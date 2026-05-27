@@ -7,6 +7,7 @@
   },
   "scripts": {
     "build": "tailorkit build",
+    "deploy": "tailorkit deploy",
     "generate": "tailorkit generate"{% if linting %},
     "lint": "oxlint",
     "lint:fix": "oxlint --fix"{% endif %}{% if formatting %},
@@ -20,7 +21,7 @@
     "preact": "{{ preactVersion }}"
   },
   "devDependencies": {
-    "tailorkit": "{{ tailorkitVersion }}"{% if linting %},
+    "@tailorkit/cli": "{{ tailorkitCLIVersion }}"{% if linting %},
     "oxlint": "{{ oxlintVersion }}"{% endif %}{% if formatting %},
     "oxfmt": "{{ oxfmtVersion }}"{% endif %},
     "typescript": "{{ typescriptVersion }}"
