@@ -1,4 +1,4 @@
-import { context, SpanStatusCode, trace } from "@opentelemetry/api";
+import { context, propagation, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import type { Attributes, Span, SpanOptions } from "@opentelemetry/api";
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
 import { PgInstrumentation } from "@opentelemetry/instrumentation-pg";
@@ -221,6 +221,44 @@ export function withSpan<T>(
     } finally {
       span.end();
     }
+  });
+}
+
+function headersToCarrier(headers: Headers): Record<string, string> {
+  return Object.fromEntries(headers.entries());
+}
+
+export function withRequestSpan<T>(
+  request: Request,
+  name: string,
+  optionsOrHandler: SpanOptions | ((span: Span) => Promise<T> | T),
+  maybeHandler?: (span: Span) => Promise<T> | T,
+): Promise<T> {
+  const carrier = headersToCarrier(request.headers);
+  const parentContext = propagation.extract(context.active(), carrier);
+
+  return context.with(parentContext, () => {
+    const url = new URL(request.url);
+    const options = typeof optionsOrHandler === "function" ? undefined : optionsOrHandler;
+    const handler = typeof optionsOrHandler === "function" ? optionsOrHandler : maybeHandler;
+
+    if (!handler) {
+      throw new Error("withRequestSpan requires a handler.");
+    }
+
+    return withSpan(
+      name,
+      {
+        kind: SpanKind.SERVER,
+        ...options,
+        attributes: safeAttributes({
+          "http.request.method": request.method,
+          "url.path": url.pathname,
+          ...options?.attributes,
+        }),
+      },
+      handler,
+    );
   });
 }
 
