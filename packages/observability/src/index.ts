@@ -3,7 +3,7 @@ import type { Attributes, Span, SpanOptions } from "@opentelemetry/api";
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
 import { PgInstrumentation } from "@opentelemetry/instrumentation-pg";
 import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
-import { ParentBasedSampler, TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-base";
+import { TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-base";
 import { ORPCInstrumentation } from "@orpc/otel";
 import { env } from "@tailorkit/env/server";
 
@@ -74,13 +74,12 @@ function resolveSampleRate() {
 }
 
 function createSampler() {
-  return new ParentBasedSampler({
-    root: new TraceIdRatioBasedSampler(resolveSampleRate()),
-  });
+  return new TraceIdRatioBasedSampler(resolveSampleRate());
 }
 
 function createInstrumentations() {
   return [
+    "auto",
     new ORPCInstrumentation(),
     new PgInstrumentation({
       enhancedDatabaseReporting: false,
