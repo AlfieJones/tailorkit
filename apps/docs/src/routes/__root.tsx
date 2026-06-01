@@ -81,9 +81,9 @@ function RootComponent() {
             <RootProvider>
               <Outlet />
             </RootProvider>
-            <Scripts />
           </LazyMotion>
         </div>
+        <Scripts />
       </body>
     </html>
   );

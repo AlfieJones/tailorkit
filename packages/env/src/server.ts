@@ -5,6 +5,7 @@ import { z } from "zod";
 
 config({
   path: ["../../apps/web/.env.local", "../../apps/web/.env"],
+  quiet: true,
 });
 
 export const env = createEnv({

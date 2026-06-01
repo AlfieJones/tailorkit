@@ -34,7 +34,7 @@
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "@upstash/redis": "^1.38.0",
-    "ioredis": "^5.0.0",
+    "ioredis": "^5.11.0",
     "tsdown": "catalog:",
     "typescript": "catalog:"
   },

@@ -1,6 +1,5 @@
-import { createContext, useContext, useEffect, useId, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useId, useMemo, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
-import type { StandardJSONSchemaV1 } from "@standard-schema/spec";
 import type { TailorKitSchemaSpecType } from "@tailorkit/core/spec";
 import type {
   TailorKitTheme,
@@ -14,6 +13,19 @@ import type {
   TailorKitSchema,
 } from "@tailorkit/core/schema";
 import type { primitives } from "./primitives";
+import {
+  AppContent,
+  AppHeader,
+  AppList,
+  AppScreen,
+  AppScreenClose,
+  AppTrigger,
+  Root,
+  createScreenMatch,
+} from "./components";
+import type { ScreenMatchProps } from "./components";
+import { createUseApps } from "./hooks/use-apps";
+import type { UseAppsResult } from "./hooks/use-apps";
 import { buildThemeCss, PrimitiveThemeContext } from "./primitives";
 import { RemoteViewHost } from "./remote-view";
 
@@ -51,7 +63,7 @@ export interface TailorKitApp {
   name?: string;
 }
 
-interface TailorKitAppsSnapshot {
+export interface TailorKitAppsSnapshot {
   apps: TailorKitApp[];
   error: Error | null;
   status: "error" | "idle" | "loading" | "ready";
@@ -64,7 +76,7 @@ interface TailorKitMetaSnapshot {
   status: "error" | "idle" | "loading" | "ready";
 }
 
-interface ScreenMatchEntry {
+export interface ScreenMatchEntry {
   context: unknown;
   depth: number;
   id: symbol;
@@ -74,43 +86,6 @@ interface ScreenMatchEntry {
   screen: string;
 }
 
-type ScreenContext<TScreen> =
-  TScreen extends ScreenDefinition<infer TContext>
-    ? TContext extends StandardJSONSchemaV1
-      ? StandardJSONSchemaV1.InferOutput<TContext>
-      : Record<string, never>
-    : never;
-
-type ScreenName<TScreens extends Record<string, ScreenDefinition>> = keyof TScreens & string;
-
-interface ScreenMatchLoadingProps<
-  TScreens extends Record<string, ScreenDefinition>,
-  TScreen extends ScreenName<TScreens>,
-> {
-  children?: ReactNode;
-  context?: ScreenContext<TScreens[TScreen]>;
-  isLoading: true;
-  screen: TScreen;
-}
-
-interface ScreenMatchReadyProps<
-  TScreens extends Record<string, ScreenDefinition>,
-  TScreen extends ScreenName<TScreens>,
-> {
-  children?: ReactNode;
-  context: ScreenContext<TScreens[TScreen]>;
-  isLoading?: false;
-  screen: TScreen;
-}
-
-type ScreenMatchProps<
-  TScreens extends Record<string, ScreenDefinition>,
-  TScreen extends ScreenName<TScreens> = ScreenName<TScreens>,
-> =
-  TScreen extends ScreenName<TScreens>
-    ? ScreenMatchLoadingProps<TScreens, TScreen> | ScreenMatchReadyProps<TScreens, TScreen>
-    : never;
-
 interface ScreenProps {
   app: TailorKitApp;
   createWorker?: (url: URL, options: WorkerOptions) => Worker;
@@ -118,10 +93,6 @@ interface ScreenProps {
 }
 
 const componentTagPrefix = "tailorkit-";
-const ScreenMatchContext = createContext<{ depth: number; id: symbol | null }>({
-  depth: 0,
-  id: null,
-});
 
 const toComponentTagName = (name: string): string =>
   `${componentTagPrefix}${name
@@ -132,14 +103,22 @@ const toComponentTagName = (name: string): string =>
 export interface TailorKitInstance<
   TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
 > {
-  Screen: (props: ScreenProps) => ReactNode;
+  AppContent: typeof AppContent;
+  AppHeader: typeof AppHeader;
+  AppList: typeof AppList;
+  AppScreen: typeof AppScreen;
+  AppScreenClose: typeof AppScreenClose;
+  AppTrigger: typeof AppTrigger;
+  Root: (props: Omit<Parameters<typeof Root>[0], "tailor">) => ReactNode;
   ScreenMatch: <TScreen extends ScreenName<TScreens>>(
     props: ScreenMatchProps<TScreens, TScreen>,
   ) => ReactNode;
   getApp: (id: string) => TailorKitApp | undefined;
   getApps: () => TailorKitApp[];
-  useApps: () => TailorKitAppsSnapshot;
+  useApps: () => UseAppsResult;
 }
+
+type ScreenName<TScreens extends Record<string, ScreenDefinition>> = keyof TScreens & string;
 
 type PrimitiveRenderers = typeof primitives;
 type CustomComponentRenderers<TComponents extends Record<string, AnyComponentDefinition>> = {
@@ -219,49 +198,8 @@ function createReactTailorKitClient<
     }
   }
 
-  const useApps = (): TailorKitAppsSnapshot => {
-    const snapshot = useSyncExternalStore(
-      store.subscribe,
-      store.getAppsSnapshot,
-      store.getAppsSnapshot,
-    );
-
-    useEffect(() => {
-      void store.fetchApps();
-    }, []);
-
-    return snapshot;
-  };
-
-  const ScreenMatch = <TScreen extends ScreenName<TScreens>>({
-    children,
-    context,
-    isLoading = false,
-    screen,
-  }: ScreenMatchProps<TScreens, TScreen>): ReactNode => {
-    const id = useMemo(() => Symbol("tailorkit-screen-match"), []);
-    const parent = useContext(ScreenMatchContext);
-    const depth = parent.depth + 1;
-
-    useEffect(() => {
-      store.registerMatch({
-        context,
-        depth,
-        id,
-        isLoading,
-        parentId: parent.id,
-        screen,
-      });
-
-      return () => {
-        store.unregisterMatch(id);
-      };
-    }, [context, depth, id, isLoading, parent.id, screen]);
-
-    return (
-      <ScreenMatchContext.Provider value={{ depth, id }}>{children}</ScreenMatchContext.Provider>
-    );
-  };
+  const useApps = createUseApps(store);
+  const ScreenMatch = createScreenMatch<TScreens>(store);
 
   const Screen = ({ app, createWorker, workerUrl }: ScreenProps): ReactNode => {
     const reactId = useId();
@@ -320,14 +258,29 @@ function createReactTailorKitClient<
     );
   };
 
-  return {
-    Screen,
+  const client = {
+    AppContent,
+    AppHeader,
+    AppList,
+    AppScreen,
+    AppScreenClose,
+    AppTrigger,
+    Root: (props: Omit<Parameters<typeof Root>[0], "tailor">) => (
+      <Root {...props} tailor={client} />
+    ),
     ScreenMatch,
     getApp: store.getApp,
     getApps: store.getApps,
+    Screen,
     useApps,
   };
+
+  return {
+    ...client,
+  } as TailorKitInstance<TScreens>;
 }
+
+export type TailorKitStore = ReturnType<typeof createTailorKitStore>;
 
 function createTailorKitStore(baseUrlInput: string | URL) {
   const baseUrl = toBaseUrl(baseUrlInput);
@@ -388,8 +341,8 @@ function createTailorKitStore(baseUrlInput: string | URL) {
 
   return {
     baseUrl,
-    fetchApps: (): Promise<void> => {
-      if (fetchAppsPromise) {
+    fetchApps: (options: { force?: boolean } = {}): Promise<void> => {
+      if (fetchAppsPromise && !options.force) {
         return fetchAppsPromise;
       }
 

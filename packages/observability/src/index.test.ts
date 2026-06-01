@@ -90,6 +90,7 @@ describe("observability helpers", () => {
           "service.name": "test-service",
           "service.version": "abc123",
         }),
+        instrumentations: expect.arrayContaining(["auto"]),
         serviceName: "test-service",
       }),
     );

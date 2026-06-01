@@ -36,13 +36,13 @@
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
-    "@vercel/functions": "^3.6.0",
+    "@vercel/functions": "^3.6.1",
     "drizzle-orm": "catalog:",
     "nanoid": "^5.1.11",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.4.5",
+    "@electric-sql/pglite": "^0.4.6",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",

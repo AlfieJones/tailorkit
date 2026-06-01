@@ -50,7 +50,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.4.5",
+    "@electric-sql/pglite": "^0.4.6",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",

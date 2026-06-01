@@ -102,6 +102,13 @@ components(callbackServer.$internal.schema, {
 
 <tailor.ScreenMatch screen="/user" isLoading context={{ userId: "user_1" }} />;
 
+<tailor.Root>
+  <tailor.ScreenMatch
+    screen="/home"
+    context={{ page: { title: "Home" }, user: { id: "user_1" } }}
+  />
+</tailor.Root>;
+
 // @ts-expect-error invalid screen name
 <tailor.ScreenMatch screen="missing" context={{}} />;
 
