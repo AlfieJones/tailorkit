@@ -81,14 +81,14 @@ function ScreenMatchHost({
   tailor: ReturnType<typeof createTailorKitClient<typeof server>>;
 }) {
   return (
-    <tailor.Root apps={[{ clientPath: "/apps/todo.js", id: "todo" }]} defaultOpen value="todo">
+    <tailor.Root apps={[{ clientPath: "/apps/todo.js", id: "todo" }]}>
       <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
         {nested && (
           <tailor.ScreenMatch screen="/user" context={{ userId: "user_1" }}>
-            <tailor.AppContent app={{ clientPath: "/apps/todo.js", id: "todo" }} />
+            <tailor.AppView app={{ clientPath: "/apps/todo.js", id: "todo" }} />
           </tailor.ScreenMatch>
         )}
-        {!nested && <tailor.AppContent app={{ clientPath: "/apps/todo.js", id: "todo" }} />}
+        {!nested && <tailor.AppView app={{ clientPath: "/apps/todo.js", id: "todo" }} />}
       </tailor.ScreenMatch>
     </tailor.Root>
   );
@@ -194,12 +194,10 @@ describe("tailorKitClient React adapter", () => {
             projectId: "project_1",
           },
         ]}
-        defaultOpen
-        value="b"
       >
         <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
-          <tailor.AppContent app={{ clientPath: "/apps/b.js", id: "b" }} />
-          <tailor.AppContent
+          <tailor.AppView app={{ clientPath: "/apps/b.js", id: "b" }} />
+          <tailor.AppView
             app={{
               currentDeployment: { id: "deployment_1" },
               id: "a",
@@ -223,6 +221,33 @@ describe("tailorKitClient React adapter", () => {
     ]);
   });
 
+  it("renders an explicit screen override without a mounted ScreenMatch", async () => {
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: "http://runtime.test",
+      components,
+    });
+
+    render(
+      <tailor.AppView
+        app={{ clientPath: "/apps/todo.js", id: "todo" }}
+        context={{ userId: "user_1" }}
+        screen="/user"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(hostRecords.at(-1)?.props).toMatchObject({
+        matches: [
+          {
+            context: { userId: "user_1" },
+            isLoading: false,
+            screen: "/user",
+          },
+        ],
+      });
+    });
+  });
+
   it("warns when sibling ScreenMatch components are active at the same depth", async () => {
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const tailor = createTailorKitClient<typeof server>({
@@ -231,10 +256,10 @@ describe("tailorKitClient React adapter", () => {
     });
 
     render(
-      <tailor.Root apps={[{ clientPath: "/apps/todo.js", id: "todo" }]} defaultOpen value="todo">
+      <tailor.Root apps={[{ clientPath: "/apps/todo.js", id: "todo" }]}>
         <tailor.ScreenMatch screen="/home" context={{ page: "home" }} />
         <tailor.ScreenMatch screen="/user" context={{ userId: "user_1" }}>
-          <tailor.AppContent app={{ clientPath: "/apps/todo.js", id: "todo" }} />
+          <tailor.AppView app={{ clientPath: "/apps/todo.js", id: "todo" }} />
         </tailor.ScreenMatch>
       </tailor.Root>,
     );
@@ -258,9 +283,9 @@ describe("tailorKitClient React adapter", () => {
     });
 
     render(
-      <tailor.Root apps={[{ clientPath: "/apps/todo.js", id: "todo" }]} defaultOpen value="todo">
+      <tailor.Root apps={[{ clientPath: "/apps/todo.js", id: "todo" }]}>
         <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
-          <tailor.AppContent app={{ clientPath: "/apps/todo.js", id: "todo" }} />
+          <tailor.AppView app={{ clientPath: "/apps/todo.js", id: "todo" }} />
         </tailor.ScreenMatch>
       </tailor.Root>,
     );
@@ -280,9 +305,9 @@ describe("tailorKitClient React adapter", () => {
     });
 
     render(
-      <tailor.Root apps={[{ clientPath: "/apps/todo.js", id: "todo" }]} defaultOpen value="todo">
+      <tailor.Root apps={[{ clientPath: "/apps/todo.js", id: "todo" }]}>
         <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
-          <tailor.AppContent app={{ clientPath: "/apps/todo.js", id: "todo" }} />
+          <tailor.AppView app={{ clientPath: "/apps/todo.js", id: "todo" }} />
         </tailor.ScreenMatch>
       </tailor.Root>,
     );
@@ -303,13 +328,9 @@ describe("tailorKitClient React adapter", () => {
     });
 
     const view = render(
-      <tailor.Root
-        apps={[{ clientPath: "/apps/missing-component.js", id: "bad" }]}
-        defaultOpen
-        value="bad"
-      >
+      <tailor.Root apps={[{ clientPath: "/apps/missing-component.js", id: "bad" }]}>
         <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
-          <tailor.AppContent app={{ clientPath: "/apps/missing-component.js", id: "bad" }} />
+          <tailor.AppView app={{ clientPath: "/apps/missing-component.js", id: "bad" }} />
         </tailor.ScreenMatch>
       </tailor.Root>,
     );
@@ -322,13 +343,9 @@ describe("tailorKitClient React adapter", () => {
 
     await act(() => {
       view.rerender(
-        <tailor.Root
-          apps={[{ clientPath: "/apps/email.js", id: "email" }]}
-          defaultOpen
-          value="email"
-        >
+        <tailor.Root apps={[{ clientPath: "/apps/email.js", id: "email" }]}>
           <tailor.ScreenMatch screen="/home" context={{ page: "home" }}>
-            <tailor.AppContent app={{ clientPath: "/apps/email.js", id: "email" }} />
+            <tailor.AppView app={{ clientPath: "/apps/email.js", id: "email" }} />
           </tailor.ScreenMatch>
         </tailor.Root>,
       );

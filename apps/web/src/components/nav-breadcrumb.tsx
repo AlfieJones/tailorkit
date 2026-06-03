@@ -35,7 +35,7 @@ function toLabel(segment: string) {
     .join(" ");
 }
 
-function addOrgSegment(id: string, params: Record<string, string>, segments: BreadcrumbSegment[]) {
+function addOrgSegment(params: Record<string, string>, segments: BreadcrumbSegment[]) {
   if (!("orgSlug" in params) || segments.some((s) => s.label === toLabel(params.orgSlug))) {
     return;
   }
@@ -73,6 +73,18 @@ function addStaticSegments(
 
   if (id.includes("/projects") && !id.includes("$projectSlug")) {
     segments.push({ label: "Projects" });
+  }
+  if (id.endsWith("/apps")) {
+    segments.push({ label: "Apps" });
+  }
+  if (id.endsWith("/apps/$appId")) {
+    const appsSegment = segments.find((segment) => segment.label === "Apps");
+    if (appsSegment) {
+      appsSegment.href = `/${params.orgSlug}/${params.projectSlug}/apps`;
+    } else {
+      segments.push({ href: `/${params.orgSlug}/${params.projectSlug}/apps`, label: "Apps" });
+    }
+    segments.push({ label: params.appId });
   }
   if (id.includes("/support")) {
     segments.push({ label: "Support" });
@@ -115,7 +127,7 @@ export function NavBreadcrumb() {
       continue;
     }
 
-    addOrgSegment(id, params, segments);
+    addOrgSegment(params, segments);
     addProjectSegment(id, params, segments);
     addStaticSegments(id, params, segments);
   }

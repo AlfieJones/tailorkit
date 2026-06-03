@@ -10,7 +10,7 @@ const ScreenMatchContext = createContext<{ depth: number; id: symbol | null }>({
   id: null,
 });
 
-type ScreenContext<TScreen> =
+export type ScreenContext<TScreen> =
   TScreen extends ScreenDefinition<infer TContext>
     ? TContext extends StandardJSONSchemaV1
       ? StandardJSONSchemaV1.InferOutput<TContext>

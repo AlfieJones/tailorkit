@@ -1,7 +1,7 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 
-import { AppShell as AuthenticatedAppShell } from "#components/app-shell";
 import { AuthScreen } from "#components/auth";
+import { TailorKitShell } from "#components/tailorkit-shell";
 import { useAuthSession } from "#lib/auth-client";
 import appCss from "../styles.css?url";
 
@@ -42,57 +42,9 @@ function AppShell() {
   }
 
   return (
-    <AuthenticatedAppShell signOut={session.signOut} user={session.data.user}>
+    <TailorKitShell signOut={() => session.signOut()} user={session.data.user}>
       <Outlet />
-    </AuthenticatedAppShell>
-  );
-}
-
-function AppSidebar({ signOut, user }: { signOut: () => Promise<void>; user: DemoUser }) {
-  const { isDark, toggleTheme } = useThemeMode();
-
-  return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Building2 aria-hidden="true" />
-          </div>
-          <div>
-            <p className="font-semibold text-sm">Northwind CRM</p>
-            <p className="text-muted-foreground text-xs">Sales workspace</p>
-          </div>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarMenu>
-            {navItems.map(({ icon: Icon, label, to }) => (
-              <SidebarMenuItem key={to}>
-                <SidebarMenuButton
-                  render={
-                    <Link
-                      to={to}
-                      activeOptions={{ exact: to === "/" }}
-                      activeProps={{ "data-active": true }}
-                    />
-                  }
-                >
-                  <Icon aria-hidden="true" />
-                  <span>{label}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
-        <div className="flex items-center gap-1">
-          <UserMenu signOut={signOut} user={user} />
-          <ThemeToggle aria-pressed={isDark} onClick={toggleTheme} />
-        </div>
-      </SidebarFooter>
-    </Sidebar>
+    </TailorKitShell>
   );
 }
 

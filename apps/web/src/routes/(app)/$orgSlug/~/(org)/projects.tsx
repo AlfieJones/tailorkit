@@ -116,7 +116,7 @@ function CreateProjectDialog({
       slugTouched.current = false;
       navigate({
         params: { orgSlug, projectSlug: project.slug },
-        to: "/$orgSlug/$projectSlug",
+        to: "/$orgSlug/$projectSlug/settings/api-keys",
       });
     },
     onError: (err: unknown) => {

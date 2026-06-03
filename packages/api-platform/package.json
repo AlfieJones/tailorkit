@@ -1,5 +1,6 @@
 {
   "name": "@tailorkit/api-platform",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [
@@ -31,7 +32,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/procedures.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts --format esm --dts --clean",
+    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/procedures.ts src/public-id.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit",
     "generate:openapi": "tsx scripts/generate-openapi.ts",
     "test": "vitest run"

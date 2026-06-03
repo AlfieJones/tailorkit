@@ -1,5 +1,6 @@
 {
   "name": "@tailorkit/observability",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [

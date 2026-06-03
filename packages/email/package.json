@@ -1,5 +1,6 @@
 {
   "name": "@tailorkit/email",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [

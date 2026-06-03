@@ -15,7 +15,7 @@ export function Footer() {
             <span className="font-semibold text-foreground text-sm">TailorKit</span>
           </Link>
           <p className="text-xs text-foreground/50">
-            © copyright TailorKit {new Date().getFullYear()}. All rights reserved.
+            © copyright TailorKit {new Date().getFullYear()}. Licensed under AGPL-3.0-only.
           </p>
         </div>
 

@@ -12,6 +12,7 @@ import z from "zod";
 import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
 import { setSpanAttributes } from "@tailorkit/observability";
+import { createPublicId } from "../public-id";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
 
@@ -76,6 +77,21 @@ const requireDeployment = o.middleware(
     return next({ context: { ...context, app: scopedApp, deployment } });
   },
 );
+
+async function createUniqueDeploymentPublicId(appId: string) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const publicId = createPublicId();
+    const existing = await db.query.appDeployment.findFirst({
+      where: { appId, publicId },
+    });
+
+    if (!existing) {
+      return publicId;
+    }
+  }
+
+  throw new ORPCError("BAD_REQUEST", { message: "Failed to create deployment id." });
+}
 
 function hexToBase64(hex: string): string {
   const bytes = new Uint8Array(hex.length / 2);
@@ -168,6 +184,7 @@ const createAppDeployment = protectedRouter
   .handler(async ({ context, input }) => {
     const [asset] = input.body.assets;
     const deploymentId = crypto.randomUUID();
+    const deploymentPublicId = await createUniqueDeploymentPublicId(context.app.id);
     const fileId = crypto.randomUUID();
     const objectKey = `projects/${context.project.id}/apps/${context.app.id}/deployments/${deploymentId}/files/${asset.objectKey}`;
     const checksumSha256 = hexToBase64(asset.checksum);
@@ -189,6 +206,7 @@ const createAppDeployment = protectedRouter
         .values({
           id: deploymentId,
           appId: context.app.id,
+          publicId: deploymentPublicId,
           status: "uploading",
         })
         .returning();

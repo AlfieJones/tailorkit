@@ -21,6 +21,7 @@ export const app = pgTable(
     id: uuid("id")
       .default(sql`pg_catalog.gen_random_uuid()`)
       .primaryKey(),
+    publicId: varchar("public_id", { length: 10 }).notNull(),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
@@ -41,7 +42,10 @@ export const app = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("app_projectId_scopeId_idx").on(table.projectId, table.scopeId)],
+  (table) => [
+    index("app_projectId_scopeId_idx").on(table.projectId, table.scopeId),
+    uniqueIndex("app_project_id_public_id_unique").on(table.projectId, table.publicId),
+  ],
 );
 
 export const App = createSelectSchema(app, {
@@ -58,27 +62,34 @@ export const appDeploymentStatus = pgEnum("app_deployment_status", [
   "published",
 ]);
 
-export const appDeployment = pgTable("app_deployment", {
-  id: uuid("id")
-    .default(sql`pg_catalog.gen_random_uuid()`)
-    .primaryKey(),
-  appId: uuid("app_id")
-    .notNull()
-    .references(() => app.id, { onDelete: "cascade" }),
+export const appDeployment = pgTable(
+  "app_deployment",
+  {
+    id: uuid("id")
+      .default(sql`pg_catalog.gen_random_uuid()`)
+      .primaryKey(),
+    publicId: varchar("public_id", { length: 10 }).notNull(),
+    appId: uuid("app_id")
+      .notNull()
+      .references(() => app.id, { onDelete: "cascade" }),
 
-  status: appDeploymentStatus("status").default("deploying").notNull(),
+    status: appDeploymentStatus("status").default("deploying").notNull(),
 
-  clientEntryFileId: uuid("client_entry_file_id").references(
-    (): AnyPgColumn => appDeploymentFile.id,
-    { onDelete: "restrict" },
-  ),
+    clientEntryFileId: uuid("client_entry_file_id").references(
+      (): AnyPgColumn => appDeploymentFile.id,
+      { onDelete: "restrict" },
+    ),
 
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
-    .notNull(),
-});
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("app_deployment_app_id_public_id_unique").on(table.appId, table.publicId),
+  ],
+);
 
 export const AppDeployment = createSelectSchema(appDeployment);
 export type AppDeployment = z.output<typeof AppDeployment>;

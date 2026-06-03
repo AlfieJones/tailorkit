@@ -81,7 +81,7 @@ function EmbedPanel() {
   }
 
   return (
-    <tailorClient.Root apps={demoApps} defaultOpen value={activeApp?.id ?? null}>
+    <tailorClient.Root apps={demoApps}>
       <tailorClient.ScreenMatch context={{}} screen="/">
         <main className="h-screen flex flex-col" style={cssVars}>
           {/* Panel header */}
@@ -120,7 +120,7 @@ function EmbedPanel() {
             {/* Make the screen wrapper fill the panel height */}
             <style>{`[data-tailorkit-screen] { display: flex; flex-direction: column; height: 100%; }`}</style>
             {activeApp ? (
-              <tailorClient.AppContent app={activeApp} />
+              <tailorClient.AppView app={activeApp} />
             ) : (
               <div className="p-5 text-sm" style={{ color: "var(--muted-foreground)" }}>
                 No app selected

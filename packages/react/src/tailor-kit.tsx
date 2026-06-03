@@ -13,17 +13,8 @@ import type {
   TailorKitSchema,
 } from "@tailorkit/core/schema";
 import type { primitives } from "./primitives";
-import {
-  AppContent,
-  AppHeader,
-  AppList,
-  AppScreen,
-  AppScreenClose,
-  AppTrigger,
-  Root,
-  createScreenMatch,
-} from "./components";
-import type { ScreenMatchProps } from "./components";
+import { Root, createScreenMatch } from "./components";
+import type { ScreenMatchProps, ScreenName } from "./components";
 import { createUseApps } from "./hooks/use-apps";
 import type { UseAppsResult } from "./hooks/use-apps";
 import { buildThemeCss, PrimitiveThemeContext } from "./primitives";
@@ -86,11 +77,36 @@ export interface ScreenMatchEntry {
   screen: string;
 }
 
-interface ScreenProps {
+interface AppViewBaseProps {
   app: TailorKitApp;
   createWorker?: (url: URL, options: WorkerOptions) => Worker;
+  fallback?: ReactNode;
   workerUrl?: string | URL;
 }
+
+type AppViewScreenProps<
+  TScreens extends Record<string, ScreenDefinition>,
+  TScreen extends ScreenName<TScreens> = ScreenName<TScreens>,
+> = [ScreenName<TScreens>] extends [never]
+  ? {
+      context?: never;
+      isLoading?: never;
+      screen?: never;
+    }
+  :
+      | {
+          context?: never;
+          isLoading?: never;
+          screen?: never;
+        }
+      | DistributiveOmit<ScreenMatchProps<TScreens, TScreen>, "children">;
+
+type DistributiveOmit<T, TKey extends keyof T> = T extends unknown ? Omit<T, TKey> : never;
+
+export type AppViewProps<
+  TScreens extends Record<string, ScreenDefinition>,
+  TScreen extends ScreenName<TScreens> = ScreenName<TScreens>,
+> = AppViewBaseProps & AppViewScreenProps<TScreens, TScreen>;
 
 const componentTagPrefix = "tailorkit-";
 
@@ -103,12 +119,7 @@ const toComponentTagName = (name: string): string =>
 export interface TailorKitInstance<
   TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
 > {
-  AppContent: typeof AppContent;
-  AppHeader: typeof AppHeader;
-  AppList: typeof AppList;
-  AppScreen: typeof AppScreen;
-  AppScreenClose: typeof AppScreenClose;
-  AppTrigger: typeof AppTrigger;
+  AppView: (props: AppViewProps<TScreens>) => ReactNode;
   Root: (props: Omit<Parameters<typeof Root>[0], "tailor">) => ReactNode;
   ScreenMatch: <TScreen extends ScreenName<TScreens>>(
     props: ScreenMatchProps<TScreens, TScreen>,
@@ -117,8 +128,6 @@ export interface TailorKitInstance<
   getApps: () => TailorKitApp[];
   useApps: () => UseAppsResult;
 }
-
-type ScreenName<TScreens extends Record<string, ScreenDefinition>> = keyof TScreens & string;
 
 type PrimitiveRenderers = typeof primitives;
 type CustomComponentRenderers<TComponents extends Record<string, AnyComponentDefinition>> = {
@@ -201,26 +210,45 @@ function createReactTailorKitClient<
   const useApps = createUseApps(store);
   const ScreenMatch = createScreenMatch<TScreens>(store);
 
-  const Screen = ({ app, createWorker, workerUrl }: ScreenProps): ReactNode => {
+  const AppView = ({
+    app,
+    createWorker,
+    fallback = null,
+    workerUrl,
+    ...screenProps
+  }: AppViewProps<TScreens>): ReactNode => {
     const reactId = useId();
     const match = useSyncExternalStore(
       store.subscribe,
       store.getCurrentMatch,
       store.getCurrentMatch,
     );
-    const props = useMemo(
-      () =>
-        match === null
-          ? undefined
-          : {
-              matches: store.getMatchChain(match.id).map((entry) => ({
-                context: entry.context,
-                isLoading: entry.isLoading,
-                screen: entry.screen,
-              })),
+    const screen = (screenProps as { screen?: string }).screen;
+    const context = (screenProps as { context?: unknown }).context;
+    const isLoading = (screenProps as { isLoading?: boolean }).isLoading ?? false;
+    const props = useMemo(() => {
+      if (screen !== undefined) {
+        return {
+          matches: [
+            {
+              context,
+              isLoading,
+              screen,
             },
-      [match],
-    );
+          ],
+        };
+      }
+
+      return match === null
+        ? undefined
+        : {
+            matches: store.getMatchChain(match.id).map((entry) => ({
+              context: entry.context,
+              isLoading: entry.isLoading,
+              screen: entry.screen,
+            })),
+          };
+    }, [context, isLoading, match, screen]);
     const meta = useSyncExternalStore(
       store.subscribe,
       store.getMetaSnapshot,
@@ -236,8 +264,8 @@ function createReactTailorKitClient<
       void store.fetchMeta();
     }, []);
 
-    if (match === null || appUrl === null) {
-      return null;
+    if (props === undefined || appUrl === null) {
+      return fallback;
     }
 
     const screenId = `tailorkit-screen-${reactId.replaceAll(":", "")}`;
@@ -259,19 +287,13 @@ function createReactTailorKitClient<
   };
 
   const client = {
-    AppContent,
-    AppHeader,
-    AppList,
-    AppScreen,
-    AppScreenClose,
-    AppTrigger,
+    AppView,
     Root: (props: Omit<Parameters<typeof Root>[0], "tailor">) => (
       <Root {...props} tailor={client} />
     ),
     ScreenMatch,
     getApp: store.getApp,
     getApps: store.getApps,
-    Screen,
     useApps,
   };
 

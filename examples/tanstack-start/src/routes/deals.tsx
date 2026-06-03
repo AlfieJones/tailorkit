@@ -1,7 +1,6 @@
-import { Card, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
 import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
+import { DealTable, MetricCard, PageHeader } from "#components/crm-ui";
 import { deals } from "#lib/crm-data";
-import { DealTable, PageHeader } from "./index";
 
 export const Route = createFileRoute("/deals")({ component: DealsPage });
 
@@ -17,18 +16,8 @@ function DealsPage() {
       <PageHeader description="Open opportunities and expected close dates." title="Deals" />
 
       <section className="grid gap-4 sm:grid-cols-3">
-        <Card className="rounded-lg">
-          <CardHeader className="p-4">
-            <CardDescription>Open deals</CardDescription>
-            <CardTitle className="text-2xl">{deals.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="rounded-lg sm:col-span-2">
-          <CardHeader className="p-4">
-            <CardDescription>Largest deal</CardDescription>
-            <CardTitle className="text-2xl">{deals[0]?.amount ?? "$0"}</CardTitle>
-          </CardHeader>
-        </Card>
+        <MetricCard label="Open deals" value={deals.length} />
+        <MetricCard label="Largest deal" value={deals[0]?.amount ?? "$0"} />
       </section>
 
       <section className="space-y-3">

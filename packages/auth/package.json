@@ -1,5 +1,6 @@
 {
   "name": "@tailorkit/auth",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [

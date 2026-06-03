@@ -36,9 +36,11 @@ import { Route as appOrgSlugProjectSlugSettingsRouteImport } from './routes/(app
 import { Route as appOrgSlugChar126orgRouteRouteImport } from './routes/(app)/$orgSlug/~/(org)/route'
 import { Route as appOrgSlugChar126orgIndexRouteImport } from './routes/(app)/$orgSlug/~/(org)/index'
 import { Route as appOrgSlugProjectSlugSettingsIndexRouteImport } from './routes/(app)/$orgSlug/$projectSlug/settings/index'
+import { Route as appOrgSlugProjectSlugAppsIndexRouteImport } from './routes/(app)/$orgSlug/$projectSlug/apps.index'
 import { Route as appOrgSlugChar126orgSettingsRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings'
 import { Route as appOrgSlugChar126orgProjectsRouteImport } from './routes/(app)/$orgSlug/~/(org)/projects'
 import { Route as appOrgSlugProjectSlugSettingsApiKeysRouteImport } from './routes/(app)/$orgSlug/$projectSlug/settings/api-keys'
+import { Route as appOrgSlugProjectSlugAppsAppIdRouteImport } from './routes/(app)/$orgSlug/$projectSlug/apps.$appId'
 import { Route as appOrgSlugChar126orgSettingsIndexRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings/index'
 import { Route as appOrgSlugChar126orgSettingsMembersRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings/members'
 
@@ -182,6 +184,12 @@ const appOrgSlugProjectSlugSettingsIndexRoute =
     path: '/',
     getParentRoute: () => appOrgSlugProjectSlugSettingsRoute,
   } as any)
+const appOrgSlugProjectSlugAppsIndexRoute =
+  appOrgSlugProjectSlugAppsIndexRouteImport.update({
+    id: '/apps/',
+    path: '/apps/',
+    getParentRoute: () => appOrgSlugProjectSlugRouteRoute,
+  } as any)
 const appOrgSlugChar126orgSettingsRoute =
   appOrgSlugChar126orgSettingsRouteImport.update({
     id: '/settings',
@@ -199,6 +207,12 @@ const appOrgSlugProjectSlugSettingsApiKeysRoute =
     id: '/api-keys',
     path: '/api-keys',
     getParentRoute: () => appOrgSlugProjectSlugSettingsRoute,
+  } as any)
+const appOrgSlugProjectSlugAppsAppIdRoute =
+  appOrgSlugProjectSlugAppsAppIdRouteImport.update({
+    id: '/apps/$appId',
+    path: '/apps/$appId',
+    getParentRoute: () => appOrgSlugProjectSlugRouteRoute,
   } as any)
 const appOrgSlugChar126orgSettingsIndexRoute =
   appOrgSlugChar126orgSettingsIndexRouteImport.update({
@@ -237,9 +251,11 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/$projectSlug/settings': typeof appOrgSlugProjectSlugSettingsRouteWithChildren
   '/$orgSlug/$projectSlug/': typeof appOrgSlugProjectSlugIndexRoute
   '/account/profile/': typeof appAccountProfileIndexRoute
+  '/$orgSlug/$projectSlug/apps/$appId': typeof appOrgSlugProjectSlugAppsAppIdRoute
   '/$orgSlug/$projectSlug/settings/api-keys': typeof appOrgSlugProjectSlugSettingsApiKeysRoute
   '/$orgSlug/~/projects': typeof appOrgSlugChar126orgProjectsRoute
   '/$orgSlug/~/settings': typeof appOrgSlugChar126orgSettingsRouteWithChildren
+  '/$orgSlug/$projectSlug/apps/': typeof appOrgSlugProjectSlugAppsIndexRoute
   '/$orgSlug/$projectSlug/settings/': typeof appOrgSlugProjectSlugSettingsIndexRoute
   '/$orgSlug/~/': typeof appOrgSlugChar126orgIndexRoute
   '/$orgSlug/~/settings/members': typeof appOrgSlugChar126orgSettingsMembersRoute
@@ -264,8 +280,10 @@ export interface FileRoutesByTo {
   '/$orgSlug': typeof appOrgSlugIndexRoute
   '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugIndexRoute
   '/account/profile': typeof appAccountProfileIndexRoute
+  '/$orgSlug/$projectSlug/apps/$appId': typeof appOrgSlugProjectSlugAppsAppIdRoute
   '/$orgSlug/$projectSlug/settings/api-keys': typeof appOrgSlugProjectSlugSettingsApiKeysRoute
   '/$orgSlug/~/projects': typeof appOrgSlugChar126orgProjectsRoute
+  '/$orgSlug/$projectSlug/apps': typeof appOrgSlugProjectSlugAppsIndexRoute
   '/$orgSlug/$projectSlug/settings': typeof appOrgSlugProjectSlugSettingsIndexRoute
   '/$orgSlug/~': typeof appOrgSlugChar126orgIndexRoute
   '/$orgSlug/~/settings/members': typeof appOrgSlugChar126orgSettingsMembersRoute
@@ -298,9 +316,11 @@ export interface FileRoutesById {
   '/(app)/$orgSlug/$projectSlug/settings': typeof appOrgSlugProjectSlugSettingsRouteWithChildren
   '/(app)/$orgSlug/$projectSlug/': typeof appOrgSlugProjectSlugIndexRoute
   '/(app)/account/profile/': typeof appAccountProfileIndexRoute
+  '/(app)/$orgSlug/$projectSlug/apps/$appId': typeof appOrgSlugProjectSlugAppsAppIdRoute
   '/(app)/$orgSlug/$projectSlug/settings/api-keys': typeof appOrgSlugProjectSlugSettingsApiKeysRoute
   '/(app)/$orgSlug/~/(org)/projects': typeof appOrgSlugChar126orgProjectsRoute
   '/(app)/$orgSlug/~/(org)/settings': typeof appOrgSlugChar126orgSettingsRouteWithChildren
+  '/(app)/$orgSlug/$projectSlug/apps/': typeof appOrgSlugProjectSlugAppsIndexRoute
   '/(app)/$orgSlug/$projectSlug/settings/': typeof appOrgSlugProjectSlugSettingsIndexRoute
   '/(app)/$orgSlug/~/(org)/': typeof appOrgSlugChar126orgIndexRoute
   '/(app)/$orgSlug/~/(org)/settings/members': typeof appOrgSlugChar126orgSettingsMembersRoute
@@ -332,9 +352,11 @@ export interface FileRouteTypes {
     | '/$orgSlug/$projectSlug/settings'
     | '/$orgSlug/$projectSlug/'
     | '/account/profile/'
+    | '/$orgSlug/$projectSlug/apps/$appId'
     | '/$orgSlug/$projectSlug/settings/api-keys'
     | '/$orgSlug/~/projects'
     | '/$orgSlug/~/settings'
+    | '/$orgSlug/$projectSlug/apps/'
     | '/$orgSlug/$projectSlug/settings/'
     | '/$orgSlug/~/'
     | '/$orgSlug/~/settings/members'
@@ -359,8 +381,10 @@ export interface FileRouteTypes {
     | '/$orgSlug'
     | '/$orgSlug/$projectSlug'
     | '/account/profile'
+    | '/$orgSlug/$projectSlug/apps/$appId'
     | '/$orgSlug/$projectSlug/settings/api-keys'
     | '/$orgSlug/~/projects'
+    | '/$orgSlug/$projectSlug/apps'
     | '/$orgSlug/$projectSlug/settings'
     | '/$orgSlug/~'
     | '/$orgSlug/~/settings/members'
@@ -392,9 +416,11 @@ export interface FileRouteTypes {
     | '/(app)/$orgSlug/$projectSlug/settings'
     | '/(app)/$orgSlug/$projectSlug/'
     | '/(app)/account/profile/'
+    | '/(app)/$orgSlug/$projectSlug/apps/$appId'
     | '/(app)/$orgSlug/$projectSlug/settings/api-keys'
     | '/(app)/$orgSlug/~/(org)/projects'
     | '/(app)/$orgSlug/~/(org)/settings'
+    | '/(app)/$orgSlug/$projectSlug/apps/'
     | '/(app)/$orgSlug/$projectSlug/settings/'
     | '/(app)/$orgSlug/~/(org)/'
     | '/(app)/$orgSlug/~/(org)/settings/members'
@@ -602,6 +628,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appOrgSlugProjectSlugSettingsIndexRouteImport
       parentRoute: typeof appOrgSlugProjectSlugSettingsRoute
     }
+    '/(app)/$orgSlug/$projectSlug/apps/': {
+      id: '/(app)/$orgSlug/$projectSlug/apps/'
+      path: '/apps'
+      fullPath: '/$orgSlug/$projectSlug/apps/'
+      preLoaderRoute: typeof appOrgSlugProjectSlugAppsIndexRouteImport
+      parentRoute: typeof appOrgSlugProjectSlugRouteRoute
+    }
     '/(app)/$orgSlug/~/(org)/settings': {
       id: '/(app)/$orgSlug/~/(org)/settings'
       path: '/settings'
@@ -622,6 +655,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$orgSlug/$projectSlug/settings/api-keys'
       preLoaderRoute: typeof appOrgSlugProjectSlugSettingsApiKeysRouteImport
       parentRoute: typeof appOrgSlugProjectSlugSettingsRoute
+    }
+    '/(app)/$orgSlug/$projectSlug/apps/$appId': {
+      id: '/(app)/$orgSlug/$projectSlug/apps/$appId'
+      path: '/apps/$appId'
+      fullPath: '/$orgSlug/$projectSlug/apps/$appId'
+      preLoaderRoute: typeof appOrgSlugProjectSlugAppsAppIdRouteImport
+      parentRoute: typeof appOrgSlugProjectSlugRouteRoute
     }
     '/(app)/$orgSlug/~/(org)/settings/': {
       id: '/(app)/$orgSlug/~/(org)/settings/'
@@ -661,6 +701,8 @@ const appOrgSlugProjectSlugSettingsRouteWithChildren =
 interface appOrgSlugProjectSlugRouteRouteChildren {
   appOrgSlugProjectSlugSettingsRoute: typeof appOrgSlugProjectSlugSettingsRouteWithChildren
   appOrgSlugProjectSlugIndexRoute: typeof appOrgSlugProjectSlugIndexRoute
+  appOrgSlugProjectSlugAppsAppIdRoute: typeof appOrgSlugProjectSlugAppsAppIdRoute
+  appOrgSlugProjectSlugAppsIndexRoute: typeof appOrgSlugProjectSlugAppsIndexRoute
 }
 
 const appOrgSlugProjectSlugRouteRouteChildren: appOrgSlugProjectSlugRouteRouteChildren =
@@ -668,6 +710,8 @@ const appOrgSlugProjectSlugRouteRouteChildren: appOrgSlugProjectSlugRouteRouteCh
     appOrgSlugProjectSlugSettingsRoute:
       appOrgSlugProjectSlugSettingsRouteWithChildren,
     appOrgSlugProjectSlugIndexRoute: appOrgSlugProjectSlugIndexRoute,
+    appOrgSlugProjectSlugAppsAppIdRoute: appOrgSlugProjectSlugAppsAppIdRoute,
+    appOrgSlugProjectSlugAppsIndexRoute: appOrgSlugProjectSlugAppsIndexRoute,
   }
 
 const appOrgSlugProjectSlugRouteRouteWithChildren =

@@ -3,6 +3,7 @@ import { Button } from "@tailorkit/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { DetailCard } from "#components/crm-ui";
 import { getCustomer } from "#lib/crm-data";
 
 export const Route = createFileRoute("/customers/$customerId")({
@@ -43,10 +44,10 @@ function CustomerDetailPage() {
             <CardDescription>{customer.notes}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 px-4 pb-4 pt-0 sm:grid-cols-2">
-            <Detail label="Owner" value={customer.owner} />
-            <Detail label="Value" value={customer.value} />
-            <Detail label="Last contact" value={customer.lastContact} />
-            <Detail label="Next step" value={customer.nextStep} />
+            <DetailCard label="Owner" value={customer.owner} />
+            <DetailCard label="Value" value={customer.value} />
+            <DetailCard label="Last contact" value={customer.lastContact} />
+            <DetailCard label="Next step" value={customer.nextStep} />
           </CardContent>
         </Card>
 
@@ -70,16 +71,5 @@ function CustomerDetailPage() {
         </Card>
       </section>
     </div>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <Card>
-      <CardContent className="p-3">
-        <p className="text-muted-foreground text-xs">{label}</p>
-        <p className="mt-1 font-medium text-sm">{value}</p>
-      </CardContent>
-    </Card>
   );
 }

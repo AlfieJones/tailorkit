@@ -1,9 +1,8 @@
 import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
-import { Card, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
+import { MetricCard, PageHeader } from "#components/crm-ui";
 import { CustomerTable } from "#components/customer-table";
 import { customers } from "#lib/crm-data";
-import { PageHeader } from "./index";
-import tailorKitClient from "#lib/tailorkit-client.tsx";
+import { ScreenMatch } from "#lib/tailorkit-client.tsx";
 import { useAuthSession } from "#lib/auth-client.ts";
 
 export const Route = createFileRoute("/customers")({ component: CustomersPage });
@@ -19,46 +18,27 @@ function CustomersPage() {
 
   if (pathname !== "/customers") {
     return (
-      <tailorKitClient.ScreenMatch
-        screen="/customers"
-        context={{ user: session.data.user, customers }}
-      >
+      <ScreenMatch screen="/customers" context={{ user: session.data.user, customers }}>
         <Outlet />
-      </tailorKitClient.ScreenMatch>
+      </ScreenMatch>
     );
   }
 
   return (
-    <tailorKitClient.ScreenMatch
-      screen="/customers"
-      context={{ user: session.data.user, customers }}
-    >
+    <ScreenMatch screen="/customers" context={{ user: session.data.user, customers }}>
       <div className="space-y-6">
         <PageHeader description="Accounts, owners, and current pipeline value." title="Customers" />
 
         <section className="grid gap-4 sm:grid-cols-3">
-          <Card className="rounded-lg">
-            <CardHeader className="p-4">
-              <CardDescription>Total</CardDescription>
-              <CardTitle className="text-2xl">{customers.length}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="rounded-lg">
-            <CardHeader className="p-4">
-              <CardDescription>Active</CardDescription>
-              <CardTitle className="text-2xl">
-                {customers.filter((customer) => customer.status === "Active").length}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="rounded-lg">
-            <CardHeader className="p-4">
-              <CardDescription>At risk</CardDescription>
-              <CardTitle className="text-2xl">
-                {customers.filter((customer) => customer.status === "At risk").length}
-              </CardTitle>
-            </CardHeader>
-          </Card>
+          <MetricCard label="Total" value={customers.length} />
+          <MetricCard
+            label="Active"
+            value={customers.filter((customer) => customer.status === "Active").length}
+          />
+          <MetricCard
+            label="At risk"
+            value={customers.filter((customer) => customer.status === "At risk").length}
+          />
         </section>
 
         <section className="space-y-3">
@@ -71,6 +51,6 @@ function CustomersPage() {
           <CustomerTable />
         </section>
       </div>
-    </tailorKitClient.ScreenMatch>
+    </ScreenMatch>
   );
 }

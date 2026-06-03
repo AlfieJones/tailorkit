@@ -1,5 +1,6 @@
 {
   "name": "@tailorkit/api-utils",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [
