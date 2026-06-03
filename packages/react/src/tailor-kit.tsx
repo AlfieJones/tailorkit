@@ -322,6 +322,7 @@ function createTailorKitStore(baseUrlInput: string | URL) {
   let currentMatch: ScreenMatchEntry | null = null;
   let fetchAppsPromise: Promise<void> | null = null;
   let fetchMetaPromise: Promise<void> | null = null;
+  let fetchAppsRequestId = 0;
   let nextOrder = 0;
 
   const emit = (): void => {
@@ -371,12 +372,17 @@ function createTailorKitStore(baseUrlInput: string | URL) {
       appsSnapshot = { ...appsSnapshot, status: "loading" };
       emit();
 
+      const requestId = ++fetchAppsRequestId;
+
       fetchAppsPromise = fetch(new URL("apps", baseUrl))
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`Unable to fetch TailorKit apps from ${baseUrl.toString()}.`);
           }
           const apps = (await response.json()) as TailorKitApp[];
+          if (requestId !== fetchAppsRequestId) {
+            return;
+          }
           appsSnapshot = {
             apps,
             error: null,
@@ -385,6 +391,9 @@ function createTailorKitStore(baseUrlInput: string | URL) {
           emit();
         })
         .catch((error: unknown) => {
+          if (requestId !== fetchAppsRequestId) {
+            return;
+          }
           appsSnapshot = {
             ...appsSnapshot,
             error: error instanceof Error ? error : new Error(String(error)),

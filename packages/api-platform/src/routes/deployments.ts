@@ -78,10 +78,26 @@ const requireDeployment = o.middleware(
   },
 );
 
-async function createUniqueDeploymentPublicId(appId: string) {
+const deploymentPublicIdUniqueConstraint = "app_deployment_app_id_public_id_unique";
+
+function isDeploymentPublicIdUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "23505" &&
+    "constraint" in error &&
+    error.constraint === deploymentPublicIdUniqueConstraint
+  );
+}
+
+async function createUniqueDeploymentPublicId(
+  appId: string,
+  database: Pick<typeof db, "query"> = db,
+) {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const publicId = createPublicId();
-    const existing = await db.query.appDeployment.findFirst({
+    const existing = await database.query.appDeployment.findFirst({
       where: { appId, publicId },
     });
 
@@ -184,7 +200,6 @@ const createAppDeployment = protectedRouter
   .handler(async ({ context, input }) => {
     const [asset] = input.body.assets;
     const deploymentId = crypto.randomUUID();
-    const deploymentPublicId = await createUniqueDeploymentPublicId(context.app.id);
     const fileId = crypto.randomUUID();
     const objectKey = `projects/${context.project.id}/apps/${context.app.id}/deployments/${deploymentId}/files/${asset.objectKey}`;
     const checksumSha256 = hexToBase64(asset.checksum);
@@ -200,50 +215,69 @@ const createAppDeployment = protectedRouter
       },
     });
 
-    const { createdDeployment, createdFile } = await db.transaction(async (tx) => {
-      const [deployment] = await tx
-        .insert(appDeployment)
-        .values({
-          id: deploymentId,
-          appId: context.app.id,
-          publicId: deploymentPublicId,
-          status: "uploading",
-        })
-        .returning();
+    let created: { createdDeployment: AppDeployment; createdFile: AppDeploymentFile } | undefined;
 
-      if (!deployment) {
-        throw new ORPCError("BAD_REQUEST", { message: "Failed to create deployment." });
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      try {
+        created = await db.transaction(async (tx) => {
+          const deploymentPublicId = await createUniqueDeploymentPublicId(context.app.id, tx);
+
+          const [deployment] = await tx
+            .insert(appDeployment)
+            .values({
+              id: deploymentId,
+              appId: context.app.id,
+              publicId: deploymentPublicId,
+              status: "uploading",
+            })
+            .returning();
+
+          if (!deployment) {
+            throw new ORPCError("BAD_REQUEST", { message: "Failed to create deployment." });
+          }
+
+          const [file] = await tx
+            .insert(appDeploymentFile)
+            .values({
+              id: fileId,
+              appDeploymentId: deployment.id,
+              checksum: asset.checksum,
+              contentLength: asset.contentLength,
+              contentType: asset.contentType,
+              encoding: asset.encoding,
+              objectKey,
+            })
+            .returning();
+
+          if (!file) {
+            throw new ORPCError("BAD_REQUEST", { message: "Failed to create deployment asset." });
+          }
+
+          const [updatedDeployment] = await tx
+            .update(appDeployment)
+            .set({ clientEntryFileId: file.id })
+            .where(eq(appDeployment.id, deployment.id))
+            .returning();
+
+          if (!updatedDeployment) {
+            throw new ORPCError("BAD_REQUEST", { message: "Failed to update deployment asset." });
+          }
+
+          return { createdDeployment: updatedDeployment, createdFile: file };
+        });
+        break;
+      } catch (error) {
+        if (!isDeploymentPublicIdUniqueConstraintError(error) || attempt === 4) {
+          throw error;
+        }
       }
+    }
 
-      const [file] = await tx
-        .insert(appDeploymentFile)
-        .values({
-          id: fileId,
-          appDeploymentId: deployment.id,
-          checksum: asset.checksum,
-          contentLength: asset.contentLength,
-          contentType: asset.contentType,
-          encoding: asset.encoding,
-          objectKey,
-        })
-        .returning();
+    if (!created) {
+      throw new ORPCError("BAD_REQUEST", { message: "Failed to create deployment." });
+    }
 
-      if (!file) {
-        throw new ORPCError("BAD_REQUEST", { message: "Failed to create deployment asset." });
-      }
-
-      const [updatedDeployment] = await tx
-        .update(appDeployment)
-        .set({ clientEntryFileId: file.id })
-        .where(eq(appDeployment.id, deployment.id))
-        .returning();
-
-      if (!updatedDeployment) {
-        throw new ORPCError("BAD_REQUEST", { message: "Failed to update deployment asset." });
-      }
-
-      return { createdDeployment: updatedDeployment, createdFile: file };
-    });
+    const { createdDeployment, createdFile } = created;
 
     return {
       body: {
