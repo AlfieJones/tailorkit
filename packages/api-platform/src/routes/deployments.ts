@@ -267,7 +267,12 @@ const createAppDeployment = protectedRouter
         });
         break;
       } catch (error) {
-        if (!isDeploymentPublicIdUniqueConstraintError(error) || attempt === 4) {
+        if (isDeploymentPublicIdUniqueConstraintError(error) && attempt === 4) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Deployment public ID already exists. Please try again.",
+          });
+        }
+        if (!isDeploymentPublicIdUniqueConstraintError(error)) {
           throw error;
         }
       }

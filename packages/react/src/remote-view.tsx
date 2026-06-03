@@ -163,10 +163,10 @@ interface RemoteElementViewProps {
   node: RemoteElementNode;
 }
 
-const RemoteElementView = memo(function RemoteElementView({
+const RemoteElementView = memo(({
   ctx,
   node,
-}: RemoteElementViewProps): ReactNode {
+}: RemoteElementViewProps): ReactNode => {
   const { dispatch, components } = ctx;
 
   const children = node.children.map((child) => <RemoteView key={child.id} nodeId={child.id} />);

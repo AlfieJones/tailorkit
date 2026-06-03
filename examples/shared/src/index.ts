@@ -4,6 +4,7 @@ import { primitives } from "tailorkit/zod";
 import { z } from "zod";
 
 import type { DemoUser } from "./auth";
+
 export * from "./auth";
 
 const Button = {
