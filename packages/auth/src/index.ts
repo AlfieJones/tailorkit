@@ -1,7 +1,7 @@
 import { createDb } from "@tailorkit/db";
 import * as schema from "@tailorkit/db/schema/auth";
 import { sendBetterAuthOtpEmail, sendOrganizationInvitationEmail } from "@tailorkit/email";
-import { env, getBaseUrl } from "@tailorkit/env/server";
+import { env, getBaseUrl, getTrustedOrigins } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
 import { initializeObservability } from "@tailorkit/observability";
 import { betterAuth } from "better-auth/minimal";
@@ -139,7 +139,7 @@ export function createAuth() {
       tanstackStartCookies(),
     ],
     secret: env.AUTH_SECRET,
-    trustedOrigins: [getBaseUrl()],
+    trustedOrigins: getTrustedOrigins(),
     user: {
       additionalFields: {
         theme: {
