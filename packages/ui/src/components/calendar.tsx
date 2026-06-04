@@ -8,6 +8,29 @@ import { cn } from "@tailorkit/ui/lib/utils";
 const buttonClassNames =
   "relative flex size-(--cell-size) text-base sm:text-sm items-center justify-center rounded-lg text-foreground not-in-data-selected:hover:bg-accent disabled:pointer-events-none disabled:opacity-64 [&_svg:not([class*='opacity-'])]:opacity-80 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0";
 
+function CalendarChevron({
+  className,
+  orientation,
+  ...props
+}: {
+  className?: string;
+  orientation?: "left" | "right" | "up" | "down";
+}): React.ReactElement {
+  if (orientation === "left") {
+    return (
+      <ChevronLeftIcon className={cn(className, "rtl:rotate-180")} {...props} aria-hidden="true" />
+    );
+  }
+
+  if (orientation === "right") {
+    return (
+      <ChevronRightIcon className={cn(className, "rtl:rotate-180")} {...props} aria-hidden="true" />
+    );
+  }
+
+  return <ChevronsUpDownIcon className={className} {...props} aria-hidden="true" />;
+}
+
 export function Calendar({
   className,
   classNames,
@@ -58,36 +81,7 @@ export function Calendar({
   );
 
   const defaultComponents = {
-    Chevron: ({
-      className,
-      orientation,
-      ...props
-    }: {
-      className?: string;
-      orientation?: "left" | "right" | "up" | "down";
-    }): React.ReactElement => {
-      if (orientation === "left") {
-        return (
-          <ChevronLeftIcon
-            className={cn(className, "rtl:rotate-180")}
-            {...props}
-            aria-hidden="true"
-          />
-        );
-      }
-
-      if (orientation === "right") {
-        return (
-          <ChevronRightIcon
-            className={cn(className, "rtl:rotate-180")}
-            {...props}
-            aria-hidden="true"
-          />
-        );
-      }
-
-      return <ChevronsUpDownIcon className={className} {...props} aria-hidden="true" />;
-    },
+    Chevron: CalendarChevron,
   };
 
   const mergedComponents = {

@@ -8,6 +8,8 @@ import { formatFieldErrors } from "./field-errors";
 import { Input } from "../components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../components/input-group";
 
+const emptyErrors: unknown[] = [];
+
 export interface TextFieldProps {
   autoComplete?: InputProps["autoComplete"];
   autoFocus?: boolean;
@@ -32,7 +34,7 @@ export function TextField({
   description,
   disabled,
   endAdornment,
-  errors = [],
+  errors = emptyErrors,
   label,
   labelAction,
   onBlur,
