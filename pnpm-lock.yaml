@@ -477,15 +477,15 @@ importers:
         specifier: ^10.29.2
         version: 10.29.2
     devDependencies:
+      '@tailorkit/cli':
+        specifier: workspace:*
+        version: link:../../../packages/cli
       oxfmt:
         specifier: 0.52.0
         version: 0.52.0
       oxlint:
         specifier: 1.67.0
         version: 1.67.0
-      tailorkit:
-        specifier: workspace:*
-        version: link:../../../packages/tailorkit
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -499,15 +499,15 @@ importers:
         specifier: ^10.29.2
         version: 10.29.2
     devDependencies:
+      '@tailorkit/cli':
+        specifier: workspace:*
+        version: link:../../../packages/cli
       oxfmt:
         specifier: 0.52.0
         version: 0.52.0
       oxlint:
         specifier: 1.67.0
         version: 1.67.0
-      tailorkit:
-        specifier: workspace:*
-        version: link:../../../packages/tailorkit
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -521,15 +521,15 @@ importers:
         specifier: ^10.29.2
         version: 10.29.2
     devDependencies:
+      '@tailorkit/cli':
+        specifier: workspace:*
+        version: link:../../../packages/cli
       oxfmt:
         specifier: 0.52.0
         version: 0.52.0
       oxlint:
         specifier: 1.67.0
         version: 1.67.0
-      tailorkit:
-        specifier: workspace:*
-        version: link:../../../packages/tailorkit
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
