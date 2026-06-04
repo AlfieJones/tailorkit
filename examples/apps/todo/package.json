@@ -15,8 +15,8 @@
     ]
   },
   "scripts": {
-    "build": "tailorkit build",
-    "generate": "tailorkit generate",
+    "build": "node ../../../packages/cli/dist/index.js build",
+    "generate": "node ../../../packages/cli/dist/index.js generate",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt --check",
