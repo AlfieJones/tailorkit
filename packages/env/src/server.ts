@@ -5,6 +5,7 @@ import { z } from "zod";
 
 config({
   path: ["../../apps/web/.env.local", "../../apps/web/.env"],
+  quiet: true,
 });
 
 export const env = createEnv({
@@ -118,4 +119,24 @@ export function getBaseUrl() {
   }
 
   return `http://localhost:${env.PORT ?? 3000}`;
+}
+
+export function getTrustedOrigins() {
+  const origins = new Set([getBaseUrl()]);
+
+  if (env.VERCEL_ENV === "production" && env.VERCEL_PROJECT_PRODUCTION_URL) {
+    origins.add(`https://${env.VERCEL_PROJECT_PRODUCTION_URL}`);
+  }
+
+  if (env.VERCEL_ENV === "preview") {
+    if (env.VERCEL_BRANCH_URL) {
+      origins.add(`https://${env.VERCEL_BRANCH_URL}`);
+    }
+
+    if (env.VERCEL_URL) {
+      origins.add(`https://${env.VERCEL_URL}`);
+    }
+  }
+
+  return [...origins];
 }

@@ -13,6 +13,8 @@ import {
   NumberFieldInput,
 } from "../components/number-field";
 
+const emptyErrors: unknown[] = [];
+
 export interface NumberFieldProps {
   description?: string;
   disabled?: boolean;
@@ -29,7 +31,7 @@ export interface NumberFieldProps {
 export function NumberField({
   description,
   disabled,
-  errors = [],
+  errors = emptyErrors,
   label,
   labelAction,
   onBlur,

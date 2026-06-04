@@ -12,6 +12,7 @@ import z from "zod";
 import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
 import { setSpanAttributes } from "@tailorkit/observability";
+import { createPublicId } from "../public-id";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
 
@@ -183,12 +184,13 @@ const createAppDeployment = protectedRouter
       },
     });
 
-    const { createdDeployment, createdFile } = await db.transaction(async (tx) => {
+    const created = await db.transaction(async (tx) => {
       const [deployment] = await tx
         .insert(appDeployment)
         .values({
           id: deploymentId,
           appId: context.app.id,
+          publicId: createPublicId(),
           status: "uploading",
         })
         .returning();
@@ -226,6 +228,7 @@ const createAppDeployment = protectedRouter
 
       return { createdDeployment: updatedDeployment, createdFile: file };
     });
+    const { createdDeployment, createdFile } = created;
 
     return {
       body: {

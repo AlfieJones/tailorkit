@@ -3,6 +3,7 @@ import { defineConfig } from "drizzle-kit";
 
 config({
   path: ["../../apps/web/.env.local", "../../apps/web/.env"],
+  quiet: true,
 });
 
 const getDrizzleDatabaseUrl = (url: string) => {

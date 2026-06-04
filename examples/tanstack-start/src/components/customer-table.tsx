@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@tailorkit/ui/table";
+import { formatCurrencyTotal } from "#components/crm-ui";
 import { customers } from "#lib/crm-data";
 
 export function CustomerTable({ limit }: { limit?: number }) {
@@ -64,14 +65,4 @@ function getStatusIndicatorClassName(status: string) {
   }
 
   return "bg-sky-500";
-}
-
-function formatCurrencyTotal(rows: { value: string }[]) {
-  const total = rows.reduce((sum, row) => sum + Number(row.value.replaceAll(/[$,]/gu, "")), 0);
-
-  return new Intl.NumberFormat("en-US", {
-    currency: "USD",
-    maximumFractionDigits: 0,
-    style: "currency",
-  }).format(total);
 }

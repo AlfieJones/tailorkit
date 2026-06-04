@@ -28,6 +28,7 @@ const server = createTailorKitServer({
 });
 
 const tailor = createTailorKitClient<typeof server>({ baseUrl: "http://runtime.test" });
+const app = { clientPath: "/apps/todo.js", id: "todo" };
 
 const slotsServer = createTailorKitServer({
   components: {
@@ -102,6 +103,13 @@ components(callbackServer.$internal.schema, {
 
 <tailor.ScreenMatch screen="/user" isLoading context={{ userId: "user_1" }} />;
 
+<tailor.Root>
+  <tailor.ScreenMatch
+    screen="/home"
+    context={{ page: { title: "Home" }, user: { id: "user_1" } }}
+  />
+</tailor.Root>;
+
 // @ts-expect-error invalid screen name
 <tailor.ScreenMatch screen="missing" context={{}} />;
 
@@ -113,3 +121,27 @@ components(callbackServer.$internal.schema, {
 
 // @ts-expect-error isLoading false requires full context
 <tailor.ScreenMatch screen="/home" isLoading={false} />;
+
+<tailor.AppView app={app} />;
+
+<tailor.AppView
+  app={app}
+  screen="/home"
+  context={{ page: { title: "Home" }, user: { id: "user_1" } }}
+/>;
+
+<tailor.AppView app={app} screen="/user" isLoading />;
+
+<tailor.AppView app={app} screen="/user" isLoading context={{ userId: "user_1" }} />;
+
+// @ts-expect-error invalid screen name
+<tailor.AppView app={app} screen="missing" context={{}} />;
+
+// @ts-expect-error invalid context shape for selected screen
+<tailor.AppView app={app} screen="/user" context={{ page: { title: "Home" } }} />;
+
+// @ts-expect-error ready app views require context when screen is provided
+<tailor.AppView app={app} screen="/home" />;
+
+// @ts-expect-error isLoading false requires full context when screen is provided
+<tailor.AppView app={app} screen="/home" isLoading={false} />;

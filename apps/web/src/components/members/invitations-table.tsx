@@ -5,7 +5,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { CellContext, ColumnDef, SortingState } from "@tanstack/react-table";
 import { MoreHorizontalIcon, SendIcon, TrashIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
 import { Badge } from "@tailorkit/ui/components/badge";
@@ -36,6 +36,95 @@ export interface InvitationRow {
   expiresAt: Date | string;
 }
 
+interface InvitationColumnsOptions {
+  canManage: boolean;
+  onResend: (invitation: InvitationRow) => void;
+  onRevoke: (invitationId: string) => void;
+  resendPending: boolean;
+  revokePending: boolean;
+}
+
+function createInvitationColumns({
+  canManage,
+  onResend,
+  onRevoke,
+  resendPending,
+  revokePending,
+}: InvitationColumnsOptions): ColumnDef<InvitationRow>[] {
+  return [
+    {
+      accessorKey: "email",
+      header: "Email",
+      size: 280,
+      cell: ({ row }: CellContext<InvitationRow, unknown>) => {
+        const initials = row.original.email.slice(0, 2).toUpperCase();
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="size-7">
+              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+            </Avatar>
+            <p className="truncate font-medium text-sm">{row.original.email}</p>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      size: 110,
+      cell: ({ row }: CellContext<InvitationRow, unknown>) => {
+        const role = row.original.role ?? "member";
+        return (
+          <Badge variant={getRoleBadgeVariant(role)} size="lg">
+            {role.charAt(0).toUpperCase() + role.slice(1)}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "expiresAt",
+      header: "Expires",
+      size: 140,
+      sortingFn: "datetime",
+      cell: ({ row }: CellContext<InvitationRow, unknown>) => (
+        <DateAgo date={row.original.expiresAt} />
+      ),
+    },
+    {
+      id: "actions",
+      size: 80,
+      enableSorting: false,
+      header: () => null,
+      cell: ({ row }: CellContext<InvitationRow, unknown>) =>
+        canManage ? (
+          <div className="flex items-center justify-end gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<Button size="icon-sm" variant="ghost" />}>
+                <MoreHorizontalIcon className="size-4" />
+                <span className="sr-only">Open invitation actions</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem disabled={resendPending} onClick={() => onResend(row.original)}>
+                  <SendIcon />
+                  Resend email
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={revokePending}
+                  variant="destructive"
+                  onClick={() => onRevoke(row.original.id)}
+                >
+                  <TrashIcon />
+                  Revoke invite
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ) : null,
+    },
+  ];
+}
+
 export function InvitationsTable({
   invitations,
   canManage,
@@ -54,76 +143,7 @@ export function InvitationsTable({
   const [sorting, setSorting] = useState<SortingState>([{ id: "email", desc: false }]);
 
   const columns = useMemo<ColumnDef<InvitationRow>[]>(
-    () => [
-      {
-        accessorKey: "email",
-        header: "Email",
-        size: 280,
-        cell: ({ row }) => {
-          const initials = row.original.email.slice(0, 2).toUpperCase();
-          return (
-            <div className="flex items-center gap-3">
-              <Avatar className="size-7">
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-              </Avatar>
-              <p className="truncate font-medium text-sm">{row.original.email}</p>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "role",
-        header: "Role",
-        size: 110,
-        cell: ({ row }) => {
-          const role = row.original.role ?? "member";
-          return (
-            <Badge variant={getRoleBadgeVariant(role)} size="lg">
-              {role.charAt(0).toUpperCase() + role.slice(1)}
-            </Badge>
-          );
-        },
-      },
-      {
-        accessorKey: "expiresAt",
-        header: "Expires",
-        size: 140,
-        sortingFn: "datetime",
-        cell: ({ row }) => <DateAgo date={row.original.expiresAt} />,
-      },
-      {
-        id: "actions",
-        size: 80,
-        enableSorting: false,
-        header: () => null,
-        cell: ({ row }) =>
-          canManage ? (
-            <div className="flex items-center justify-end gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger render={<Button size="icon-sm" variant="ghost" />}>
-                  <MoreHorizontalIcon className="size-4" />
-                  <span className="sr-only">Open invitation actions</span>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem disabled={resendPending} onClick={() => onResend(row.original)}>
-                    <SendIcon />
-                    Resend email
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    disabled={revokePending}
-                    variant="destructive"
-                    onClick={() => onRevoke(row.original.id)}
-                  >
-                    <TrashIcon />
-                    Revoke invite
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ) : null,
-      },
-    ],
+    () => createInvitationColumns({ canManage, onResend, onRevoke, resendPending, revokePending }),
     [canManage, onResend, onRevoke, resendPending, revokePending],
   );
 

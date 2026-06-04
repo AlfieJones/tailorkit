@@ -68,6 +68,10 @@
                             "type": "string",
                             "format": "uuid"
                           },
+                          "publicId": {
+                            "type": "string",
+                            "maxLength": 10
+                          },
                           "projectId": {
                             "type": "string",
                             "format": "uuid"
@@ -121,6 +125,10 @@
                                     "type": "string",
                                     "format": "uuid"
                                   },
+                                  "publicId": {
+                                    "type": "string",
+                                    "maxLength": 10
+                                  },
                                   "appId": {
                                     "type": "string",
                                     "format": "uuid"
@@ -153,6 +161,7 @@
                                 },
                                 "required": [
                                   "id",
+                                  "publicId",
                                   "appId",
                                   "status",
                                   "clientEntryFileId",
@@ -168,6 +177,7 @@
                         },
                         "required": [
                           "id",
+                          "publicId",
                           "projectId",
                           "scopeId",
                           "name",
@@ -252,6 +262,10 @@
                       "type": "string",
                       "format": "uuid"
                     },
+                    "publicId": {
+                      "type": "string",
+                      "maxLength": 10
+                    },
                     "projectId": {
                       "type": "string",
                       "format": "uuid"
@@ -305,6 +319,10 @@
                               "type": "string",
                               "format": "uuid"
                             },
+                            "publicId": {
+                              "type": "string",
+                              "maxLength": 10
+                            },
                             "appId": {
                               "type": "string",
                               "format": "uuid"
@@ -337,6 +355,7 @@
                           },
                           "required": [
                             "id",
+                            "publicId",
                             "appId",
                             "status",
                             "clientEntryFileId",
@@ -352,6 +371,7 @@
                   },
                   "required": [
                     "id",
+                    "publicId",
                     "projectId",
                     "scopeId",
                     "name",
@@ -403,6 +423,10 @@
                       "type": "string",
                       "format": "uuid"
                     },
+                    "publicId": {
+                      "type": "string",
+                      "maxLength": 10
+                    },
                     "projectId": {
                       "type": "string",
                       "format": "uuid"
@@ -456,6 +480,10 @@
                               "type": "string",
                               "format": "uuid"
                             },
+                            "publicId": {
+                              "type": "string",
+                              "maxLength": 10
+                            },
                             "appId": {
                               "type": "string",
                               "format": "uuid"
@@ -488,6 +516,7 @@
                           },
                           "required": [
                             "id",
+                            "publicId",
                             "appId",
                             "status",
                             "clientEntryFileId",
@@ -503,6 +532,7 @@
                   },
                   "required": [
                     "id",
+                    "publicId",
                     "projectId",
                     "scopeId",
                     "name",
@@ -622,6 +652,10 @@
                       "type": "string",
                       "format": "uuid"
                     },
+                    "publicId": {
+                      "type": "string",
+                      "maxLength": 10
+                    },
                     "projectId": {
                       "type": "string",
                       "format": "uuid"
@@ -675,6 +709,10 @@
                               "type": "string",
                               "format": "uuid"
                             },
+                            "publicId": {
+                              "type": "string",
+                              "maxLength": 10
+                            },
                             "appId": {
                               "type": "string",
                               "format": "uuid"
@@ -707,6 +745,7 @@
                           },
                           "required": [
                             "id",
+                            "publicId",
                             "appId",
                             "status",
                             "clientEntryFileId",
@@ -722,6 +761,7 @@
                   },
                   "required": [
                     "id",
+                    "publicId",
                     "projectId",
                     "scopeId",
                     "name",
@@ -789,6 +829,10 @@
                       "type": "string",
                       "format": "uuid"
                     },
+                    "publicId": {
+                      "type": "string",
+                      "maxLength": 10
+                    },
                     "projectId": {
                       "type": "string",
                       "format": "uuid"
@@ -842,6 +886,10 @@
                               "type": "string",
                               "format": "uuid"
                             },
+                            "publicId": {
+                              "type": "string",
+                              "maxLength": 10
+                            },
                             "appId": {
                               "type": "string",
                               "format": "uuid"
@@ -874,6 +922,7 @@
                           },
                           "required": [
                             "id",
+                            "publicId",
                             "appId",
                             "status",
                             "clientEntryFileId",
@@ -889,6 +938,7 @@
                   },
                   "required": [
                     "id",
+                    "publicId",
                     "projectId",
                     "scopeId",
                     "name",
@@ -1215,6 +1265,10 @@
                             "type": "string",
                             "format": "uuid"
                           },
+                          "publicId": {
+                            "type": "string",
+                            "maxLength": 10
+                          },
                           "appId": {
                             "type": "string",
                             "format": "uuid"
@@ -1247,6 +1301,7 @@
                         },
                         "required": [
                           "id",
+                          "publicId",
                           "appId",
                           "status",
                           "clientEntryFileId",
@@ -1449,6 +1504,10 @@
                           "type": "string",
                           "format": "uuid"
                         },
+                        "publicId": {
+                          "type": "string",
+                          "maxLength": 10
+                        },
                         "appId": {
                           "type": "string",
                           "format": "uuid"
@@ -1481,6 +1540,7 @@
                       },
                       "required": [
                         "id",
+                        "publicId",
                         "appId",
                         "status",
                         "clientEntryFileId",
@@ -1532,6 +1592,10 @@
                       "type": "string",
                       "format": "uuid"
                     },
+                    "publicId": {
+                      "type": "string",
+                      "maxLength": 10
+                    },
                     "appId": {
                       "type": "string",
                       "format": "uuid"
@@ -1564,6 +1628,7 @@
                   },
                   "required": [
                     "id",
+                    "publicId",
                     "appId",
                     "status",
                     "clientEntryFileId",
@@ -1620,6 +1685,10 @@
                       "type": "string",
                       "format": "uuid"
                     },
+                    "publicId": {
+                      "type": "string",
+                      "maxLength": 10
+                    },
                     "appId": {
                       "type": "string",
                       "format": "uuid"
@@ -1652,6 +1721,7 @@
                   },
                   "required": [
                     "id",
+                    "publicId",
                     "appId",
                     "status",
                     "clientEntryFileId",

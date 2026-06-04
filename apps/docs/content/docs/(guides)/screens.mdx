@@ -102,7 +102,7 @@ and selects one by mount order so production keeps rendering.
 
 ## Render The Current Match
 
-`tailor.Screen` renders the selected match into a TailorKit app.
+`tailor.AppView` renders the selected match into a TailorKit app.
 
 ```tsx
 const { apps } = tailor.useApps();
@@ -110,13 +110,20 @@ const { apps } = tailor.useApps();
 return (
   <tailor.ScreenMatch screen="/home" context={context}>
     {apps.map((app) => (
-      <tailor.Screen key={app.id} app={app} />
+      <tailor.AppView key={app.id} app={app} />
     ))}
   </tailor.ScreenMatch>
 );
 ```
 
 Multiple apps can render the same current match.
+
+You can also pass a screen and context directly when the app view is not
+rendered under the route that owns the active `ScreenMatch`.
+
+```tsx
+<tailor.AppView app={app} screen="/home" context={context} />
+```
 
 ## Registry State
 
@@ -131,7 +138,7 @@ const todoApp = tailor.getApp("todo");
 
 ## App URL Resolution
 
-`tailor.Screen` resolves deployed app clients from the TailorKit metadata
+`tailor.AppView` resolves deployed app clients from the TailorKit metadata
 `assetsBaseUrl` and the app registry item's current deployment.
 
 ```ts
@@ -144,7 +151,7 @@ new URL(
 Local apps can still provide a client path directly:
 
 ```tsx
-<tailor.Screen
+<tailor.AppView
   app={{
     id: "todo",
     clientPath: "/tailorkit/todo/client.js",

@@ -5,7 +5,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { CellContext, ColumnDef, SortingState } from "@tanstack/react-table";
 import { MoreHorizontalIcon, TrashIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
 import { Badge } from "@tailorkit/ui/components/badge";
@@ -39,6 +39,97 @@ export interface MemberRow {
   isOwner: boolean;
 }
 
+interface MemberColumnsOptions {
+  canManage: boolean;
+  onRemove: (memberId: string) => void;
+  removePending: boolean;
+}
+
+function createMemberColumns({
+  canManage,
+  onRemove,
+  removePending,
+}: MemberColumnsOptions): ColumnDef<MemberRow>[] {
+  return [
+    {
+      accessorKey: "name",
+      header: "Member",
+      size: 280,
+      cell: ({ row }: CellContext<MemberRow, unknown>) => {
+        const initials = row.original.name
+          .split(" ")
+          .map((word: string) => word[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase();
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="size-7">
+              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate font-medium text-sm leading-tight">
+                {row.original.name}
+                {row.original.isCurrentUser && (
+                  <span className="ml-1.5 text-muted-foreground text-xs font-normal">(you)</span>
+                )}
+              </p>
+              <p className="truncate text-muted-foreground text-xs leading-tight">
+                {row.original.email}
+              </p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      size: 110,
+      cell: ({ row }: CellContext<MemberRow, unknown>) => (
+        <Badge variant={getRoleBadgeVariant(row.original.role)} size="lg">
+          {row.original.role.charAt(0).toUpperCase() + row.original.role.slice(1)}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Last Active",
+      size: 140,
+      sortingFn: "datetime",
+      cell: ({ row }: CellContext<MemberRow, unknown>) => <DateAgo date={row.original.createdAt} />,
+    },
+    {
+      id: "actions",
+      size: 80,
+      enableSorting: false,
+      header: () => null,
+      cell: ({ row }: CellContext<MemberRow, unknown>) => (
+        <div className="flex items-center justify-end gap-1">
+          {canManage && !row.original.isCurrentUser && !row.original.isOwner && (
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<Button size="icon-sm" variant="ghost" />}>
+                <MoreHorizontalIcon className="size-4" />
+                <span className="sr-only">Open member actions</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem
+                  disabled={removePending}
+                  variant="destructive"
+                  onClick={() => onRemove(row.original.id)}
+                >
+                  <TrashIcon />
+                  Remove member
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      ),
+    },
+  ];
+}
+
 export function MembersTable({
   members,
   canManage,
@@ -69,84 +160,7 @@ export function MembersTable({
   }, [members, search]);
 
   const columns = useMemo<ColumnDef<MemberRow>[]>(
-    () => [
-      {
-        accessorKey: "name",
-        header: "Member",
-        size: 280,
-        cell: ({ row }) => {
-          const initials = row.original.name
-            .split(" ")
-            .map((word: string) => word[0])
-            .slice(0, 2)
-            .join("")
-            .toUpperCase();
-          return (
-            <div className="flex items-center gap-3">
-              <Avatar className="size-7">
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="truncate font-medium text-sm leading-tight">
-                  {row.original.name}
-                  {row.original.isCurrentUser && (
-                    <span className="ml-1.5 text-muted-foreground text-xs font-normal">(you)</span>
-                  )}
-                </p>
-                <p className="truncate text-muted-foreground text-xs leading-tight">
-                  {row.original.email}
-                </p>
-              </div>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "role",
-        header: "Role",
-        size: 110,
-        cell: ({ row }) => (
-          <Badge variant={getRoleBadgeVariant(row.original.role)} size="lg">
-            {row.original.role.charAt(0).toUpperCase() + row.original.role.slice(1)}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: "createdAt",
-        header: "Last Active",
-        size: 140,
-        sortingFn: "datetime",
-        cell: ({ row }) => <DateAgo date={row.original.createdAt} />,
-      },
-      {
-        id: "actions",
-        size: 80,
-        enableSorting: false,
-        header: () => null,
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1">
-            {canManage && !row.original.isCurrentUser && !row.original.isOwner && (
-              <DropdownMenu>
-                <DropdownMenuTrigger render={<Button size="icon-sm" variant="ghost" />}>
-                  <MoreHorizontalIcon className="size-4" />
-                  <span className="sr-only">Open member actions</span>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem
-                    disabled={removePending}
-                    variant="destructive"
-                    onClick={() => onRemove(row.original.id)}
-                  >
-                    <TrashIcon />
-                    Remove member
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-        ),
-      },
-    ],
+    () => createMemberColumns({ canManage, onRemove, removePending }),
     [canManage, onRemove, removePending],
   );
 

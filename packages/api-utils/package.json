@@ -1,5 +1,6 @@
 {
   "name": "@tailorkit/api-utils",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [
@@ -32,13 +33,13 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@orpc/experimental-ratelimit": "^1.14.3",
+    "@orpc/experimental-ratelimit": "^1.14.4",
     "@orpc/server": "catalog:",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
     "@upstash/ratelimit": "^2.0.8",
-    "@vercel/functions": "^3.6.0"
+    "@vercel/functions": "^3.6.1"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",

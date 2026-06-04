@@ -1,4 +1,4 @@
-import { KeyRoundIcon, SettingsIcon } from "lucide-react";
+import { AppWindowIcon, KeyRoundIcon, SettingsIcon } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -48,6 +48,15 @@ export function ProjectSidebar({ orgSlug, projectSlug }: ProjectSidebarProps) {
         <SidebarGroup>
           <SidebarBackButton label={project.name} params={{ orgSlug }} to="/$orgSlug/~/projects" />
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={isActive(`${base}/apps`)}
+                render={<Link params={{ orgSlug, projectSlug }} to="/$orgSlug/$projectSlug/apps" />}
+              >
+                <AppWindowIcon />
+                <span>Apps</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={isActive(`${base}/settings/api-keys`)}

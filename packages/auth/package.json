@@ -1,5 +1,6 @@
 {
   "name": "@tailorkit/auth",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [
@@ -29,13 +30,13 @@
   },
   "dependencies": {
     "@better-auth/api-key": "1.6.11",
-    "@better-auth/infra": "^0.2.8",
+    "@better-auth/infra": "^0.2.11",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/email": "workspace:*",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
-    "@vercel/functions": "^3.6.0",
+    "@vercel/functions": "^3.6.1",
     "better-auth": "catalog:",
     "uuid": "^14.0.0",
     "zod": "catalog:"

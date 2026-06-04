@@ -5,8 +5,25 @@ import { eq } from "drizzle-orm";
 import z from "zod";
 import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
+import { createPublicId } from "../public-id";
 
 const AppWithCurrentDeployment = App.extend({ currentDeployment: AppDeployment.nullable() });
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
+async function createUniqueAppPublicId(projectId: string) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const publicId = createPublicId();
+    const existing = await db.query.app.findFirst({
+      where: { projectId, publicId },
+    });
+
+    if (!existing) {
+      return publicId;
+    }
+  }
+
+  throw new ORPCError("BAD_REQUEST", { message: "Failed to create app id." });
+}
 
 const listApps = protectedRouter
   .route({
@@ -83,6 +100,7 @@ const createApp = protectedRouter
         description: input.body.description?.trim() || undefined,
         name: input.body.name.trim(),
         projectId: context.project.id,
+        publicId: await createUniqueAppPublicId(context.project.id),
         scopeId: input.body.scopeId,
       })
       .returning();
@@ -170,12 +188,22 @@ const deploy = protectedRouter
   .output(z.object({ body: AppWithCurrentDeployment }))
   .use(requireApp, ({ params: { appId }, query: { scopeId } }) => ({ appId, scopeId }))
   .handler(async ({ context, input }) => {
-    const deployment = await db.query.appDeployment.findFirst({
+    const deploymentByPublicId = await db.query.appDeployment.findFirst({
       where: {
         appId: context.app.id,
-        id: input.body.deploymentId,
+        publicId: input.body.deploymentId,
       },
     });
+    const deployment =
+      deploymentByPublicId ??
+      (uuidPattern.test(input.body.deploymentId)
+        ? await db.query.appDeployment.findFirst({
+            where: {
+              appId: context.app.id,
+              id: input.body.deploymentId,
+            },
+          })
+        : null);
 
     if (!deployment) {
       throw new ORPCError("NOT_FOUND", { message: "Deployment not found." });

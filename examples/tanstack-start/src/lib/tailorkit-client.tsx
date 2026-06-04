@@ -6,7 +6,7 @@ import { Input } from "@tailorkit/ui/components/input";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@tailorkit/ui/components/tabs";
 import { Textarea } from "@tailorkit/ui/components/textarea";
 
-export const tailorKitClient = createTailorKitClient<typeof tailorKit>({
+export const tailor = createTailorKitClient<typeof tailorKit>({
   baseUrl:
     typeof window === "undefined"
       ? "http://localhost/api/tailorkit/"
@@ -32,4 +32,6 @@ export const tailorKitClient = createTailorKitClient<typeof tailorKit>({
   },
 });
 
-export default tailorKitClient;
+export const ScreenMatch = tailor.ScreenMatch;
+
+export default tailor;

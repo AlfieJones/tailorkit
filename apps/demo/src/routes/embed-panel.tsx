@@ -81,52 +81,54 @@ function EmbedPanel() {
   }
 
   return (
-    <tailorClient.ScreenMatch context={{}} screen="/">
-      <main className="h-screen flex flex-col" style={cssVars}>
-        {/* Panel header */}
-        <div
-          className="flex items-center gap-3 px-4 py-3 flex-shrink-0 border-b"
-          style={{
-            background: "var(--accent)",
-            borderColor: "var(--border)",
-            color: "var(--foreground)",
-          }}
-        >
+    <tailorClient.Root apps={demoApps}>
+      <tailorClient.ScreenMatch context={{}} screen="/">
+        <main className="h-screen flex flex-col" style={cssVars}>
+          {/* Panel header */}
           <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+            className="flex items-center gap-3 px-4 py-3 flex-shrink-0 border-b"
+            style={{
+              background: "var(--accent)",
+              borderColor: "var(--border)",
+              color: "var(--foreground)",
+            }}
           >
-            {activeApp?.id === "messages" ? <MessagesIcon /> : <TodoIcon />}
-          </div>
-          <span className="flex-1 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-            {activeApp?.name}
-          </span>
-          <button
-            className="w-7 h-7 rounded flex items-center justify-center text-xs border-0 cursor-pointer transition-colors"
-            onClick={closePanel}
-            style={{ background: "transparent", color: "var(--foreground)" }}
-            type="button"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* App content */}
-        <div
-          className="flex-1 min-h-0 overflow-hidden flex flex-col"
-          style={{ background: "var(--background)" }}
-        >
-          {/* Make the screen wrapper fill the panel height */}
-          <style>{`[data-tailorkit-screen] { display: flex; flex-direction: column; height: 100%; }`}</style>
-          {activeApp ? (
-            <tailorClient.Screen app={activeApp} />
-          ) : (
-            <div className="p-5 text-sm" style={{ color: "var(--muted-foreground)" }}>
-              No app selected
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+            >
+              {activeApp?.id === "messages" ? <MessagesIcon /> : <TodoIcon />}
             </div>
-          )}
-        </div>
-      </main>
-    </tailorClient.ScreenMatch>
+            <span className="flex-1 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+              {activeApp?.name}
+            </span>
+            <button
+              className="w-7 h-7 rounded flex items-center justify-center text-xs border-0 cursor-pointer transition-colors"
+              onClick={closePanel}
+              style={{ background: "transparent", color: "var(--foreground)" }}
+              type="button"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* App content */}
+          <div
+            className="flex-1 min-h-0 overflow-hidden flex flex-col"
+            style={{ background: "var(--background)" }}
+          >
+            {/* Make the screen wrapper fill the panel height */}
+            <style>{`[data-tailorkit-screen] { display: flex; flex-direction: column; height: 100%; }`}</style>
+            {activeApp ? (
+              <tailorClient.AppView app={activeApp} />
+            ) : (
+              <div className="p-5 text-sm" style={{ color: "var(--muted-foreground)" }}>
+                No app selected
+              </div>
+            )}
+          </div>
+        </main>
+      </tailorClient.ScreenMatch>
+    </tailorClient.Root>
   );
 }

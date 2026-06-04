@@ -1,5 +1,6 @@
 {
   "name": "@tailorkit/client-platform",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [
@@ -26,7 +27,7 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.97.2",
+    "@hey-api/openapi-ts": "^0.97.3",
     "@tailorkit/api-platform": "workspace:*",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",

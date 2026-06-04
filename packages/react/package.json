@@ -2,6 +2,7 @@
   "name": "@tailorkit/react",
   "version": "0.0.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [
@@ -20,7 +21,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@base-ui/react": "^1.5.0",
+    "@floating-ui/react-dom": "^2.1.8",
     "@standard-schema/spec": "^1.1.0",
     "@tailorkit/core": "workspace:*",
     "@tailorkit/sandbox": "workspace:*"

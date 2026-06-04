@@ -1,7 +1,7 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 
-import { AppShell as AuthenticatedAppShell } from "#components/app-shell";
 import { AuthScreen } from "#components/auth";
+import { TailorKitShell } from "#components/tailorkit-shell";
 import { useAuthSession } from "#lib/auth-client";
 import appCss from "../styles.css?url";
 
@@ -42,9 +42,9 @@ function AppShell() {
   }
 
   return (
-    <AuthenticatedAppShell signOut={session.signOut} user={session.data.user}>
+    <TailorKitShell signOut={() => session.signOut()} user={session.data.user}>
       <Outlet />
-    </AuthenticatedAppShell>
+    </TailorKitShell>
   );
 }
 

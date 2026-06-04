@@ -7,6 +7,8 @@ import { formatFieldErrors } from "./field-errors";
 import { Switch } from "../components/switch";
 import { Field, FieldDescription, FieldError, FieldLabel } from "../components/field";
 
+const emptyErrors: unknown[] = [];
+
 export interface BooleanFieldProps {
   checked?: boolean;
   description?: string;
@@ -22,7 +24,7 @@ export function BooleanField({
   checked,
   description,
   disabled,
-  errors = [],
+  errors = emptyErrors,
   label,
   onBlur,
   onCheckedChange,

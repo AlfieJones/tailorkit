@@ -81,10 +81,28 @@ function createSampler() {
 
 function createInstrumentations() {
   return [
+    "auto",
     new ORPCInstrumentation(),
     new PgInstrumentation({
       enhancedDatabaseReporting: false,
-      requireParentSpan: true,
+      requireParentSpan: false,
+      requestHook: (span, queryInfo) => {
+        const operation = queryInfo.query.text.trim().split(/\s+/u)[0]?.toLowerCase() ?? "query";
+        span.setAttributes(
+          safeAttributes({
+            "operation.name": `db.${operation}`,
+            "resource.name": `postgres ${operation}`,
+            "tailorkit.package": "db",
+          }),
+        );
+      },
+      responseHook: (span, responseInfo) => {
+        span.setAttributes(
+          safeAttributes({
+            "db.response.rows": responseInfo.data.rowCount,
+          }),
+        );
+      },
     }),
     new HttpInstrumentation({
       requireParentforOutgoingSpans: true,
@@ -211,6 +229,14 @@ export function withSpan<T>(
   }
 
   return tracer.startActiveSpan(name, options ?? {}, async (span) => {
+    span.setAttributes(
+      safeAttributes({
+        "operation.name": name,
+        "resource.name": name,
+        ...options?.attributes,
+      }),
+    );
+
     try {
       const result = await handler(span);
       span.setStatus({ code: SpanStatusCode.OK });

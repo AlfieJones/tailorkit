@@ -126,6 +126,7 @@ describe("platform appRouter", () => {
         description: "Embedded inbox",
         name: "Inbox",
         projectId,
+        publicId: expect.stringMatching(/^[0-9a-z]{10}$/u),
         scopeId: "production",
       }),
     );
@@ -133,6 +134,7 @@ describe("platform appRouter", () => {
     await db.insert(appTable).values({
       name: "Staging app",
       projectId,
+      publicId: "staging001",
       scopeId: "staging",
     });
 
@@ -153,6 +155,7 @@ describe("platform appRouter", () => {
       .values({
         name: "Notes",
         projectId,
+        publicId: "notes00001",
         scopeId: "production",
       })
       .returning();
@@ -165,6 +168,7 @@ describe("platform appRouter", () => {
       .insert(appDeployment)
       .values({
         appId: createdApp.id,
+        publicId: "deploy0001",
         status: "published",
       })
       .returning();
@@ -193,6 +197,7 @@ describe("platform appRouter", () => {
       .values({
         name: "Other project app",
         projectId: otherProjectId,
+        publicId: "other00001",
         scopeId: "production",
       })
       .returning();

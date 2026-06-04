@@ -26,6 +26,7 @@ export function TabsList({
 }): React.ReactElement {
   return (
     <TabsPrimitive.List
+      activateOnFocus={false}
       className={cn(
         "relative z-0 flex w-fit items-center justify-center gap-x-0.5 text-muted-foreground",
         "data-[orientation=vertical]:flex-col",

@@ -7,6 +7,8 @@ import { formatFieldErrors } from "./field-errors";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../components/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../components/tooltip";
 
+const emptyErrors: unknown[] = [];
+
 export interface SelectFieldProps {
   allowDeselect?: boolean;
   description?: string;
@@ -28,7 +30,7 @@ export function SelectField({
   disabled,
   emptyPlaceholder = "No options available",
   emptyTooltip = "This field is disabled because there are no options to choose from.",
-  errors = [],
+  errors = emptyErrors,
   items,
   label,
   onValueChange,

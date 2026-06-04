@@ -2,6 +2,7 @@
   "name": "notes",
   "private": true,
   "description": "A TailorKit.dev app that embeds in a host app to extend what it can do.",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#tailorkit": "./src/tailorkit.gen.ts",
@@ -28,9 +29,9 @@
     "preact": "^10.29.2"
   },
   "devDependencies": {
-    "oxfmt": "0.51.0",
-    "oxlint": "1.66.0",
-    "tailorkit": "workspace:*",
+    "@tailorkit/cli": "workspace:*",
+    "oxfmt": "0.52.0",
+    "oxlint": "1.67.0",
     "typescript": "^6.0.3"
   }
 }

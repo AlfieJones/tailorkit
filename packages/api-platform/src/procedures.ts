@@ -6,6 +6,7 @@ import type { Context } from "./context";
 import { db } from "@tailorkit/db";
 
 const rateLimiter = createRatelimiter({ maxRequests: 100, window: 1000 });
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 export const o = os.$context<Context>().$route({
   inputStructure: "detailed",
@@ -24,10 +25,26 @@ export const requireApp = o.middleware(
       "tailorkit.resource_type": "app",
     });
 
-    const app = await db.query.app.findFirst({
-      where: { id: input.appId, projectId: context.project.id, scopeId: input.scopeId },
-      with: { currentDeployment: { where: { status: "published" } } },
-    });
+    const appById = uuidPattern.test(input.appId)
+      ? await db.query.app.findFirst({
+          where: {
+            id: input.appId,
+            projectId: context.project.id,
+            scopeId: input.scopeId,
+          },
+          with: { currentDeployment: { where: { status: "published" } } },
+        })
+      : null;
+    const app =
+      appById ??
+      (await db.query.app.findFirst({
+        where: {
+          projectId: context.project.id,
+          publicId: input.appId,
+          scopeId: input.scopeId,
+        },
+        with: { currentDeployment: { where: { status: "published" } } },
+      }));
 
     if (!app) {
       throw new ORPCError("NOT_FOUND");

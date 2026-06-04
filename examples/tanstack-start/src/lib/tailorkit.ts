@@ -8,7 +8,6 @@ export const tailorKit = createTailorKit({
     platformBaseUrl:
       process.env.TAILORKIT_PLATFORM_BASE_URL ?? "http://localhost:3000/api/platform",
   },
-
   actions,
   components,
   screens,

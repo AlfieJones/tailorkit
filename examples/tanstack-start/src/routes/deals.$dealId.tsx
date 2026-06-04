@@ -3,6 +3,7 @@ import { Button } from "@tailorkit/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { DetailCard } from "#components/crm-ui";
 import { getDeal } from "#lib/crm-data";
 
 export const Route = createFileRoute("/deals/$dealId")({
@@ -42,23 +43,12 @@ function DealDetailPage() {
           <CardDescription>Current sales motion and close plan.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 px-4 pb-4 pt-0 sm:grid-cols-2">
-          <Detail label="Owner" value={deal.owner} />
-          <Detail label="Close date" value={deal.closeDate} />
-          <Detail label="Probability" value={deal.probability} />
-          <Detail label="Next step" value={deal.nextStep} />
+          <DetailCard label="Owner" value={deal.owner} />
+          <DetailCard label="Close date" value={deal.closeDate} />
+          <DetailCard label="Probability" value={deal.probability} />
+          <DetailCard label="Next step" value={deal.nextStep} />
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <Card>
-      <CardContent className="p-3">
-        <p className="text-muted-foreground text-xs">{label}</p>
-        <p className="mt-1 font-medium text-sm">{value}</p>
-      </CardContent>
-    </Card>
   );
 }

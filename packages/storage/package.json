@@ -1,5 +1,6 @@
 {
   "name": "@tailorkit/storage",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
     "#*": [
@@ -31,8 +32,8 @@
     "@tailorkit/observability": "workspace:*"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.1053.0",
-    "@aws-sdk/s3-request-presigner": "^3.1053.0",
+    "@aws-sdk/client-s3": "^3.1056.0",
+    "@aws-sdk/s3-request-presigner": "^3.1056.0",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",

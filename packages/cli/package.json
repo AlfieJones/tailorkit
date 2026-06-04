@@ -2,8 +2,9 @@
   "name": "@tailorkit/cli",
   "version": "0.0.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "bin": {
-    "tailorkit": "./dist/index.js"
+    "tailorkit": "./bin/tailorkit.js"
   },
   "type": "module",
   "imports": {
