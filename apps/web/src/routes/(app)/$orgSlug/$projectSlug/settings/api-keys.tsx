@@ -179,7 +179,6 @@ function ProjectApiKeysPage() {
             </Tooltip>
           </InputGroupAddon>
         </InputGroup>
-        <LastUsedLabel lastRequest={activeKey.lastRequest} />
       </div>
     );
   })();
