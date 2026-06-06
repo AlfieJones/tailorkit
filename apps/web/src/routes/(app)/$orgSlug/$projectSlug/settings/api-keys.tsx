@@ -59,9 +59,13 @@ function keyLabel(key: { id: string; prefix?: string | null; start?: string | nu
 }
 
 function LastUsedLabel({ lastRequest }: { lastRequest?: Date | string | null }) {
+  if (!lastRequest) {
+    return null;
+  }
+
   return (
     <span className="shrink-0 text-muted-foreground text-xs">
-      Last used {lastRequest ? <DateAgo className="inline" date={lastRequest} /> : "never"}
+      Last used <DateAgo className="inline" date={lastRequest} />
     </span>
   );
 }
