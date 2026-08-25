@@ -6,6 +6,16 @@ packages:
   - examples/apps/*
   - packages/*
 
+packageExtensions:
+  "@better-auth/infra@0.4.2":
+    dependencies:
+      "@better-auth/scim": 1.7.1
+      "@better-auth/sso": 1.7.1
+
+overrides:
+  "@better-auth/infra@0.4.2>@better-auth/utils": 0.4.2
+  "@better-auth/infra@0.4.2>better-call": 1.4.0
+
 catalog:
   "@ai-sdk/react": ^3.0.192
   "@orpc/client": ^1.14.4
@@ -32,7 +42,7 @@ catalog:
   "@vitejs/plugin-react": ^6.0.2
   "@vercel/otel": ^2.1.2
   ai: ^6.0.190
-  better-auth: 1.6.11
+  better-auth: 1.7.1
   class-variance-authority: ^0.7.1
   dotenv: ^17.2.2
   drizzle-orm: 1.0.0-rc.4-5d5b77c

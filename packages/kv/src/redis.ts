@@ -2,6 +2,14 @@ import IORedis from "ioredis";
 import { withSpan } from "@tailorkit/observability";
 import type { KV, SetOptions } from "./types.js";
 
+const INCREMENT_WITH_TTL_SCRIPT = `
+local value = redis.call("INCR", KEYS[1])
+if value == 1 then
+  redis.call("EXPIRE", KEYS[1], ARGV[1])
+end
+return value
+`;
+
 export function createRedisKV(url: string): KV<"redis"> {
   const redis = new IORedis(url);
 
@@ -11,6 +19,24 @@ export function createRedisKV(url: string): KV<"redis"> {
     get: (key) =>
       withSpan("kv.get", { attributes: { "tailorkit.package": "kv", "kv.type": "redis" } }, () =>
         redis.get(key),
+      ),
+    getAndDelete: (key) =>
+      withSpan(
+        "kv.get_and_delete",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "redis" } },
+        () => redis.getdel(key),
+      ),
+    increment: (key, ttl) =>
+      withSpan(
+        "kv.increment",
+        {
+          attributes: {
+            "tailorkit.package": "kv",
+            "kv.type": "redis",
+            "kv.ttl_seconds": ttl,
+          },
+        },
+        async () => Number(await redis.eval(INCREMENT_WITH_TTL_SCRIPT, 1, key, ttl)),
       ),
     set: async (key, value, options?: SetOptions) => {
       if (options?.ttl) {
