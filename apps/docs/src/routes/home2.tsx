@@ -2,7 +2,6 @@ import { Button } from "@tailorkit/ui/button";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import {
-  ArrowDown,
   ArrowRight,
   Braces,
   Check,
@@ -14,10 +13,8 @@ import {
   LockKeyhole,
   MessageSquareText,
   Palette,
-  Server,
   ShieldCheck,
   Sparkles,
-  Workflow,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Footer } from "#components/footer";
@@ -36,16 +33,6 @@ export const Route = createFileRoute("/home2")({
     ],
   }),
 });
-
-const schemaSnippet = `const tailorKit = createTailorKit({
-  components: { Button, Table, ...primitives() },
-  screens: { "/customers/:customerId": customerScreen },
-  actions: { customers: { updateStatus, createNote } },
-});`;
-
-const appSnippet = `const screen = createScreen("/customers/:customerId", {
-  component: RenewalPlan,
-});`;
 
 const hostControls = [
   {
@@ -113,14 +100,14 @@ function Hero() {
   return (
     <section className="border-b border-border">
       <div className="mx-auto max-w-7xl px-6 pb-0 pt-14 sm:px-10 sm:pt-16 lg:px-14 lg:pt-20 xl:px-20">
-        <Eyebrow>TypeScript framework for SaaS extensions</Eyebrow>
+        <Eyebrow>Secure, native product extensions</Eyebrow>
         <h1 className="mt-5 max-w-4xl text-balance font-display text-[clamp(3rem,5.6vw,5.5rem)] font-semibold leading-[0.94] tracking-[-0.06em]">
-          Add a secure app platform to your SaaS.
+          Turn user requests into safe, native product features.
         </h1>
         <p className="mt-6 max-w-3xl text-pretty text-lg leading-8 text-foreground/62 sm:text-xl sm:leading-9">
-          TailorKit lets you expose a small, typed extension surface—your screens, components,
-          context, and server actions—so users, partners, or AI agents can build custom features
-          <span className="text-foreground"> without getting access to your app internals.</span>
+          TailorKit runs AI- or user-generated code in a sandbox, then renders its UI with the
+          components already in your app. Users get tailored workflows; you keep control of data,
+          permissions, and the final interface.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
           <Button
@@ -139,153 +126,111 @@ function Hero() {
           />
         </div>
       </div>
-      <ArchitectureDiagram />
+      <OutcomePreview />
     </section>
   );
 }
 
-function ArchitectureDiagram() {
+function OutcomePreview() {
   return (
     <div className="mx-auto mt-12 max-w-7xl px-6 sm:px-10 lg:mt-14 lg:px-14 xl:px-20">
       <div className="overflow-hidden rounded-t-xl border border-border bg-sidebar/35">
         <div className="border-b border-border px-5 py-4 sm:flex sm:items-center sm:justify-between sm:px-6">
           <div className="flex items-center gap-2 text-sm font-medium">
-            <Workflow aria-hidden="true" className="size-4 text-primary" />
-            How a TailorKit app reaches your product
+            <Sparkles aria-hidden="true" className="size-4 text-primary" />
+            The end result
           </div>
           <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.16em] text-foreground/40 sm:mt-0">
-            Your host stays in control
+            A user-built feature, inside your product
           </p>
         </div>
-        <div className="grid divide-y divide-border lg:grid-cols-[1.15fr_auto_1fr_auto_1fr] lg:divide-x lg:divide-y-0">
-          <DiagramNode
-            detail="You define the allowed components, current screen context, and server actions."
-            eyebrow="Your SaaS"
-            icon={Server}
-            title="Host contract"
-          >
-            <CodeBlock code={schemaSnippet} label="src/lib/tailorkit.ts" />
-          </DiagramNode>
-          <DiagramArrow label="Generate bindings" />
-          <DiagramNode
-            detail="An extension imports generated types and describes UI with your approved primitives."
-            eyebrow="Separate app"
-            icon={Code2}
-            title="App code"
-          >
-            <CodeBlock code={appSnippet} label="src/screens/renewal-plan.tsx" />
-          </DiagramNode>
-          <DiagramArrow label="Serialized UI + events" />
-          <DiagramNode
-            detail="TailorKit isolates app code. Your React app renders the real components and handles actions."
-            eyebrow="Back in your SaaS"
-            icon={LayoutTemplate}
-            title="Native product UI"
-          >
-            <div className="mt-6 rounded-lg border border-border bg-background p-3">
-              <div className="flex items-center gap-2 border-b border-border pb-3 text-xs font-medium">
-                <span className="flex size-6 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <Sparkles aria-hidden="true" className="size-3.5" />
-                </span>
-                Renewal plan
-                <span className="ml-auto rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px] text-emerald-700 dark:text-emerald-300">
-                  Host rendered
+        <div className="grid divide-y divide-border lg:grid-cols-[17rem_auto_minmax(0,1fr)] lg:divide-x lg:divide-y-0">
+          <div className="flex flex-col justify-center bg-background p-5 sm:p-7">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-foreground/40">
+              A user or AI asks
+            </p>
+            <p className="mt-4 text-xl font-medium leading-8 tracking-tight">
+              “Add a renewal checklist to every customer page.”
+            </p>
+            <p className="mt-4 text-sm leading-6 text-foreground/52">
+              They describe the workflow they need. TailorKit turns it into an extension for the
+              screen you choose.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-2 bg-sidebar/60 px-4 py-3 lg:w-16 lg:flex-col lg:px-2">
+            <ArrowRight aria-hidden="true" className="size-4 rotate-90 text-primary lg:rotate-0" />
+            <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-foreground/38 lg:[writing-mode:vertical-rl]">
+              TailorKit
+            </span>
+          </div>
+          <div className="min-w-0 bg-background p-5 sm:p-7">
+            <div className="overflow-hidden rounded-lg border border-border bg-sidebar/45">
+              <div className="flex items-center gap-2 border-b border-border bg-background px-3 py-2.5">
+                <span className="size-2 rounded-full bg-foreground/15" />
+                <span className="size-2 rounded-full bg-foreground/15" />
+                <span className="size-2 rounded-full bg-foreground/15" />
+                <span className="ml-2 font-mono text-[9px] uppercase tracking-[0.14em] text-foreground/36">
+                  Your product / customers / acme
                 </span>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <MiniStat label="Renewal" value="24 Sep" />
-                <MiniStat label="Health" value="At risk" warn />
-              </div>
-              <div className="mt-2 flex items-center gap-2 rounded-md border border-border px-2 py-2 text-[10px] text-foreground/62">
-                <Check aria-hidden="true" className="size-3 text-primary" />
-                Share usage summary
+              <div className="grid min-h-[14rem] grid-cols-[3.75rem_minmax(0,1fr)] sm:grid-cols-[9rem_minmax(0,1fr)]">
+                <aside className="border-r border-border bg-sidebar/55 p-2 sm:p-3">
+                  <div className="mb-5 flex size-6 items-center justify-center rounded bg-foreground text-[10px] font-semibold text-background sm:mb-7">
+                    A
+                  </div>
+                  <div className="space-y-1.5 text-[10px] text-foreground/42 sm:text-xs">
+                    <p className="rounded px-2 py-1.5">Overview</p>
+                    <p className="rounded bg-primary/10 px-2 py-1.5 text-primary">Customers</p>
+                    <p className="hidden rounded px-2 py-1.5 sm:block">Reports</p>
+                  </div>
+                </aside>
+                <div className="min-w-0 p-3 sm:p-5">
+                  <p className="text-[10px] text-foreground/42">Customers / Acme, Inc.</p>
+                  <h2 className="mt-1 text-lg font-semibold tracking-tight sm:text-xl">
+                    Customer account
+                  </h2>
+                  <div className="mt-4 rounded-lg border border-primary/25 bg-primary/[0.045] p-3 sm:p-4">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                        <Check aria-hidden="true" className="size-3.5" />
+                      </span>
+                      <div>
+                        <p className="text-xs font-semibold">Renewal plan</p>
+                        <p className="text-[10px] text-foreground/46">
+                          A native-looking product extension
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-2 border-t border-primary/15 pt-3 text-[11px] text-foreground/67 sm:text-xs">
+                      <p className="flex items-center gap-2">
+                        <Check className="size-3 text-primary" /> Book sponsor review
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span className="size-3 rounded border border-border" /> Share usage summary
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </DiagramNode>
+          </div>
         </div>
-        <div className="flex items-center gap-2 border-t border-border bg-primary/[0.045] px-5 py-3 text-xs leading-5 text-foreground/60 sm:px-6">
-          <ShieldCheck aria-hidden="true" className="size-4 shrink-0 text-primary" />
-          App code never gets direct access to the host DOM, browser APIs, authentication state, or
-          your database.
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border bg-primary/[0.045] px-5 py-3 text-xs leading-5 text-foreground/60 sm:px-6">
+          <FeaturePromise>Sandboxed user and AI code</FeaturePromise>
+          <FeaturePromise>Uses your existing components</FeaturePromise>
+          <FeaturePromise>Only approved data and actions</FeaturePromise>
         </div>
       </div>
     </div>
   );
 }
 
-function DiagramNode({
-  children,
-  detail,
-  eyebrow,
-  icon: Icon,
-  title,
-}: {
-  children: ReactNode;
-  detail: string;
-  eyebrow: string;
-  icon: typeof Server;
-  title: string;
-}) {
+function FeaturePromise({ children }: { children: ReactNode }) {
   return (
-    <div className="min-w-0 bg-background p-5 sm:p-6">
-      <div className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-sidebar text-primary">
-          <Icon aria-hidden="true" className="size-4" />
-        </span>
-        <div>
-          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-foreground/38">
-            {eyebrow}
-          </p>
-          <h2 className="mt-0.5 text-sm font-semibold">{title}</h2>
-        </div>
-      </div>
-      <p className="mt-5 text-sm leading-6 text-foreground/56">{detail}</p>
+    <span className="flex items-center gap-2">
+      <ShieldCheck aria-hidden="true" className="size-3.5 text-primary" />
       {children}
-    </div>
-  );
-}
-
-function DiagramArrow({ label }: { label: string }) {
-  return (
-    <div className="flex shrink-0 items-center justify-center gap-2 bg-sidebar/60 px-4 py-3 text-center lg:w-12 lg:flex-col lg:px-2">
-      <ArrowDown aria-hidden="true" className="size-4 text-primary lg:hidden" />
-      <ArrowRight aria-hidden="true" className="hidden size-4 text-primary lg:block" />
-      <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-foreground/38 lg:[writing-mode:vertical-rl]">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-function CodeBlock({ code, label }: { code: string; label: string }) {
-  return (
-    <div className="mt-6 overflow-hidden rounded-lg border border-border bg-foreground/[0.035]">
-      <div className="border-b border-border px-3 py-2 font-mono text-[9px] text-foreground/42">
-        {label}
-      </div>
-      <pre className="overflow-x-auto p-3 font-mono text-[11px] leading-5 text-foreground/72 sm:text-xs">
-        <code>{code}</code>
-      </pre>
-    </div>
-  );
-}
-
-function MiniStat({
-  label,
-  value,
-  warn = false,
-}: {
-  label: string;
-  value: string;
-  warn?: boolean;
-}) {
-  return (
-    <div className="rounded-md border border-border p-2">
-      <p className="text-[9px] uppercase tracking-wider text-foreground/38">{label}</p>
-      <p className={`mt-1 text-xs font-medium ${warn ? "text-amber-700 dark:text-amber-300" : ""}`}>
-        {value}
-      </p>
-    </div>
+    </span>
   );
 }
 
