@@ -4,6 +4,7 @@ import { sendBetterAuthOtpEmail, sendOrganizationInvitationEmail } from "@tailor
 import { env, getBaseUrl, getTrustedOrigins } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
 import { initializeObservability } from "@tailorkit/observability";
+import type { SecondaryStorage } from "better-auth";
 import { betterAuth } from "better-auth/minimal";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
@@ -19,7 +20,7 @@ void initializeObservability("tailorkit-web");
 
 const noopWaitUntil = (promise: Promise<unknown>) => void promise;
 
-const createSecondaryStorage = () => {
+const createSecondaryStorage = (): SecondaryStorage | undefined => {
   const kv = getKV();
 
   if (!kv) {
