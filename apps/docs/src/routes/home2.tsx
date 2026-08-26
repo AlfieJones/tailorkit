@@ -2,7 +2,10 @@ import { Button } from "@tailorkit/ui/button";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { ArrowRight } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Footer } from "#components/footer";
+import { LineShadowText } from "#components/line-shadow";
 import { baseOptions } from "#lib/layout.shared";
 
 const contractSteps = [
@@ -78,12 +81,22 @@ function HomeTwoPage() {
 }
 
 function Hero() {
+  const theme = useTheme();
+  const [shadowColor, setShadowColor] = useState("white");
+
+  useEffect(() => {
+    setShadowColor(theme.resolvedTheme === "light" ? "black" : "white");
+  }, [theme.resolvedTheme]);
+
   return (
     <section className="border-b border-border px-6 py-24 text-center sm:px-10 sm:py-28 lg:px-16 lg:py-32">
       <div className="mx-auto max-w-4xl">
         <Eyebrow>The extension framework for SaaS</Eyebrow>
         <h1 className="mt-5 text-balance font-display text-[clamp(3rem,7.5vw,5.75rem)] font-semibold leading-[0.93] tracking-[-0.065em]">
-          Let users build the features they want with <span className="text-primary">AI.</span>
+          Let users build the features they want with{" "}
+          <LineShadowText className="whitespace-nowrap text-primary" shadowColor={shadowColor}>
+            AI.
+          </LineShadowText>
         </h1>
         <p className="mx-auto mt-7 max-w-2xl text-pretty text-lg leading-8 text-foreground/62 sm:text-xl sm:leading-8">
           TailorKit gives your SaaS an app ecosystem, with hosting, sandboxing, and agentic builders
