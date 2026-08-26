@@ -1,54 +1,12 @@
 import { Button } from "@tailorkit/ui/button";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
-import { ArrowRight } from "lucide-react";
+import { ArrowDown, ArrowRight, Braces, LayoutTemplate, LockKeyhole } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Footer } from "#components/footer";
 import { LineShadowText } from "#components/line-shadow";
 import { baseOptions } from "#lib/layout.shared";
-
-const contractSteps = [
-  {
-    description:
-      "Choose the screen context, components, theme tokens, and server actions an extension may use.",
-    number: "01",
-    points: ["Screen context and data", "Your components and styles", "Typed server actions"],
-    title: "Expose your product surface",
-  },
-  {
-    description:
-      "Users, AI, and partner developers build against that contract. The app code runs in an opaque-origin iframe with an internal worker.",
-    number: "02",
-    points: ["AI-generated user features", "Partner-built apps", "No host DOM or browser APIs"],
-    title: "Build in a sandbox",
-  },
-  {
-    description:
-      "TailorKit sends structured UI and event requests back. Your SaaS renders the approved components and validates every action.",
-    number: "03",
-    points: ["Your design system", "Your auth and permissions", "Host-validated actions"],
-    title: "Render with your UI",
-  },
-] as const;
-
-const guarantees = [
-  {
-    description:
-      "Extensions compose the components and tokens you expose, so they feel native from the first click.",
-    title: "Renders your components",
-  },
-  {
-    description:
-      "Only the screen context and typed server actions you publish are available to an extension.",
-    title: "Receives only what you share",
-  },
-  {
-    description:
-      "Untrusted code stays outside your main thread and cannot directly reach your DOM, auth, or database.",
-    title: "Stays outside the host",
-  },
-] as const;
 
 export const Route = createFileRoute("/home2")({
   component: HomeTwoPage,
@@ -98,8 +56,8 @@ function Hero() {
           </LineShadowText>
         </h1>
         <p className="mx-auto mt-7 max-w-2xl text-pretty text-lg leading-8 text-foreground/62 sm:text-xl sm:leading-8">
-          TailorKit gives your SaaS an app ecosystem, with hosting, sandboxing, and agentic builders
-          so customers and partners can extend your product using your design system.
+          TailorKit lets users, AI, and partners build extensions inside your SaaS. Those extensions
+          run in a sandbox and use the components, data, and actions you choose to expose.
         </p>
         <div className="mt-9 flex flex-wrap justify-center gap-3">
           <Button
@@ -122,60 +80,130 @@ function ContractDiagram() {
     <section className="border-b border-border px-6 py-16 sm:px-10 lg:px-16 lg:py-20">
       <div className="mx-auto max-w-5xl">
         <div className="mx-auto max-w-2xl text-center">
-          <Eyebrow>Native UI, sandboxed code</Eyebrow>
+          <Eyebrow>What TailorKit does</Eyebrow>
           <h2 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1] tracking-[-0.05em] sm:text-5xl">
-            Extensions look like part of your product.
+            A safe way to run extensions inside your SaaS.
           </h2>
           <p className="mt-5 text-pretty text-base leading-7 text-foreground/58 sm:text-lg">
-            They describe UI with the components and tokens you expose. Their code runs in a
-            sandbox, never inside your product&apos;s DOM.
+            Users, AI, and partners build apps independently. You decide what those apps can use,
+            and your product always renders the final interface.
           </p>
         </div>
 
         <div className="mt-12 overflow-hidden border border-border text-left">
           <div className="flex flex-col gap-2 border-b border-border bg-sidebar/45 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary">
-              [ From contract to native UI ]
+              [ How an extension reaches your product ]
             </p>
             <p className="text-sm text-foreground/56 sm:max-w-sm sm:text-right">
               Your SaaS owns the data, permissions, and final rendering path.
             </p>
           </div>
-          <div className="grid md:grid-cols-3">
-            {contractSteps.map(({ description, number, points, title }) => (
-              <article
-                className="border-b border-border p-6 last:border-b-0 md:border-b-0 md:not-last:border-r"
-                key={number}
-              >
-                <p className="font-mono text-[10px] tracking-[0.16em] text-primary">{number}</p>
-                <h3 className="mt-5 text-lg font-semibold tracking-tight">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-foreground/58">{description}</p>
-                <ul className="mt-5 space-y-2 border-l border-primary/45 pl-3 text-xs leading-5 text-foreground/68">
-                  {points.map((point) => (
-                    <li key={point}>{point}</li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </div>
-        <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-6 text-foreground/52">
-          The host only receives structured UI and event requests. App code never gets direct access
-          to the host DOM, browser APIs, authentication state, or your database.
-        </p>
-        <div className="mt-8 grid overflow-hidden border border-border text-left md:grid-cols-3">
-          {guarantees.map(({ description, title }) => (
-            <article
-              className="border-b border-border p-5 last:border-b-0 md:border-b-0 md:not-last:border-r"
-              key={title}
-            >
-              <h3 className="text-sm font-semibold">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-foreground/58">{description}</p>
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)_4.5rem_minmax(0,1fr)]">
+            <article className="p-6">
+              <StageLabel icon={Braces} number="01" title="Your SaaS" />
+              <h3 className="mt-5 text-lg font-semibold tracking-tight">
+                You choose the building blocks.
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-foreground/58">
+                Publish only the context, components, and server actions that belong on a screen.
+              </p>
+              <div className="mt-5 space-y-3 border border-border bg-sidebar/30 p-4 font-mono text-[10px] text-foreground/68">
+                <p className="text-primary">/customers/:customerId</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="border border-border bg-background px-2 py-1">Button</span>
+                  <span className="border border-border bg-background px-2 py-1">Badge</span>
+                  <span className="border border-border bg-background px-2 py-1">Table</span>
+                </div>
+                <p>actions: createNote, updateStatus</p>
+              </div>
             </article>
-          ))}
+
+            <FlowArrow label="Your contract" />
+
+            <article className="border-y border-border bg-primary/[0.045] p-6 lg:border-y-0">
+              <StageLabel icon={LockKeyhole} number="02" title="TailorKit sandbox" />
+              <h3 className="mt-5 text-lg font-semibold tracking-tight">Apps build separately.</h3>
+              <p className="mt-3 text-sm leading-6 text-foreground/58">
+                User prompts, AI-generated features, and partner apps run outside your main thread.
+              </p>
+              <div className="mt-5 border border-primary/30 bg-background p-4">
+                <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-primary">
+                  User request
+                </p>
+                <p className="mt-2 text-sm font-medium">“Add a renewal checklist.”</p>
+                <div className="mt-4 border-t border-border pt-3 font-mono text-[10px] text-foreground/56">
+                  Opaque-origin iframe + worker
+                </div>
+              </div>
+            </article>
+
+            <FlowArrow label="Structured UI + events" />
+
+            <article className="p-6">
+              <StageLabel icon={LayoutTemplate} number="03" title="Your product" />
+              <h3 className="mt-5 text-lg font-semibold tracking-tight">
+                Your UI renders natively.
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-foreground/58">
+                The host renders real components and validates every requested action.
+              </p>
+              <div className="mt-5 overflow-hidden border border-border bg-sidebar/30">
+                <div className="border-b border-border bg-background px-3 py-2 font-mono text-[9px] text-foreground/48">
+                  Customers / Acme, Inc.
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold">Renewal checklist</p>
+                    <span className="border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] text-primary">
+                      At risk
+                    </span>
+                  </div>
+                  <div className="mt-3 space-y-2 text-[10px] text-foreground/58">
+                    <p className="border-l-2 border-primary pl-2">Share usage summary</p>
+                    <p className="border-l-2 border-border pl-2">Schedule renewal review</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+          <p className="border-t border-border bg-sidebar/30 px-5 py-4 text-center text-sm leading-6 text-foreground/58 sm:px-6">
+            Extensions can only use what your app publishes. They never get direct access to your
+            DOM, auth state, browser APIs, or database.
+          </p>
         </div>
       </div>
     </section>
+  );
+}
+
+function StageLabel({
+  icon: Icon,
+  number,
+  title,
+}: {
+  icon: typeof Braces;
+  number: string;
+  title: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2 text-primary">
+        <Icon aria-hidden="true" className="size-4" />
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em]">{title}</p>
+      </div>
+      <p className="font-mono text-[10px] tracking-[0.16em] text-foreground/38">{number}</p>
+    </div>
+  );
+}
+
+function FlowArrow({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 border-y border-border p-3 text-center lg:border-y-0">
+      <ArrowRight aria-hidden="true" className="hidden size-4 text-primary lg:block" />
+      <ArrowDown aria-hidden="true" className="size-4 text-primary lg:hidden" />
+      <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-foreground/44">{label}</p>
+    </div>
   );
 }
 
