@@ -12,6 +12,42 @@ export function createRedisKV(url: string): KV<"redis"> {
       withSpan("kv.get", { attributes: { "tailorkit.package": "kv", "kv.type": "redis" } }, () =>
         redis.get(key),
       ),
+    getAndDelete: (key) =>
+      withSpan(
+        "kv.get_and_delete",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "redis" } },
+        () => redis.getdel(key),
+      ),
+    increment: (key, ttl) =>
+      withSpan(
+        "kv.increment",
+        {
+          attributes: {
+            "tailorkit.package": "kv",
+            "kv.type": "redis",
+            "kv.ttl_seconds": ttl,
+          },
+        },
+        async () => {
+          if (!Number.isInteger(ttl) || ttl <= 0) {
+            throw new TypeError("Redis increment TTL must be a positive integer");
+          }
+
+          const results = await redis.multi().incr(key).expire(key, ttl, "NX").exec();
+          const incrementResult = results?.[0];
+
+          if (!incrementResult) {
+            throw new Error("Redis increment transaction returned no result");
+          }
+
+          const [error, value] = incrementResult;
+          if (error) {
+            throw error;
+          }
+
+          return Number(value);
+        },
+      ),
     set: async (key, value, options?: SetOptions) => {
       if (options?.ttl) {
         const ttl = options.ttl;
