@@ -11,42 +11,42 @@ import { baseOptions } from "#lib/layout.shared";
 const contractSteps = [
   {
     description:
-      "Publish the route context, UI primitives, theme tokens, and server actions an extension may use.",
+      "Choose the screen context, components, theme tokens, and server actions an extension may use.",
     number: "01",
-    points: ["Current screen context", "Your components and styles", "Typed server actions"],
-    title: "Define the contract",
+    points: ["Screen context and data", "Your components and styles", "Typed server actions"],
+    title: "Expose your product surface",
   },
   {
     description:
-      "A user can ask AI for a feature, or a developer and partner can build an app against that contract.",
+      "Users, AI, and partner developers build against that contract. The app code runs in an opaque-origin iframe with an internal worker.",
     number: "02",
-    points: ["User-built features", "Partner integrations", "Generated TypeScript bindings"],
-    title: "Build the extension",
+    points: ["AI-generated user features", "Partner-built apps", "No host DOM or browser APIs"],
+    title: "Build in a sandbox",
   },
   {
     description:
-      "TailorKit isolates the app. Your SaaS renders the approved interface and validates each action.",
+      "TailorKit sends structured UI and event requests back. Your SaaS renders the approved components and validates every action.",
     number: "03",
-    points: ["Sandboxed app code", "Host-rendered interface", "Validated action requests"],
-    title: "Render it in your product",
+    points: ["Your design system", "Your auth and permissions", "Host-validated actions"],
+    title: "Render with your UI",
   },
 ] as const;
 
 const guarantees = [
   {
     description:
-      "Extensions compose the components and tokens you expose, so they fit the product from the first click.",
-    title: "Uses your UI",
+      "Extensions compose the components and tokens you expose, so they feel native from the first click.",
+    title: "Renders your components",
   },
   {
     description:
-      "Only the screen context and typed actions you publish are available to an extension.",
-    title: "Uses approved capabilities",
+      "Only the screen context and typed server actions you publish are available to an extension.",
+    title: "Receives only what you share",
   },
   {
     description:
-      "Untrusted code runs outside your main thread and never gets direct access to your DOM, auth, or database.",
-    title: "Runs in a sandbox",
+      "Untrusted code stays outside your main thread and cannot directly reach your DOM, auth, or database.",
+    title: "Stays outside the host",
   },
 ] as const;
 
@@ -112,11 +112,6 @@ function Hero() {
           />
           <Button size="lg" variant="outline" render={<Link to="/docs">Read the docs</Link>} />
         </div>
-        <div className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-2 font-mono text-[10px] uppercase tracking-[0.14em] text-foreground/45">
-          <span>Host-rendered UI</span>
-          <span>Sandboxed code</span>
-          <span>Typed actions</span>
-        </div>
       </div>
     </section>
   );
@@ -127,22 +122,23 @@ function ContractDiagram() {
     <section className="border-b border-border px-6 py-16 sm:px-10 lg:px-16 lg:py-20">
       <div className="mx-auto max-w-5xl">
         <div className="mx-auto max-w-2xl text-center">
-          <Eyebrow>How it works</Eyebrow>
+          <Eyebrow>Native UI, sandboxed code</Eyebrow>
           <h2 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1] tracking-[-0.05em] sm:text-5xl">
-            Your product stays in control.
+            Extensions look like part of your product.
           </h2>
           <p className="mt-5 text-pretty text-base leading-7 text-foreground/58 sm:text-lg">
-            TailorKit makes the boundary between your SaaS and an extension explicit.
+            They describe UI with the components and tokens you expose. Their code runs in a
+            sandbox, never inside your product&apos;s DOM.
           </p>
         </div>
 
         <div className="mt-12 overflow-hidden border border-border text-left">
           <div className="flex flex-col gap-2 border-b border-border bg-sidebar/45 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary">
-              [ The host contract ]
+              [ From contract to native UI ]
             </p>
             <p className="text-sm text-foreground/56 sm:max-w-sm sm:text-right">
-              Your SaaS defines what every extension can see, do, and render.
+              Your SaaS owns the data, permissions, and final rendering path.
             </p>
           </div>
           <div className="grid md:grid-cols-3">
@@ -164,8 +160,8 @@ function ContractDiagram() {
           </div>
         </div>
         <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-6 text-foreground/52">
-          App code never gets direct access to the host DOM, browser APIs, authentication state, or
-          your database.
+          The host only receives structured UI and event requests. App code never gets direct access
+          to the host DOM, browser APIs, authentication state, or your database.
         </p>
         <div className="mt-8 grid overflow-hidden border border-border text-left md:grid-cols-3">
           {guarantees.map(({ description, title }) => (
