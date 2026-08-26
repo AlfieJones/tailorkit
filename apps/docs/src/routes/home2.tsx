@@ -91,8 +91,7 @@ function Hero() {
   return (
     <section className="border-b border-border px-6 py-24 text-center sm:px-10 sm:py-28 lg:px-16 lg:py-32">
       <div className="mx-auto max-w-4xl">
-        <Eyebrow>The extension framework for SaaS</Eyebrow>
-        <h1 className="mt-5 text-balance font-display text-[clamp(3rem,7.5vw,5.75rem)] font-semibold leading-[0.93] tracking-[-0.065em]">
+        <h1 className="text-balance font-display text-[clamp(3rem,7.5vw,5.75rem)] font-semibold leading-[0.93] tracking-[-0.065em]">
           Let users build the features they want with{" "}
           <LineShadowText className="whitespace-nowrap text-primary" shadowColor={shadowColor}>
             AI.
