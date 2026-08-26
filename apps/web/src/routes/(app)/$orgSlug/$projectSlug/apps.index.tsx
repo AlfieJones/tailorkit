@@ -32,21 +32,43 @@ import {
 import { DateAgo } from "@tailorkit/ui/date";
 import { renderSortableHeader } from "#components/members/member-table-utils";
 import { PageLayout } from "#components/page-layout";
-import { client } from "#lib/orpc";
+import { orpc } from "#lib/orpc";
 
 const appsPageSize = 25;
 
+function appsListQueryOptions({
+  appsList,
+  orgSlug,
+  projectSlug,
+  search,
+}: {
+  appsList: typeof orpc.apps.list;
+  orgSlug: string;
+  projectSlug: string;
+  search: string;
+}) {
+  return appsList.infiniteOptions({
+    input: (page) => ({
+      orgSlug,
+      page,
+      pageSize: appsPageSize,
+      projectSlug,
+      search,
+    }),
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
+    initialPageParam: 1,
+  });
+}
+
 export const Route = createFileRoute("/(app)/$orgSlug/$projectSlug/apps/")({
   loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(
-      context.orpc.apps.list.queryOptions({
-        input: {
-          orgSlug: params.orgSlug,
-          page: 1,
-          pageSize: appsPageSize,
-          projectSlug: params.projectSlug,
-          search: "",
-        },
+    context.queryClient.ensureInfiniteQueryData(
+      appsListQueryOptions({
+        appsList: context.orpc.apps.list,
+        orgSlug: params.orgSlug,
+        projectSlug: params.projectSlug,
+        search: "",
       }),
     ),
   component: AppsIndexPage,
@@ -215,20 +237,14 @@ function AppsIndexPage() {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
   const normalizedSearch = search.trim();
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = useInfiniteQuery({
-    queryFn: ({ pageParam }) =>
-      client.apps.list({
-        orgSlug,
-        page: pageParam,
-        pageSize: appsPageSize,
-        projectSlug,
-        search: normalizedSearch,
-      }),
-    getNextPageParam: (lastPage) =>
-      lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
-    initialPageParam: 1,
-    queryKey: ["apps", orgSlug, projectSlug, normalizedSearch],
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = useInfiniteQuery(
+    appsListQueryOptions({
+      appsList: orpc.apps.list,
+      orgSlug,
+      projectSlug,
+      search: normalizedSearch,
+    }),
+  );
 
   useEffect(() => {
     const loadMoreElement = loadMoreRef.current;
