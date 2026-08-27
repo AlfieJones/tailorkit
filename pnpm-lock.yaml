@@ -176,6 +176,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.8(react@19.2.8)
+      tailorkit:
+        specifier: workspace:*
+        version: link:../../packages/tailorkit
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.3

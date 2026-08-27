@@ -4,10 +4,8 @@ import {
   Bell,
   Check,
   CircleHelp,
-  CirclePlus,
   CreditCard,
   Ellipsis,
-  Grid2X2,
   Handshake,
   LayoutDashboard,
   ListFilter,
@@ -19,8 +17,11 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import type { ComponentType } from "react";
+import type { TailorKitApp } from "tailorkit/react";
 import { defaultData, loadCrmData, saveCrmData } from "#lib/crm-store";
 import type { Contact, CrmData } from "#lib/crm-store";
+import { marketplaceApps, tailor } from "#lib/tailorkit-client";
 
 type Page = "overview" | "pipeline" | "customers" | "tasks" | "my-week";
 
@@ -67,7 +68,7 @@ export function CrmApp({ page }: { page: Page }) {
   const [data, setData] = useState<CrmData>(defaultData);
   const [ready, setReady] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
-  const [showStripe, setShowStripe] = useState(false);
+  const [currentAppId, setCurrentAppId] = useState<string | null>(null);
 
   useEffect(() => {
     setData(loadCrmData());
@@ -107,19 +108,21 @@ export function CrmApp({ page }: { page: Page }) {
           <Search size={16} /> <span>Search</span>
           <kbd>⌘ K</kbd>
         </button>
-        <p className="sidebar-label">Workspace</p>
-        <nav className="nav-list" aria-label="Workspace navigation">
-          {navigation.map((item) => (
-            <NavItem item={item} key={item.page} page={page} />
-          ))}
-        </nav>
-        <div className="sidebar-divider" />
-        <p className="sidebar-label">For you</p>
-        <nav className="nav-list" aria-label="Personal navigation">
-          {workspace.map((item) => (
-            <NavItem item={item} key={item.page} page={page} />
-          ))}
-        </nav>
+        <div className="sidebar-scroll">
+          <p className="sidebar-label">Workspace</p>
+          <nav className="nav-list" aria-label="Workspace navigation">
+            {navigation.map((item) => (
+              <NavItem item={item} key={item.page} page={page} />
+            ))}
+          </nav>
+          <div className="sidebar-divider" />
+          <p className="sidebar-label">For you</p>
+          <nav className="nav-list" aria-label="Personal navigation">
+            {workspace.map((item) => (
+              <NavItem item={item} key={item.page} page={page} />
+            ))}
+          </nav>
+        </div>
         <div className="sidebar-bottom">
           <button className="help-button" type="button">
             <CircleHelp size={17} /> Help & resources
@@ -169,7 +172,7 @@ export function CrmApp({ page }: { page: Page }) {
               openValue={openValue}
               activeTasks={activeTasks.length}
               onComplete={completeTask}
-              onOpenStripe={() => setShowStripe(true)}
+              onOpenStripe={() => setCurrentAppId("stripe-revenue")}
             />
           )}
           {page === "pipeline" && <Pipeline contacts={data.contacts} />}
@@ -185,37 +188,22 @@ export function CrmApp({ page }: { page: Page }) {
       </main>
 
       <aside className="apps-rail" aria-label="Apps">
-        <button
-          className="rail-app stripe"
-          aria-label="Open Stripe app"
-          onClick={() => setShowStripe(true)}
-          type="button"
-        >
-          S
-        </button>
-        <button className="rail-app" aria-label="Browse apps" type="button">
-          <Grid2X2 size={18} />
-        </button>
-        <div className="rail-line" />
-        <button
-          className="rail-app muted"
-          aria-label="Add integration"
-          onClick={() => setShowStripe(true)}
-          type="button"
-        >
-          <CirclePlus size={19} />
-        </button>
+        {marketplaceApps.map((app) => (
+          <button
+            aria-label={`Open ${app.name}`}
+            className={`rail-app ${app.id === "stripe-revenue" ? "stripe" : "coach"}`}
+            key={app.id}
+            onClick={() => setCurrentAppId(app.id)}
+            type="button"
+          >
+            {app.id === "stripe-revenue" ? "S" : "R"}
+          </button>
+        ))}
       </aside>
 
       {showAdd && <AddPersonModal onClose={() => setShowAdd(false)} onSave={addContact} />}
-      {showStripe && (
-        <StripePanel
-          connected={data.stripeConnected}
-          onClose={() => setShowStripe(false)}
-          onConnect={() =>
-            setData((current) => ({ ...current, stripeConnected: !current.stripeConnected }))
-          }
-        />
+      {currentAppId && (
+        <MarketplaceApp appId={currentAppId} onClose={() => setCurrentAppId(null)} />
       )}
     </div>
   );
@@ -610,52 +598,39 @@ function AddPersonModal({
   );
 }
 
-function StripePanel({
-  connected,
-  onClose,
-  onConnect,
-}: {
-  connected: boolean;
-  onClose: () => void;
-  onConnect: () => void;
-}) {
+function MarketplaceApp({ appId, onClose }: { appId: string; onClose: () => void }) {
+  const app = marketplaceApps.find((candidate) => candidate.id === appId);
+  if (!app) {
+    return null;
+  }
+  const AppView = tailor.AppView as unknown as ComponentType<{ app: TailorKitApp; screen: string }>;
+
   return (
-    <div className="app-panel">
+    <aside className="app-panel" data-app-id={app.id}>
       <div className="panel-top">
         <div>
-          <span className="stripe-logo">S</span>
-          <strong>Stripe</strong>
+          <span className={`stripe-logo ${app.id === "renewal-coach" ? "coach-logo" : ""}`}>
+            {app.id === "stripe-revenue" ? "S" : "R"}
+          </span>
+          <strong>{app.name}</strong>
         </div>
-        <button aria-label="Close Stripe" className="icon-button" onClick={onClose} type="button">
+        <button
+          aria-label={`Close ${app.name}`}
+          className="icon-button"
+          onClick={onClose}
+          type="button"
+        >
           <X size={18} />
         </button>
       </div>
-      <div className="stripe-hero">
-        <span className="stripe-logo large">S</span>
-        <h2>Stripe for Clover</h2>
-        <p>Bring billing signals into your sales workflow—without switching tabs.</p>
-      </div>
-      <div className="panel-features">
-        <div>
-          <Check size={16} /> Subscription status
+      <p className="app-description">{app.description}</p>
+      <tailor.Root apps={marketplaceApps}>
+        <div className="tailorkit-app-view">
+          <AppView app={app} screen="/" />
         </div>
-        <div>
-          <Check size={16} /> Invoice history
-        </div>
-        <div>
-          <Check size={16} /> Customer lifetime value
-        </div>
-      </div>
-      <div className={`connection-status ${connected ? "connected" : ""}`}>
-        <i />
-        {connected ? "Connected to Stripe" : "Not connected"}
-      </div>
-      <button className="stripe-connect" onClick={onConnect} type="button">
-        {connected ? "Disconnect Stripe" : "Connect Stripe"}
-        <ArrowUpRight size={16} />
-      </button>
-      <p className="panel-note">Demo integration — no account or data is shared.</p>
-    </div>
+      </tailor.Root>
+      <p className="panel-note">Built and rendered by TailorKit’s app runtime.</p>
+    </aside>
   );
 }
 
