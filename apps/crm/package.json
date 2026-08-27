@@ -29,6 +29,7 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "lucide-react": "catalog:",
+    "nitro": "3.0.260610-beta",
     "react": "catalog:",
     "react-dom": "catalog:",
     "tailwindcss": "catalog:"
