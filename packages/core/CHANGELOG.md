@@ -1,5 +1,12 @@
 # @tailorkit/core
 
+## 0.1.0-beta.1
+
+### Patch Changes
+
+- c0bdd68: Test the trusted-publishing beta release flow.
+- @tailorkit/client-platform@0.1.0-beta.1
+
 ## 0.1.0-beta.0
 
 ### Minor Changes
