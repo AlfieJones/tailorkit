@@ -27,6 +27,7 @@
     "release:status": "vp exec changeset status --verbose",
     "release:version": "vp exec changeset version",
     "release:build": "vp -C packages/client-platform run build && vp -C packages/core run build && vp -C packages/app run build && vp -C packages/sandbox run build && vp -C packages/react run build && vp -C packages/cli build && vp -C packages/tailorkit run build",
+    "release:normalize": "node ./scripts/check-prerelease.mjs && node ./scripts/normalize-prerelease.mjs",
     "release:publish": "vp run release:build && node ./scripts/check-prerelease.mjs && node ./scripts/publish-prerelease.mjs",
     "tailorkit": "vp -C packages/cli build && node ./packages/cli/dist/index.js"
   },
