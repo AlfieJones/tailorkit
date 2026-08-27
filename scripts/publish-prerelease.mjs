@@ -8,7 +8,7 @@ if (preState.mode !== "pre" || !["alpha", "beta"].includes(preState.tag)) {
   process.exit(1);
 }
 
-const result = spawnSync("vp", ["exec", "changeset", "publish", "--tag", preState.tag], {
+const result = spawnSync("vp", ["exec", "changeset", "publish"], {
   stdio: "inherit",
 });
 
