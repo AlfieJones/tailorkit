@@ -1,5 +1,7 @@
 {
   "name": "@tailorkit/api-platform",
+  "version": "0.0.0",
+  "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
@@ -51,7 +53,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.4.6",
+    "@electric-sql/pglite": "^0.5.5",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",

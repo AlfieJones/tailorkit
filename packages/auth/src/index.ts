@@ -5,7 +5,7 @@ import { env, getBaseUrl, getTrustedOrigins } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
 import { initializeObservability } from "@tailorkit/observability";
 import { betterAuth } from "better-auth/minimal";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { waitUntil as vercelWaitUntil } from "@vercel/functions";
 import { haveIBeenPwned } from "better-auth/plugins";
@@ -29,6 +29,8 @@ const createSecondaryStorage = () => {
   return {
     delete: (key: string) => kv.delete(key),
     get: (key: string) => kv.get(key),
+    getAndDelete: (key: string) => kv.getAndDelete(key),
+    increment: (key: string, ttl: number) => kv.increment(key, ttl),
     set: (key: string, value: string, ttl?: number) => kv.set(key, value, { ttl }),
   };
 };
@@ -51,6 +53,7 @@ export function createAuth() {
       cookiePrefix: env.VERCEL_TARGET_ENV === "production" ? "tailorkit" : "tailorkit-dev",
       database: {
         generateId: "uuid",
+        joins: true,
       },
       ipAddress: {
         ipAddressHeaders: ["x-vercel-forwarded-for", "x-forwarded-for"],

@@ -9,18 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as EmbedPanelRouteImport } from './routes/embed-panel'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EmbedPanelRouteImport } from './routes/embed-panel'
 import { Route as ApiTailorkitSplatRouteImport } from './routes/api/tailorkit.$'
 
-const EmbedPanelRoute = EmbedPanelRouteImport.update({
-  id: '/embed-panel',
-  path: '/embed-panel',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedPanelRoute = EmbedPanelRouteImport.update({
+  id: '/embed-panel',
+  path: '/embed-panel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTailorkitSplatRoute = ApiTailorkitSplatRouteImport.update({
@@ -61,18 +61,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/embed-panel': {
-      id: '/embed-panel'
-      path: '/embed-panel'
-      fullPath: '/embed-panel'
-      preLoaderRoute: typeof EmbedPanelRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed-panel': {
+      id: '/embed-panel'
+      path: '/embed-panel'
+      fullPath: '/embed-panel'
+      preLoaderRoute: typeof EmbedPanelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tailorkit/$': {

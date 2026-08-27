@@ -1,5 +1,7 @@
 {
   "name": "@tailorkit/api",
+  "version": "0.0.0",
+  "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
@@ -37,13 +39,13 @@
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
-    "@vercel/functions": "^3.6.1",
+    "@vercel/functions": "^3.9.5",
     "drizzle-orm": "catalog:",
-    "nanoid": "^5.1.11",
+    "nanoid": "^6.0.1",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.4.6",
+    "@electric-sql/pglite": "^0.5.5",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",

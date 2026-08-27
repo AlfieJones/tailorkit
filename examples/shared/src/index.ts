@@ -124,6 +124,7 @@ export const screens = {
   "/customers/detail": {
     context: z.object({
       user,
+      customers: z.array(customer),
       customer,
     }),
   },

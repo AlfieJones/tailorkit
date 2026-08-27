@@ -10,6 +10,8 @@ import { runInit } from "./init";
 import { runExperimentalPreview, toPreviewOptions } from "./preview";
 import { openUrlInBrowser } from "./utils/open-browser";
 
+declare const __TAILORKIT_VERSION__: string;
+
 const cli = cac("tailorkit");
 
 const formatBytes = (bytes: number): string => {
@@ -305,5 +307,5 @@ cli
   });
 
 cli.help();
-cli.version("0.0.0");
+cli.version(__TAILORKIT_VERSION__);
 cli.parse();

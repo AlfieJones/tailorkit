@@ -1,6 +1,6 @@
 ---
-title: Layouts and Styles
-description: Use our primitives to enable different layouts and styles
+title: Layouts and styles
+description: Expose responsive layout primitives and theme tokens to TailorKit apps.
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -9,16 +9,16 @@ TailorKit apps should build layout with primitives, not raw styles or class
 names. The host owns the design system; apps ask for intent through typed props
 and theme tokens.
 
-## Primitives
+## Add primitives to the host
 
 Add primitives to your host schema, then import the generated bindings from
 `#tailorkit` in app code.
 
 ```ts tab="Zod"
-import { defineSchema } from "tailorkit";
+import { createTailorKit } from "tailorkit";
 import { primitives } from "tailorkit/zod";
 
-export const schema = defineSchema({
+export const tailorKit = createTailorKit({
   components: {
     ...primitives(),
   },
@@ -26,10 +26,10 @@ export const schema = defineSchema({
 ```
 
 ```ts tab="Valibot"
-import { defineSchema } from "tailorkit";
+import { createTailorKit } from "tailorkit";
 import { primitives } from "tailorkit/valibot";
 
-export const schema = defineSchema({
+export const tailorKit = createTailorKit({
   components: {
     ...primitives(),
   },
@@ -37,10 +37,10 @@ export const schema = defineSchema({
 ```
 
 ```ts tab="ArkType"
-import { defineSchema } from "tailorkit";
+import { createTailorKit } from "tailorkit";
 import { primitives } from "tailorkit/arktype";
 
-export const schema = defineSchema({
+export const tailorKit = createTailorKit({
   components: {
     ...primitives(),
   },
@@ -53,9 +53,9 @@ your TailorKit client. Custom components can sit beside them.
 ```tsx
 import { Button } from "@/components/button";
 import { createTailorKitClient, primitives } from "tailorkit/react";
-import { tailor } from "./tailor";
+import type { tailorKit } from "./tailorkit";
 
-export const tailorClient = createTailorKitClient<typeof tailor>({
+export const tailorClient = createTailorKitClient<typeof tailorKit>({
   baseUrl: "/api/tailorkit",
   components: {
     ...primitives,
@@ -70,13 +70,18 @@ export const tailorClient = createTailorKitClient<typeof tailor>({
 export default tailorClient;
 ```
 
+## Use primitives in an app
+
+After the app runs `tailorkit generate`, it can import the primitive bindings
+from `#tailorkit`:
+
 ```tsx
 import { Box, Flex } from "#tailorkit";
 
-export function Screen() {
+export function Content() {
   return (
     <Box background="surface" padding="lg" radius="md">
-      <Flex direction={{ base: "column", md: "row" }} gap="md" align="center">
+      <Flex align="center" direction={{ base: "column", md: "row" }} gap="md">
         Content
       </Flex>
     </Box>
@@ -84,10 +89,10 @@ export function Screen() {
 }
 ```
 
-The generated `#tailorkit` file exposes typed component props, so token names
-and breakpoint names come from the host schema.
+The generated bindings type-check token and breakpoint names against the host
+schema.
 
-## Available Primitives
+## Available primitives
 
 All primitive props are responsive unless noted by the generated type:
 
@@ -127,13 +132,13 @@ props.
   production](/docs/deploying-to-production) for production guidance.
 </Callout>
 
-## Theme Tokens
+## Theme tokens
 
 Theme tokens are named values configured on the host schema. Primitive props use
 token names, and the React renderer turns them into scoped CSS variables.
 
 ```ts tab="Zod"
-import { defineSchema, type TailorKitTheme } from "tailorkit";
+import { createTailorKit, type TailorKitTheme } from "tailorkit";
 import { primitives } from "tailorkit/zod";
 
 const theme: TailorKitTheme = {
@@ -151,16 +156,15 @@ const theme: TailorKitTheme = {
   },
 };
 
-export const schema = defineSchema({
+export const tailorKit = createTailorKit({
   components: {
     ...primitives(theme),
   },
-  theme,
 });
 ```
 
 ```ts tab="Valibot"
-import { defineSchema, type TailorKitTheme } from "tailorkit";
+import { createTailorKit, type TailorKitTheme } from "tailorkit";
 import { primitives } from "tailorkit/valibot";
 
 const theme: TailorKitTheme = {
@@ -178,16 +182,15 @@ const theme: TailorKitTheme = {
   },
 };
 
-export const schema = defineSchema({
+export const tailorKit = createTailorKit({
   components: {
     ...primitives(theme),
   },
-  theme,
 });
 ```
 
 ```ts tab="ArkType"
-import { defineSchema, type TailorKitTheme } from "tailorkit";
+import { createTailorKit, type TailorKitTheme } from "tailorkit";
 import { primitives } from "tailorkit/arktype";
 
 const theme: TailorKitTheme = {
@@ -205,13 +208,26 @@ const theme: TailorKitTheme = {
   },
 };
 
-export const schema = defineSchema({
+export const tailorKit = createTailorKit({
   components: {
     ...primitives(theme),
   },
+});
+```
+
+Pass the same theme to the React client so its primitive renderers resolve the
+token names to scoped CSS variables:
+
+```tsx
+export const tailorClient = createTailorKitClient<typeof tailorKit>({
+  baseUrl: "/api/tailorkit",
+  components: primitives,
   theme,
 });
 ```
+
+Keep the shared `theme` object in a module that is safe to import from both the
+server configuration and browser client.
 
 ### Breakpoints
 
@@ -226,17 +242,17 @@ Breakpoints control responsive primitive props. Defaults:
 | `xl`   | `1280px`       |
 | `2xl`  | `1536px`       |
 
-### Background Colors
+### Background colors
 
 Used by the `background` prop. No defaults are provided; define the surface
 names apps are allowed to use.
 
-### Border Colors
+### Border colors
 
 Used by the `borderColor` prop. No defaults are provided; define the border
 color names apps are allowed to use.
 
-### Text Colors
+### Text colors
 
 Used by the `textColor` prop. No defaults are provided; define the text color
 names apps are allowed to use.
@@ -259,7 +275,7 @@ Used by `width` and `height`. Defaults:
 
 `0`, fractions from `1/2` through `11/12`, `full`, `min`, `max`, `fit`
 
-### Border Styles
+### Border styles
 
 Used by the `border` prop. Defaults:
 
@@ -271,31 +287,31 @@ Used by the `overflow` prop. Defaults:
 
 `visible`, `hidden`, `clip`, `scroll`, `auto`
 
-### Overflow Wrap
+### Overflow wrap
 
 Used by the `overflowWrap` prop. Defaults:
 
 `normal`, `breakWord`, `anywhere`
 
-### Text Align
+### Text align
 
 Used by the `textAlign` prop. Defaults:
 
 `left`, `right`, `start`, `end`, `center`, `justify`
 
-### Text Overflow
+### Text overflow
 
 Used by the `textOverflow` prop. Defaults:
 
 `clip`, `ellipsis`
 
-### Text Transform
+### Text transform
 
 Used by the `textTransform` prop. Defaults:
 
 `capitalize`, `uppercase`, `lowercase`, `none`
 
-## Prop Overview
+## Prop reference
 
 Common `Box` props:
 

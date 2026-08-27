@@ -1,11 +1,19 @@
 {
   "name": "@tailorkit/cli",
   "version": "0.0.0",
-  "private": true,
   "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlfieJones/tailorkit.git",
+    "directory": "packages/cli"
+  },
   "bin": {
     "tailorkit": "./bin/tailorkit.js"
   },
+  "files": [
+    "bin",
+    "dist"
+  ],
   "type": "module",
   "imports": {
     "#*": [
@@ -19,17 +27,20 @@
   "exports": {
     ".": "./dist/index.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "vite build",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@clack/prompts": "^1.3.0",
+    "@clack/prompts": "^1.7.0",
     "@tailorkit/app": "workspace:*",
     "@tailorkit/core": "workspace:*",
     "cac": "^7.0.0",
-    "liquidjs": "^10.27.0",
+    "liquidjs": "^10.29.0",
     "picocolors": "^1.1.1",
     "zod": "catalog:"
   },

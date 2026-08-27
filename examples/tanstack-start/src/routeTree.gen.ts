@@ -9,17 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as DealsRouteImport } from './routes/deals'
-import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DealsDealIdRouteImport } from './routes/deals.$dealId'
-import { Route as CustomersCustomerIdRouteImport } from './routes/customers.$customerId'
+import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as DealsRouteImport } from './routes/deals'
 import { Route as ApiAuthRouteImport } from './routes/api/auth'
+import { Route as CustomersCustomerIdRouteImport } from './routes/customers.$customerId'
+import { Route as DealsDealIdRouteImport } from './routes/deals.$dealId'
 import { Route as ApiTailorkitSplatRouteImport } from './routes/api/tailorkit.$'
 
-const DealsRoute = DealsRouteImport.update({
-  id: '/deals',
-  path: '/deals',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomersRoute = CustomersRouteImport.update({
@@ -27,25 +27,25 @@ const CustomersRoute = CustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const DealsRoute = DealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DealsDealIdRoute = DealsDealIdRouteImport.update({
-  id: '/$dealId',
-  path: '/$dealId',
-  getParentRoute: () => DealsRoute,
+const ApiAuthRoute = ApiAuthRouteImport.update({
+  id: '/api/auth',
+  path: '/api/auth',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CustomersCustomerIdRoute = CustomersCustomerIdRouteImport.update({
   id: '/$customerId',
   path: '/$customerId',
   getParentRoute: () => CustomersRoute,
 } as any)
-const ApiAuthRoute = ApiAuthRouteImport.update({
-  id: '/api/auth',
-  path: '/api/auth',
-  getParentRoute: () => rootRouteImport,
+const DealsDealIdRoute = DealsDealIdRouteImport.update({
+  id: '/$dealId',
+  path: '/$dealId',
+  getParentRoute: () => DealsRoute,
 } as any)
 const ApiTailorkitSplatRoute = ApiTailorkitSplatRouteImport.update({
   id: '/api/tailorkit/$',
@@ -121,11 +121,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/deals': {
-      id: '/deals'
-      path: '/deals'
-      fullPath: '/deals'
-      preLoaderRoute: typeof DealsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customers': {
@@ -135,19 +135,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/deals': {
+      id: '/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof DealsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/deals/$dealId': {
-      id: '/deals/$dealId'
-      path: '/$dealId'
-      fullPath: '/deals/$dealId'
-      preLoaderRoute: typeof DealsDealIdRouteImport
-      parentRoute: typeof DealsRoute
+    '/api/auth': {
+      id: '/api/auth'
+      path: '/api/auth'
+      fullPath: '/api/auth'
+      preLoaderRoute: typeof ApiAuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/customers/$customerId': {
       id: '/customers/$customerId'
@@ -156,12 +156,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersCustomerIdRouteImport
       parentRoute: typeof CustomersRoute
     }
-    '/api/auth': {
-      id: '/api/auth'
-      path: '/api/auth'
-      fullPath: '/api/auth'
-      preLoaderRoute: typeof ApiAuthRouteImport
-      parentRoute: typeof rootRouteImport
+    '/deals/$dealId': {
+      id: '/deals/$dealId'
+      path: '/$dealId'
+      fullPath: '/deals/$dealId'
+      preLoaderRoute: typeof DealsDealIdRouteImport
+      parentRoute: typeof DealsRoute
     }
     '/api/tailorkit/$': {
       id: '/api/tailorkit/$'

@@ -1,7 +1,10 @@
 import { createContext, h, render } from "preact";
 import type { ComponentChild, ComponentChildren, ComponentType, VNode } from "preact";
 import { useContext } from "preact/hooks";
-import { version as preactVersion } from "preact/package.json";
+
+declare const __PREACT_VERSION__: string;
+
+const preactVersion = __PREACT_VERSION__;
 
 // oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
 export interface TailorKitScreens {}
@@ -22,8 +25,25 @@ export type ScreenContext<TPath extends AppScreenPath> =
 
 export type View<TProps extends object = Record<string, never>> = (props: TProps) => ComponentChild;
 
+export type ScreenRuntimeProps<TPath extends AppScreenPath> =
+  | {
+      context: ScreenContext<TPath>;
+      screen: TPath;
+      status: "ready";
+    }
+  | {
+      context?: never;
+      screen: TPath;
+      status: "loading";
+    }
+  | {
+      context?: never;
+      screen: TPath;
+      status: "error";
+    };
+
 export interface ScreenDefinition<TPath extends AppScreenPath = AppScreenPath> {
-  component: View<ScreenPropsForPath<TPath>>;
+  component: View<ScreenRuntimeProps<TPath>>;
   path: TPath;
   useContext: () => ScreenContext<TPath>;
 }
@@ -79,16 +99,26 @@ export type TailorKitClientWithMeta<TScreens extends ScreenDefinitions = ScreenD
 
 export const createScreen = <const TPath extends AppScreenPath>(
   path: TPath,
-  options: { component: View<Record<string, never>> },
+  options: {
+    component: View<Record<string, never>>;
+    error?: View<Record<string, never>>;
+    loading?: View<Record<string, never>>;
+  },
 ): ScreenDefinition<TPath> => {
   const Context = createContext<ScreenContext<TPath> | null>(null);
 
-  const Screen = (props: ScreenPropsForPath<TPath>) => {
-    const context = "context" in props ? props.context : {};
+  const Screen = (props: ScreenRuntimeProps<TPath>) => {
+    if (props.status === "loading") {
+      return options.loading ? h(options.loading as ComponentType<object>, {}) : null;
+    }
+
+    if (props.status === "error") {
+      return options.error ? h(options.error as ComponentType<object>, {}) : null;
+    }
 
     return h(
       Context.Provider,
-      { value: context as ScreenContext<TPath> },
+      { value: props.context as ScreenContext<TPath> },
       h(options.component as ComponentType<object>, {}),
     );
   };
@@ -108,7 +138,7 @@ export const createScreen = <const TPath extends AppScreenPath>(
   };
 };
 
-export const createClient = <const TScreens extends ScreenDefinitions>(
+export const defineClient = <const TScreens extends ScreenDefinitions>(
   client: TailorKitClient<TScreens> &
     RequireScreenPaths<TScreens> &
     RequireMatchingScreenKeys<TScreens>,
@@ -122,7 +152,6 @@ export const createClient = <const TScreens extends ScreenDefinitions>(
     render,
   },
 });
-export const defineClient = createClient;
 
 const componentTagPrefix = "tailorkit-";
 

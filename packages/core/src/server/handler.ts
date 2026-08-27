@@ -5,6 +5,7 @@ import type {
   NoComponentFieldCallbackConflicts,
   NoMixedActionContexts,
   ResolveActionTreeContext,
+  ScreenContextHierarchy,
 } from "../schema";
 import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
@@ -30,7 +31,8 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
       NoMixedActionContexts<InferTailorKitServerActions<TOptions>>;
     components: InferTailorKitServerComponents<TOptions> &
       NoComponentFieldCallbackConflicts<InferTailorKitServerComponents<TOptions>>;
-    screens?: InferTailorKitServerScreens<TOptions>;
+    screens?: InferTailorKitServerScreens<TOptions> &
+      ScreenContextHierarchy<InferTailorKitServerScreens<TOptions>>;
   },
 ): TailorKitServer<
   InferTailorKitServerComponents<TOptions>,

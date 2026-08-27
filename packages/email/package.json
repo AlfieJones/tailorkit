@@ -1,5 +1,7 @@
 {
   "name": "@tailorkit/email",
+  "version": "0.0.0",
+  "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
@@ -24,20 +26,20 @@
     "dev": "email dev --dir src/templates --port 3003"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.1056.0",
-    "@react-email/render": "^2.0.8",
+    "@aws-sdk/client-sesv2": "^3.1116.0",
+    "@react-email/render": "^2.1.0",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/observability": "workspace:*",
-    "nodemailer": "^8.0.9",
-    "react": "19.2.6",
-    "react-dom": "19.2.6",
-    "react-email": "6.5.0"
+    "nodemailer": "^9.0.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-email": "6.9.2"
   },
   "devDependencies": {
-    "@react-email/ui": "6.5.0",
+    "@react-email/ui": "6.9.2",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
-    "@types/nodemailer": "^8.0.0",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"

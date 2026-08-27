@@ -7,7 +7,7 @@ import type {
   ResolvedComponentMetadata,
 } from "./components";
 import { resolveComponentMetadata } from "./components";
-import type { ResolvedScreenMetadata, ScreenDefinitions } from "./screens";
+import type { ResolvedScreenMetadata, ScreenContextHierarchy, ScreenDefinitions } from "./screens";
 import { jsonSchemaSerializer, serializeSchema } from "./shared";
 import type { SchemaSerializer } from "./shared";
 
@@ -50,7 +50,7 @@ export const createTailorKitSchema = <
 >(schema: {
   actions?: TActions & NoMixedActionContexts<NoInfer<TActions>>;
   components: TComponents & NoComponentFieldCallbackConflicts<NoInfer<TComponents>>;
-  screens?: TScreens;
+  screens?: TScreens & ScreenContextHierarchy<NoInfer<TScreens>>;
 }): TailorKitSchema<TComponents, TScreens, TActions> => {
   const components = {} as TailorKitSchema<
     TComponents,
@@ -160,6 +160,7 @@ export {
 export {
   type ResolvedScreenMetadata,
   type Screen,
+  type ScreenContextHierarchy,
   type ScreenDefinition,
   type ScreenDefinitions,
   type Screens,

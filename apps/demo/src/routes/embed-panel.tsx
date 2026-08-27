@@ -82,53 +82,61 @@ function EmbedPanel() {
 
   return (
     <tailorClient.Root apps={demoApps}>
-      <tailorClient.ScreenMatch context={{}} screen="/">
-        <main className="h-screen flex flex-col" style={cssVars}>
-          {/* Panel header */}
+      <CurrentDemoScreen tailorClient={tailorClient} />
+      <main className="h-screen flex flex-col" style={cssVars}>
+        {/* Panel header */}
+        <div
+          className="flex items-center gap-3 px-4 py-3 flex-shrink-0 border-b"
+          style={{
+            background: "var(--accent)",
+            borderColor: "var(--border)",
+            color: "var(--foreground)",
+          }}
+        >
           <div
-            className="flex items-center gap-3 px-4 py-3 flex-shrink-0 border-b"
-            style={{
-              background: "var(--accent)",
-              borderColor: "var(--border)",
-              color: "var(--foreground)",
-            }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
           >
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
-            >
-              {activeApp?.id === "messages" ? <MessagesIcon /> : <TodoIcon />}
-            </div>
-            <span className="flex-1 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-              {activeApp?.name}
-            </span>
-            <button
-              className="w-7 h-7 rounded flex items-center justify-center text-xs border-0 cursor-pointer transition-colors"
-              onClick={closePanel}
-              style={{ background: "transparent", color: "var(--foreground)" }}
-              type="button"
-            >
-              ✕
-            </button>
+            {activeApp?.id === "messages" ? <MessagesIcon /> : <TodoIcon />}
           </div>
+          <span className="flex-1 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+            {activeApp?.name}
+          </span>
+          <button
+            className="w-7 h-7 rounded flex items-center justify-center text-xs border-0 cursor-pointer transition-colors"
+            onClick={closePanel}
+            style={{ background: "transparent", color: "var(--foreground)" }}
+            type="button"
+          >
+            ✕
+          </button>
+        </div>
 
-          {/* App content */}
-          <div
-            className="flex-1 min-h-0 overflow-hidden flex flex-col"
-            style={{ background: "var(--background)" }}
-          >
-            {/* Make the screen wrapper fill the panel height */}
-            <style>{`[data-tailorkit-screen] { display: flex; flex-direction: column; height: 100%; }`}</style>
-            {activeApp ? (
-              <tailorClient.AppView app={activeApp} />
-            ) : (
-              <div className="p-5 text-sm" style={{ color: "var(--muted-foreground)" }}>
-                No app selected
-              </div>
-            )}
-          </div>
-        </main>
-      </tailorClient.ScreenMatch>
+        {/* App content */}
+        <div
+          className="flex-1 min-h-0 overflow-hidden flex flex-col"
+          style={{ background: "var(--background)" }}
+        >
+          {/* Make the screen wrapper fill the panel height */}
+          <style>{`[data-tailorkit-screen] { display: flex; flex-direction: column; height: 100%; }`}</style>
+          {activeApp ? (
+            <tailorClient.AppView app={activeApp} />
+          ) : (
+            <div className="p-5 text-sm" style={{ color: "var(--muted-foreground)" }}>
+              No app selected
+            </div>
+          )}
+        </div>
+      </main>
     </tailorClient.Root>
   );
+}
+
+function CurrentDemoScreen({
+  tailorClient,
+}: {
+  tailorClient: ReturnType<typeof createDemoTailorClient>;
+}) {
+  tailorClient.useCurrentScreen({ context: {}, screen: "/" });
+  return null;
 }

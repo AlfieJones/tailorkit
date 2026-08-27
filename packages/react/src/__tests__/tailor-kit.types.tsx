@@ -22,8 +22,16 @@ const server = createTailorKitServer({
     Button: {},
   },
   screens: {
+    "/": { context: typedSchema<{ user: { id: string } }>() },
     "/home": { context: typedSchema<{ page: { title: string }; user: { id: string } }>() },
-    "/user": { context: typedSchema<{ userId: string }>() },
+    "/home/detail": {
+      context: typedSchema<{
+        detail: { id: string };
+        page: { title: string };
+        user: { id: string };
+      }>(),
+    },
+    "/user": { context: typedSchema<{ user: { id: string }; userId: string }>() },
   },
 });
 
@@ -97,30 +105,26 @@ components(callbackServer.$internal.schema, {
   },
 });
 
-<tailor.ScreenMatch screen="/home" context={{ page: { title: "Home" }, user: { id: "user_1" } }} />;
+tailor.useCurrentScreen({
+  screen: "/home",
+  context: { page: { title: "Home" }, user: { id: "user_1" } },
+});
 
-<tailor.ScreenMatch screen="/user" isLoading />;
+tailor.useCurrentScreen({ screen: "/user", status: "loading" });
 
-<tailor.ScreenMatch screen="/user" isLoading context={{ userId: "user_1" }} />;
-
-<tailor.Root>
-  <tailor.ScreenMatch
-    screen="/home"
-    context={{ page: { title: "Home" }, user: { id: "user_1" } }}
-  />
-</tailor.Root>;
+tailor.useCurrentScreen({ screen: "/user", status: "error" });
 
 // @ts-expect-error invalid screen name
-<tailor.ScreenMatch screen="missing" context={{}} />;
+tailor.useCurrentScreen({ screen: "missing", context: {} });
 
 // @ts-expect-error invalid context shape for selected screen
-<tailor.ScreenMatch screen="/user" context={{ page: { title: "Home" } }} />;
+tailor.useCurrentScreen({ screen: "/user", context: { page: { title: "Home" } } });
 
 // @ts-expect-error ready matches require context
-<tailor.ScreenMatch screen="/home" />;
+tailor.useCurrentScreen({ screen: "/home" });
 
-// @ts-expect-error isLoading false requires full context
-<tailor.ScreenMatch screen="/home" isLoading={false} />;
+// @ts-expect-error loading screens cannot expose partial context
+tailor.useCurrentScreen({ screen: "/user", status: "loading", context: { userId: "user_1" } });
 
 <tailor.AppView app={app} />;
 
@@ -130,9 +134,9 @@ components(callbackServer.$internal.schema, {
   context={{ page: { title: "Home" }, user: { id: "user_1" } }}
 />;
 
-<tailor.AppView app={app} screen="/user" isLoading />;
+<tailor.AppView app={app} screen="/user" status="loading" />;
 
-<tailor.AppView app={app} screen="/user" isLoading context={{ userId: "user_1" }} />;
+<tailor.AppView app={app} screen="/user" status="error" />;
 
 // @ts-expect-error invalid screen name
 <tailor.AppView app={app} screen="missing" context={{}} />;
@@ -143,5 +147,5 @@ components(callbackServer.$internal.schema, {
 // @ts-expect-error ready app views require context when screen is provided
 <tailor.AppView app={app} screen="/home" />;
 
-// @ts-expect-error isLoading false requires full context when screen is provided
-<tailor.AppView app={app} screen="/home" isLoading={false} />;
+// @ts-expect-error loading app views cannot expose context
+<tailor.AppView app={app} screen="/user" status="loading" context={{ userId: "user_1" }} />;

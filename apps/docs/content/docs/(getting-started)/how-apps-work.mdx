@@ -6,7 +6,7 @@ description: Apps are sandboxed extensions that render through your platform.
 TailorKit lets your product host runtime apps in specific parts of the UI while
 keeping control of the page, data, and platform behavior.
 
-## The Model
+## The model
 
 A TailorKit integration has two sides:
 
@@ -21,31 +21,25 @@ perform, and which theme tokens they can use to match your product.
 
 ```mermaid
 flowchart LR
-  subgraph Host["Host product"]
-    ProductUi["Your UI"]
-    AppUi["App UI"]
-    ProductUi <-->|"<div class='bg-card'>Shared<br />UI kit</div>"| AppUi
-  end
-
-  subgraph Sandbox["Sandbox"]
-    AppCode["App code"]
-  end
-
-  AppUi -->|"Events"| AppCode
-  AppCode -->|"Serialized UI"| AppUi
+  Host["Host schema and context"] --> Bindings["Generated app bindings"]
+  Bindings --> Sandbox["Sandboxed app code"]
+  Sandbox -->|"Serialized UI"| Renderer["Host React renderers"]
+  Renderer --> Product["Product UI"]
+  Product -->|"Component events"| Sandbox
+  Sandbox -->|"Action requests"| Host
 ```
 
-## What The Host Owns
+## What the host owns
 
 The host is the source of truth. It chooses the active screen, passes screen
 context, renders approved components, and handles sensitive work through host
-callbacks.
+actions.
 
 For example, the host can say: "this part of the user route is the `/user`
 screen, and here is the current user context." Read [Screens](/docs/screens)
 for the full pattern.
 
-## What Apps Own
+## What apps own
 
 Apps are built separately from the host. They import generated bindings from the
 schema, implement one or more screens, and describe UI using host-approved
@@ -54,20 +48,27 @@ components.
 Read [Writing apps](/docs/writing-apps) and [Components](/docs/components) for
 the app-side and host-side details.
 
-## Sandbox And Security
+## Sandbox and security
 
-App code runs in a worker sandbox. It receives screen context, returns a
-description of the UI, and responds to events. The host renders the real UI and
-keeps direct access to routing, data, secrets, and browser APIs.
+App code runs in a hidden, opaque-origin iframe sandbox with an internal worker.
+It receives screen context, returns a description of the UI, and responds to
+events. The host renders the real UI and keeps direct access to routing, data,
+secrets, and browser APIs.
 
-### Isolated Runtime
+### Isolated runtime
 
-TailorKit treats app code as untrusted by default. Apps do not run on the main
-thread and do not get direct access to the DOM. They describe UI instead of
-mutating the page, and can only render through the screens, components, props,
-callbacks, slots, and tokens your host exposes.
+TailorKit treats app code as untrusted by default. Apps run in an internal
+worker behind a sandboxed iframe, do not run on the main thread, and do not get
+direct access to the DOM. They describe UI instead of mutating the page, and
+can only render through the screens, components, props, callbacks, slots, and
+tokens your host exposes.
 
-### Event Boundary
+The iframe allows scripts but not same-origin access. Its content security
+policy blocks network connections, images, styles, nested frames, and form
+submissions from the sandbox document. The host fetches app code before passing
+it across the sandbox boundary.
+
+### Event boundary
 
 Events move through TailorKit. A user clicks a host-rendered component, the
 callback is forwarded to the app sandbox, and the app can update its rendered
@@ -78,12 +79,13 @@ permissions, changing pages, and rendering the final interface. App events are
 forwarded through TailorKit, so the host can validate payloads and decide which
 callbacks or actions are allowed.
 
-### Narrow Capabilities
+### Narrow capabilities
 
 That lets you grant narrow capabilities without opening the whole browser
 environment. For example, you can expose a host-owned copy-to-clipboard action
 while still preventing app code from reading local storage, cookies, or other
 page-level state directly.
 
-For the production checklist, read
-[Deploying to production](/docs/deploying-to-production).
+The sandbox is one layer of the security model, not a substitute for narrow
+schemas, authorization, and output validation. For the complete checklist,
+read [Deploying to production](/docs/deploying-to-production).

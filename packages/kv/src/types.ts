@@ -13,6 +13,8 @@ export interface KV<T extends KVType = KVType> {
   readonly type: T;
   engine: KVEngine<T>;
   get: (key: string) => Promise<string | null>;
+  getAndDelete: (key: string) => Promise<string | null>;
+  increment: (key: string, ttl: number) => Promise<number>;
   set: (key: string, value: string, options?: SetOptions) => Promise<void>;
   delete: (key: string) => Promise<void>;
 }

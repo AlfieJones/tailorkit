@@ -1,10 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, useTable } from "@tanstack/react-table";
 import type { CellContext, ColumnDef, SortingState } from "@tanstack/react-table";
 import { MoreHorizontalIcon, SendIcon, TrashIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
@@ -28,6 +23,7 @@ import {
   TableRow,
 } from "@tailorkit/ui/components/table";
 import { getRoleBadgeVariant, renderSortableHeader } from "./member-table-utils";
+import { dataTableFeatures } from "#lib/table";
 
 export interface InvitationRow {
   id: string;
@@ -50,13 +46,13 @@ function createInvitationColumns({
   onRevoke,
   resendPending,
   revokePending,
-}: InvitationColumnsOptions): ColumnDef<InvitationRow>[] {
+}: InvitationColumnsOptions): ColumnDef<typeof dataTableFeatures, InvitationRow>[] {
   return [
     {
       accessorKey: "email",
       header: "Email",
       size: 280,
-      cell: ({ row }: CellContext<InvitationRow, unknown>) => {
+      cell: ({ row }: CellContext<typeof dataTableFeatures, InvitationRow, unknown>) => {
         const initials = row.original.email.slice(0, 2).toUpperCase();
         return (
           <div className="flex items-center gap-3">
@@ -72,7 +68,7 @@ function createInvitationColumns({
       accessorKey: "role",
       header: "Role",
       size: 110,
-      cell: ({ row }: CellContext<InvitationRow, unknown>) => {
+      cell: ({ row }: CellContext<typeof dataTableFeatures, InvitationRow, unknown>) => {
         const role = row.original.role ?? "member";
         return (
           <Badge variant={getRoleBadgeVariant(role)} size="lg">
@@ -85,8 +81,8 @@ function createInvitationColumns({
       accessorKey: "expiresAt",
       header: "Expires",
       size: 140,
-      sortingFn: "datetime",
-      cell: ({ row }: CellContext<InvitationRow, unknown>) => (
+      sortFn: "datetime",
+      cell: ({ row }: CellContext<typeof dataTableFeatures, InvitationRow, unknown>) => (
         <DateAgo date={row.original.expiresAt} />
       ),
     },
@@ -95,7 +91,7 @@ function createInvitationColumns({
       size: 80,
       enableSorting: false,
       header: () => null,
-      cell: ({ row }: CellContext<InvitationRow, unknown>) =>
+      cell: ({ row }: CellContext<typeof dataTableFeatures, InvitationRow, unknown>) =>
         canManage ? (
           <div className="flex items-center justify-end gap-1">
             <DropdownMenu>
@@ -142,17 +138,16 @@ export function InvitationsTable({
 }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "email", desc: false }]);
 
-  const columns = useMemo<ColumnDef<InvitationRow>[]>(
+  const columns = useMemo<ColumnDef<typeof dataTableFeatures, InvitationRow>[]>(
     () => createInvitationColumns({ canManage, onResend, onRevoke, resendPending, revokePending }),
     [canManage, onResend, onRevoke, resendPending, revokePending],
   );
 
-  const table = useReactTable({
+  const table = useTable({
     columns,
     data: invitations,
     enableSortingRemoval: false,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    features: dataTableFeatures,
     onSortingChange: setSorting,
     state: { sorting },
   });
@@ -187,7 +182,7 @@ export function InvitationsTable({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows.map((row) => (
-            <TableRow data-state={row.getIsSelected() ? "selected" : undefined} key={row.id}>
+            <TableRow key={row.id}>
               {row.getVisibleCells().map((cell) => (
                 <TableCell key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

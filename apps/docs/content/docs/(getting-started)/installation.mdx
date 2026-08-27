@@ -8,6 +8,9 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 
 Set up TailorKit in the app that will host and render TailorKit apps.
 
+By the end of this guide, your backend will expose the TailorKit schema and app
+registry, and your React frontend will be ready to render installed apps.
+
 <Steps>
 <Step>
 
@@ -20,10 +23,11 @@ npm install tailorkit
 </Step>
 <Step>
 
-### Create TailorKit instance
+### Create the TailorKit server
 
-Create `tailorkit.ts` in your project root, `lib/`, `utils/`, `src/lib/`, or
-`app/lib/`.
+Create `tailorkit.ts` in a server-safe module such as `src/lib/`. Do not import
+this module into a browser bundle: actions and project credentials belong on
+the server.
 
 This file defines the screens, components, theme tokens, and actions TailorKit
 apps can use. Primitives provide basic layout and styling abilities. See
@@ -103,10 +107,9 @@ Mount the handler at your TailorKit base path. The default is `/api/tailorkit`.
   examples for popular frameworks below.
 </Callout>
 
-Pass your app's auth check as `authenticate` instead of blocking unauthenticated
-requests before `tailorKit.handler`. TailorKit calls `authenticate` only for
-routes that need your app's user context; CLI deployment routes use TailorKit's
-deploy-token authentication.
+Pass your app's auth check as `authenticate` instead of blocking requests before
+`tailorKit.handler`. TailorKit applies the appropriate authentication to each
+route, including its CLI deployment flow.
 
 ```ts title="app/api/tailorkit/[...tailorkit]/route.ts" tab="Next.js (App)"
 import { auth } from "#lib/auth";
@@ -119,7 +122,7 @@ async function handleRequest(request: Request) {
       const session = await auth(request);
 
       if (!session) {
-        return;
+        return null;
       }
 
       return {
@@ -156,7 +159,7 @@ async function handleRequest({ request }: { request: Request }) {
       const session = await auth(request);
 
       if (!session) {
-        return;
+        return null;
       }
 
       return {
@@ -181,7 +184,7 @@ async function handleRequest(request: Request) {
       const session = await auth(request);
 
       if (!session) {
-        return;
+        return null;
       }
 
       return {
@@ -215,7 +218,7 @@ export default defineEventHandler(async (event) => {
       const session = await auth(request);
 
       if (!session) {
-        return;
+        return null;
       }
 
       return {
@@ -242,7 +245,7 @@ app.on(["GET", "POST"], "/api/tailorkit/*", async (c) => {
       const session = await auth(c.req.raw);
 
       if (!session) {
-        return;
+        return null;
       }
 
       return {
@@ -290,15 +293,30 @@ export const tailorKitClient = createTailorKitClient<typeof tailorKit>({
 export default tailorKitClient;
 ```
 
+Use an absolute URL during server rendering if your framework cannot resolve
+`/api/tailorkit` without an origin. In the browser, a same-origin relative URL
+is usually the simplest option.
+
 </Step>
 <Step>
 
 ### Finish
 
-Deploy the host app after `tailorkit.ts`, the API handler, and the React client are
-in place.
+Confirm that these endpoints respond before moving on:
+
+```txt
+GET /api/tailorkit/schema
+GET /api/tailorkit/meta
+GET /api/tailorkit/apps
+```
+
+The schema and metadata endpoints describe your public app contract. The apps
+endpoint requires a valid host session and returns the apps installed for the
+authenticated `scopeId`.
 
 🎉 TailorKit is installed.
+
+Continue to the [Quickstart](/docs/quickstart) to create and preview an app.
 
 </Step>
 </Steps>

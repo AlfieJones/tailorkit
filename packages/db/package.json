@@ -1,5 +1,7 @@
 {
   "name": "@tailorkit/db",
+  "version": "0.0.0",
+  "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
@@ -36,7 +38,7 @@
     "@tailorkit/env": "workspace:*",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
-    "pg": "^8.21.0",
+    "pg": "^8.23.0",
     "zod": "catalog:"
   },
   "devDependencies": {

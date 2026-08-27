@@ -1,8 +1,15 @@
 {
   "name": "@tailorkit/sandbox",
   "version": "0.0.0",
-  "private": true,
   "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlfieJones/tailorkit.git",
+    "directory": "packages/sandbox"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "imports": {
     "#*": [
@@ -14,25 +21,48 @@
     ]
   },
   "exports": {
-    "./host": "./src/host/index.ts",
-    "./protocol": "./src/protocol.ts",
-    "./worker": "./src/worker/worker.ts",
-    "./worker-dom": "./src/worker-dom/index.ts",
-    "./worker-dom/dom": "./src/worker-dom/dom.ts"
+    "./host": {
+      "development": "./src/host/index.ts",
+      "types": "./dist/host/index.d.ts",
+      "import": "./dist/host.js"
+    },
+    "./protocol": {
+      "development": "./src/protocol.ts",
+      "types": "./dist/protocol.d.ts",
+      "import": "./dist/protocol.js"
+    },
+    "./worker": {
+      "development": "./src/worker/worker.ts",
+      "types": "./dist/worker/worker.d.ts",
+      "import": "./dist/worker.js"
+    },
+    "./worker-dom": {
+      "development": "./src/worker-dom/index.ts",
+      "types": "./dist/worker-dom/index.d.ts",
+      "import": "./dist/worker-dom/index.js"
+    },
+    "./worker-dom/dom": {
+      "development": "./src/worker-dom/dom.ts",
+      "types": "./dist/worker-dom/dom.d.ts",
+      "import": "./dist/worker-dom/dom.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
     "test": "vitest run",
-    "build": "vite build"
+    "build": "vite build && tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "preact": "^10.29.2",
+    "preact": "^10.29.8",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
-    "happy-dom": "^20.9.0",
+    "happy-dom": "^20.11.6",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

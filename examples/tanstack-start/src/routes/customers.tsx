@@ -2,7 +2,7 @@ import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router"
 import { MetricCard, PageHeader } from "#components/crm-ui";
 import { CustomerTable } from "#components/customer-table";
 import { customers } from "#lib/crm-data";
-import { ScreenMatch } from "#lib/tailorkit-client.tsx";
+import tailor from "#lib/tailorkit-client.tsx";
 import { useAuthSession } from "#lib/auth-client.ts";
 
 export const Route = createFileRoute("/customers")({ component: CustomersPage });
@@ -16,41 +16,40 @@ function CustomersPage() {
     return;
   }
 
+  tailor.useCurrentScreen({
+    context: { user: session.data.user, customers },
+    screen: "/customers",
+  });
+
   if (pathname !== "/customers") {
-    return (
-      <ScreenMatch screen="/customers" context={{ user: session.data.user, customers }}>
-        <Outlet />
-      </ScreenMatch>
-    );
+    return <Outlet />;
   }
 
   return (
-    <ScreenMatch screen="/customers" context={{ user: session.data.user, customers }}>
-      <div className="space-y-6">
-        <PageHeader description="Accounts, owners, and current pipeline value." title="Customers" />
+    <div className="space-y-6">
+      <PageHeader description="Accounts, owners, and current pipeline value." title="Customers" />
 
-        <section className="grid gap-4 sm:grid-cols-3">
-          <MetricCard label="Total" value={customers.length} />
-          <MetricCard
-            label="Active"
-            value={customers.filter((customer) => customer.status === "Active").length}
-          />
-          <MetricCard
-            label="At risk"
-            value={customers.filter((customer) => customer.status === "At risk").length}
-          />
-        </section>
+      <section className="grid gap-4 sm:grid-cols-3">
+        <MetricCard label="Total" value={customers.length} />
+        <MetricCard
+          label="Active"
+          value={customers.filter((customer) => customer.status === "Active").length}
+        />
+        <MetricCard
+          label="At risk"
+          value={customers.filter((customer) => customer.status === "At risk").length}
+        />
+      </section>
 
-        <section className="space-y-3">
-          <div>
-            <h2 className="font-semibold text-lg">Customer list</h2>
-            <p className="text-muted-foreground text-sm">
-              Click through to view contact details and next steps.
-            </p>
-          </div>
-          <CustomerTable />
-        </section>
-      </div>
-    </ScreenMatch>
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-semibold text-lg">Customer list</h2>
+          <p className="text-muted-foreground text-sm">
+            Click through to view contact details and next steps.
+          </p>
+        </div>
+        <CustomerTable />
+      </section>
+    </div>
   );
 }

@@ -1,12 +1,7 @@
 /* oxlint-disable react/no-unstable-nested-components */
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, useTable } from "@tanstack/react-table";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { ArrowLeftIcon, RocketIcon } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -37,6 +32,7 @@ import { DateAgo } from "@tailorkit/ui/date";
 import { renderSortableHeader } from "#components/members/member-table-utils";
 import { PageLayout } from "#components/page-layout";
 import { orpc } from "#lib/orpc";
+import { dataTableFeatures } from "#lib/table";
 
 export const Route = createFileRoute("/(app)/$orgSlug/$projectSlug/apps/$appId")({
   loader: ({ context, params }) =>
@@ -82,7 +78,7 @@ function DeploymentsTable({
 }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
 
-  const columns = useMemo<ColumnDef<DeploymentRow>[]>(
+  const columns = useMemo<ColumnDef<typeof dataTableFeatures, DeploymentRow>[]>(
     () => [
       {
         accessorKey: "id",
@@ -111,26 +107,25 @@ function DeploymentsTable({
         accessorKey: "createdAt",
         header: "Created",
         size: 140,
-        sortingFn: "datetime",
+        sortFn: "datetime",
         cell: ({ row }) => <DateAgo date={row.original.createdAt} />,
       },
       {
         accessorKey: "updatedAt",
         header: "Updated",
         size: 140,
-        sortingFn: "datetime",
+        sortFn: "datetime",
         cell: ({ row }) => <DateAgo date={row.original.updatedAt} />,
       },
     ],
     [currentDeploymentId],
   );
 
-  const table = useReactTable({
+  const table = useTable({
     columns,
     data: deployments,
     enableSortingRemoval: false,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    features: dataTableFeatures,
     onSortingChange: setSorting,
     state: { sorting },
   });

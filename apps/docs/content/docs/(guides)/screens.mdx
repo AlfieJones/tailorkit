@@ -1,154 +1,208 @@
 ---
 title: Screens
-description: Connect host-owned routes to TailorKit screens with typed context.
+description: Publish typed route context to TailorKit apps.
 ---
 
-Screen matching is how a host app tells TailorKit which screen is active.
-TailorKit consumes mounted `ScreenMatch` components; it does not own routing,
-read `window.location`, or mutate browser history.
+A screen connects a place in your host product to an app view. The basic flow
+has three parts: define the screen, publish its context, and render the app.
 
-## Declare A Match
+TailorKit does not own your router or inspect the browser URL. Your route tells
+TailorKit which screen is current.
 
-Place `tailor.ScreenMatch` inside the host route or layout that owns the active
-data. `screen` is the stable TailorKit surface key, and `context` is the data
-for that surface.
+## Define a screen
 
-```tsx
-<tailor.ScreenMatch screen="/users/detail" context={{ user }}>
-  {children}
-</tailor.ScreenMatch>
-```
+Add a stable path and its context to the server contract:
 
-## Typed Context
+```ts title="src/lib/tailorkit.ts"
+import { createTailorKit } from "tailorkit";
+import { z } from "zod";
 
-`screen` is typed from `schema.screens`, and `context` is typed from the
-selected screen's context schema.
-
-```ts
-const schema = defineSchema({
+export const tailorKit = createTailorKit({
   components: {},
   screens: {
-    "/users/detail": screen({
+    "/customers": {
       context: z.object({
-        user: z.object({
-          id: z.string(),
-          name: z.string(),
-        }),
+        customers: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+          }),
+        ),
       }),
-    }),
+    },
   },
 });
 ```
 
-This match type-checks:
+## Publish the current screen
+
+Call the hook in the client route that owns the data:
 
 ```tsx
-<tailor.ScreenMatch
-  screen="/users/detail"
-  context={{
-    user,
-  }}
-/>
+function CustomersPage({ customers }) {
+  tailor.useCurrentScreen({
+    screen: "/customers",
+    context: { customers },
+  });
+
+  return <CustomerList customers={customers} />;
+}
 ```
 
-Invalid screen names or missing context fields fail at compile time.
+The hook must be rendered below `tailor.Root`. Supplying `context` means the
+screen is ready; no status is needed.
 
-## Loading Without Stale Context
+## Render an app
 
-Use `isLoading` when the route is mounted but its data is not ready. Loading
-matches can omit `context`.
+`AppView` uses the current screen automatically:
 
 ```tsx
-<tailor.ScreenMatch
-  screen="/users/detail"
-  isLoading={isLoading}
-  context={isLoading ? undefined : { user }}
->
-  {children}
-</tailor.ScreenMatch>
+<tailor.AppView app={app} />
 ```
 
-The API is intentionally strict:
+That is the complete ready-state setup. The sections below cover unresolved
+data, nested routes, and less common integrations.
 
-- `isLoading: true` allows `context` to be omitted.
-- `isLoading?: false` requires the full typed `context`.
+## Loading and error states
 
-This prevents a previous route's context from being reused while the next route
-is still loading.
-
-## Nested Matches
-
-When multiple matches are mounted, the deepest mounted match is preferred.
-TailorKit passes the mounted chain to each app. If an app does not implement the
-deepest screen, the worker walks back through parent matches until it finds a
-screen the app implements.
+Publish a status when the complete context is not available:
 
 ```tsx
-<tailor.ScreenMatch screen="/projects" context={projectContext}>
-  <ProjectLayout>
-    <tailor.ScreenMatch screen="/projects/issues/detail" context={issueContext}>
-      <IssuePage />
-    </tailor.ScreenMatch>
-  </ProjectLayout>
-</tailor.ScreenMatch>
+function CustomersPage() {
+  const query = useQuery({
+    queryKey: ["customers"],
+    queryFn: getCustomers,
+  });
+
+  tailor.useCurrentScreen(
+    query.isPending
+      ? { screen: "/customers", status: "loading" }
+      : query.isError
+        ? { screen: "/customers", status: "error" }
+        : { screen: "/customers", context: { customers: query.data } },
+  );
+
+  return query.data ? <CustomerList customers={query.data} /> : null;
+}
 ```
 
-When the nested issue route unmounts, TailorKit uses the parent project match.
-If both matches are mounted but an app only implements `/projects`, it receives
-the parent match and its parent context.
+Loading and error states do not need context and cannot receive it. This keeps
+stale or incomplete route data out of the app. An app may define matching
+loading and error UI; otherwise it renders nothing until the context is ready.
 
-Sibling matches at the same depth are ambiguous. TailorKit warns in development
-and selects one by mount order so production keeps rendering.
+## Nested screens
 
-## Render The Current Match
+Screen paths form a hierarchy. If the current path is
+`/pages/customers/detail`, TailorKit tries these paths for each app:
 
-`tailor.AppView` renders the selected match into a TailorKit app.
+1. `/pages/customers/detail`
+2. `/pages/customers`
+3. `/pages`
+4. `/`
 
-```tsx
-const { apps } = tailor.useApps();
+The first path implemented by the app is used. The complete context from the
+current nested screen is passed to it.
 
-return (
-  <tailor.ScreenMatch screen="/home" context={context}>
-    {apps.map((app) => (
-      <tailor.AppView key={app.id} app={app} />
-    ))}
-  </tailor.ScreenMatch>
-);
-```
-
-Multiple apps can render the same current match.
-
-You can also pass a screen and context directly when the app view is not
-rendered under the route that owns the active `ScreenMatch`.
-
-```tsx
-<tailor.AppView app={app} screen="/home" context={context} />
-```
-
-## Registry State
-
-The same `tailor` instance caches the app registry. Use `useApps()` in React and
-`getApps()` or `getApp(id)` when you need to read the cached values outside a
-render path.
-
-```tsx
-const { apps, error, status } = tailor.useApps();
-const todoApp = tailor.getApp("todo");
-```
-
-## App URL Resolution
-
-`tailor.AppView` resolves deployed app clients from the TailorKit metadata
-`assetsBaseUrl` and the app registry item's current deployment.
+Every nested context must therefore include the context of its closest defined
+parent. Extend the parent schema to make this clear:
 
 ```ts
-new URL(
-  `projects/${app.projectId}/apps/${app.id}/deployments/${app.currentDeployment.id}/files/client.js`,
-  assetsBaseUrl,
-);
+const pagesContext = z.object({ user });
+const customersContext = pagesContext.extend({
+  customers: z.array(customer),
+});
+const detailContext = customersContext.extend({
+  customer,
+});
+
+const screens = {
+  "/pages": { context: pagesContext },
+  "/pages/customers": { context: customersContext },
+  "/pages/customers/detail": { context: detailContext },
+};
 ```
 
-Local apps can still provide a client path directly:
+TailorKit checks this relationship when the server contract is defined. A
+nested route publishes only its own path and complete context; TailorKit derives
+the parent paths. The rule is transitive, so a deeply nested context also
+contains the context defined at `/` when a root screen exists.
+
+## Layouts and nested routes
+
+A parent layout can remain registered while a nested route is mounted:
+
+```tsx
+function PagesLayout({ user }) {
+  tailor.useCurrentScreen({
+    screen: "/pages",
+    context: { user },
+  });
+
+  return <Outlet />;
+}
+
+function CustomerRoute({ customer, customers, user }) {
+  tailor.useCurrentScreen({
+    screen: "/pages/customers/detail",
+    context: { user, customers, customer },
+  });
+
+  return <CustomerDetails customer={customer} />;
+}
+```
+
+TailorKit chooses the deepest mounted path. When the nested route unmounts, the
+layout becomes current again. Avoid mounting unrelated screens at the same
+depth; the result is ambiguous and produces a development warning.
+
+## Server Components
+
+Hooks cannot run in a React Server Component. Load the data on the server and
+pass its serializable context to a small Client Component:
+
+```tsx title="customer-screen.tsx"
+"use client";
+
+export function CustomerScreen({ customers }) {
+  tailor.useCurrentScreen({
+    screen: "/customers",
+    context: { customers },
+  });
+
+  return null;
+}
+```
+
+Render this bridge from the Server Component. Client-routed applications can
+call the hook directly in their route component.
+
+## Override the current screen
+
+Most views should use the current route registration. A view that is independent
+of the route can provide its screen directly:
+
+```tsx
+<tailor.AppView app={app} screen="/customers" context={{ customers }} />
+```
+
+Explicit loading and error states use the same shape as the hook:
+
+```tsx
+<tailor.AppView app={app} screen="/customers" status="loading" />
+```
+
+## Load installed apps
+
+Use `useApps()` to load the apps available to the current authenticated scope:
+
+```tsx
+const { data: apps, error, status } = tailor.useApps();
+```
+
+`getApps()` and `getApp(id)` return the current cached snapshot outside React.
+
+`AppView` normally resolves the client from the app registry. A local or custom
+app can provide its client path directly:
 
 ```tsx
 <tailor.AppView
@@ -159,18 +213,9 @@ Local apps can still provide a client path directly:
 />
 ```
 
-## Responsibilities
+## Responsibility boundary
 
-The host app owns:
-
-- routing.
-- loading state.
-- data fetching.
-- choosing the active TailorKit screen.
-
-TailorKit owns:
-
-- fetching and caching the app registry.
-- tracking mounted `ScreenMatch` entries.
-- selecting the deepest active match chain.
-- rendering the first implemented match into each TailorKit app.
+The host owns routing, data fetching, permissions, and the context exposed to
+apps. TailorKit tracks mounted registrations, selects the deepest current path,
+finds the closest screen each app implements, and passes it the complete
+context.

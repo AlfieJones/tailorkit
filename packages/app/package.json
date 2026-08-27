@@ -1,8 +1,15 @@
 {
   "name": "@tailorkit/app",
   "version": "0.0.0",
-  "private": true,
   "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlfieJones/tailorkit.git",
+    "directory": "packages/app"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "imports": {
     "#*": [
@@ -14,25 +21,45 @@
     ]
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./client": "./src/client/index.ts",
-    "./config": "./src/config/index.ts",
-    "./config/loader": "./src/config/loader.ts",
-    "./builder": "./src/builder/index.ts"
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./config": {
+      "development": "./src/config/index.ts",
+      "types": "./dist/config/index.d.ts",
+      "import": "./dist/config.js"
+    },
+    "./config/loader": {
+      "development": "./src/config/loader.ts",
+      "types": "./dist/config/loader.d.ts",
+      "import": "./dist/config-loader.js"
+    },
+    "./builder": {
+      "development": "./src/builder/index.ts",
+      "types": "./dist/builder/index.d.ts",
+      "import": "./dist/builder.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
+    "build": "tsup --config tsup.config.ts && tsc -p tsconfig.build.json",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@tailorkit/core": "workspace:*",
-    "cosmiconfig": "^9.0.1",
+    "cosmiconfig": "^10.0.0",
     "vite": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
-    "preact": "^10.29.2",
+    "preact": "^10.29.8",
+    "tsup": "^8.5.1",
     "typescript": "catalog:"
   },
   "peerDependencies": {

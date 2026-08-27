@@ -27,14 +27,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1.18.0
         with:
           node-version: 24
-          cache: pnpm
+          cache: true
+          run-install: false
 
       - name: Restore Turbo cache
         uses: actions/cache@v4
@@ -46,16 +44,16 @@ jobs:
             turbo-${{ runner.os }}-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: vp install --frozen-lockfile
 
       - name: Lint
-        run: pnpm lint
+        run: vp run lint
 
       - name: Format
-        run: pnpm format
+        run: vp run format
 
       - name: Typecheck
-        run: pnpm turbo run check-types
+        run: vp run check-types
 
   tests:
     name: Tests
@@ -64,14 +62,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1.18.0
         with:
           node-version: 24
-          cache: pnpm
+          cache: true
+          run-install: false
 
       - name: Restore Turbo cache
         uses: actions/cache@v4
@@ -83,10 +79,10 @@ jobs:
             turbo-${{ runner.os }}-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: vp install --frozen-lockfile
 
       - name: Run tests
-        run: pnpm turbo run test
+        run: vp run test
 
   build:
     name: Build
@@ -95,14 +91,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1.18.0
         with:
           node-version: 24
-          cache: pnpm
+          cache: true
+          run-install: false
 
       - name: Restore Turbo cache
         uses: actions/cache@v4
@@ -114,7 +108,7 @@ jobs:
             turbo-${{ runner.os }}-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: vp install --frozen-lockfile
 
       - name: Build
-        run: pnpm turbo run build
+        run: vp run build

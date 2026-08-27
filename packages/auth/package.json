@@ -1,5 +1,7 @@
 {
   "name": "@tailorkit/auth",
+  "version": "0.0.0",
+  "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
@@ -26,19 +28,20 @@
   "scripts": {
     "build": "tsdown src/index.ts src/lib/email.ts src/lib/permissions.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit",
-    "generate": "better-auth generate --config src/index.ts --output ../db/src/schema/auth.ts"
+    "generate": "pnpm dlx auth@1.7.1 generate --config src/index.ts --output ../db/src/schema/auth.ts"
   },
   "dependencies": {
-    "@better-auth/api-key": "1.6.11",
-    "@better-auth/infra": "^0.2.11",
+    "@better-auth/api-key": "1.7.1",
+    "@better-auth/drizzle-adapter": "1.7.1",
+    "@better-auth/infra": "^0.4.2",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/email": "workspace:*",
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
-    "@vercel/functions": "^3.6.1",
+    "@vercel/functions": "^3.9.5",
     "better-auth": "catalog:",
-    "uuid": "^14.0.0",
+    "uuid": "^14.0.2",
     "zod": "catalog:"
   },
   "devDependencies": {

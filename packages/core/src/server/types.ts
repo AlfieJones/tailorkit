@@ -5,6 +5,7 @@ import type {
   NoMixedActionContexts,
   NoComponentFieldCallbackConflicts,
   ResolveActionTreeContext,
+  ScreenContextHierarchy,
   ScreenDefinition,
   ScreenDefinitions,
   TailorKitSchema,
@@ -53,7 +54,7 @@ export interface TailorKitServerSchemaOptions<
 > {
   actions?: TActions & ActionDefinitions & NoMixedActionContexts<TActions>;
   components: TComponents & NoComponentFieldCallbackConflicts<TComponents>;
-  screens?: TScreens;
+  screens?: TScreens & ScreenContextHierarchy<TScreens>;
 }
 
 export interface TailorKitServerInputOptions extends TailorKitServerBaseOptions {

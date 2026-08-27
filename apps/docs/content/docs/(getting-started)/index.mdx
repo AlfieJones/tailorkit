@@ -4,17 +4,24 @@ description: Build app ecosystems inside your product without handing over routi
 ---
 
 import { Card, Cards } from "fumadocs-ui/components/card";
-import { BoxesIcon, CodeIcon, PlugIcon, WrenchIcon } from "lucide-react";
+import { BoxesIcon, CodeIcon, PlugIcon, RocketIcon, WrenchIcon } from "lucide-react";
 
 TailorKit lets you add an app ecosystem directly into your product. We handle
 the infrastructure, sandboxing, distribution, and more, so users can build
 features for themselves and organizations can unblock their own workflows.
 
-## Start Here
+The host product remains in control: it chooses where apps render, which data
+they receive, which components they can use, and which trusted actions they can
+request.
+
+## Start here
 
 <Cards>
   <Card href="/docs/installation" icon={<WrenchIcon />} title="Installation">
     Install TailorKit and wire it into the host app that will render apps.
+  </Card>
+  <Card href="/docs/quickstart" icon={<RocketIcon />} title="Quickstart">
+    Create an app, generate typed host bindings, and preview it locally.
   </Card>
   <Card href="/docs/how-apps-work" icon={<BoxesIcon />} title="How apps work">
     Understand the host, app, registry, and runtime pieces.
@@ -27,7 +34,16 @@ features for themselves and organizations can unblock their own workflows.
   </Card>
 </Cards>
 
-## Features
+## Choose your path
+
+If you own the product that will host apps, start with
+[Installation](/docs/installation), then define [screens](/docs/screens),
+[components](/docs/components), and [actions](/docs/actions).
+
+If you are building an app for an existing TailorKit host, start with the
+[Quickstart](/docs/quickstart), then read [Writing apps](/docs/writing-apps).
+
+## What TailorKit provides
 
 - Secure sandboxing for running apps inside your product.
 - Proxied UI rendering, so apps can use your existing components and feel
@@ -40,19 +56,19 @@ features for themselves and organizations can unblock their own workflows.
 
 ## Terminology
 
-**Host app**: Your product. It owns routing, data loading, permissions, actions,
-and the design system.
+- **Host app:** your product. It owns routing, data loading, permissions,
+  actions, and the design system.
 
-**TailorKit app**: A lightweight runtime app that renders inside the host app
-through the components and screens the host exposes.
+- **TailorKit app:** a lightweight runtime app that renders inside the host app
+  through the components and screens the host exposes.
 
-**Schema**: The typed contract that describes the components, screens, context,
-actions, and theme tokens available to TailorKit apps.
+- **Schema:** the typed contract that describes the components, screens,
+  context, actions, and theme tokens available to TailorKit apps.
 
-**Registry**: The list of TailorKit apps the host can load for an environment,
-workspace, customer, or user.
+- **Registry:** the list of TailorKit apps the host can load for an environment,
+  workspace, customer, or user.
 
-**Screen**: A host-owned surface where one or more TailorKit apps can render.
+- **Screen:** a host-owned surface where one or more TailorKit apps can render.
 
 ## FAQ
 
