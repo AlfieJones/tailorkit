@@ -19,4 +19,10 @@ if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
 
-await normalizePrereleasePackages(preState);
+if (process.env.NODE_AUTH_TOKEN) {
+  await normalizePrereleasePackages(preState);
+} else {
+  console.log(
+    "Skipping npm access and dist-tag normalization because trusted publishing is active.",
+  );
+}
