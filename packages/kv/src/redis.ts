@@ -36,7 +36,13 @@ export function createRedisKV(url: string): KV<"redis"> {
             "kv.ttl_seconds": ttl,
           },
         },
-        async () => Number(await redis.eval(INCREMENT_WITH_TTL_SCRIPT, 1, key, ttl)),
+        async () => {
+          if (!Number.isInteger(ttl) || ttl <= 0) {
+            throw new TypeError("Redis increment TTL must be a positive integer");
+          }
+
+          return Number(await redis.eval(INCREMENT_WITH_TTL_SCRIPT, 1, key, ttl));
+        },
       ),
     set: async (key, value, options?: SetOptions) => {
       if (options?.ttl) {

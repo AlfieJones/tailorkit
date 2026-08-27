@@ -41,6 +41,7 @@
     "@tailorkit/observability": "workspace:*",
     "@vercel/functions": "^3.9.5",
     "better-auth": "catalog:",
+    "jose": "6.2.10",
     "uuid": "^14.0.2",
     "zod": "catalog:"
   },
