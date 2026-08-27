@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      normalize_only:
+        description: Repair npm visibility and prerelease dist-tags without publishing
+        required: false
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -21,7 +27,7 @@ env:
 jobs:
   select-mode:
     name: Select release mode
-    if: github.repository == 'AlfieJones/tailorkit' && github.ref == 'refs/heads/main'
+    if: github.repository == 'AlfieJones/tailorkit' && github.ref == 'refs/heads/main' && !inputs.normalize_only
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -130,3 +136,29 @@ jobs:
           script: vp run release:publish
           create-github-releases: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  normalize:
+    name: Normalize npm prerelease access and tags
+    if: github.event_name == 'workflow_dispatch' && inputs.normalize_only
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-prerelease
+    permissions:
+      contents: read
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1.18.0
+        with:
+          node-version: 24
+          cache: false
+          registry-url: ${{ secrets.NPM_TOKEN != '' && 'https://registry.npmjs.org' || '' }}
+          run-install: false
+
+      - name: Normalize prerelease packages
+        run: vp run release:normalize
