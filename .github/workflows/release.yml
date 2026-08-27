@@ -161,4 +161,4 @@ jobs:
           run-install: false
 
       - name: Normalize prerelease packages
-        run: vp run release:normalize
+        run: node ./scripts/check-prerelease.mjs && node ./scripts/normalize-prerelease.mjs
