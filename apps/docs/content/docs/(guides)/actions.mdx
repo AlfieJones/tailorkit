@@ -11,7 +11,7 @@ checks, payments, invites, role changes, and other trusted side effects.
 
 Callbacks are for UI events. Actions are for trusted work.
 
-## Create An Action Builder
+## Create an action builder
 
 Use `createActions()` to create an action builder. If your actions need access
 to host state, add a context type with `.context<...>()`.
@@ -27,7 +27,7 @@ const action = createActions().context<{
 The context type controls the `context` value passed to every action created
 from this builder.
 
-## Define An Action
+## Define an action
 
 An action is built from input, output, and a server-side handler.
 
@@ -54,7 +54,7 @@ export const tailorKit = createTailorKit({
 The handler runs on your server. It receives validated `input` and the
 `context` you pass from your TailorKit API handler.
 
-## Input And Output
+## Validate input and output
 
 Define input and output schemas explicitly. TailorKit uses them to generate the
 contract between TailorKit apps and your backend, and to validate data at the
@@ -93,7 +93,7 @@ const createTodo = action
   and what your backend promises to return.
 </Callout>
 
-## Pass Context From The Handler
+## Pass context from the handler
 
 Pass an `authenticate` function when you call `tailorKit.handler`. TailorKit calls
 it for routes that need your app's authenticated user, then passes the returned
@@ -135,7 +135,7 @@ Return `null` when the request is not authenticated; TailorKit will reject host
 authenticated routes while still allowing TailorKit-managed deploy-token routes
 to use their own authentication.
 
-## Organize Actions
+## Organize actions
 
 Small projects can define actions directly in `tailorkit.ts`. Larger projects
 are easier to maintain when actions live in their own files.
@@ -197,7 +197,7 @@ export const messageActions = {
 };
 ```
 
-## Nested Actions
+## Nest actions
 
 Actions can be nested. This keeps larger action sets readable and gives apps a
 clear path to call.
@@ -224,7 +224,7 @@ or `projects.archive`.
   builder and reuse it across action files.
 </Callout>
 
-## Actions And Callbacks
+## Choose actions or callbacks
 
 Use callbacks for component events such as `onClick`, `onOpenChange`, and
 `onValueChange`. Use actions when the app needs your backend to perform trusted
@@ -242,7 +242,18 @@ const Button = {
 A callback can tell the app that a button was clicked. An action can create a
 record, send an invite, charge a customer, or call an internal API.
 
-## Best Practices
+Generated app bindings expose actions by the same path:
+
+```ts
+import { actions } from "#tailorkit";
+
+const message = await actions.messages.send({
+  body: "Hello",
+  channelId: "general",
+});
+```
+
+## Best practices
 
 - Keep actions focused on one piece of trusted work.
 - Use narrow input schemas with required fields, enums, and bounded values.

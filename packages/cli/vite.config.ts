@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import packageJson from "./package.json" with { type: "json" };
 
 const liquidRawPlugin = () => ({
   name: "liquid-raw",
@@ -10,6 +11,9 @@ const liquidRawPlugin = () => ({
 });
 
 export default defineConfig({
+  define: {
+    __TAILORKIT_VERSION__: JSON.stringify(packageJson.version),
+  },
   build: {
     emptyOutDir: true,
     minify: true,

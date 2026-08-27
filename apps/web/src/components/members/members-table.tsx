@@ -1,10 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, useTable } from "@tanstack/react-table";
 import type { CellContext, ColumnDef, SortingState } from "@tanstack/react-table";
 import { MoreHorizontalIcon, TrashIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@tailorkit/ui/components/avatar";
@@ -27,6 +22,7 @@ import {
   TableRow,
 } from "@tailorkit/ui/components/table";
 import { getRoleBadgeVariant, renderSortableHeader } from "./member-table-utils";
+import { dataTableFeatures } from "#lib/table";
 
 export interface MemberRow {
   id: string;
@@ -49,13 +45,13 @@ function createMemberColumns({
   canManage,
   onRemove,
   removePending,
-}: MemberColumnsOptions): ColumnDef<MemberRow>[] {
+}: MemberColumnsOptions): ColumnDef<typeof dataTableFeatures, MemberRow>[] {
   return [
     {
       accessorKey: "name",
       header: "Member",
       size: 280,
-      cell: ({ row }: CellContext<MemberRow, unknown>) => {
+      cell: ({ row }: CellContext<typeof dataTableFeatures, MemberRow, unknown>) => {
         const initials = row.original.name
           .split(" ")
           .map((word: string) => word[0])
@@ -86,7 +82,7 @@ function createMemberColumns({
       accessorKey: "role",
       header: "Role",
       size: 110,
-      cell: ({ row }: CellContext<MemberRow, unknown>) => (
+      cell: ({ row }: CellContext<typeof dataTableFeatures, MemberRow, unknown>) => (
         <Badge variant={getRoleBadgeVariant(row.original.role)} size="lg">
           {row.original.role.charAt(0).toUpperCase() + row.original.role.slice(1)}
         </Badge>
@@ -96,15 +92,17 @@ function createMemberColumns({
       accessorKey: "createdAt",
       header: "Last Active",
       size: 140,
-      sortingFn: "datetime",
-      cell: ({ row }: CellContext<MemberRow, unknown>) => <DateAgo date={row.original.createdAt} />,
+      sortFn: "datetime",
+      cell: ({ row }: CellContext<typeof dataTableFeatures, MemberRow, unknown>) => (
+        <DateAgo date={row.original.createdAt} />
+      ),
     },
     {
       id: "actions",
       size: 80,
       enableSorting: false,
       header: () => null,
-      cell: ({ row }: CellContext<MemberRow, unknown>) => (
+      cell: ({ row }: CellContext<typeof dataTableFeatures, MemberRow, unknown>) => (
         <div className="flex items-center justify-end gap-1">
           {canManage && !row.original.isCurrentUser && !row.original.isOwner && (
             <DropdownMenu>
@@ -159,17 +157,16 @@ export function MembersTable({
     );
   }, [members, search]);
 
-  const columns = useMemo<ColumnDef<MemberRow>[]>(
+  const columns = useMemo<ColumnDef<typeof dataTableFeatures, MemberRow>[]>(
     () => createMemberColumns({ canManage, onRemove, removePending }),
     [canManage, onRemove, removePending],
   );
 
-  const table = useReactTable({
+  const table = useTable({
     columns,
     data: filtered,
     enableSortingRemoval: false,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    features: dataTableFeatures,
     onSortingChange: setSorting,
     state: { sorting },
   });
@@ -197,7 +194,7 @@ export function MembersTable({
         <TableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow data-state={row.getIsSelected() ? "selected" : undefined} key={row.id}>
+              <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

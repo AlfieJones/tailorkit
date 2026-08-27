@@ -1,8 +1,11 @@
 import { flexRender } from "@tanstack/react-table";
-import type { Header } from "@tanstack/react-table";
+import type { Header, RowData } from "@tanstack/react-table";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import type { dataTableFeatures } from "#lib/table";
 
-export function renderSortableHeader<TData>(header: Header<TData, unknown>) {
+export function renderSortableHeader<TData extends RowData>(
+  header: Header<typeof dataTableFeatures, TData, unknown>,
+) {
   if (header.isPlaceholder) {
     return null;
   }

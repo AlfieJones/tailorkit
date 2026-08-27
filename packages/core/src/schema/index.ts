@@ -36,6 +36,7 @@ export {
 } from "./components";
 export {
   type Screen,
+  type ScreenContextHierarchy,
   type ScreenDefinitions,
   type ScreenDefinition,
   type Screens,

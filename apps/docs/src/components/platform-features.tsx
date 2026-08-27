@@ -38,12 +38,12 @@ const FEATURES = [
     id: "secure-runtime",
     label: "Secure Runtime",
     tag: "SECURE RUNTIME",
-    heading: "Third-party code that can't hurt you",
+    heading: "A narrow boundary around third-party code",
     description: (
       <>
-        Extension code runs inside an <B>isolated web worker</B>, with UI events and rendering{" "}
-        <B>proxied through your host app</B>. The extension can build real product experiences
-        without running inside your main application runtime.
+        Extension code runs in an <B>opaque-origin iframe sandbox</B> with an internal worker, with
+        UI events and rendering <B>proxied through your host app</B>. The extension can build real
+        product experiences without running inside your main application runtime.
       </>
     ),
   },

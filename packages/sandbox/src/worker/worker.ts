@@ -45,8 +45,12 @@ function sendError(error: unknown): void {
   });
 }
 
-async function loadApp(appUrl: string, props: Record<string, unknown> = {}): Promise<void> {
-  const moduleUrl = await createSandboxedAppModuleUrl(appUrl);
+async function loadApp(
+  appUrl: string,
+  appSource: string,
+  props: Record<string, unknown> = {},
+): Promise<void> {
+  const moduleUrl = createSandboxedAppModuleUrl(appSource);
   const module = (await import(/* @vite-ignore */ moduleUrl)) as {
     default?: ComponentType<Record<string, unknown>> | TailorKitAppClient;
     mount?: (context: {
@@ -73,15 +77,8 @@ async function loadApp(appUrl: string, props: Record<string, unknown> = {}): Pro
   }
 }
 
-async function createSandboxedAppModuleUrl(appUrl: string): Promise<string> {
-  const response = await fetch(appUrl);
-
-  if (!response.ok) {
-    throw new Error(`Unable to load TailorKit app client from ${appUrl}.`);
-  }
-
-  const source = await response.text();
-  return createModuleUrl(rewritePreactImports(source));
+function createSandboxedAppModuleUrl(appSource: string): string {
+  return createModuleUrl(rewritePreactImports(appSource));
 }
 
 function createSandboxPreactModules(): Record<string, string> {
@@ -216,12 +213,12 @@ self.addEventListener("message", (event) => {
         if (loadedAppUrl !== payload.data.appUrl) {
           suppressPatches = true;
           try {
-            await loadApp(payload.data.appUrl, payload.data.props);
+            await loadApp(payload.data.appUrl, payload.data.appSource, payload.data.props);
           } finally {
             suppressPatches = false;
           }
         } else if (payload.data.props) {
-          await loadApp(payload.data.appUrl, payload.data.props);
+          await loadApp(payload.data.appUrl, payload.data.appSource, payload.data.props);
         }
         sendSnapshot();
         break;
@@ -269,10 +266,10 @@ interface TailorKitScreenDefinition {
   path?: string;
 }
 
-interface TailorKitScreenMatchPayload {
+interface TailorKitCurrentScreenPayload {
   context?: unknown;
-  isLoading?: boolean;
-  screen?: unknown;
+  path?: unknown;
+  status?: unknown;
 }
 
 function assertAppPreactVersion(
@@ -301,40 +298,62 @@ function renderTailorKitClient(client: TailorKitAppClient, props: Record<string,
     throw new Error("TailorKit app client is missing screens.");
   }
 
-  const requestedMatches = Array.isArray(props.matches)
-    ? (props.matches as TailorKitScreenMatchPayload[])
-    : [];
+  const requestedScreen =
+    typeof props.screen === "object" && props.screen !== null
+      ? (props.screen as TailorKitCurrentScreenPayload)
+      : null;
 
-  let requestedScreen = "";
+  let selectedScreen = "";
   let selectedProps = props;
-  for (const match of requestedMatches) {
-    if (typeof match.screen === "string" && screens[match.screen] !== undefined) {
-      requestedScreen = match.screen;
+  const hierarchy =
+    typeof requestedScreen?.path === "string" ? createScreenHierarchy(requestedScreen.path) : [];
+
+  for (const screenPath of hierarchy) {
+    if (screens[screenPath] !== undefined) {
+      selectedScreen = screenPath;
       selectedProps = {
-        context: match.context,
-        isLoading: match.isLoading ?? false,
-        screen: match.screen,
+        context: requestedScreen?.context,
+        screen: screenPath,
+        status:
+          requestedScreen?.status === "error" || requestedScreen?.status === "loading"
+            ? requestedScreen.status
+            : "ready",
       };
       break;
     }
   }
 
-  if (!requestedScreen) {
-    throw new Error("TailorKit app client does not define any mounted screen.");
+  if (!selectedScreen) {
+    throw new Error(
+      "TailorKit app client does not define the current screen or one of its parents.",
+    );
   }
 
-  const screen = screens[requestedScreen];
+  const screen = screens[selectedScreen];
   if (screen === undefined) {
-    throw new Error(`TailorKit app client does not define screen "${requestedScreen}".`);
+    throw new Error(`TailorKit app client does not define screen "${selectedScreen}".`);
   }
 
   const Screen = screen.component;
   if (typeof Screen !== "function") {
-    throw new TypeError(`TailorKit app client screen "${requestedScreen}" is missing a component.`);
+    throw new TypeError(`TailorKit app client screen "${selectedScreen}" is missing a component.`);
   }
 
   const appH = client.$runtime?.h ?? h;
   const appRender = client.$runtime?.render ?? render;
 
   appRender(appH(Screen, selectedProps), worker.root);
+}
+
+function createScreenHierarchy(screen: string): string[] {
+  const hierarchy = [screen];
+  let current = screen;
+
+  while (current !== "/") {
+    const separator = current.lastIndexOf("/");
+    current = separator <= 0 ? "/" : current.slice(0, separator);
+    hierarchy.push(current);
+  }
+
+  return hierarchy;
 }

@@ -1,18 +1,19 @@
 ---
-title: App Client
-description: Register TailorKit app screens with createClient.
+title: App client reference
+description: Register TailorKit app screens and access typed screen context.
 ---
 
 The app client is the runtime entry point for a TailorKit app. It maps screen
-keys to Preact components and is loaded by the host through the sandbox worker.
+keys to Preact components and is loaded by the host's iframe-and-worker sandbox
+runtime.
 
-## Create A Client
+## `defineClient`
 
 ```ts
-import { createClient } from "@tailorkit/app";
+import { defineClient } from "@tailorkit/app";
 import HomeScreen from "./screens/home";
 
-const client = createClient({
+const client = defineClient({
   screens: {
     "/home": HomeScreen,
   },
@@ -22,28 +23,54 @@ export default client;
 ```
 
 Each key in `screens` must match a screen path from the generated TailorKit
-types and start with `/`.
+types, start with `/`, and match the path used by its `createScreen` value.
 
-## Screen Components
+## `createScreen`
 
-Screen components receive props generated from the host schema.
+Create a screen and read its typed context with `useContext()`:
 
 ```tsx
-import { h } from "preact";
-import type { ScreenProps } from "#tailorkit";
+import { createScreen } from "@tailorkit/app";
 
-type HomeScreenProps = ScreenProps<"/home">;
+const screen = createScreen("/home", {
+  component: HomeScreen,
+});
 
-export default function HomeScreen({ context }: HomeScreenProps) {
-  return h("h1", null, context.page.title);
+function HomeScreen() {
+  const context = screen.useContext();
+
+  return <h1>{context.page.title}</h1>;
 }
+
+export default screen;
 ```
 
-The host passes the mounted screen match chain when rendering the app. The app
-client selects the first screen it implements and renders it with that match's
-`{ screen, context, isLoading }` props.
+The host publishes the current path and context. If the app does not implement
+that exact path, TailorKit uses the closest parent path it does implement.
 
-## Runtime Behavior
+### Loading and error UI
+
+Add these components only when the app needs custom UI for unresolved host
+data:
+
+```tsx
+const screen = createScreen("/home", {
+  component: HomeScreen,
+  loading: LoadingScreen,
+  error: ErrorScreen,
+});
+```
+
+Both are optional. If omitted, the app renders nothing while the host publishes
+that state.
+
+| Member         | Description                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| `path`         | The screen path passed to `createScreen`.                                                             |
+| `component`    | The Preact component rendered when the host context is ready.                                         |
+| `useContext()` | Returns the generated context type for this path. It throws when called outside that screen's render. |
+
+## Runtime behavior
 
 When a host renders:
 
@@ -52,8 +79,15 @@ When a host renders:
 ```
 
 TailorKit resolves the app's client URL, loads the client in the worker, and
-renders the current screen match chain into the app.
+renders the current screen into the app.
 
-If the deepest screen is not implemented by the app client, the worker walks
-back through parent matches. If none of the mounted matches are implemented, the
-worker reports an error for that app.
+If the current screen is not implemented by the app client, the worker walks
+back through its parent paths. For example, `/pages/detail` falls back to
+`/pages` and then `/`. The nested context is safe for a parent screen because
+the host schema requires nested contexts to include their parent context.
+If the app implements none of those paths, TailorKit reports an error for that
+app.
+
+The exported client also includes `$meta` and `$runtime` properties used by the
+TailorKit sandbox. Treat them as runtime details; app code should configure
+screens through `defineClient` and `createScreen`.

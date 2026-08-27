@@ -1,93 +1,190 @@
-import { describe, expect, it, vi } from "vitest";
-import { createWorkerUiHost } from "./index.js";
+// @vitest-environment happy-dom
 
-class FakeWorker extends EventTarget {
-  readonly options: WorkerOptions;
-  readonly url: URL;
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createIframeUiHost } from "./index.js";
 
-  constructor(url = new URL("http://localhost/runtime-worker.js"), options: WorkerOptions = {}) {
-    super();
-    this.url = url;
-    this.options = options;
+const iframeReadyType = "tailorkit:iframe-ready";
+const workerMessageType = "tailorkit:worker-message";
+
+function getChannel(iframe: HTMLIFrameElement): string {
+  const match = /const channel = "([a-f0-9]+)"/u.exec(iframe.srcdoc);
+  if (!match?.[1]) {
+    throw new Error("Unable to find iframe channel.");
   }
-
-  messages: unknown[] = [];
-
-  postMessage(message: unknown): void {
-    this.messages.push(message);
-  }
-
-  emit(message: unknown): void {
-    this.dispatchEvent(new MessageEvent("message", { data: message }));
-  }
+  return match[1];
 }
 
-describe("createWorkerUiHost", () => {
-  const createWorker = (url: URL, options: WorkerOptions): Worker =>
-    new FakeWorker(url, options) as unknown as Worker;
+function emitFromIframe(iframe: HTMLIFrameElement, data: unknown): void {
+  window.dispatchEvent(
+    new MessageEvent("message", {
+      data,
+      source: iframe.contentWindow,
+    }),
+  );
+}
 
-  it("mounts and stores worker snapshots", () => {
-    const host = createWorkerUiHost("http://localhost/app.js", {
-      createWorker,
-      workerUrl: "http://localhost/runtime-worker.js",
+function getContentWindow(iframe: HTMLIFrameElement): Window {
+  const contentWindow = iframe.contentWindow;
+  if (!contentWindow) {
+    throw new Error("Expected iframe content window.");
+  }
+  return contentWindow;
+}
+
+function createFetch() {
+  return vi.fn<typeof fetch>((input) => {
+    const url = input.toString();
+    return Promise.resolve(new Response(url.includes("runtime") ? "// runtime" : "// app"));
+  });
+}
+
+describe("createIframeUiHost", () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    vi.restoreAllMocks();
+  });
+
+  it("runs the extension behind a hidden, opaque-origin iframe", async () => {
+    const fetch = createFetch();
+    const host = createIframeUiHost("https://assets.test/app.js", {
+      fetch,
+      runtimeUrl: "https://host.test/runtime.js",
     });
-    const worker = host.worker as unknown as FakeWorker;
-
     host.mount();
-    worker.emit({
-      data: {
-        revision: 1,
-        tree: {
-          children: [{ id: "text", kind: "text", text: "Hello" }],
-          id: "root",
-          kind: "fragment",
+    const postMessage = vi.spyOn(getContentWindow(host.iframe), "postMessage");
+    const channel = getChannel(host.iframe);
+
+    emitFromIframe(host.iframe, { channel, type: iframeReadyType });
+
+    await vi.waitFor(() => {
+      expect(postMessage).toHaveBeenCalledWith(
+        {
+          channel,
+          type: "tailorkit:bootstrap",
+          workerSource: "// runtime",
         },
-      },
-      type: "snapshot",
+        "*",
+      );
     });
 
-    expect(worker.url.toString()).toBe("http://localhost/runtime-worker.js");
-    expect(worker.options).toEqual({ type: "module" });
-    expect(worker.messages).toEqual([
-      {
-        data: {
-          appUrl: "http://localhost/app.js",
-          props: undefined,
+    expect(host.iframe.hidden).toBe(true);
+    expect(host.iframe.getAttribute("sandbox")).toBe("allow-scripts");
+    expect(host.iframe.getAttribute("sandbox")).not.toContain("allow-same-origin");
+    expect(host.iframe.srcdoc).toContain("connect-src 'none'");
+    expect(fetch).toHaveBeenCalledWith(new URL("https://assets.test/app.js"), {
+      credentials: "omit",
+    });
+    expect(fetch).toHaveBeenCalledWith(new URL("https://host.test/runtime.js"), {
+      credentials: "omit",
+    });
+
+    emitFromIframe(host.iframe, {
+      channel,
+      payload: { type: "ready" },
+      type: workerMessageType,
+    });
+
+    await vi.waitFor(() => {
+      expect(postMessage).toHaveBeenCalledWith(
+        {
+          channel,
+          payload: {
+            data: {
+              appSource: "// app",
+              appUrl: "https://assets.test/app.js",
+              props: undefined,
+            },
+            type: "init",
+          },
+          type: workerMessageType,
         },
-        type: "init",
+        "*",
+      );
+    });
+  });
+
+  it("stores snapshots received through the iframe bridge", () => {
+    const host = createIframeUiHost("https://assets.test/app.js", { fetch: createFetch() });
+    const channel = getChannel(host.iframe);
+
+    emitFromIframe(host.iframe, {
+      channel,
+      payload: {
+        data: {
+          revision: 1,
+          tree: {
+            children: [{ id: "text", kind: "text", text: "Hello" }],
+            id: "root",
+            kind: "fragment",
+          },
+        },
+        type: "snapshot",
       },
-    ]);
+      type: workerMessageType,
+    });
+
     expect(host.getSnapshot()).toMatchObject({ children: [{ text: "Hello" }] });
   });
 
-  it("bridges requestAnimationFrame messages back to the worker", () => {
-    Object.defineProperty(globalThis, "requestAnimationFrame", {
-      configurable: true,
-      value: (_callback: FrameRequestCallback) => 0,
-      writable: true,
-    });
+  it("bridges animation frames back into the sandbox", () => {
     const requestFrame = vi
       .spyOn(globalThis, "requestAnimationFrame")
       .mockImplementation((callback: FrameRequestCallback) => {
         callback(123);
         return 1;
       });
-    const host = createWorkerUiHost("http://localhost/app.js", { createWorker });
-    const worker = host.worker as unknown as FakeWorker;
+    const host = createIframeUiHost("https://assets.test/app.js", { fetch: createFetch() });
+    host.mount();
+    const channel = getChannel(host.iframe);
+    const postMessage = vi.spyOn(getContentWindow(host.iframe), "postMessage");
 
-    worker.emit({ data: {}, type: "requestAnimationFrame" });
+    emitFromIframe(host.iframe, {
+      channel,
+      payload: { data: {}, type: "requestAnimationFrame" },
+      type: workerMessageType,
+    });
 
-    expect(worker.messages).toEqual([{ data: { timestamp: 123 }, type: "animationFrame" }]);
+    expect(postMessage).toHaveBeenCalledWith(
+      {
+        channel,
+        payload: { data: { timestamp: 123 }, type: "animationFrame" },
+        type: workerMessageType,
+      },
+      "*",
+    );
     requestFrame.mockRestore();
   });
 
-  it("reports invalid worker messages through onError", () => {
+  it("rejects messages from other windows and reports invalid sandbox messages", () => {
     const onError = vi.fn();
-    const host = createWorkerUiHost("http://localhost/app.js", { createWorker, onError });
-    const worker = host.worker as unknown as FakeWorker;
+    const host = createIframeUiHost("https://assets.test/app.js", {
+      fetch: createFetch(),
+      onError,
+    });
+    const channel = getChannel(host.iframe);
 
-    worker.emit({ type: "wat" });
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: { channel, payload: { type: "wat" }, type: workerMessageType },
+        source: window,
+      }),
+    );
+    expect(onError).not.toHaveBeenCalled();
 
+    emitFromIframe(host.iframe, {
+      channel,
+      payload: { type: "wat" },
+      type: workerMessageType,
+    });
     expect(onError).toHaveBeenCalledOnce();
+  });
+
+  it("removes the iframe when destroyed", () => {
+    const host = createIframeUiHost("https://assets.test/app.js", { fetch: createFetch() });
+    host.mount();
+    expect(document.body.contains(host.iframe)).toBe(true);
+
+    host.destroy();
+    expect(document.body.contains(host.iframe)).toBe(false);
   });
 });

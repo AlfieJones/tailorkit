@@ -1,6 +1,5 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
-import { Banner } from "fumadocs-ui/components/banner";
 
 import { LazyMotion, domMax } from "motion/react";
 
@@ -66,18 +65,6 @@ function RootComponent() {
       <body className="flex flex-col min-h-screen relative">
         <div className="isolate">
           <LazyMotion features={domMax}>
-            <Banner>
-              <span>
-                Private beta. We&apos;re working directly with early teams.{" "}
-                <a
-                  className="text-primary"
-                  href="https://cal.com/alfiejones"
-                  rel="noopener noreferrer"
-                >
-                  Talk to a founder
-                </a>
-              </span>
-            </Banner>
             <RootProvider>
               <Outlet />
             </RootProvider>

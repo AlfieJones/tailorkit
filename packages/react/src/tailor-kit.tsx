@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import type { TailorKitSchemaSpecType } from "@tailorkit/core/spec";
 import type {
   TailorKitTheme,
-  ActionTree,
   CallbackMap,
   ComponentDefinition,
   ComponentProps,
@@ -13,10 +12,11 @@ import type {
   TailorKitSchema,
 } from "@tailorkit/core/schema";
 import type { primitives } from "./primitives";
-import { Root, createScreenMatch } from "./components";
-import type { ScreenMatchProps, ScreenName } from "./components";
+import { Root } from "./components";
 import { createUseApps } from "./hooks/use-apps";
 import type { UseAppsResult } from "./hooks/use-apps";
+import { createUseCurrentScreen } from "./hooks/use-current-screen";
+import type { CurrentScreenOptions, ScreenName } from "./hooks/use-current-screen";
 import { buildThemeCss, PrimitiveThemeContext } from "./primitives";
 import { RemoteViewHost } from "./remote-view";
 
@@ -67,21 +67,19 @@ interface TailorKitMetaSnapshot {
   status: "error" | "idle" | "loading" | "ready";
 }
 
-export interface ScreenMatchEntry {
+export interface CurrentScreenEntry {
   context: unknown;
-  depth: number;
   id: symbol;
-  isLoading: boolean;
   order: number;
-  parentId: symbol | null;
   screen: string;
+  status: "error" | "loading" | "ready";
 }
 
 interface AppViewBaseProps {
   app: TailorKitApp;
-  createWorker?: (url: URL, options: WorkerOptions) => Worker;
+  createIframe?: () => HTMLIFrameElement;
   fallback?: ReactNode;
-  workerUrl?: string | URL;
+  runtimeUrl?: string | URL;
 }
 
 type AppViewScreenProps<
@@ -90,18 +88,16 @@ type AppViewScreenProps<
 > = [ScreenName<TScreens>] extends [never]
   ? {
       context?: never;
-      isLoading?: never;
       screen?: never;
+      status?: never;
     }
   :
       | {
           context?: never;
-          isLoading?: never;
           screen?: never;
+          status?: never;
         }
-      | DistributiveOmit<ScreenMatchProps<TScreens, TScreen>, "children">;
-
-type DistributiveOmit<T, TKey extends keyof T> = T extends unknown ? Omit<T, TKey> : never;
+      | CurrentScreenOptions<TScreens, TScreen>;
 
 export type AppViewProps<
   TScreens extends Record<string, ScreenDefinition>,
@@ -121,12 +117,12 @@ export interface TailorKitInstance<
 > {
   AppView: (props: AppViewProps<TScreens>) => ReactNode;
   Root: (props: Omit<Parameters<typeof Root>[0], "tailor">) => ReactNode;
-  ScreenMatch: <TScreen extends ScreenName<TScreens>>(
-    props: ScreenMatchProps<TScreens, TScreen>,
-  ) => ReactNode;
   getApp: (id: string) => TailorKitApp | undefined;
   getApps: () => TailorKitApp[];
   useApps: () => UseAppsResult;
+  useCurrentScreen: <TScreen extends ScreenName<TScreens>>(
+    options: CurrentScreenOptions<TScreens, TScreen>,
+  ) => void;
 }
 
 type PrimitiveRenderers = typeof primitives;
@@ -143,35 +139,38 @@ export function components<TComponents extends Record<string, AnyComponentDefini
   return customComponents as ComponentRenderers<TComponents>;
 }
 
-type ServerComponents<TTailor> = TTailor extends {
+interface TailorKitServerShape {
   $internal: {
-    schema: TailorKitSchema<infer TComponents, Record<string, ScreenDefinition>, ActionTree>;
+    schema: {
+      components: Record<string, unknown>;
+      screens: Record<string, unknown>;
+    };
   };
 }
-  ? TComponents extends Record<string, AnyComponentDefinition>
-    ? TComponents
-    : never
-  : never;
 
-type ServerScreens<TTailor> = TTailor extends {
-  $internal: {
-    schema: TailorKitSchema<Record<string, AnyComponentDefinition>, infer TScreens, ActionTree>;
-  };
-}
-  ? TScreens extends Record<string, ScreenDefinition>
-    ? TScreens
-    : never
-  : never;
+type ServerComponentMap<TTailor extends TailorKitServerShape> =
+  TTailor["$internal"]["schema"]["components"];
 
-type AnyServerSchema = TailorKitSchema<
-  Record<string, AnyComponentDefinition>,
-  Record<string, ScreenDefinition>,
-  ActionTree
->;
+type ServerComponents<TTailor extends TailorKitServerShape> = {
+  [
+    TName in keyof ServerComponentMap<TTailor>
+  ]: ServerComponentMap<TTailor>[TName] extends AnyComponentDefinition
+    ? ServerComponentMap<TTailor>[TName]
+    : never;
+};
 
-export function createTailorKitClient<
-  TTailor extends { $internal: { schema: AnyServerSchema } },
->(options: {
+type ServerScreenMap<TTailor extends TailorKitServerShape> =
+  TTailor["$internal"]["schema"]["screens"];
+
+type ServerScreens<TTailor extends TailorKitServerShape> = {
+  [
+    TName in keyof ServerScreenMap<TTailor>
+  ]: ServerScreenMap<TTailor>[TName] extends ScreenDefinition
+    ? ServerScreenMap<TTailor>[TName]
+    : never;
+};
+
+export function createTailorKitClient<TTailor extends TailorKitServerShape>(options: {
   baseUrl: string | URL;
   components?: CompleteComponentRenderers<ServerComponents<TTailor>>;
   theme?: TailorKitTheme;
@@ -208,47 +207,45 @@ function createReactTailorKitClient<
   }
 
   const useApps = createUseApps(store);
-  const ScreenMatch = createScreenMatch<TScreens>(store);
+  const useCurrentScreen = createUseCurrentScreen<TScreens>(store);
 
   const AppView = ({
     app,
-    createWorker,
+    createIframe,
     fallback = null,
-    workerUrl,
+    runtimeUrl,
     ...screenProps
   }: AppViewProps<TScreens>): ReactNode => {
     const reactId = useId();
-    const match = useSyncExternalStore(
+    const currentScreen = useSyncExternalStore(
       store.subscribe,
-      store.getCurrentMatch,
-      store.getCurrentMatch,
+      store.getCurrentScreen,
+      store.getCurrentScreen,
     );
     const screen = (screenProps as { screen?: string }).screen;
     const context = (screenProps as { context?: unknown }).context;
-    const isLoading = (screenProps as { isLoading?: boolean }).isLoading ?? false;
+    const status = (screenProps as { status?: "error" | "loading" | "ready" }).status ?? "ready";
     const props = useMemo(() => {
       if (screen !== undefined) {
         return {
-          matches: [
-            {
-              context,
-              isLoading,
-              screen,
-            },
-          ],
+          screen: {
+            context,
+            path: screen,
+            status,
+          },
         };
       }
 
-      return match === null
+      return currentScreen === null
         ? undefined
         : {
-            matches: store.getMatchChain(match.id).map((entry) => ({
-              context: entry.context,
-              isLoading: entry.isLoading,
-              screen: entry.screen,
-            })),
+            screen: {
+              context: currentScreen.context,
+              path: currentScreen.screen,
+              status: currentScreen.status,
+            },
           };
-    }, [context, isLoading, match, screen]);
+    }, [context, currentScreen, screen, status]);
     const meta = useSyncExternalStore(
       store.subscribe,
       store.getMetaSnapshot,
@@ -277,9 +274,9 @@ function createReactTailorKitClient<
           <RemoteViewHost
             appUrl={appUrl}
             components={wrappedComponents}
-            createWorker={createWorker}
+            createIframe={createIframe}
             props={props}
-            workerUrl={workerUrl}
+            runtimeUrl={runtimeUrl}
           />
         </div>
       </PrimitiveThemeContext.Provider>
@@ -291,10 +288,10 @@ function createReactTailorKitClient<
     Root: (props: Omit<Parameters<typeof Root>[0], "tailor">) => (
       <Root {...props} tailor={client} />
     ),
-    ScreenMatch,
     getApp: store.getApp,
     getApps: store.getApps,
     useApps,
+    useCurrentScreen,
   };
 
   return {
@@ -307,7 +304,7 @@ export type TailorKitStore = ReturnType<typeof createTailorKitStore>;
 function createTailorKitStore(baseUrlInput: string | URL) {
   const baseUrl = toBaseUrl(baseUrlInput);
   const listeners = new Set<() => void>();
-  const matches = new Map<symbol, ScreenMatchEntry>();
+  const screens = new Map<symbol, CurrentScreenEntry>();
   let appsSnapshot: TailorKitAppsSnapshot = {
     apps: [],
     error: null,
@@ -319,7 +316,7 @@ function createTailorKitStore(baseUrlInput: string | URL) {
     schema: null,
     status: "idle",
   };
-  let currentMatch: ScreenMatchEntry | null = null;
+  let currentScreen: CurrentScreenEntry | null = null;
   let fetchAppsPromise: Promise<void> | null = null;
   let fetchMetaPromise: Promise<void> | null = null;
   let fetchAppsRequestId = 0;
@@ -331,35 +328,37 @@ function createTailorKitStore(baseUrlInput: string | URL) {
     }
   };
 
-  const selectCurrentMatch = (): void => {
-    let selected: ScreenMatchEntry | null = null;
+  const selectCurrentScreen = (): void => {
+    let selected: CurrentScreenEntry | null = null;
 
-    for (const match of matches.values()) {
-      if (selected === null || match.depth > selected.depth) {
-        selected = match;
+    for (const screen of screens.values()) {
+      const depth = getScreenDepth(screen.screen);
+      const selectedDepth = selected === null ? -1 : getScreenDepth(selected.screen);
+
+      if (selected === null || depth > selectedDepth) {
+        selected = screen;
       }
 
-      if (selected !== null && match.depth === selected.depth && match.order > selected.order) {
-        selected = match;
+      if (selected !== null && depth === selectedDepth && screen.order > selected.order) {
+        selected = screen;
       }
     }
 
-    const deepestMatches =
+    const deepestScreens =
       selected === null
         ? []
-        : [...matches.values()].filter((match) => match.depth === selected.depth);
+        : [...screens.values()].filter(
+            (screen) => getScreenDepth(screen.screen) === getScreenDepth(selected.screen),
+          );
 
-    if (typeof console !== "undefined" && selected !== null && deepestMatches.length > 1) {
+    if (typeof console !== "undefined" && selected !== null && deepestScreens.length > 1) {
+      const screenNames = deepestScreens.map((screen) => `"${screen.screen}"`).join(", ");
       console.warn(
-        `TailorKit found multiple active ScreenMatch components at the same depth: ${deepestMatches
-          .map((match) => `"${match.screen}"`)
-          .join(", ")}. TailorKit selected "${
-          selected.screen
-        }" by mount order, but same-depth matches are ambiguous. Nest related matches or render one match conditionally.`,
+        `TailorKit found multiple active screens at the same hierarchy depth: ${screenNames}. TailorKit selected "${selected.screen}" by mount order. Only one route at a hierarchy depth should call useCurrentScreen.`,
       );
     }
 
-    currentMatch = selected;
+    currentScreen = selected;
   };
 
   return {
@@ -444,29 +443,18 @@ function createTailorKitStore(baseUrlInput: string | URL) {
       appsSnapshot.apps.find((app) => app.id === id),
     getApps: (): TailorKitApp[] => appsSnapshot.apps,
     getAppsSnapshot: (): TailorKitAppsSnapshot => appsSnapshot,
-    getCurrentMatch: (): ScreenMatchEntry | null => currentMatch,
-    getMatchChain: (id: symbol): ScreenMatchEntry[] => {
-      const chain: ScreenMatchEntry[] = [];
-      let next = matches.get(id) ?? null;
-
-      while (next !== null) {
-        chain.push(next);
-        next = next.parentId === null ? null : (matches.get(next.parentId) ?? null);
-      }
-
-      return chain;
-    },
+    getCurrentScreen: (): CurrentScreenEntry | null => currentScreen,
     getMetaSnapshot: (): TailorKitMetaSnapshot => metaSnapshot,
-    registerMatch: (entry: Omit<ScreenMatchEntry, "order">): void => {
-      const existing = matches.get(entry.id);
-      matches.set(entry.id, {
+    registerScreen: (entry: Omit<CurrentScreenEntry, "order">): void => {
+      const existing = screens.get(entry.id);
+      screens.set(entry.id, {
         ...entry,
         order: existing?.order ?? nextOrder,
       });
       if (!existing) {
         nextOrder += 1;
       }
-      selectCurrentMatch();
+      selectCurrentScreen();
       emit();
     },
     subscribe: (listener: () => void): (() => void) => {
@@ -475,13 +463,19 @@ function createTailorKitStore(baseUrlInput: string | URL) {
         listeners.delete(listener);
       };
     },
-    unregisterMatch: (id: symbol): void => {
-      matches.delete(id);
-      selectCurrentMatch();
+    unregisterScreen: (id: symbol): void => {
+      screens.delete(id);
+      selectCurrentScreen();
       emit();
     },
   };
 }
+
+function getScreenDepth(screen: string): number {
+  return screen === "/" ? 0 : screen.split("/").filter(Boolean).length;
+}
+
+export type { CurrentScreenOptions } from "./hooks/use-current-screen";
 
 function resolveAppUrl(app: TailorKitApp, baseUrl: URL, assetsBaseUrl: string | null): URL | null {
   if (app.clientPath) {

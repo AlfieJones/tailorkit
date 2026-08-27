@@ -26,12 +26,12 @@
   },
   "dependencies": {
     "@tailorkit/app": "workspace:*",
-    "preact": "^10.29.2"
+    "preact": "^10.29.8"
   },
   "devDependencies": {
     "@tailorkit/cli": "workspace:*",
-    "oxfmt": "0.52.0",
-    "oxlint": "1.67.0",
-    "typescript": "^6.0.3"
+    "oxfmt": "0.64.0",
+    "oxlint": "1.79.0",
+    "typescript": "catalog:"
   }
 }

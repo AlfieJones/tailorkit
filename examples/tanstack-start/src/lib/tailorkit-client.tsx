@@ -32,6 +32,4 @@ export const tailor = createTailorKitClient<typeof tailorKit>({
   },
 });
 
-export const ScreenMatch = tailor.ScreenMatch;
-
 export default tailor;

@@ -24,17 +24,45 @@ export function TailorKitShell({
 
   return (
     <tailor.Root apps={apps}>
-      <SidebarProvider>
-        <tailor.ScreenMatch context={{ user }} screen="/">
-          <AppSidebar signOut={signOut} user={user} />
-          <SidebarInset className="me-12">
-            <main className="mx-auto w-full max-w-6xl p-6">{children}</main>
-          </SidebarInset>
-        </tailor.ScreenMatch>
-        <TailorKitAppScreen app={currentApp} onClose={() => setCurrentApp(null)} />
-        <TailorKitAppList apps={apps ?? []} currentApp={currentApp} onSelect={setCurrentApp} />
-      </SidebarProvider>
+      <TailorKitShellContent
+        apps={apps ?? []}
+        currentApp={currentApp}
+        onSelectApp={setCurrentApp}
+        signOut={signOut}
+        user={user}
+      >
+        {children}
+      </TailorKitShellContent>
     </tailor.Root>
+  );
+}
+
+function TailorKitShellContent({
+  apps,
+  children,
+  currentApp,
+  onSelectApp,
+  signOut,
+  user,
+}: {
+  apps: Apps;
+  children: ReactNode;
+  currentApp: TailorKitApp | null;
+  onSelectApp: (app: TailorKitApp | null) => void;
+  signOut: () => Promise<void>;
+  user: DemoUser;
+}) {
+  tailor.useCurrentScreen({ context: { user }, screen: "/" });
+
+  return (
+    <SidebarProvider>
+      <AppSidebar signOut={signOut} user={user} />
+      <SidebarInset className="me-12">
+        <main className="mx-auto w-full max-w-6xl p-6">{children}</main>
+      </SidebarInset>
+      <TailorKitAppScreen app={currentApp} onClose={() => onSelectApp(null)} />
+      <TailorKitAppList apps={apps} currentApp={currentApp} onSelect={onSelectApp} />
+    </SidebarProvider>
   );
 }
 

@@ -1,6 +1,15 @@
 {
   "name": "@tailorkit/client-platform",
+  "version": "0.0.0",
   "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlfieJones/tailorkit.git",
+    "directory": "packages/client-platform"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "imports": {
     "#*": [
@@ -13,24 +22,35 @@
   },
   "exports": {
     ".": {
-      "default": "./src/index.ts"
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./client": {
-      "default": "./src/client/index.ts"
+      "development": "./src/client/index.ts",
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js"
     },
     "./client/*": {
-      "default": "./src/client/*.ts"
+      "development": "./src/client/*.ts",
+      "types": "./dist/client/*.d.ts",
+      "import": "./dist/client/*.js"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
+    "build": "tsup 'src/**/*.ts' --format esm --target node20 --clean && tsc -p tsconfig.build.json",
     "generate": "openapi-ts",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.97.3",
+    "@hey-api/openapi-ts": "^0.99.0",
     "@tailorkit/api-platform": "workspace:*",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
+    "tsup": "^8.5.1",
     "typescript": "catalog:"
   }
 }

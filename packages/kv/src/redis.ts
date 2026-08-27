@@ -2,6 +2,14 @@ import IORedis from "ioredis";
 import { withSpan } from "@tailorkit/observability";
 import type { KV, SetOptions } from "./types.js";
 
+const INCREMENT_WITH_TTL_SCRIPT = `
+local value = redis.call("INCR", KEYS[1])
+if value == 1 then
+  redis.call("EXPIRE", KEYS[1], ARGV[1])
+end
+return value
+`;
+
 export function createRedisKV(url: string): KV<"redis"> {
   const redis = new IORedis(url);
 
@@ -33,19 +41,7 @@ export function createRedisKV(url: string): KV<"redis"> {
             throw new TypeError("Redis increment TTL must be a positive integer");
           }
 
-          const results = await redis.multi().incr(key).expire(key, ttl, "NX").exec();
-          const incrementResult = results?.[0];
-
-          if (!incrementResult) {
-            throw new Error("Redis increment transaction returned no result");
-          }
-
-          const [error, value] = incrementResult;
-          if (error) {
-            throw error;
-          }
-
-          return Number(value);
+          return Number(await redis.eval(INCREMENT_WITH_TTL_SCRIPT, 1, key, ttl));
         },
       ),
     set: async (key, value, options?: SetOptions) => {

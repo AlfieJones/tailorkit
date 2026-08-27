@@ -1,0 +1,37 @@
+{
+  "name": "nextjs",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --webpack --port 5020",
+    "build": "next build --webpack",
+    "start": "next start --port 5020",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt --check",
+    "format:fix": "oxfmt --write",
+    "check": "pnpm run lint && pnpm run format",
+    "fix": "pnpm run lint:fix && pnpm run format:fix",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@examples/shared": "workspace:*",
+    "@tailorkit/ui": "workspace:*",
+    "lucide-react": "catalog:",
+    "next": "16.3.2",
+    "next-themes": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tailorkit": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "esbuild": "^0.28.2",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}

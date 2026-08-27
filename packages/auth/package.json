@@ -1,5 +1,7 @@
 {
   "name": "@tailorkit/auth",
+  "version": "0.0.0",
+  "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
@@ -37,10 +39,10 @@
     "@tailorkit/env": "workspace:*",
     "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
-    "@vercel/functions": "^3.6.1",
+    "@vercel/functions": "^3.9.5",
     "better-auth": "catalog:",
     "jose": "6.2.10",
-    "uuid": "^14.0.0",
+    "uuid": "^14.0.2",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -1,8 +1,15 @@
 {
   "name": "@tailorkit/core",
   "version": "0.0.0",
-  "private": true,
   "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlfieJones/tailorkit.git",
+    "directory": "packages/core"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "imports": {
     "#*": [
@@ -14,16 +21,52 @@
     ]
   },
   "exports": {
-    "./server": "./src/server/index.ts",
-    "./server/types": "./src/server/types.ts",
-    "./schema": "./src/schema/index.ts",
-    "./spec": "./src/spec/index.ts",
-    "./primitives/theme": "./src/primitives/theme.ts",
-    "./primitives/zod": "./src/primitives/zod.ts",
-    "./primitives/valibot": "./src/primitives/valibot.ts",
-    "./primitives/arktype": "./src/primitives/arktype.ts"
+    "./server": {
+      "development": "./src/server/index.ts",
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server.js"
+    },
+    "./server/types": {
+      "development": "./src/server/types.ts",
+      "types": "./dist/server/types.d.ts",
+      "import": "./dist/server-types.js"
+    },
+    "./schema": {
+      "development": "./src/schema/index.ts",
+      "types": "./dist/schema/index.d.ts",
+      "import": "./dist/schema.js"
+    },
+    "./spec": {
+      "development": "./src/spec/index.ts",
+      "types": "./dist/spec/index.d.ts",
+      "import": "./dist/spec.js"
+    },
+    "./primitives/theme": {
+      "development": "./src/primitives/theme.ts",
+      "types": "./dist/primitives/theme.d.ts",
+      "import": "./dist/primitives-theme.js"
+    },
+    "./primitives/zod": {
+      "development": "./src/primitives/zod.ts",
+      "types": "./dist/primitives/zod.d.ts",
+      "import": "./dist/primitives-zod.js"
+    },
+    "./primitives/valibot": {
+      "development": "./src/primitives/valibot.ts",
+      "types": "./dist/primitives/valibot.d.ts",
+      "import": "./dist/primitives-valibot.js"
+    },
+    "./primitives/arktype": {
+      "development": "./src/primitives/arktype.ts",
+      "types": "./dist/primitives/arktype.d.ts",
+      "import": "./dist/primitives-arktype.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
+    "build": "tsup --entry.server src/server/index.ts --entry.server-types src/server/types.ts --entry.schema src/schema/index.ts --entry.spec src/spec/index.ts --entry.primitives-theme src/primitives/theme.ts --entry.primitives-zod src/primitives/zod.ts --entry.primitives-valibot src/primitives/valibot.ts --entry.primitives-arktype src/primitives/arktype.ts --format esm --target node20 --clean && tsc -p tsconfig.build.json",
     "check-types": "tsc --noEmit",
     "generate:native": "tsx scripts/generate-native-components/index.ts",
     "test": "vitest run --typecheck"
@@ -33,15 +76,16 @@
     "@orpc/server": "catalog:",
     "@standard-schema/spec": "^1.1.0",
     "@tailorkit/client-platform": "workspace:*",
-    "zod": "catalog:"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
-    "arktype": "^2.2.0",
+    "arktype": "^2.2.3",
+    "tsup": "^8.5.1",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "valibot": "^1.4.0",
+    "valibot": "^1.4.2",
     "vitest": "catalog:",
     "zod": "catalog:"
   },

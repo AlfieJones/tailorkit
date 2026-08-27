@@ -24,7 +24,7 @@ flowchart LR
 This keeps app UI consistent with your product while keeping the host in control
 of what can be rendered.
 
-## The Component Contract
+## Define the component contract
 
 A component definition has three parts:
 
@@ -151,7 +151,7 @@ TabsList: ({ props, slots }) => <TabsList {...props}>{slots.default}</TabsList>,
 Declare only the slots you intend apps to use. A component without `slots` is a
 leaf component from the app's point of view.
 
-## Register Components On The Server
+## Register components on the server
 
 Pass the component map to `createTailorKit`. This makes the component contract
 available from the TailorKit API route.
@@ -204,7 +204,7 @@ export const Route = createFileRoute("/api/tailorkit/$")({
 });
 ```
 
-## Register Renderers On The Client
+## Register renderers on the client
 
 The client maps each server-defined component name to a real React renderer.
 `createTailorKitClient<typeof tailorKit>()` uses the server schema type so
@@ -240,7 +240,7 @@ renderer by name and renders the real `@tailorkit/ui` button. If a remote app
 uses a component that is not registered, the host throws:
 `TailorKit component "Name" is not registered.`
 
-## The Serialized Schema
+## Serialized schema reference
 
 TailorKit serializes components into a stable runtime shape:
 
@@ -275,7 +275,7 @@ local refactor.
   coordinate the app update.
 </Callout>
 
-## Naming And Compatibility
+## Naming and compatibility
 
 Component names are public API. TailorKit also derives DOM-style tag names from
 them for remote rendering, so `TextArea` can be addressed as `tailorkit-text-area`

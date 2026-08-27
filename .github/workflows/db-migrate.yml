@@ -26,17 +26,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1.18.0
         with:
           node-version: 24
-          cache: pnpm
+          cache: true
+          run-install: false
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: vp install --frozen-lockfile
 
       - name: Validate migration database secret
         run: |
@@ -48,6 +46,6 @@ jobs:
           DATABASE_URL: ${{ secrets.PRODUCTION_MIGRATION_DATABASE_URL }}
 
       - name: Run Drizzle migrations
-        run: pnpm turbo run db:migrate --filter=@tailorkit/db
+        run: vp run db:migrate
         env:
           DATABASE_URL: ${{ secrets.PRODUCTION_MIGRATION_DATABASE_URL }}

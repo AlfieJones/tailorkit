@@ -1,5 +1,7 @@
 {
   "name": "@tailorkit/kv",
+  "version": "0.0.0",
+  "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
   "imports": {
@@ -34,8 +36,8 @@
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
-    "@upstash/redis": "^1.38.0",
-    "ioredis": "^5.11.0",
+    "@upstash/redis": "^1.38.2",
+    "ioredis": "^6.0.0",
     "tsdown": "catalog:",
     "typescript": "catalog:"
   },

@@ -65,6 +65,7 @@ export type RemotePatch =
     };
 
 export interface WorkerUiMountOptions {
+  appSource: string;
   appUrl: string;
   props?: Record<string, unknown>;
 }
@@ -72,6 +73,7 @@ export interface WorkerUiMountOptions {
 export const HostToWorkerPayload = z.discriminatedUnion("type", [
   z.object({
     data: z.object({
+      appSource: z.string(),
       appUrl: z.string(),
       props: z.record(z.string(), z.unknown()).optional(),
     }),

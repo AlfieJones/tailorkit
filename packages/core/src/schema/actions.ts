@@ -136,7 +136,7 @@ interface ActionBuilder<
 > {
   context: <TNextActionContext>() => ActionBuilder<TInput, TOutput, TNextActionContext>;
   handler: <
-    TReturn extends TOutput extends Schema ? StandardSchemaV1.InferOutput<TOutput> : unknown =
+    TReturn extends (TOutput extends Schema ? StandardSchemaV1.InferOutput<TOutput> : unknown) =
       TOutput extends Schema ? StandardSchemaV1.InferOutput<TOutput> : unknown,
   >(
     handler: ActionHandler<TInput, TOutput, TActionContext, TReturn>,

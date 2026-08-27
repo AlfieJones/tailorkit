@@ -35,9 +35,9 @@ export type InferCallbacks<TCallbacks> =
     ? string extends keyof TCallbacks
       ? EmptyObject
       : {
-          [TKey in keyof TCallbacks as TCallbacks[TKey] extends undefined
-            ? never
-            : TKey]: InferCallback<NonNullable<TCallbacks[TKey]>>;
+          [
+            TKey in keyof TCallbacks as TCallbacks[TKey] extends undefined ? never : TKey
+          ]: InferCallback<NonNullable<TCallbacks[TKey]>>;
         }
     : EmptyObject;
 

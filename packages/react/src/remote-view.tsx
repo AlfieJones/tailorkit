@@ -12,7 +12,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { ReactNode } from "react";
-import { createWorkerUiHost } from "@tailorkit/sandbox/host";
+import { createIframeUiHost } from "@tailorkit/sandbox/host";
 import type { HostToWorkerPayload, RemoteElementNode } from "@tailorkit/sandbox/protocol";
 import { NodeStore } from "./node-store";
 import { RemoteUIContext } from "./remote-context";
@@ -51,17 +51,17 @@ class RemoteErrorBoundary extends Component<RemoteErrorBoundaryProps, RemoteErro
 interface RemoteViewHostProps {
   appUrl: string | URL;
   components: Record<string, unknown>;
-  createWorker?: (url: URL, options: WorkerOptions) => Worker;
+  createIframe?: () => HTMLIFrameElement;
   props?: Record<string, unknown>;
-  workerUrl?: string | URL;
+  runtimeUrl?: string | URL;
 }
 
 export function RemoteViewHost({
   appUrl,
   components,
-  createWorker,
+  createIframe,
   props,
-  workerUrl,
+  runtimeUrl,
 }: RemoteViewHostProps): ReactNode {
   const appKey = appUrl.toString();
   const storeRef = useRef<NodeStore | null>(null);
@@ -103,15 +103,15 @@ export function RemoteViewHost({
   }, [appKey]);
 
   useEffect(() => {
-    const host = createWorkerUiHost(appUrl, {
-      createWorker,
+    const host = createIframeUiHost(appUrl, {
+      createIframe,
       onError: (error) => {
         console.error("TailorKit remote app failed", error);
         setError(error);
         setStatus("error");
       },
       props,
-      workerUrl,
+      runtimeUrl,
     });
 
     dispatchRef.current = (payload) => host.dispatch(payload);
@@ -131,9 +131,9 @@ export function RemoteViewHost({
     return () => {
       unsubscribe();
       dispatchRef.current = null;
-      host.worker.terminate();
+      host.destroy();
     };
-  }, [appUrl, createWorker, props, workerUrl, store]);
+  }, [appUrl, createIframe, props, runtimeUrl, store]);
 
   if (status === "error" && error) {
     return createElement("div", null, formatError(error));

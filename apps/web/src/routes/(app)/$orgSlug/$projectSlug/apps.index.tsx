@@ -1,12 +1,7 @@
 /* oxlint-disable react/no-unstable-nested-components */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, useTable } from "@tanstack/react-table";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { AppWindowIcon, SearchIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -33,6 +28,7 @@ import { DateAgo } from "@tailorkit/ui/date";
 import { renderSortableHeader } from "#components/members/member-table-utils";
 import { PageLayout } from "#components/page-layout";
 import { orpc } from "#lib/orpc";
+import { dataTableFeatures } from "#lib/table";
 
 const appsPageSize = 25;
 
@@ -115,7 +111,7 @@ function AppsTable({
   const navigate = useNavigate();
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
 
-  const columns = useMemo<ColumnDef<AppRow>[]>(
+  const columns = useMemo<ColumnDef<typeof dataTableFeatures, AppRow>[]>(
     () => [
       {
         accessorKey: "name",
@@ -160,19 +156,18 @@ function AppsTable({
         accessorKey: "createdAt",
         header: "Created",
         size: 140,
-        sortingFn: "datetime",
+        sortFn: "datetime",
         cell: ({ row }) => <DateAgo date={row.original.createdAt} />,
       },
     ],
     [],
   );
 
-  const table = useReactTable({
+  const table = useTable({
     columns,
     data: apps,
     enableSortingRemoval: false,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    features: dataTableFeatures,
     onSortingChange: setSorting,
     state: { sorting },
   });

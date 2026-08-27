@@ -3,6 +3,14 @@ import { withSpan } from "@tailorkit/observability";
 import { Redis } from "@upstash/redis";
 import type { KV, SetOptions } from "./types.js";
 
+const INCREMENT_WITH_TTL_SCRIPT = `
+local value = redis.call("INCR", KEYS[1])
+if value == 1 then
+  redis.call("EXPIRE", KEYS[1], ARGV[1])
+end
+return value
+`;
+
 export function createUpstashKV(): KV<"upstash"> {
   const redis = new Redis({
     url: env.KV_REST_API_URL as string,
@@ -45,8 +53,7 @@ export function createUpstashKV(): KV<"upstash"> {
             throw new TypeError("Redis increment TTL must be a positive integer");
           }
 
-          const [value] = await redis.multi().incr(key).expire(key, ttl, "NX").exec();
-          return Number(value);
+          return Number(await redis.eval(INCREMENT_WITH_TTL_SCRIPT, [key], [ttl]));
         },
       ),
     set: async (key, value, options?: SetOptions) => {

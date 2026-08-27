@@ -9,82 +9,62 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LogoutRouteImport } from './routes/logout'
-import { Route as authRouteRouteImport } from './routes/(auth)/route'
-import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
-import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
-import { Route as authLoginRouteImport } from './routes/(auth)/login'
-import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
-import { Route as appOnboardingRouteImport } from './routes/(app)/onboarding'
-import { Route as appAccountRouteRouteImport } from './routes/(app)/account/route'
+import { Route as appRouteRouteImport } from './routes/(app)/route'
+import { Route as authRouteRouteImport } from './routes/(auth)/route'
+import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as appOrgSlugRouteRouteImport } from './routes/(app)/$orgSlug/route'
+import { Route as appAccountRouteRouteImport } from './routes/(app)/account/route'
+import { Route as appOnboardingRouteImport } from './routes/(app)/onboarding'
+import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as authLoginRouteImport } from './routes/(auth)/login'
+import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
+import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
 import { Route as appOrgSlugIndexRouteImport } from './routes/(app)/$orgSlug/index'
-import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
-import { Route as ApiPlatformSplatRouteImport } from './routes/api/platform.$'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
-import { Route as appAccountSecurityRouteImport } from './routes/(app)/account/security'
-import { Route as appAccountRequestOrganizationRouteImport } from './routes/(app)/account/request-organization'
-import { Route as appAccountOrganizationsRouteImport } from './routes/(app)/account/organizations'
-import { Route as appAccountInvitesRouteImport } from './routes/(app)/account/invites'
-import { Route as appAccountProfileRouteRouteImport } from './routes/(app)/account/profile/route'
 import { Route as appOrgSlugProjectSlugRouteRouteImport } from './routes/(app)/$orgSlug/$projectSlug/route'
-import { Route as appAccountProfileIndexRouteImport } from './routes/(app)/account/profile/index'
+import { Route as appAccountInvitesRouteImport } from './routes/(app)/account/invites'
+import { Route as appAccountOrganizationsRouteImport } from './routes/(app)/account/organizations'
+import { Route as appAccountProfileRouteRouteImport } from './routes/(app)/account/profile/route'
+import { Route as appAccountRequestOrganizationRouteImport } from './routes/(app)/account/request-organization'
+import { Route as appAccountSecurityRouteImport } from './routes/(app)/account/security'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as ApiPlatformSplatRouteImport } from './routes/api/platform.$'
+import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as appOrgSlugProjectSlugIndexRouteImport } from './routes/(app)/$orgSlug/$projectSlug/index'
 import { Route as appOrgSlugProjectSlugSettingsRouteImport } from './routes/(app)/$orgSlug/$projectSlug/settings'
 import { Route as appOrgSlugChar126orgRouteRouteImport } from './routes/(app)/$orgSlug/~/(org)/route'
-import { Route as appOrgSlugChar126orgIndexRouteImport } from './routes/(app)/$orgSlug/~/(org)/index'
-import { Route as appOrgSlugProjectSlugSettingsIndexRouteImport } from './routes/(app)/$orgSlug/$projectSlug/settings/index'
+import { Route as appAccountProfileIndexRouteImport } from './routes/(app)/account/profile/index'
 import { Route as appOrgSlugProjectSlugAppsIndexRouteImport } from './routes/(app)/$orgSlug/$projectSlug/apps.index'
-import { Route as appOrgSlugChar126orgSettingsRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings'
-import { Route as appOrgSlugChar126orgProjectsRouteImport } from './routes/(app)/$orgSlug/~/(org)/projects'
-import { Route as appOrgSlugProjectSlugSettingsApiKeysRouteImport } from './routes/(app)/$orgSlug/$projectSlug/settings/api-keys'
 import { Route as appOrgSlugProjectSlugAppsAppIdRouteImport } from './routes/(app)/$orgSlug/$projectSlug/apps.$appId'
+import { Route as appOrgSlugProjectSlugSettingsIndexRouteImport } from './routes/(app)/$orgSlug/$projectSlug/settings/index'
+import { Route as appOrgSlugProjectSlugSettingsApiKeysRouteImport } from './routes/(app)/$orgSlug/$projectSlug/settings/api-keys'
+import { Route as appOrgSlugChar126orgIndexRouteImport } from './routes/(app)/$orgSlug/~/(org)/index'
+import { Route as appOrgSlugChar126orgProjectsRouteImport } from './routes/(app)/$orgSlug/~/(org)/projects'
+import { Route as appOrgSlugChar126orgSettingsRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings'
 import { Route as appOrgSlugChar126orgSettingsIndexRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings/index'
 import { Route as appOrgSlugChar126orgSettingsMembersRouteImport } from './routes/(app)/$orgSlug/~/(org)/settings/members'
 
-const LogoutRoute = LogoutRouteImport.update({
-  id: '/logout',
-  path: '/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authRouteRoute = authRouteRouteImport.update({
-  id: '/(auth)',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const authRouteRoute = authRouteRouteImport.update({
+  id: '/(auth)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => authRouteRoute,
+const LogoutRoute = LogoutRouteImport.update({
+  id: '/logout',
+  path: '/logout',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const authSignUpRoute = authSignUpRouteImport.update({
-  id: '/sign-up',
-  path: '/sign-up',
-  getParentRoute: () => authRouteRoute,
-} as any)
-const authLoginRoute = authLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => authRouteRoute,
-} as any)
-const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => authRouteRoute,
-} as any)
-const appOnboardingRoute = appOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
+const appOrgSlugRouteRoute = appOrgSlugRouteRouteImport.update({
+  id: '/$orgSlug',
+  path: '/$orgSlug',
   getParentRoute: () => appRouteRoute,
 } as any)
 const appAccountRouteRoute = appAccountRouteRouteImport.update({
@@ -92,34 +72,55 @@ const appAccountRouteRoute = appAccountRouteRouteImport.update({
   path: '/account',
   getParentRoute: () => appRouteRoute,
 } as any)
-const appOrgSlugRouteRoute = appOrgSlugRouteRouteImport.update({
-  id: '/$orgSlug',
-  path: '/$orgSlug',
+const appOnboardingRoute = appOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => appRouteRoute,
+} as any)
+const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const authLoginRoute = authLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const authSignUpRoute = authSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => authRouteRoute,
 } as any)
 const appOrgSlugIndexRoute = appOrgSlugIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => appOrgSlugRouteRoute,
 } as any)
-const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
-  id: '/api/rpc/$',
-  path: '/api/rpc/$',
-  getParentRoute: () => rootRouteImport,
+const appOrgSlugProjectSlugRouteRoute =
+  appOrgSlugProjectSlugRouteRouteImport.update({
+    id: '/$projectSlug',
+    path: '/$projectSlug',
+    getParentRoute: () => appOrgSlugRouteRoute,
+  } as any)
+const appAccountInvitesRoute = appAccountInvitesRouteImport.update({
+  id: '/invites',
+  path: '/invites',
+  getParentRoute: () => appAccountRouteRoute,
 } as any)
-const ApiPlatformSplatRoute = ApiPlatformSplatRouteImport.update({
-  id: '/api/platform/$',
-  path: '/api/platform/$',
-  getParentRoute: () => rootRouteImport,
+const appAccountOrganizationsRoute = appAccountOrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
+  getParentRoute: () => appAccountRouteRoute,
 } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const appAccountSecurityRoute = appAccountSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
+const appAccountProfileRouteRoute = appAccountProfileRouteRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => appAccountRouteRoute,
 } as any)
 const appAccountRequestOrganizationRoute =
@@ -128,31 +129,25 @@ const appAccountRequestOrganizationRoute =
     path: '/request-organization',
     getParentRoute: () => appAccountRouteRoute,
   } as any)
-const appAccountOrganizationsRoute = appAccountOrganizationsRouteImport.update({
-  id: '/organizations',
-  path: '/organizations',
+const appAccountSecurityRoute = appAccountSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => appAccountRouteRoute,
 } as any)
-const appAccountInvitesRoute = appAccountInvitesRouteImport.update({
-  id: '/invites',
-  path: '/invites',
-  getParentRoute: () => appAccountRouteRoute,
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const appAccountProfileRouteRoute = appAccountProfileRouteRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => appAccountRouteRoute,
+const ApiPlatformSplatRoute = ApiPlatformSplatRouteImport.update({
+  id: '/api/platform/$',
+  path: '/api/platform/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const appOrgSlugProjectSlugRouteRoute =
-  appOrgSlugProjectSlugRouteRouteImport.update({
-    id: '/$projectSlug',
-    path: '/$projectSlug',
-    getParentRoute: () => appOrgSlugRouteRoute,
-  } as any)
-const appAccountProfileIndexRoute = appAccountProfileIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => appAccountProfileRouteRoute,
+const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
+  id: '/api/rpc/$',
+  path: '/api/rpc/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const appOrgSlugProjectSlugIndexRoute =
   appOrgSlugProjectSlugIndexRouteImport.update({
@@ -172,11 +167,22 @@ const appOrgSlugChar126orgRouteRoute =
     path: '/~',
     getParentRoute: () => appOrgSlugRouteRoute,
   } as any)
-const appOrgSlugChar126orgIndexRoute =
-  appOrgSlugChar126orgIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => appOrgSlugChar126orgRouteRoute,
+const appAccountProfileIndexRoute = appAccountProfileIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => appAccountProfileRouteRoute,
+} as any)
+const appOrgSlugProjectSlugAppsIndexRoute =
+  appOrgSlugProjectSlugAppsIndexRouteImport.update({
+    id: '/apps/',
+    path: '/apps/',
+    getParentRoute: () => appOrgSlugProjectSlugRouteRoute,
+  } as any)
+const appOrgSlugProjectSlugAppsAppIdRoute =
+  appOrgSlugProjectSlugAppsAppIdRouteImport.update({
+    id: '/apps/$appId',
+    path: '/apps/$appId',
+    getParentRoute: () => appOrgSlugProjectSlugRouteRoute,
   } as any)
 const appOrgSlugProjectSlugSettingsIndexRoute =
   appOrgSlugProjectSlugSettingsIndexRouteImport.update({
@@ -184,16 +190,16 @@ const appOrgSlugProjectSlugSettingsIndexRoute =
     path: '/',
     getParentRoute: () => appOrgSlugProjectSlugSettingsRoute,
   } as any)
-const appOrgSlugProjectSlugAppsIndexRoute =
-  appOrgSlugProjectSlugAppsIndexRouteImport.update({
-    id: '/apps/',
-    path: '/apps/',
-    getParentRoute: () => appOrgSlugProjectSlugRouteRoute,
+const appOrgSlugProjectSlugSettingsApiKeysRoute =
+  appOrgSlugProjectSlugSettingsApiKeysRouteImport.update({
+    id: '/api-keys',
+    path: '/api-keys',
+    getParentRoute: () => appOrgSlugProjectSlugSettingsRoute,
   } as any)
-const appOrgSlugChar126orgSettingsRoute =
-  appOrgSlugChar126orgSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
+const appOrgSlugChar126orgIndexRoute =
+  appOrgSlugChar126orgIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => appOrgSlugChar126orgRouteRoute,
   } as any)
 const appOrgSlugChar126orgProjectsRoute =
@@ -202,17 +208,11 @@ const appOrgSlugChar126orgProjectsRoute =
     path: '/projects',
     getParentRoute: () => appOrgSlugChar126orgRouteRoute,
   } as any)
-const appOrgSlugProjectSlugSettingsApiKeysRoute =
-  appOrgSlugProjectSlugSettingsApiKeysRouteImport.update({
-    id: '/api-keys',
-    path: '/api-keys',
-    getParentRoute: () => appOrgSlugProjectSlugSettingsRoute,
-  } as any)
-const appOrgSlugProjectSlugAppsAppIdRoute =
-  appOrgSlugProjectSlugAppsAppIdRouteImport.update({
-    id: '/apps/$appId',
-    path: '/apps/$appId',
-    getParentRoute: () => appOrgSlugProjectSlugRouteRoute,
+const appOrgSlugChar126orgSettingsRoute =
+  appOrgSlugChar126orgSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => appOrgSlugChar126orgRouteRoute,
   } as any)
 const appOrgSlugChar126orgSettingsIndexRoute =
   appOrgSlugChar126orgSettingsIndexRouteImport.update({
@@ -439,18 +439,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/logout': {
-      id: '/logout'
-      path: '/logout'
-      fullPath: '/logout'
-      preLoaderRoute: typeof LogoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)': {
-      id: '/(auth)'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof authRouteRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(app)': {
@@ -460,46 +453,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/(auth)': {
+      id: '/(auth)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof authRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/verify-email': {
-      id: '/(auth)/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof authVerifyEmailRouteImport
-      parentRoute: typeof authRouteRoute
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/(auth)/sign-up': {
-      id: '/(auth)/sign-up'
-      path: '/sign-up'
-      fullPath: '/sign-up'
-      preLoaderRoute: typeof authSignUpRouteImport
-      parentRoute: typeof authRouteRoute
-    }
-    '/(auth)/login': {
-      id: '/(auth)/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof authLoginRouteImport
-      parentRoute: typeof authRouteRoute
-    }
-    '/(auth)/forgot-password': {
-      id: '/(auth)/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof authForgotPasswordRouteImport
-      parentRoute: typeof authRouteRoute
-    }
-    '/(app)/onboarding': {
-      id: '/(app)/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof appOnboardingRouteImport
+    '/(app)/$orgSlug': {
+      id: '/(app)/$orgSlug'
+      path: '/$orgSlug'
+      fullPath: '/$orgSlug'
+      preLoaderRoute: typeof appOrgSlugRouteRouteImport
       parentRoute: typeof appRouteRoute
     }
     '/(app)/account': {
@@ -509,12 +481,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appAccountRouteRouteImport
       parentRoute: typeof appRouteRoute
     }
-    '/(app)/$orgSlug': {
-      id: '/(app)/$orgSlug'
-      path: '/$orgSlug'
-      fullPath: '/$orgSlug'
-      preLoaderRoute: typeof appOrgSlugRouteRouteImport
+    '/(app)/onboarding': {
+      id: '/(app)/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof appOnboardingRouteImport
       parentRoute: typeof appRouteRoute
+    }
+    '/(auth)/forgot-password': {
+      id: '/(auth)/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof authForgotPasswordRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/login': {
+      id: '/(auth)/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof authLoginRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/sign-up': {
+      id: '/(auth)/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof authSignUpRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/verify-email': {
+      id: '/(auth)/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof authVerifyEmailRouteImport
+      parentRoute: typeof authRouteRoute
     }
     '/(app)/$orgSlug/': {
       id: '/(app)/$orgSlug/'
@@ -523,39 +523,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appOrgSlugIndexRouteImport
       parentRoute: typeof appOrgSlugRouteRoute
     }
-    '/api/rpc/$': {
-      id: '/api/rpc/$'
-      path: '/api/rpc/$'
-      fullPath: '/api/rpc/$'
-      preLoaderRoute: typeof ApiRpcSplatRouteImport
-      parentRoute: typeof rootRouteImport
+    '/(app)/$orgSlug/$projectSlug': {
+      id: '/(app)/$orgSlug/$projectSlug'
+      path: '/$projectSlug'
+      fullPath: '/$orgSlug/$projectSlug'
+      preLoaderRoute: typeof appOrgSlugProjectSlugRouteRouteImport
+      parentRoute: typeof appOrgSlugRouteRoute
     }
-    '/api/platform/$': {
-      id: '/api/platform/$'
-      path: '/api/platform/$'
-      fullPath: '/api/platform/$'
-      preLoaderRoute: typeof ApiPlatformSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(app)/account/security': {
-      id: '/(app)/account/security'
-      path: '/security'
-      fullPath: '/account/security'
-      preLoaderRoute: typeof appAccountSecurityRouteImport
-      parentRoute: typeof appAccountRouteRoute
-    }
-    '/(app)/account/request-organization': {
-      id: '/(app)/account/request-organization'
-      path: '/request-organization'
-      fullPath: '/account/request-organization'
-      preLoaderRoute: typeof appAccountRequestOrganizationRouteImport
+    '/(app)/account/invites': {
+      id: '/(app)/account/invites'
+      path: '/invites'
+      fullPath: '/account/invites'
+      preLoaderRoute: typeof appAccountInvitesRouteImport
       parentRoute: typeof appAccountRouteRoute
     }
     '/(app)/account/organizations': {
@@ -565,13 +544,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appAccountOrganizationsRouteImport
       parentRoute: typeof appAccountRouteRoute
     }
-    '/(app)/account/invites': {
-      id: '/(app)/account/invites'
-      path: '/invites'
-      fullPath: '/account/invites'
-      preLoaderRoute: typeof appAccountInvitesRouteImport
-      parentRoute: typeof appAccountRouteRoute
-    }
     '/(app)/account/profile': {
       id: '/(app)/account/profile'
       path: '/profile'
@@ -579,19 +551,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appAccountProfileRouteRouteImport
       parentRoute: typeof appAccountRouteRoute
     }
-    '/(app)/$orgSlug/$projectSlug': {
-      id: '/(app)/$orgSlug/$projectSlug'
-      path: '/$projectSlug'
-      fullPath: '/$orgSlug/$projectSlug'
-      preLoaderRoute: typeof appOrgSlugProjectSlugRouteRouteImport
-      parentRoute: typeof appOrgSlugRouteRoute
+    '/(app)/account/request-organization': {
+      id: '/(app)/account/request-organization'
+      path: '/request-organization'
+      fullPath: '/account/request-organization'
+      preLoaderRoute: typeof appAccountRequestOrganizationRouteImport
+      parentRoute: typeof appAccountRouteRoute
     }
-    '/(app)/account/profile/': {
-      id: '/(app)/account/profile/'
-      path: '/'
-      fullPath: '/account/profile/'
-      preLoaderRoute: typeof appAccountProfileIndexRouteImport
-      parentRoute: typeof appAccountProfileRouteRoute
+    '/(app)/account/security': {
+      id: '/(app)/account/security'
+      path: '/security'
+      fullPath: '/account/security'
+      preLoaderRoute: typeof appAccountSecurityRouteImport
+      parentRoute: typeof appAccountRouteRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/platform/$': {
+      id: '/api/platform/$'
+      path: '/api/platform/$'
+      fullPath: '/api/platform/$'
+      preLoaderRoute: typeof ApiPlatformSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rpc/$': {
+      id: '/api/rpc/$'
+      path: '/api/rpc/$'
+      fullPath: '/api/rpc/$'
+      preLoaderRoute: typeof ApiRpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(app)/$orgSlug/$projectSlug/': {
       id: '/(app)/$orgSlug/$projectSlug/'
@@ -614,19 +607,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appOrgSlugChar126orgRouteRouteImport
       parentRoute: typeof appOrgSlugRouteRoute
     }
-    '/(app)/$orgSlug/~/(org)/': {
-      id: '/(app)/$orgSlug/~/(org)/'
+    '/(app)/account/profile/': {
+      id: '/(app)/account/profile/'
       path: '/'
-      fullPath: '/$orgSlug/~/'
-      preLoaderRoute: typeof appOrgSlugChar126orgIndexRouteImport
-      parentRoute: typeof appOrgSlugChar126orgRouteRoute
-    }
-    '/(app)/$orgSlug/$projectSlug/settings/': {
-      id: '/(app)/$orgSlug/$projectSlug/settings/'
-      path: '/'
-      fullPath: '/$orgSlug/$projectSlug/settings/'
-      preLoaderRoute: typeof appOrgSlugProjectSlugSettingsIndexRouteImport
-      parentRoute: typeof appOrgSlugProjectSlugSettingsRoute
+      fullPath: '/account/profile/'
+      preLoaderRoute: typeof appAccountProfileIndexRouteImport
+      parentRoute: typeof appAccountProfileRouteRoute
     }
     '/(app)/$orgSlug/$projectSlug/apps/': {
       id: '/(app)/$orgSlug/$projectSlug/apps/'
@@ -635,11 +621,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appOrgSlugProjectSlugAppsIndexRouteImport
       parentRoute: typeof appOrgSlugProjectSlugRouteRoute
     }
-    '/(app)/$orgSlug/~/(org)/settings': {
-      id: '/(app)/$orgSlug/~/(org)/settings'
-      path: '/settings'
-      fullPath: '/$orgSlug/~/settings'
-      preLoaderRoute: typeof appOrgSlugChar126orgSettingsRouteImport
+    '/(app)/$orgSlug/$projectSlug/apps/$appId': {
+      id: '/(app)/$orgSlug/$projectSlug/apps/$appId'
+      path: '/apps/$appId'
+      fullPath: '/$orgSlug/$projectSlug/apps/$appId'
+      preLoaderRoute: typeof appOrgSlugProjectSlugAppsAppIdRouteImport
+      parentRoute: typeof appOrgSlugProjectSlugRouteRoute
+    }
+    '/(app)/$orgSlug/$projectSlug/settings/': {
+      id: '/(app)/$orgSlug/$projectSlug/settings/'
+      path: '/'
+      fullPath: '/$orgSlug/$projectSlug/settings/'
+      preLoaderRoute: typeof appOrgSlugProjectSlugSettingsIndexRouteImport
+      parentRoute: typeof appOrgSlugProjectSlugSettingsRoute
+    }
+    '/(app)/$orgSlug/$projectSlug/settings/api-keys': {
+      id: '/(app)/$orgSlug/$projectSlug/settings/api-keys'
+      path: '/api-keys'
+      fullPath: '/$orgSlug/$projectSlug/settings/api-keys'
+      preLoaderRoute: typeof appOrgSlugProjectSlugSettingsApiKeysRouteImport
+      parentRoute: typeof appOrgSlugProjectSlugSettingsRoute
+    }
+    '/(app)/$orgSlug/~/(org)/': {
+      id: '/(app)/$orgSlug/~/(org)/'
+      path: '/'
+      fullPath: '/$orgSlug/~/'
+      preLoaderRoute: typeof appOrgSlugChar126orgIndexRouteImport
       parentRoute: typeof appOrgSlugChar126orgRouteRoute
     }
     '/(app)/$orgSlug/~/(org)/projects': {
@@ -649,19 +656,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appOrgSlugChar126orgProjectsRouteImport
       parentRoute: typeof appOrgSlugChar126orgRouteRoute
     }
-    '/(app)/$orgSlug/$projectSlug/settings/api-keys': {
-      id: '/(app)/$orgSlug/$projectSlug/settings/api-keys'
-      path: '/api-keys'
-      fullPath: '/$orgSlug/$projectSlug/settings/api-keys'
-      preLoaderRoute: typeof appOrgSlugProjectSlugSettingsApiKeysRouteImport
-      parentRoute: typeof appOrgSlugProjectSlugSettingsRoute
-    }
-    '/(app)/$orgSlug/$projectSlug/apps/$appId': {
-      id: '/(app)/$orgSlug/$projectSlug/apps/$appId'
-      path: '/apps/$appId'
-      fullPath: '/$orgSlug/$projectSlug/apps/$appId'
-      preLoaderRoute: typeof appOrgSlugProjectSlugAppsAppIdRouteImport
-      parentRoute: typeof appOrgSlugProjectSlugRouteRoute
+    '/(app)/$orgSlug/~/(org)/settings': {
+      id: '/(app)/$orgSlug/~/(org)/settings'
+      path: '/settings'
+      fullPath: '/$orgSlug/~/settings'
+      preLoaderRoute: typeof appOrgSlugChar126orgSettingsRouteImport
+      parentRoute: typeof appOrgSlugChar126orgRouteRoute
     }
     '/(app)/$orgSlug/~/(org)/settings/': {
       id: '/(app)/$orgSlug/~/(org)/settings/'

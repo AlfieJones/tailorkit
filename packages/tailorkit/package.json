@@ -1,11 +1,19 @@
 {
   "name": "tailorkit",
   "version": "0.0.0",
-  "private": true,
   "license": "AGPL-3.0-only",
-  "bin": {
-    "tailorkit": "./node_modules/@tailorkit/cli/dist/index.js"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlfieJones/tailorkit.git",
+    "directory": "packages/tailorkit"
   },
+  "bin": {
+    "tailorkit": "./bin/tailorkit.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
   "type": "module",
   "imports": {
     "#*": [
@@ -17,15 +25,42 @@
     ]
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./server": "./src/server.ts",
-    "./react": "./src/react.ts",
-    "./zod": "./src/zod.ts",
-    "./valibot": "./src/valibot.ts",
-    "./arktype": "./src/arktype.ts"
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "development": "./src/server.ts",
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    },
+    "./react": {
+      "development": "./src/react.ts",
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    },
+    "./zod": {
+      "development": "./src/zod.ts",
+      "types": "./dist/zod.d.ts",
+      "import": "./dist/zod.js"
+    },
+    "./valibot": {
+      "development": "./src/valibot.ts",
+      "types": "./dist/valibot.d.ts",
+      "import": "./dist/valibot.js"
+    },
+    "./arktype": {
+      "development": "./src/arktype.ts",
+      "types": "./dist/arktype.d.ts",
+      "import": "./dist/arktype.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
-    "build": "tsup ./src/cli.ts ./src/index.ts ./src/server.ts ./src/react.ts ./src/zod.ts ./src/valibot.ts ./src/arktype.ts --out-dir ./dist --format esm --target node20 --minify --clean",
+    "build": "tsup ./src/index.ts ./src/server.ts ./src/react.ts ./src/zod.ts ./src/valibot.ts ./src/arktype.ts --out-dir ./dist --format esm --target node20 --minify --clean && tsc -p tsconfig.build.json",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

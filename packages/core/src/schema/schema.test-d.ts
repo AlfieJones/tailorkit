@@ -23,6 +23,19 @@ createTailorKitSchema({
   },
 });
 
+createTailorKitSchema({
+  components: {},
+  screens: {
+    "/pages": {
+      context: z.object({ userId: z.string() }),
+    },
+    // @ts-expect-error nested screen contexts must include their parent context
+    "/pages/detail": {
+      context: z.object({ pageId: z.string() }),
+    },
+  },
+});
+
 const tailor = createTailorKitSchema({
   components: {
     Button: {

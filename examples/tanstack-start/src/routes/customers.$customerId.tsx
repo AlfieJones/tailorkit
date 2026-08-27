@@ -4,7 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tail
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { DetailCard } from "#components/crm-ui";
-import { getCustomer } from "#lib/crm-data";
+import { customers, getCustomer } from "#lib/crm-data";
+import { useAuthSession } from "#lib/auth-client";
+import tailor from "#lib/tailorkit-client";
 
 export const Route = createFileRoute("/customers/$customerId")({
   component: CustomerDetailPage,
@@ -21,6 +23,19 @@ export const Route = createFileRoute("/customers/$customerId")({
 
 function CustomerDetailPage() {
   const { customer } = Route.useLoaderData();
+  const session = useAuthSession();
+
+  tailor.useCurrentScreen(
+    session.data
+      ? {
+          context: { customer, customers, user: session.data.user },
+          screen: "/customers/detail",
+        }
+      : {
+          screen: "/customers/detail",
+          status: "loading",
+        },
+  );
 
   return (
     <div className="space-y-6">

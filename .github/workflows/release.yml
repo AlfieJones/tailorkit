@@ -1,0 +1,123 @@
+name: Prerelease
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: prerelease-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CI: true
+  TURBO_TELEMETRY_DISABLED: 1
+  TAILORKIT_OTEL_DISABLED: true
+  OTEL_SDK_DISABLED: true
+
+jobs:
+  select-mode:
+    name: Select release mode
+    if: github.repository == 'AlfieJones/tailorkit' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      mode: ${{ steps.changesets.outputs.mode }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1.18.0
+        with:
+          node-version: 24
+          cache: false
+          run-install: false
+
+      - name: Install dependencies
+        run: vp install --frozen-lockfile
+
+      - name: Select Changesets mode
+        id: changesets
+        uses: changesets/action/select-mode@v2.1.1
+
+  version:
+    name: Update version PR
+    if: needs.select-mode.outputs.mode == 'version'
+    needs: select-mode
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1.18.0
+        with:
+          node-version: 24
+          cache: false
+          run-install: false
+
+      - name: Install dependencies
+        run: vp install --frozen-lockfile
+
+      - name: Create or update version PR
+        uses: changesets/action/version@v2.1.1
+        with:
+          script: vp run release:version
+          commit-message: "chore: version beta packages"
+          pr-title: "chore: version beta packages"
+          pr-base-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish prerelease
+    if: needs.select-mode.outputs.mode == 'publish'
+    needs: select-mode
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm-prerelease
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NPM_CONFIG_PROVENANCE: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1.18.0
+        with:
+          node-version: 24
+          cache: false
+          registry-url: ${{ secrets.NPM_TOKEN != '' && 'https://registry.npmjs.org' || '' }}
+          run-install: false
+
+      - name: Install dependencies
+        run: vp install --frozen-lockfile
+
+      - name: Build and publish prerelease
+        uses: changesets/action/publish@v2.1.1
+        with:
+          script: vp run release:publish
+          create-github-releases: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
