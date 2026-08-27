@@ -8,7 +8,15 @@ import { createContext, appRouter } from "@tailorkit/api";
 import { QueryClient } from "@tanstack/react-query";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
-export const getQueryClient = () => new QueryClient();
+export const getQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Prevent SSR-prefetched queries from immediately refetching after hydration.
+        staleTime: 60_000,
+      },
+    },
+  });
 
 const getORPCClient = createIsomorphicFn()
   .server(() =>
