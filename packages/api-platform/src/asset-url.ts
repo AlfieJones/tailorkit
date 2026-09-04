@@ -8,8 +8,8 @@ export function withAssetUrl(deployment: AppDeployment, publicTeamId: string, pr
   return {
     ...deployment,
     clientEntryUrl:
-      env.ASSET_GATEWAY_SECRET && deployment.status === "published" && deployment.clientEntryFileId
-        ? `https://${publicTeamId}.${env.ASSET_DOMAIN}/p/${projectId}/d/${deployment.id}/client.js`
+      deployment.status === "published" && deployment.clientEntryFileId
+        ? `https://${publicTeamId}.${env.ASSET_DOMAIN}/p/${projectId}/a/${deployment.appId}/d/${deployment.id}/client.js`
         : null,
   };
 }

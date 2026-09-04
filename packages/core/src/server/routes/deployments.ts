@@ -18,7 +18,7 @@ const deploymentAssetInput = z.object({
   contentLength: z.number().int().min(1),
   contentType: z.literal("application/javascript"),
   encoding: z.literal("utf-8"),
-  objectKey: z.string(),
+  objectKey: z.literal("client.js"),
 });
 
 const getErrorMessage = (error: unknown): string | undefined => {

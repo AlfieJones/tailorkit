@@ -104,9 +104,6 @@ export const env = createEnv({
       .string()
       .regex(/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/u)
       .default("tailorkit.app"),
-    ASSET_GATEWAY_SECRET: z.string().min(32).optional(),
-    ASSET_BLOCKED_TEAM_IDS: z.string().optional(),
-    ASSET_BLOCKED_DEPLOYMENT_IDS: z.string().optional(),
     BLOB_BUCKET: z.string().min(1).optional(),
     BLOB_ENDPOINT: z.url().optional(),
     BLOB_REGION: z.string().min(1).optional(),

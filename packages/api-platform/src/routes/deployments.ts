@@ -16,14 +16,6 @@ import { DeploymentWithAssetUrl, withAssetUrl } from "../asset-url";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
 
-const assetObjectKey = z
-  .string()
-  .max(255)
-  .regex(
-    /^(?:[a-zA-Z0-9._-]+\/)*[a-zA-Z0-9._-]+\.[a-zA-Z0-9]+$/u,
-    "Must be a valid object key like assets/client.js",
-  );
-
 const createDeploymentAssetInput = AppDeploymentFile.pick({
   contentType: true,
   encoding: true,
@@ -37,7 +29,7 @@ const createDeploymentAssetInput = AppDeploymentFile.pick({
     .int()
     .min(1)
     .max(1024 * 1024),
-  objectKey: assetObjectKey,
+  objectKey: z.literal("client.js"),
 });
 
 const deploymentAssetUpload = z.object({
@@ -176,7 +168,7 @@ const createAppDeployment = protectedRouter
     const [asset] = input.body.assets;
     const deploymentId = crypto.randomUUID();
     const fileId = crypto.randomUUID();
-    const objectKey = `projects/${context.project.id}/apps/${context.app.id}/deployments/${deploymentId}/files/${asset.objectKey}`;
+    const objectKey = `teams/${context.organization.publicId}/projects/${context.project.id}/apps/${context.app.id}/deployments/${deploymentId}/files/${asset.objectKey}`;
     const checksumSha256 = hexToBase64(asset.checksum);
     const uploadUrl = await context.storage.createUploadUrl({
       checksumSha256,

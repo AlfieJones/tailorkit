@@ -405,7 +405,7 @@ export type DeploymentsCreateData = {
         encoding: "utf-8";
         checksum: string;
         contentLength: number;
-        objectKey: string;
+        objectKey: "client.js";
       },
     ];
     scopeId: string;

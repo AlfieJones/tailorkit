@@ -20,7 +20,6 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
-import { Route as ApiAssetResolveRouteImport } from './routes/api/asset-resolve'
 import { Route as appOrgSlugIndexRouteImport } from './routes/(app)/$orgSlug/index'
 import { Route as appOrgSlugProjectSlugRouteRouteImport } from './routes/(app)/$orgSlug/$projectSlug/route'
 import { Route as appAccountInvitesRouteImport } from './routes/(app)/account/invites'
@@ -97,11 +96,6 @@ const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
   getParentRoute: () => authRouteRoute,
-} as any)
-const ApiAssetResolveRoute = ApiAssetResolveRouteImport.update({
-  id: '/api/asset-resolve',
-  path: '/api/asset-resolve',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const appOrgSlugIndexRoute = appOrgSlugIndexRouteImport.update({
   id: '/',
@@ -243,7 +237,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof authLoginRoute
   '/sign-up': typeof authSignUpRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/api/asset-resolve': typeof ApiAssetResolveRoute
   '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
   '/account/profile': typeof appAccountProfileRouteRouteWithChildren
   '/account/invites': typeof appAccountInvitesRoute
@@ -277,7 +270,6 @@ export interface FileRoutesByTo {
   '/login': typeof authLoginRoute
   '/sign-up': typeof authSignUpRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/api/asset-resolve': typeof ApiAssetResolveRoute
   '/account/invites': typeof appAccountInvitesRoute
   '/account/organizations': typeof appAccountOrganizationsRoute
   '/account/request-organization': typeof appAccountRequestOrganizationRoute
@@ -310,7 +302,6 @@ export interface FileRoutesById {
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/sign-up': typeof authSignUpRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
-  '/api/asset-resolve': typeof ApiAssetResolveRoute
   '/(app)/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
   '/(app)/account/profile': typeof appAccountProfileRouteRouteWithChildren
   '/(app)/account/invites': typeof appAccountInvitesRoute
@@ -347,7 +338,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/sign-up'
     | '/verify-email'
-    | '/api/asset-resolve'
     | '/$orgSlug/$projectSlug'
     | '/account/profile'
     | '/account/invites'
@@ -381,7 +371,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/sign-up'
     | '/verify-email'
-    | '/api/asset-resolve'
     | '/account/invites'
     | '/account/organizations'
     | '/account/request-organization'
@@ -413,7 +402,6 @@ export interface FileRouteTypes {
     | '/(auth)/login'
     | '/(auth)/sign-up'
     | '/(auth)/verify-email'
-    | '/api/asset-resolve'
     | '/(app)/$orgSlug/$projectSlug'
     | '/(app)/account/profile'
     | '/(app)/account/invites'
@@ -444,7 +432,6 @@ export interface RootRouteChildren {
   appRouteRoute: typeof appRouteRouteWithChildren
   authRouteRoute: typeof authRouteRouteWithChildren
   LogoutRoute: typeof LogoutRoute
-  ApiAssetResolveRoute: typeof ApiAssetResolveRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiPlatformSplatRoute: typeof ApiPlatformSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
@@ -528,13 +515,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/verify-email'
       preLoaderRoute: typeof authVerifyEmailRouteImport
       parentRoute: typeof authRouteRoute
-    }
-    '/api/asset-resolve': {
-      id: '/api/asset-resolve'
-      path: '/api/asset-resolve'
-      fullPath: '/api/asset-resolve'
-      preLoaderRoute: typeof ApiAssetResolveRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/(app)/$orgSlug/': {
       id: '/(app)/$orgSlug/'
@@ -865,7 +845,6 @@ const rootRouteChildren: RootRouteChildren = {
   appRouteRoute: appRouteRouteWithChildren,
   authRouteRoute: authRouteRouteWithChildren,
   LogoutRoute: LogoutRoute,
-  ApiAssetResolveRoute: ApiAssetResolveRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiPlatformSplatRoute: ApiPlatformSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
