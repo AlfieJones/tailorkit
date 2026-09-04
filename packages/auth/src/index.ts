@@ -15,6 +15,7 @@ import { organization } from "better-auth/plugins/organization";
 import { ac, roles } from "./lib/permissions";
 import { apiKey } from "@better-auth/api-key";
 import { dash } from "@better-auth/infra";
+import { initializePublicTeamId, publicTeamIdField } from "./lib/public-team-id";
 
 void initializeObservability("tailorkit-web");
 
@@ -92,6 +93,10 @@ export function createAuth() {
         ac,
         allowUserToCreateOrganization: false,
         roles,
+        organizationHooks: {
+          beforeCreateOrganization: ({ organization }) =>
+            Promise.resolve(initializePublicTeamId(organization)),
+        },
         sendInvitationEmail: async (data) => {
           await sendOrganizationInvitationEmail({
             email: data.email,
@@ -104,6 +109,7 @@ export function createAuth() {
         schema: {
           organization: {
             additionalFields: {
+              publicId: publicTeamIdField,
               slug: {
                 type: "string",
                 fieldName: "slug",

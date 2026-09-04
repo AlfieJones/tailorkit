@@ -157,6 +157,17 @@
                                     "type": "string",
                                     "format": "date-time",
                                     "x-native-type": "date"
+                                  },
+                                  "clientEntryUrl": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "format": "uri"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
                                   }
                                 },
                                 "required": [
@@ -166,7 +177,8 @@
                                   "status",
                                   "clientEntryFileId",
                                   "createdAt",
-                                  "updatedAt"
+                                  "updatedAt",
+                                  "clientEntryUrl"
                                 ]
                               },
                               {
@@ -355,6 +367,17 @@
                               "type": "string",
                               "format": "date-time",
                               "x-native-type": "date"
+                            },
+                            "clientEntryUrl": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
@@ -364,7 +387,8 @@
                             "status",
                             "clientEntryFileId",
                             "createdAt",
-                            "updatedAt"
+                            "updatedAt",
+                            "clientEntryUrl"
                           ]
                         },
                         {
@@ -520,6 +544,17 @@
                               "type": "string",
                               "format": "date-time",
                               "x-native-type": "date"
+                            },
+                            "clientEntryUrl": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
@@ -529,7 +564,8 @@
                             "status",
                             "clientEntryFileId",
                             "createdAt",
-                            "updatedAt"
+                            "updatedAt",
+                            "clientEntryUrl"
                           ]
                         },
                         {
@@ -753,6 +789,17 @@
                               "type": "string",
                               "format": "date-time",
                               "x-native-type": "date"
+                            },
+                            "clientEntryUrl": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
@@ -762,7 +809,8 @@
                             "status",
                             "clientEntryFileId",
                             "createdAt",
-                            "updatedAt"
+                            "updatedAt",
+                            "clientEntryUrl"
                           ]
                         },
                         {
@@ -934,6 +982,17 @@
                               "type": "string",
                               "format": "date-time",
                               "x-native-type": "date"
+                            },
+                            "clientEntryUrl": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
@@ -943,7 +1002,8 @@
                             "status",
                             "clientEntryFileId",
                             "createdAt",
-                            "updatedAt"
+                            "updatedAt",
+                            "clientEntryUrl"
                           ]
                         },
                         {
@@ -1317,6 +1377,17 @@
                             "type": "string",
                             "format": "date-time",
                             "x-native-type": "date"
+                          },
+                          "clientEntryUrl": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -1326,7 +1397,8 @@
                           "status",
                           "clientEntryFileId",
                           "createdAt",
-                          "updatedAt"
+                          "updatedAt",
+                          "clientEntryUrl"
                         ]
                       }
                     },
@@ -1556,6 +1628,17 @@
                           "type": "string",
                           "format": "date-time",
                           "x-native-type": "date"
+                        },
+                        "clientEntryUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -1565,7 +1648,8 @@
                         "status",
                         "clientEntryFileId",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "clientEntryUrl"
                       ]
                     }
                   },
@@ -1644,6 +1728,17 @@
                       "type": "string",
                       "format": "date-time",
                       "x-native-type": "date"
+                    },
+                    "clientEntryUrl": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -1653,7 +1748,8 @@
                     "status",
                     "clientEntryFileId",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "clientEntryUrl"
                   ]
                 }
               }
@@ -1737,6 +1833,17 @@
                       "type": "string",
                       "format": "date-time",
                       "x-native-type": "date"
+                    },
+                    "clientEntryUrl": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -1746,7 +1853,8 @@
                     "status",
                     "clientEntryFileId",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "clientEntryUrl"
                   ]
                 }
               }

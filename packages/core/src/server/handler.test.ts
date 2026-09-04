@@ -56,7 +56,11 @@ optionalSchemaTailor.handler(new Request("https://example.com/api/tailorkit/sche
 
 describe("createTailorKitServer", () => {
   it("preserves hosted bundle URLs without an assetsBaseUrl override", async () => {
-    const app = { id: "app", clientPath: "https://tailorkit.dev/api/assets/signed/client.js" };
+    const app = {
+      id: "app",
+      clientPath:
+        "https://abc123def4.tailorkit.app/p/22222222-2222-4222-8222-222222222222/d/44444444-4444-4444-8444-444444444444/client.js",
+    };
     const server = createTailorKitServer({
       projectKey: "server-only-key",
       components: {},

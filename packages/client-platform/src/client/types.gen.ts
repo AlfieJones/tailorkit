@@ -38,6 +38,7 @@ export type AppsListResponses = {
         clientEntryFileId: string | null;
         createdAt: string;
         updatedAt: string;
+        clientEntryUrl: string | null;
       } | null;
       clientPath?: string;
     }>;
@@ -84,6 +85,7 @@ export type AppsCreateResponses = {
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
+      clientEntryUrl: string | null;
     } | null;
     clientPath?: string;
   };
@@ -146,6 +148,7 @@ export type AppsGetResponses = {
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
+      clientEntryUrl: string | null;
     } | null;
     clientPath?: string;
   };
@@ -189,6 +192,7 @@ export type AppsUpdateResponses = {
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
+      clientEntryUrl: string | null;
     } | null;
     clientPath?: string;
   };
@@ -231,6 +235,7 @@ export type AppsDeployResponses = {
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
+      clientEntryUrl: string | null;
     } | null;
     clientPath?: string;
   };
@@ -379,6 +384,7 @@ export type DeploymentsListResponses = {
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
+      clientEntryUrl: string | null;
     }>;
     pagination: {
       hasMore: boolean;
@@ -442,6 +448,7 @@ export type DeploymentsCreateResponses = {
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
+      clientEntryUrl: string | null;
     };
   };
 };
@@ -472,6 +479,7 @@ export type DeploymentsGetResponses = {
     clientEntryFileId: string | null;
     createdAt: string;
     updatedAt: string;
+    clientEntryUrl: string | null;
   };
 };
 
@@ -501,6 +509,7 @@ export type DeploymentsPublishResponses = {
     clientEntryFileId: string | null;
     createdAt: string;
     updatedAt: string;
+    clientEntryUrl: string | null;
   };
 };
 

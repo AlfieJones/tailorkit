@@ -1,124 +1,115 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import { db } from "@tailorkit/db";
-import { env, getBaseUrl } from "@tailorkit/env/server";
-import { getStorage } from "@tailorkit/storage";
-import { signAssetGrant, verifyAssetGrant } from "./asset-token";
+import { organization } from "@tailorkit/db/schema/auth";
+import { project } from "@tailorkit/db/schema/project";
+import { app, appDeployment, appDeploymentFile } from "@tailorkit/db/schema/apps";
+import { and, eq } from "drizzle-orm";
+import { env } from "@tailorkit/env/server";
+import { getStorage } from "@tailorkit/storage/storage";
 
-// Only the authenticated, scope-filtered registry issues these capabilities.
-// Neither a bucket URL nor a platform credential is exposed to the browser.
-export function withClientPath<
-  T extends {
-    id: string;
-    projectId: string;
-    currentDeployment: { id: string; status: string } | null;
-  },
->(app: T): T & { clientPath?: string } {
-  if (app.currentDeployment?.status !== "published") {
-    return app;
-  }
-  const token = signAssetGrant(
-    { projectId: app.projectId, appId: app.id, deploymentId: app.currentDeployment.id },
-    env.AUTH_SECRET ?? "",
-  );
-  return { ...app, clientPath: new URL(`/api/assets/${token}/client.js`, getBaseUrl()).href };
+const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+const assetPath = new RegExp(`^/p/(${uuid})/d/(${uuid})/client\\.js$`, "u");
+const teamLabel = /^[a-z0-9]{10}$/u;
+
+function denied(status = 404) {
+  return new Response(null, { status, headers: { "Cache-Control": "no-store" } });
 }
 
-const headers = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, HEAD, OPTIONS",
-  "cache-control": "private, no-store",
-  "content-security-policy": "default-src 'none'; sandbox",
-  "cross-origin-resource-policy": "cross-origin",
-  "referrer-policy": "no-referrer",
-  "x-content-type-options": "nosniff",
-};
-
-async function readAsset(url: string, contentLength: number) {
-  const upstream = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(15_000) });
-  if (!upstream.ok || !upstream.body) {
-    throw new Error("Asset unavailable");
-  }
-  const reader = upstream.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-    size += value.byteLength;
-    if (size > contentLength || size > 1024 * 1024) {
-      await reader.cancel();
-      throw new Error("Invalid asset size");
-    }
-    chunks.push(value);
-  }
-  if (size !== contentLength) {
-    throw new Error("Invalid asset size");
-  }
-  return Buffer.concat(chunks);
+function blocked(list: string | undefined, id: string) {
+  return list?.split(",").some((item) => item.trim().toLowerCase() === id) ?? false;
 }
 
-export async function handleAssetRequest(request: Request): Promise<Response> {
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers });
-  }
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    return new Response(null, {
-      status: 405,
-      headers: { ...headers, allow: "GET, HEAD, OPTIONS" },
-    });
-  }
-  const match = /^\/api\/assets\/([A-Za-z0-9_.-]+)\/client\.js$/u.exec(
-    new URL(request.url).pathname,
+function authorizedGateway(request: Request) {
+  const secret = env.ASSET_GATEWAY_SECRET;
+  return (
+    Boolean(secret) &&
+    request.method === "GET" &&
+    timingSafeEqual(
+      createHash("sha256")
+        .update(request.headers.get("authorization") ?? "")
+        .digest(),
+      createHash("sha256").update(`Bearer ${secret}`).digest(),
+    )
   );
-  const grant = match?.[1] && verifyAssetGrant(match[1], env.AUTH_SECRET ?? "");
-  if (!grant) {
-    return new Response("Not found", { status: 404, headers });
+}
+
+/** Service-authenticated resolver; it never serves or redirects to customer bytes. */
+export async function resolveAsset(request: Request): Promise<Response> {
+  if (!authorizedGateway(request)) {
+    return denied();
   }
-  try {
-    const app = await db.query.app.findFirst({
-      where: { id: grant.appId, projectId: grant.projectId },
-    });
-    if (!app) {
-      return new Response("Not found", { status: 404, headers });
-    }
-    const deployment = await db.query.appDeployment.findFirst({
-      where: { id: grant.deploymentId, appId: app.id, status: "published" },
-    });
-    if (!deployment?.clientEntryFileId) {
-      return new Response("Not found", { status: 404, headers });
-    }
-    const file = await db.query.appDeploymentFile.findFirst({
-      where: {
-        id: deployment.clientEntryFileId,
-        appDeploymentId: deployment.id,
-        status: "verified",
-      },
-    });
-    const prefix = `projects/${app.projectId}/apps/${app.id}/deployments/${deployment.id}/files/`;
-    if (
-      !file ||
-      !file.objectKey.startsWith(prefix) ||
-      file.contentType !== "application/javascript" ||
-      file.contentLength > 1024 * 1024
-    ) {
-      return new Response("Not found", { status: 404, headers });
-    }
-    const storage = getStorage();
-    if (!storage) {
-      throw new Error("Storage unavailable");
-    }
-    const download = await storage.createDownloadUrl({ key: file.objectKey, expiresInSeconds: 60 });
-    // Fetch server-side: R2 stays private and needs no browser CORS configuration.
-    const bytes = await readAsset(download.url, file.contentLength);
-    return new Response(request.method === "HEAD" ? null : bytes, {
-      headers: {
-        ...headers,
-        "content-type": "application/javascript; charset=utf-8",
-        "content-length": String(bytes.byteLength),
-      },
-    });
-  } catch {
-    return new Response("Asset unavailable", { status: 502, headers });
+
+  const query = new URL(request.url).searchParams;
+  const hostname = query.get("hostname") ?? "";
+  const suffix = `.${env.ASSET_DOMAIN}`;
+  if (!hostname.endsWith(suffix)) {
+    return denied();
   }
+  const publicTeamId = hostname.slice(0, -suffix.length);
+  const match = assetPath.exec(query.get("path") ?? "");
+  const projectId = match?.[1];
+  const deploymentId = match?.[2];
+  if (
+    !teamLabel.test(publicTeamId) ||
+    !projectId ||
+    !deploymentId ||
+    blocked(env.ASSET_BLOCKED_TEAM_IDS, publicTeamId) ||
+    blocked(env.ASSET_BLOCKED_DEPLOYMENT_IDS, deploymentId)
+  ) {
+    return denied();
+  }
+
+  // Public ID is globally unique. All remaining joins use primary/unique indexes;
+  // select exactly one entry file instead of scanning all deployment files.
+  const [file] = await db
+    .select({
+      objectKey: appDeploymentFile.objectKey,
+      checksum: appDeploymentFile.checksum,
+      contentLength: appDeploymentFile.contentLength,
+      appId: app.id,
+    })
+    .from(organization)
+    .innerJoin(project, eq(project.organizationId, organization.id))
+    .innerJoin(app, eq(app.projectId, project.id))
+    .innerJoin(appDeployment, eq(appDeployment.appId, app.id))
+    .innerJoin(
+      appDeploymentFile,
+      and(
+        eq(appDeploymentFile.id, appDeployment.clientEntryFileId),
+        eq(appDeploymentFile.appDeploymentId, appDeployment.id),
+      ),
+    )
+    .where(
+      and(
+        eq(organization.publicId, publicTeamId),
+        eq(project.id, projectId),
+        eq(appDeployment.id, deploymentId),
+        eq(appDeployment.status, "published"),
+        eq(appDeploymentFile.status, "verified"),
+        eq(appDeploymentFile.contentType, "application/javascript"),
+      ),
+    )
+    .limit(1);
+  if (
+    !file ||
+    !file.checksum ||
+    file.contentLength < 1 ||
+    file.contentLength > 1024 * 1024 ||
+    !file.objectKey.startsWith(
+      `projects/${projectId}/apps/${file.appId}/deployments/${deploymentId}/files/`,
+    )
+  ) {
+    return denied();
+  }
+  const storage = getStorage();
+  if (!storage) {
+    return denied(503);
+  }
+  const { url } = await storage.createDownloadUrl({ key: file.objectKey, expiresInSeconds: 60 });
+  return Response.json(
+    { url, checksum: file.checksum, contentLength: file.contentLength },
+    {
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
 }

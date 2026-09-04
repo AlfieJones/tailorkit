@@ -29,6 +29,7 @@ const userId = "44444444-4444-4444-8444-444444444444";
 function createContext(overrides: Partial<Context> = {}): Context {
   return {
     organization: {
+      publicId: "team000001",
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
       id: orgId,
       logo: null,
@@ -75,6 +76,7 @@ describe("platform appRouter", () => {
     });
 
     await db.insert(organization).values({
+      publicId: "team000001",
       id: orgId,
       name: "Analytical Engines",
       slug: "analytical-engines",
@@ -189,7 +191,7 @@ describe("platform appRouter", () => {
     );
 
     expect(result.body.items[0]?.currentDeployment?.id).toBe(deployment.id);
-    expect(result.body.items[0]?.clientPath).toMatch(/\/api\/assets\/.+\/client\.js$/u);
+    expect(result.body.items[0]?.clientPath).toBeUndefined(); // No entry file: not deliverable.
   });
 
   it("does not resolve apps outside the current project or scope", async () => {
