@@ -57,7 +57,11 @@ a:focus-visible {
   padding: 25px 14px 16px;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  align-self: start;
+  height: 100dvh;
+  overflow: hidden;
+  position: sticky;
+  top: 0;
 }
 .brand {
   color: var(--ink);
@@ -104,6 +108,11 @@ a:focus-visible {
   font-size: 10px;
   color: #aaa8ae;
   font-family: inherit;
+}
+.sidebar-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .sidebar-label,
 .tiny-label {
@@ -153,6 +162,7 @@ a:focus-visible {
 }
 .sidebar-bottom {
   margin-top: auto;
+  flex-shrink: 0;
 }
 .help-button {
   background: none;
@@ -659,6 +669,15 @@ a:focus-visible {
   font-size: 21px;
   font-weight: bold;
 }
+.rail-app.coach,
+.coach-logo {
+  background: #153d3a;
+  border-color: #153d3a;
+  color: #d8ff9b;
+  font-family: Georgia, serif;
+  font-size: 17px;
+  font-weight: bold;
+}
 .rail-line {
   border-top: 1px solid #ece9e6;
   margin: 6px 0 2px;
@@ -832,6 +851,9 @@ a:focus-visible {
   border: 1px solid #e7e4e1;
   border-radius: 14px;
   box-shadow: 0 15px 60px #2f273c2e;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 100px);
   padding: 17px;
   position: fixed;
   right: 64px;
@@ -848,6 +870,31 @@ a:focus-visible {
   align-items: center;
   display: flex;
   gap: 8px;
+}
+.app-description {
+  color: #87838a;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 13px 3px 10px;
+}
+.tailorkit-app-view {
+  border: 1px solid #ece9e6;
+  border-radius: 10px;
+  flex: 1;
+  min-height: 250px;
+  overflow: auto;
+}
+.tailorkit-remote-button {
+  background: #635bff;
+  border: 0;
+  border-radius: 7px;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  margin: 4px 0;
+  padding: 9px 11px;
 }
 .stripe-logo {
   align-items: center;
