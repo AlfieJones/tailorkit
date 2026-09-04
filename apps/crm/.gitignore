@@ -1,0 +1,4 @@
+.output/
+.vercel/
+dist/
+node_modules/

@@ -10,6 +10,6 @@ pnpm --filter crm-showcase dev
 
 ## Vercel
 
-Create a new Vercel project from this repository with **Root Directory** set to `apps/crm`. Vercel will detect the Nitro output from TanStack Start. No environment variables are required.
+Create a new Vercel project from this repository with **Root Directory** set to `apps/crm`. The Nitro Vite plugin emits Vercel's Build Output API format. No environment variables are required.
 
 After the first production deployment, assign `crm.tailorkit.dev` under **Project → Settings → Domains**.
