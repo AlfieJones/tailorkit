@@ -1,7 +1,6 @@
 minimumReleaseAge: 4320
 
 packages:
-  - infra
   - apps/*
   - examples/*
   - examples/apps/*

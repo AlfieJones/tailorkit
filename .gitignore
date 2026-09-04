@@ -52,8 +52,6 @@ lerna-debug.log*
 
 # Better-T-Stack
 .alchemy
-.sst
-sst-env.d.ts
 
 # Testing
 coverage

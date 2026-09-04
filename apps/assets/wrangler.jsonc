@@ -1,7 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  // Local development/type generation only. SST owns deployed resources.
-  "name": "tailorkit-assets-local",
+  "name": "tailorkit-assets",
   "main": "src/index.ts",
   // Match the latest date supported by the pinned local workerd runtime.
   "compatibility_date": "2026-08-27",
@@ -9,6 +8,7 @@
   "workers_dev": false,
   "preview_urls": false,
   "secrets": { "required": ["ASSET_GATEWAY_SECRET"] },
+  "routes": [{ "pattern": "*.tailorkit.app/*", "zone_name": "tailorkit.app" }],
   "vars": {
     "ASSET_DOMAIN": "tailorkit.app",
     "PLATFORM_ORIGIN": "https://tailorkit.dev",

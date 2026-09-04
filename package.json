@@ -3,9 +3,6 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "infra:install": "turbo run infra:install --filter=@tailorkit/infra",
-    "infra:diff": "turbo run infra:diff --filter=@tailorkit/infra",
-    "infra:deploy": "turbo run infra:deploy --filter=@tailorkit/infra",
     "dev": "turbo run dev --filter=web",
     "dev:docs": "turbo run dev --filter=docs",
     "build": "turbo run build",
