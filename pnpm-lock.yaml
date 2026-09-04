@@ -1405,15 +1405,6 @@ importers:
       '@fontsource-variable/geist-mono':
         specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource-variable/host-grotesk':
-        specifier: ^5.3.0
-        version: 5.3.0
-      '@fontsource-variable/lora':
-        specifier: ^5.3.0
-        version: 5.3.0
-      '@fontsource-variable/onest':
-        specifier: ^5.3.1
-        version: 5.3.1
       '@tanstack/react-form':
         specifier: ^1.33.5
         version: 1.33.5(@tanstack/react-start@1.168.48(crossws@0.4.12(srvx@0.11.22))(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -2635,15 +2626,6 @@ packages:
 
   '@fontsource-variable/geist@5.3.0':
     resolution: {integrity: sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==}
-
-  '@fontsource-variable/host-grotesk@5.3.0':
-    resolution: {integrity: sha512-WvdqilphrdjYLeCHXny9gkdpIZgzyeHpgRWB8T4LSKs5nVnCs6pYYeCeMiRshxcuB6djqL6CSdF1Hq0BvMNCwA==}
-
-  '@fontsource-variable/lora@5.3.0':
-    resolution: {integrity: sha512-2ph8KiZ8Bn141hWuC3ErtpJ+Ui8p2MJQn8TJNRSRmLmnCIOCtHfiBM9R7WLRPeUG/q6hXyHOxWQ8DvRSX+ixvQ==}
-
-  '@fontsource-variable/onest@5.3.1':
-    resolution: {integrity: sha512-xaaw6G4HDB2/RczsWLD/2bnib4ykmQlTlBUN3GOEOiyErilZukQWVJG95h9zwAy0i8KY+QzDa+COPfqhI72Acw==}
 
   '@fuma-translate/react@1.0.2':
     resolution: {integrity: sha512-uOiOtBx3nRXR8Nu1GzBf1tApgF1FErDBTHxRIAQeyQdyOoZbrNRN6H4kDCWObY4qyGeGbHydG0DHzgeUgFDMIw==}
@@ -11555,12 +11537,6 @@ snapshots:
   '@fontsource-variable/geist-mono@5.3.0': {}
 
   '@fontsource-variable/geist@5.3.0': {}
-
-  '@fontsource-variable/host-grotesk@5.3.0': {}
-
-  '@fontsource-variable/lora@5.3.0': {}
-
-  '@fontsource-variable/onest@5.3.1': {}
 
   '@fuma-translate/react@1.0.2(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:

@@ -15,7 +15,7 @@ export function NotFound() {
     <main className="flex min-h-svh items-center justify-center bg-background px-6 py-16">
       <Empty>
         <EmptyHeader>
-          <EmptyMedia variant="icon" className="tracking-tight text-sm text-foreground">
+          <EmptyMedia variant="icon" className="tracking-tight text-sm text-primary">
             404
           </EmptyMedia>
           <EmptyTitle>Page not found</EmptyTitle>
