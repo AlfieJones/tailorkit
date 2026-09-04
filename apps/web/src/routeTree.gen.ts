@@ -27,6 +27,7 @@ import { Route as appAccountOrganizationsRouteImport } from './routes/(app)/acco
 import { Route as appAccountProfileRouteRouteImport } from './routes/(app)/account/profile/route'
 import { Route as appAccountRequestOrganizationRouteImport } from './routes/(app)/account/request-organization'
 import { Route as appAccountSecurityRouteImport } from './routes/(app)/account/security'
+import { Route as ApiAssetsSplatRouteImport } from './routes/api/assets.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiPlatformSplatRouteImport } from './routes/api/platform.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
@@ -133,6 +134,11 @@ const appAccountSecurityRoute = appAccountSecurityRouteImport.update({
   id: '/security',
   path: '/security',
   getParentRoute: () => appAccountRouteRoute,
+} as any)
+const ApiAssetsSplatRoute = ApiAssetsSplatRouteImport.update({
+  id: '/api/assets/$',
+  path: '/api/assets/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/account/organizations': typeof appAccountOrganizationsRoute
   '/account/request-organization': typeof appAccountRequestOrganizationRoute
   '/account/security': typeof appAccountSecurityRoute
+  '/api/assets/$': typeof ApiAssetsSplatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/platform/$': typeof ApiPlatformSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -274,6 +281,7 @@ export interface FileRoutesByTo {
   '/account/organizations': typeof appAccountOrganizationsRoute
   '/account/request-organization': typeof appAccountRequestOrganizationRoute
   '/account/security': typeof appAccountSecurityRoute
+  '/api/assets/$': typeof ApiAssetsSplatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/platform/$': typeof ApiPlatformSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -308,6 +316,7 @@ export interface FileRoutesById {
   '/(app)/account/organizations': typeof appAccountOrganizationsRoute
   '/(app)/account/request-organization': typeof appAccountRequestOrganizationRoute
   '/(app)/account/security': typeof appAccountSecurityRoute
+  '/api/assets/$': typeof ApiAssetsSplatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/platform/$': typeof ApiPlatformSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/account/organizations'
     | '/account/request-organization'
     | '/account/security'
+    | '/api/assets/$'
     | '/api/auth/$'
     | '/api/platform/$'
     | '/api/rpc/$'
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/account/organizations'
     | '/account/request-organization'
     | '/account/security'
+    | '/api/assets/$'
     | '/api/auth/$'
     | '/api/platform/$'
     | '/api/rpc/$'
@@ -408,6 +419,7 @@ export interface FileRouteTypes {
     | '/(app)/account/organizations'
     | '/(app)/account/request-organization'
     | '/(app)/account/security'
+    | '/api/assets/$'
     | '/api/auth/$'
     | '/api/platform/$'
     | '/api/rpc/$'
@@ -432,6 +444,7 @@ export interface RootRouteChildren {
   appRouteRoute: typeof appRouteRouteWithChildren
   authRouteRoute: typeof authRouteRouteWithChildren
   LogoutRoute: typeof LogoutRoute
+  ApiAssetsSplatRoute: typeof ApiAssetsSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiPlatformSplatRoute: typeof ApiPlatformSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
@@ -564,6 +577,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/security'
       preLoaderRoute: typeof appAccountSecurityRouteImport
       parentRoute: typeof appAccountRouteRoute
+    }
+    '/api/assets/$': {
+      id: '/api/assets/$'
+      path: '/api/assets/$'
+      fullPath: '/api/assets/$'
+      preLoaderRoute: typeof ApiAssetsSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -845,6 +865,7 @@ const rootRouteChildren: RootRouteChildren = {
   appRouteRoute: appRouteRouteWithChildren,
   authRouteRoute: authRouteRouteWithChildren,
   LogoutRoute: LogoutRoute,
+  ApiAssetsSplatRoute: ApiAssetsSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiPlatformSplatRoute: ApiPlatformSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,

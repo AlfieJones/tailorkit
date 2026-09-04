@@ -173,6 +173,10 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "clientPath": {
+                            "type": "string",
+                            "format": "uri"
                           }
                         },
                         "required": [
@@ -367,6 +371,10 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "clientPath": {
+                      "type": "string",
+                      "format": "uri"
                     }
                   },
                   "required": [
@@ -528,6 +536,10 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "clientPath": {
+                      "type": "string",
+                      "format": "uri"
                     }
                   },
                   "required": [
@@ -757,6 +769,10 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "clientPath": {
+                      "type": "string",
+                      "format": "uri"
                     }
                   },
                   "required": [
@@ -934,6 +950,10 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "clientPath": {
+                      "type": "string",
+                      "format": "uri"
                     }
                   },
                   "required": [

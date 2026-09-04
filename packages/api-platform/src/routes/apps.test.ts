@@ -189,6 +189,7 @@ describe("platform appRouter", () => {
     );
 
     expect(result.body.items[0]?.currentDeployment?.id).toBe(deployment.id);
+    expect(result.body.items[0]?.clientPath).toMatch(/\/api\/assets\/.+\/client\.js$/u);
   });
 
   it("does not resolve apps outside the current project or scope", async () => {

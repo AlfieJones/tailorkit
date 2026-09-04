@@ -28,6 +28,7 @@ export interface TailorKitServerBaseOptions {
    * @default process.env.TAILORKIT_PROJECT_KEY
    */
   projectKey?: string;
+  /** Optional custom asset origin. Hosted apps receive a signed clientPath from TailorKit automatically. */
   assetsBaseUrl?: string;
   basePath?: string;
   /**
