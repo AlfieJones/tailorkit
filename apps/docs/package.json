@@ -18,6 +18,7 @@
     ]
   },
   "scripts": {
+    "check-types": "fumadocs-mdx && tsc --noEmit",
     "dev": "vite dev --port 5173",
     "build": "vite build",
     "start": "vite preview",

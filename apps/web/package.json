@@ -13,6 +13,7 @@
     ]
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview",
     "dev": "vite dev --port 3000"

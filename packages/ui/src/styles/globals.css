@@ -164,8 +164,9 @@
   --card-foreground: hsl(0, 0%, 3.9%);
   --popover: hsl(0, 0%, 98%);
   --popover-foreground: hsl(0, 0%, 15.1%);
-  --primary: hsl(252, 70%, 55%);
-  --primary-foreground: hsl(0, 0%, 98%);
+  /* Saturated lime balances brightness with text and hover contrast on light surfaces. */
+  --primary: #507200;
+  --primary-foreground: #ffffff;
   --secondary: hsl(0, 0%, 93.1%);
   --secondary-foreground: hsl(0, 0%, 9%);
   --muted: hsl(0, 0%, 96.1%);
@@ -182,11 +183,11 @@
   --warning-foreground: var(--color-amber-700);
   --border: hsla(0, 0%, 80%, 50%);
   --input: hsl(0, 0%, 86%);
-  --ring: hsl(252, 70%, 55%);
+  --ring: #507200;
   --sidebar: hsl(0, 0%, 94.7%);
   --sidebar-foreground: hsl(0, 0%, 3.9%);
-  --sidebar-primary: hsl(252, 70%, 55%);
-  --sidebar-primary-foreground: hsl(0, 0%, 98%);
+  --sidebar-primary: #507200;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: hsla(0, 0%, 82%, 50%);
   --sidebar-accent-foreground: hsl(0, 0%, 9%);
   --sidebar-border: hsla(0, 0%, 80%, 50%);
@@ -200,8 +201,8 @@
   --card-foreground: hsl(0, 0%, 98%);
   --popover: hsl(0, 0%, 10%);
   --popover-foreground: hsl(0, 0%, 86.9%);
-  --primary: #a191f1;
-  --primary-foreground: hsl(0, 0%, 9%);
+  --primary: #b8e954;
+  --primary-foreground: #000000;
   --secondary: hsl(0, 0%, 12.9%);
   --secondary-foreground: hsl(0, 0%, 92%);
   --muted: hsl(0, 0%, 12.9%);
@@ -218,11 +219,11 @@
   --warning-foreground: var(--color-amber-400);
   --border: hsla(0, 0%, 40%, 20%);
   --input: hsl(0, 0%, 16%);
-  --ring: #a191f1;
+  --ring: #b8e954;
   --sidebar: hsl(0, 0%, 6.25%);
   --sidebar-foreground: hsl(0, 0%, 92%);
-  --sidebar-primary: #a191f1;
-  --sidebar-primary-foreground: hsl(0, 0%, 9%);
+  --sidebar-primary: #b8e954;
+  --sidebar-primary-foreground: #000000;
   --sidebar-accent: hsla(0, 0%, 40.9%, 30%);
   --sidebar-accent-foreground: hsl(0, 0%, 90%);
   --sidebar-border: hsla(0, 0%, 40%, 20%);

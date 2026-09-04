@@ -46,7 +46,7 @@ function Hero() {
   return (
     <section className="border-b border-border px-6 py-16 sm:px-10 sm:py-20 lg:px-16 lg:py-24">
       <div className="mx-auto max-w-6xl">
-        <h1 className="max-w-[52rem] text-balance font-display text-[clamp(3.5rem,7.2vw,6.75rem)] font-semibold leading-[0.88] tracking-[-0.075em]">
+        <h1 className="max-w-[52rem] text-balance font-sans text-[clamp(2.75rem,6vw,5.5rem)] font-semibold leading-[1.05] tracking-[-0.045em]">
           Let users build the features they want <span className="text-primary">with AI.</span>
         </h1>
         <div className="mt-10 max-w-xl">

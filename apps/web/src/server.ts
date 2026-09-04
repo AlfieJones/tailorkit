@@ -6,11 +6,10 @@ const { default: handler, createServerEntry } = await import("@tanstack/react-st
 
 export default createServerEntry({
   fetch(request) {
-    return withRequestSpan(request, "web.request", (span) =>
-      handler.fetch(request).then((response) => {
-        span.setAttribute("http.response.status_code", response.status);
-        return response;
-      }),
-    );
+    return withRequestSpan(request, "web.request", async (span) => {
+      const response = await handler.fetch(request);
+      span.setAttribute("http.response.status_code", response.status);
+      return response;
+    });
   },
 });
