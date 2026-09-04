@@ -2,6 +2,8 @@ import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  // Keep worker assets relative to the package so consuming bundlers can copy them.
+  base: "./",
   build: {
     lib: {
       formats: ["es"],

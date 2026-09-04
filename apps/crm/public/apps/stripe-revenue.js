@@ -12,9 +12,10 @@ function remoteComponent(name, callbacks = {}) {
         continue;
       }
       const eventName = `tailorkitcallback${key.toLowerCase()}`;
+      const callback = nextProps[key];
       callbackMap[eventName] = { callback: key, inputCount };
       nextProps[`on${eventName}`] = (event) =>
-        nextProps[key](...(event.detail ?? []).slice(0, inputCount));
+        callback(...(event.detail ?? []).slice(0, inputCount));
       nextProps[key] = undefined;
     }
     if (Object.keys(callbackMap).length > 0) {

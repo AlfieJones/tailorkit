@@ -1,5 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nitro",
+  "framework": "tanstack-start",
+  "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=crm-showcase",
+  "outputDirectory": null,
   "regions": ["syd1"]
 }
