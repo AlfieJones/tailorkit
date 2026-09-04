@@ -182,7 +182,7 @@ export function CreateOrgDialog({ children, open: openProp, onOpenChange }: Crea
               Close
             </DialogClose>
             <Button
-              disabled={createMutation.isPending || slugAvailability.available === false}
+              disabled={createMutation.isPending || slugAvailability.status === "unavailable"}
               form="create-org-dialog-form"
               size="sm"
               type="submit"
