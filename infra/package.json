@@ -1,0 +1,19 @@
+{
+  "name": "@tailorkit/infra",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "infra:install": "sst install --config ../sst.config.ts --stage staging",
+    "infra:diff": "sst diff --config ../sst.config.ts",
+    "infra:deploy": "sst deploy --config ../sst.config.ts",
+    "check-types": "sst install --config ../sst.config.ts --stage staging && tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "sst": "4.17.1",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

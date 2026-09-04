@@ -8,8 +8,7 @@
     "check-types": "wrangler types && tsc --noEmit",
     "types": "wrangler types",
     "test": "vitest run",
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "dev": "wrangler dev"
   },
   "devDependencies": {
     "typescript": "catalog:",
