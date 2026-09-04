@@ -164,10 +164,11 @@
   --card-foreground: hsl(0, 0%, 3.9%);
   --popover: hsl(0, 0%, 98%);
   --popover-foreground: hsl(0, 0%, 15.1%);
-  --primary: #b8e954;
-  --primary-foreground: #000000;
-  --secondary: #45807a;
-  --secondary-foreground: #ffffff;
+  /* Deeper lime keeps primary text and controls legible on light surfaces. */
+  --primary: #4d7014;
+  --primary-foreground: #ffffff;
+  --secondary: hsl(0, 0%, 93.1%);
+  --secondary-foreground: hsl(0, 0%, 9%);
   --muted: hsl(0, 0%, 96.1%);
   --muted-foreground: hsl(0, 0%, 45.1%);
   --accent: hsla(0, 0%, 82%, 50%);
@@ -182,11 +183,11 @@
   --warning-foreground: var(--color-amber-700);
   --border: hsla(0, 0%, 80%, 50%);
   --input: hsl(0, 0%, 86%);
-  --ring: #b8e954;
+  --ring: #4d7014;
   --sidebar: hsl(0, 0%, 94.7%);
   --sidebar-foreground: hsl(0, 0%, 3.9%);
-  --sidebar-primary: #b8e954;
-  --sidebar-primary-foreground: #000000;
+  --sidebar-primary: #4d7014;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: hsla(0, 0%, 82%, 50%);
   --sidebar-accent-foreground: hsl(0, 0%, 9%);
   --sidebar-border: hsla(0, 0%, 80%, 50%);
@@ -202,8 +203,8 @@
   --popover-foreground: hsl(0, 0%, 86.9%);
   --primary: #b8e954;
   --primary-foreground: #000000;
-  --secondary: #45807a;
-  --secondary-foreground: #ffffff;
+  --secondary: hsl(0, 0%, 12.9%);
+  --secondary-foreground: hsl(0, 0%, 92%);
   --muted: hsl(0, 0%, 12.9%);
   --muted-foreground: hsla(0, 0%, 70%, 0.8);
   --accent: hsla(0, 0%, 40.9%, 30%);
