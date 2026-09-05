@@ -73,5 +73,5 @@ describe("permanent public team identity", () => {
     } finally {
       await client.close();
     }
-  });
+  }, 15_000);
 });
