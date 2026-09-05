@@ -44,25 +44,18 @@ describe("permanent public team identity", () => {
         "CREATE TABLE organization (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text, slug text UNIQUE)",
       );
       await client.exec(migration);
+      await client.exec(hyphenMigration);
       expect(migration).not.toMatch(/public_id[^;]*DEFAULT/iu);
 
       const inserted = await client.query<{ id: string; public_id: string }>(
-        "INSERT INTO organization (name, slug, public_id) VALUES ('Team', 'team', 'abc123def4') RETURNING id, public_id",
+        "INSERT INTO organization (name, slug, public_id) VALUES ('Team', 'team', 'abc123def45678') RETURNING id, public_id",
       );
       const team = inserted.rows[0];
       if (!team) {
         throw new Error("Missing inserted team");
       }
 
-      await client.exec(hyphenMigration);
-      for (const valid of [
-        "team-abcde",
-        "a--------z",
-        "0-123456-9",
-        "team-abcdefghi",
-        "a------------z",
-        "0123456789abcd",
-      ]) {
+      for (const valid of ["team-abcdefghi", "a------------z", "0123456789abcd"]) {
         await client.query("INSERT INTO organization (slug, public_id) VALUES ($1, $2)", [
           valid,
           valid,
@@ -76,17 +69,21 @@ describe("permanent public team identity", () => {
       );
       expect(renamed.rows[0]?.public_id).toBe(team.public_id);
       await expect(
-        client.query("UPDATE organization SET public_id = 'changed000' WHERE id = $1", [team.id]),
+        client.query("UPDATE organization SET public_id = 'changed0000000' WHERE id = $1", [
+          team.id,
+        ]),
       ).rejects.toThrow("Public team IDs are permanent");
       await expect(
         client.query(
-          "INSERT INTO organization (slug, public_id) VALUES ('duplicate', 'abc123def4')",
+          "INSERT INTO organization (slug, public_id) VALUES ('duplicate', 'abc123def45678')",
         ),
       ).rejects.toThrow();
       await expect(
         client.query("INSERT INTO organization (slug) VALUES ('missing')"),
       ).rejects.toThrow();
       for (const invalid of [
+        "abc123def4",
+        "team-abcde",
         "UPPERCASE0",
         "too-short",
         "-bc123def4",
