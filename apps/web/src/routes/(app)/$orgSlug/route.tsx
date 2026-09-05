@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/client";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 
 import { clearActiveOrg, getActiveOrg } from "#lib/active-org";
@@ -13,7 +14,11 @@ export const Route = createFileRoute("/(app)/$orgSlug")({
         context.orpc.user.getOrg.queryOptions({ input: { orgSlug: params.orgSlug } }),
       )
       .catch(async (error: unknown) => {
-        if (!(await getActiveOrg())) {
+        if (
+          !(error instanceof ORPCError) ||
+          error.code !== "NOT_FOUND" ||
+          (await getActiveOrg()) !== params.orgSlug
+        ) {
           throw error;
         }
 
