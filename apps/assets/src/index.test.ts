@@ -43,16 +43,20 @@ describe("tenant asset gateway", () => {
     expect(get).toHaveBeenCalledWith(key.replace("abc123def4", "xyz123def4"));
   });
 
-  it.each(["team-abcde", "a--------z", "0-123456-9"])(
-    "serves bundles for hyphenated team ID %s",
-    async (publicId) => {
-      get.mockResolvedValueOnce(object());
-      const response = await worker.fetch(new Request(url.replace("abc123def4", publicId)), env);
-      expect(response.status).toBe(200);
-      expect(get).toHaveBeenCalledWith(key.replace("abc123def4", publicId));
-      expect(await response.text()).toBe(bundle);
-    },
-  );
+  it.each([
+    "team-abcde",
+    "a--------z",
+    "0-123456-9",
+    "team-abcdefghi",
+    "a------------z",
+    "0123456789abcd",
+  ])("serves bundles for hyphenated team ID %s", async (publicId) => {
+    get.mockResolvedValueOnce(object());
+    const response = await worker.fetch(new Request(url.replace("abc123def4", publicId)), env);
+    expect(response.status).toBe(200);
+    expect(get).toHaveBeenCalledWith(key.replace("abc123def4", publicId));
+    expect(await response.text()).toBe(bundle);
+  });
 
   it("rejects foreign hosts, slugs, malformed paths and query strings before R2", async () => {
     for (const invalid of [
@@ -61,6 +65,13 @@ describe("tenant asset gateway", () => {
       url.replace("abc123def4", "-bc123def4"),
       url.replace("abc123def4", "abc123def-"),
       url.replace("abc123def4", "abc_23def4"),
+      url.replace("abc123def4", "-bc123def45678"),
+      url.replace("abc123def4", "abc123def4567-"),
+      url.replace("abc123def4", "abc_23def45678"),
+      url.replace("abc123def4", "01234567890"),
+      url.replace("abc123def4", "012345678901"),
+      url.replace("abc123def4", "0123456789012"),
+      url.replace("abc123def4", "012345678901234"),
       url.replace("tailorkit.app", "tailorkit.app.evil.example"),
       url.replace("abc123def4", "nested.abc123def4"),
       `${url}?token=anything`,

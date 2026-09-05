@@ -28,7 +28,7 @@ describe("permanent public team identity", () => {
     const ids = Array.from({ length: 1000 }, () => createPublicTeamId());
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) {
-      expect(id).toMatch(/^[a-z0-9][a-z0-9-]{8}[a-z0-9]$/u);
+      expect(id).toMatch(/^[a-z0-9][a-z0-9-]{12}[a-z0-9]$/u);
     }
     expect(ids.some((id) => id.includes("-"))).toBe(true);
     expect(publicTeamIdField).toMatchObject({ required: true, input: false, unique: true });
@@ -55,7 +55,14 @@ describe("permanent public team identity", () => {
       }
 
       await client.exec(hyphenMigration);
-      for (const valid of ["team-abcde", "a--------z", "0-123456-9"]) {
+      for (const valid of [
+        "team-abcde",
+        "a--------z",
+        "0-123456-9",
+        "team-abcdefghi",
+        "a------------z",
+        "0123456789abcd",
+      ]) {
         await client.query("INSERT INTO organization (slug, public_id) VALUES ($1, $2)", [
           valid,
           valid,
@@ -86,6 +93,13 @@ describe("permanent public team identity", () => {
         "abc123def-",
         "abc_23def4",
         "01234567890",
+        "012345678901",
+        "0123456789012",
+        "012345678901234",
+        "-bc123def45678",
+        "abc123def4567-",
+        "abc_23def45678",
+        "ABC123DEF45678",
       ]) {
         await expect(
           client.query("INSERT INTO organization (slug, public_id) VALUES ($1, $2)", [

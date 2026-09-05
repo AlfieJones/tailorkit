@@ -1,5 +1,6 @@
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-const teamLabel = /^[a-z0-9][a-z0-9-]{8}[a-z0-9]$/u;
+// Accept legacy 10-character IDs alongside newly generated 14-character IDs.
+const teamLabel = /^[a-z0-9]([a-z0-9-]{8}|[a-z0-9-]{12})[a-z0-9]$/u;
 const assetPath = new RegExp(`^/p/(${uuid})/a/(${uuid})/d/(${uuid})/client\\.js$`, "u");
 const maxAssetBytes = 1024 * 1024;
 

@@ -3,7 +3,7 @@ import { customAlphabet } from "nanoid";
 // Keep the first and last characters alphanumeric so IDs remain valid DNS labels.
 // Keep the middle alphabet aligned with the database and asset gateway constraints.
 const createEdge = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 1);
-const createMiddle = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz-", 8);
+const createMiddle = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz-", 12);
 
 export function createPublicTeamId() {
   return `${createEdge()}${createMiddle()}${createEdge()}`;
