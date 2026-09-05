@@ -90,12 +90,14 @@ describe("projectRouter", () => {
         id: orgId,
         name: "Analytical Engines",
         slug: "analytical-engines",
+        publicId: "team000001",
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
       },
       {
         id: otherOrgId,
         name: "Compilers Inc",
         slug: "compilers-inc",
+        publicId: "team000002",
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
       },
     ]);

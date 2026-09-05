@@ -6,8 +6,12 @@ import z from "zod";
 import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
 import { createPublicId } from "../public-id";
+import { withAppAssetUrl } from "../asset-url";
 
-const AppWithCurrentDeployment = App.extend({ currentDeployment: AppDeployment.nullable() });
+const AppWithCurrentDeployment = App.extend({
+  currentDeployment: AppDeployment.nullable(),
+  clientPath: z.url().optional(),
+});
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 async function createUniqueAppPublicId(projectId: string) {
@@ -55,7 +59,9 @@ const listApps = protectedRouter
 
     return {
       body: {
-        items: apps.slice(0, pageSize),
+        items: apps
+          .slice(0, pageSize)
+          .map((item) => withAppAssetUrl(item, context.organization.publicId, context.project.id)),
         pagination: {
           hasMore: apps.length > pageSize,
           page,
@@ -80,7 +86,9 @@ const getApp = protectedRouter
   )
   .output(z.object({ body: AppWithCurrentDeployment }))
   .use(requireApp, ({ params: { appId }, query: { scopeId } }) => ({ appId, scopeId }))
-  .handler(({ context }) => ({ body: context.app }));
+  .handler(({ context }) => ({
+    body: withAppAssetUrl(context.app, context.organization.publicId, context.project.id),
+  }));
 
 const createApp = protectedRouter
   .route({
@@ -220,10 +228,11 @@ const deploy = protectedRouter
     }
 
     return {
-      body: {
-        ...updatedApp,
-        currentDeployment: deployment,
-      },
+      body: withAppAssetUrl(
+        { ...updatedApp, currentDeployment: deployment },
+        context.organization.publicId,
+        context.project.id,
+      ),
     };
   });
 

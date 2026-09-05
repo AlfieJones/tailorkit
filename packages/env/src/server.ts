@@ -100,6 +100,10 @@ export const env = createEnv({
     KV_REST_API_TOKEN: z.string().min(1).optional(),
     KV_REST_API_URL: z.url().optional(),
     // Object storage
+    ASSET_DOMAIN: z
+      .string()
+      .regex(/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/u)
+      .default("tailorkit.app"),
     BLOB_BUCKET: z.string().min(1).optional(),
     BLOB_ENDPOINT: z.url().optional(),
     BLOB_REGION: z.string().min(1).optional(),

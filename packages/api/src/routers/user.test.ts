@@ -108,12 +108,14 @@ describe("userRouter", () => {
         id: orgId,
         name: "Analytical Engines",
         slug: "analytical-engines",
+        publicId: "team000001",
         createdAt: new Date("2026-01-02T00:00:00.000Z"),
       },
       {
         id: otherOrgId,
         name: "Compilers Inc",
         slug: "compilers-inc",
+        publicId: "team000002",
         createdAt: new Date("2026-01-02T00:00:00.000Z"),
       },
     ]);
@@ -197,6 +199,7 @@ describe("userRouter", () => {
     vi.mocked(auth.api.createOrganization).mockResolvedValue({
       createdAt: new Date("2026-01-04T00:00:00.000Z"),
       id: "77777777-7777-4777-8777-777777777777",
+      publicId: "team000003",
       members: [],
       metadata: null,
       name: "New Org",

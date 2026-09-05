@@ -55,6 +55,28 @@ optionalSchemaTailor.handler(new Request("https://example.com/api/tailorkit/sche
 });
 
 describe("createTailorKitServer", () => {
+  it("preserves hosted bundle URLs without an assetsBaseUrl override", async () => {
+    const app = {
+      id: "app",
+      clientPath:
+        "https://abc123def4.tailorkit.app/p/22222222-2222-4222-8222-222222222222/a/33333333-3333-4333-8333-333333333333/d/44444444-4444-4444-8444-444444444444/client.js",
+    };
+    const server = createTailorKitServer({
+      projectKey: "server-only-key",
+      components: {},
+      $internal: {
+        platformFetch: () =>
+          Promise.resolve(
+            Response.json({ items: [app], pagination: { hasMore: false, page: 1, pageSize: 100 } }),
+          ),
+      },
+    });
+    const response = await server.handler(new Request("https://host.test/api/tailorkit/apps"), {
+      authenticate: () => ({ scopeId: "workspace" }),
+    });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual([app]);
+  });
   it("dispatches actions with host context and validated input", async () => {
     const requests: Request[] = [];
     const client = createTailorKitClient({

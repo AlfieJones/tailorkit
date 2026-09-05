@@ -22,6 +22,7 @@ export type AppsListResponses = {
   200: {
     items: Array<{
       id: string;
+      publicId: string;
       projectId: string;
       scopeId: string;
       name: string;
@@ -31,12 +32,14 @@ export type AppsListResponses = {
       updatedAt: string;
       currentDeployment: {
         id: string;
+        publicId: string;
         appId: string;
         status: "uploading" | "deploying" | "verifying" | "published";
         clientEntryFileId: string | null;
         createdAt: string;
         updatedAt: string;
       } | null;
+      clientPath?: string;
     }>;
     pagination: {
       hasMore: boolean;
@@ -65,6 +68,7 @@ export type AppsCreateResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     projectId: string;
     scopeId: string;
     name: string;
@@ -74,12 +78,14 @@ export type AppsCreateResponses = {
     updatedAt: string;
     currentDeployment: {
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
+    clientPath?: string;
   };
 };
 
@@ -124,6 +130,7 @@ export type AppsGetResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     projectId: string;
     scopeId: string;
     name: string;
@@ -133,12 +140,14 @@ export type AppsGetResponses = {
     updatedAt: string;
     currentDeployment: {
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
+    clientPath?: string;
   };
 };
 
@@ -164,6 +173,7 @@ export type AppsUpdateResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     projectId: string;
     scopeId: string;
     name: string;
@@ -173,12 +183,14 @@ export type AppsUpdateResponses = {
     updatedAt: string;
     currentDeployment: {
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
+    clientPath?: string;
   };
 };
 
@@ -203,6 +215,7 @@ export type AppsDeployResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     projectId: string;
     scopeId: string;
     name: string;
@@ -212,12 +225,14 @@ export type AppsDeployResponses = {
     updatedAt: string;
     currentDeployment: {
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
+    clientPath?: string;
   };
 };
 
@@ -358,6 +373,7 @@ export type DeploymentsListResponses = {
   200: {
     items: Array<{
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
@@ -383,7 +399,7 @@ export type DeploymentsCreateData = {
         encoding: "utf-8";
         checksum: string;
         contentLength: number;
-        objectKey: string;
+        objectKey: "client.js";
       },
     ];
     scopeId: string;
@@ -420,6 +436,7 @@ export type DeploymentsCreateResponses = {
     ];
     deployment: {
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
@@ -449,6 +466,7 @@ export type DeploymentsGetResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     appId: string;
     status: "uploading" | "deploying" | "verifying" | "published";
     clientEntryFileId: string | null;
@@ -477,6 +495,7 @@ export type DeploymentsPublishResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     appId: string;
     status: "uploading" | "deploying" | "verifying" | "published";
     clientEntryFileId: string | null;

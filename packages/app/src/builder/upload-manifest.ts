@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const tailorkitUploadManifestSchema = z.object({
   assets: z.object({
-    client: z.string().min(1),
+    client: z.literal("client.js"),
   }),
   version: z.literal(1),
 });
