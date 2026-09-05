@@ -32,7 +32,7 @@
     "db:push": "pnpm drizzle-kit push",
     "db:generate": "pnpm drizzle-kit generate",
     "db:studio": "pnpm drizzle-kit studio --port 4020",
-    "db:migrate": "tsx scripts/migrate.ts"
+    "db:migrate": "pnpm drizzle-kit migrate"
   },
   "dependencies": {
     "@tailorkit/env": "workspace:*",
