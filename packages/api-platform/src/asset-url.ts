@@ -8,7 +8,7 @@ export function withAssetUrl(deployment: AppDeployment, publicTeamId: string, pr
   return {
     ...deployment,
     clientEntryUrl:
-      deployment.status === "published" && deployment.clientEntryFileId
+      env.ASSET_GATEWAY_READY && deployment.status === "published" && deployment.clientEntryFileId
         ? `https://${publicTeamId}.${env.ASSET_DOMAIN}/p/${projectId}/a/${deployment.appId}/d/${deployment.id}/client.js`
         : null,
   };
