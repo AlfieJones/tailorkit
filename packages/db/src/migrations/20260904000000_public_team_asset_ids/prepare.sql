@@ -1,4 +1,7 @@
 ALTER TABLE organization ADD COLUMN IF NOT EXISTS public_id text;--> statement-breakpoint
+-- Match the application alphabet: DNS labels are case-insensitive, `_` is
+-- invalid, and `-` cannot occur at either edge. Lowercase alphanumeric is the
+-- largest alphabet safe at every random position.
 CREATE OR REPLACE FUNCTION tailorkit_team_nanoid() RETURNS text LANGUAGE plpgsql VOLATILE AS $$
 DECLARE alphabet constant text := '0123456789abcdefghijklmnopqrstuvwxyz'; result text := ''; candidate integer;
 BEGIN
