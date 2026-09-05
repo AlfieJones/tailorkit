@@ -15,13 +15,22 @@ const migration = await readFile(
   "utf-8",
 );
 
+const hyphenMigration = await readFile(
+  new URL(
+    "../../db/src/migrations/20260905000000_public_team_id_hyphens/migration.sql",
+    import.meta.url,
+  ),
+  "utf-8",
+);
+
 describe("permanent public team identity", () => {
   it("generates lowercase DNS-safe NanoIDs and controls the field in Better Auth", () => {
     const ids = Array.from({ length: 1000 }, () => createPublicTeamId());
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) {
-      expect(id).toMatch(/^[a-z0-9]{10}$/u);
+      expect(id).toMatch(/^[a-z0-9][a-z0-9-]{8}[a-z0-9]$/u);
     }
+    expect(ids.some((id) => id.includes("-"))).toBe(true);
     expect(publicTeamIdField).toMatchObject({ required: true, input: false, unique: true });
     const created = initializePublicTeamId({ slug: "editable", publicId: "attacker00" });
     expect(created.data.publicId).not.toBe("attacker00");
@@ -45,6 +54,14 @@ describe("permanent public team identity", () => {
         throw new Error("Missing inserted team");
       }
 
+      await client.exec(hyphenMigration);
+      for (const valid of ["team-abcde", "a--------z", "0-123456-9"]) {
+        await client.query("INSERT INTO organization (slug, public_id) VALUES ($1, $2)", [
+          valid,
+          valid,
+        ]);
+      }
+
       await client.query("UPDATE organization SET name = 'Renamed' WHERE id = $1", [team.id]);
       const renamed = await client.query<{ public_id: string }>(
         "SELECT public_id FROM organization WHERE id = $1",
@@ -62,7 +79,14 @@ describe("permanent public team identity", () => {
       await expect(
         client.query("INSERT INTO organization (slug) VALUES ('missing')"),
       ).rejects.toThrow();
-      for (const invalid of ["UPPERCASE0", "too-short", "team-abcde", "01234567890"]) {
+      for (const invalid of [
+        "UPPERCASE0",
+        "too-short",
+        "-bc123def4",
+        "abc123def-",
+        "abc_23def4",
+        "01234567890",
+      ]) {
         await expect(
           client.query("INSERT INTO organization (slug, public_id) VALUES ($1, $2)", [
             invalid,

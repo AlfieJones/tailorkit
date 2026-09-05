@@ -1,9 +1,13 @@
 import { customAlphabet } from "nanoid";
 
-// DNS labels are case-insensitive, `_` is invalid, and `-` cannot occur at either
-// edge. Lowercase a-z plus 0-9 is therefore the largest alphabet safe at every
-// random position; keep it aligned with the database format constraint.
-export const createPublicTeamId = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 10);
+// Keep the first and last characters alphanumeric so IDs remain valid DNS labels.
+// Keep the middle alphabet aligned with the database and asset gateway constraints.
+const createEdge = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 1);
+const createMiddle = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz-", 8);
+
+export function createPublicTeamId() {
+  return `${createEdge()}${createMiddle()}${createEdge()}`;
+}
 
 export const publicTeamIdField = {
   type: "string",

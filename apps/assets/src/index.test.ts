@@ -43,10 +43,24 @@ describe("tenant asset gateway", () => {
     expect(get).toHaveBeenCalledWith(key.replace("abc123def4", "xyz123def4"));
   });
 
+  it.each(["team-abcde", "a--------z", "0-123456-9"])(
+    "serves bundles for hyphenated team ID %s",
+    async (publicId) => {
+      get.mockResolvedValueOnce(object());
+      const response = await worker.fetch(new Request(url.replace("abc123def4", publicId)), env);
+      expect(response.status).toBe(200);
+      expect(get).toHaveBeenCalledWith(key.replace("abc123def4", publicId));
+      expect(await response.text()).toBe(bundle);
+    },
+  );
+
   it("rejects foreign hosts, slugs, malformed paths and query strings before R2", async () => {
     for (const invalid of [
       url.replace("abc123def4", "team-abc123def4"),
       url.replace("abc123def4", "editable-slug"),
+      url.replace("abc123def4", "-bc123def4"),
+      url.replace("abc123def4", "abc123def-"),
+      url.replace("abc123def4", "abc_23def4"),
       url.replace("tailorkit.app", "tailorkit.app.evil.example"),
       url.replace("abc123def4", "nested.abc123def4"),
       `${url}?token=anything`,
