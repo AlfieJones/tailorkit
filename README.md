@@ -92,6 +92,17 @@ pnpm services:stop
 Use `pnpm services:watch` to keep service logs attached, or
 `pnpm services:down` to stop and remove the local containers.
 
+The Compose stack includes Postgres and an S3-compatible SeaweedFS service. With
+the local blob variables documented in `packages/storage/README.md`, CLI uploads
+and asset reads stay on the machine.
+
+In development, published app URLs use the platform's built-in `/api/assets`
+Node endpoint. This lets the web app, API, database, and asset delivery run as one
+Node project backed by any S3-compatible store. For a self-hosted production
+deployment, set `ASSET_BASE_URL` to the public endpoint, for example
+`https://tailorkit.example.com/api/assets`. If it is unset in production, app
+URLs continue to use the wildcard asset domain configured by `ASSET_DOMAIN`.
+
 ## License
 
 TailorKit is licensed under AGPL-3.0-only. See [LICENSE](./LICENSE).

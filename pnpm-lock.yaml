@@ -449,6 +449,9 @@ importers:
       '@tailorkit/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@tailorkit/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@tailorkit/ui':
         specifier: workspace:*
         version: link:../../packages/ui
