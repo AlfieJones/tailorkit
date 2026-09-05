@@ -14,6 +14,13 @@ const migration = await readFile(
   ),
   "utf-8",
 );
+const preparation = await readFile(
+  new URL(
+    "../../db/src/migrations/20260904000000_public_team_asset_ids/prepare.sql",
+    import.meta.url,
+  ),
+  "utf-8",
+);
 
 describe("permanent public team identity", () => {
   it("generates lowercase DNS-safe NanoIDs and controls the field in Better Auth", () => {
@@ -34,6 +41,15 @@ describe("permanent public team identity", () => {
       await client.exec(`CREATE TABLE organization (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text, slug text UNIQUE);
         INSERT INTO organization (name, slug) SELECT 'Team ' || n, 'team-' || n FROM generate_series(1, 100) n;`);
       const before = await client.query<{ id: string }>("SELECT id FROM organization ORDER BY id");
+      for (const statement of preparation
+        .split("--> statement-breakpoint")
+        .map((value) => value.trim())
+        .filter(Boolean)) {
+        await client.exec(statement.replace(" CONCURRENTLY", ""));
+      }
+      expect(preparation).toContain("CREATE UNIQUE INDEX CONCURRENTLY");
+      expect(migration).not.toContain("CREATE INDEX CONCURRENTLY");
+      expect(migration).toContain("UNIQUE USING INDEX organization_public_id_key_idx");
       await client.exec(migration);
       const after = await client.query<{ id: string; public_id: string }>(
         "SELECT id, public_id FROM organization ORDER BY id",
