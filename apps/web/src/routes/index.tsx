@@ -1,10 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { createIsomorphicFn } from "@tanstack/react-start";
-import { getCookie } from "@tanstack/react-start/server";
-
-const getActiveOrgId = createIsomorphicFn()
-  .server(() => getCookie("active-org-id"))
-  .client(() => sessionStorage.getItem("active-org-id") ?? "");
+import { clearActiveOrg, getActiveOrgSlug } from "#lib/active-org";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
@@ -24,8 +19,13 @@ export const Route = createFileRoute("/")({
       context.orpc.user.getOrgs.queryOptions(),
     );
 
-    const orgId = getActiveOrgId();
-    const org = orgs.find((org) => org.id === orgId) || orgs[0];
+    const activeOrgSlug = getActiveOrgSlug();
+    const activeOrg = orgs.find((org) => org.slug === activeOrgSlug);
+    if (activeOrgSlug && !activeOrg) {
+      await clearActiveOrg();
+    }
+
+    const org = activeOrg ?? orgs[0];
     if (org?.slug) {
       throw redirect({ params: { orgSlug: org.slug }, to: "/$orgSlug/~/projects" });
     }

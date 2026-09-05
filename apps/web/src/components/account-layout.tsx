@@ -30,9 +30,9 @@ export function AccountSidebar() {
   const isActive = (path: string) => pathname === path;
 
   const { data: orgs } = useQuery(orpc.user.getOrgs.queryOptions());
-  const activeOrgId =
+  const activeOrgSlug =
     typeof window !== "undefined" ? (sessionStorage.getItem("active-org-id") ?? "") : "";
-  const backOrg = orgs?.find((org) => org.id === activeOrgId) ?? orgs?.[0];
+  const backOrg = orgs?.find((org) => org.slug === activeOrgSlug) ?? orgs?.[0];
 
   return (
     <Sidebar>
