@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@tailorkit/db";
 import {
   app,
+  AppDeployment,
   appDeployment,
   AppDeploymentFile,
   appDeploymentFile,
@@ -12,7 +13,6 @@ import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
 import { setSpanAttributes } from "@tailorkit/observability";
 import { createPublicId } from "../public-id";
-import { DeploymentWithAssetUrl, withAssetUrl } from "../asset-url";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
 
@@ -90,7 +90,7 @@ const listAppDeployments = protectedRouter
       query: paginationQuery.extend({ appId: z.string(), scopeId: z.string() }),
     }),
   )
-  .output(paginatedOutput(DeploymentWithAssetUrl))
+  .output(paginatedOutput(AppDeployment))
   .use(requireApp, ({ query: { appId, scopeId } }) => ({ appId, scopeId }))
   .handler(async ({ context, input }) => {
     const { page, pageSize } = input.query;
@@ -107,11 +107,7 @@ const listAppDeployments = protectedRouter
 
     return {
       body: {
-        items: deployments
-          .slice(0, pageSize)
-          .map((deployment) =>
-            withAssetUrl(deployment, context.organization.publicId, context.project.id),
-          ),
+        items: deployments.slice(0, pageSize),
         pagination: {
           hasMore: deployments.length > pageSize,
           page,
@@ -132,14 +128,12 @@ const getAppDeployment = protectedRouter
       query: z.object({ scopeId: z.string() }),
     }),
   )
-  .output(z.object({ body: DeploymentWithAssetUrl }))
+  .output(z.object({ body: AppDeployment }))
   .use(requireDeployment, ({ params: { deploymentId }, query: { scopeId } }) => ({
     deploymentId,
     scopeId,
   }))
-  .handler(({ context }) => ({
-    body: withAssetUrl(context.deployment, context.organization.publicId, context.project.id),
-  }));
+  .handler(({ context }) => ({ body: context.deployment }));
 
 const createAppDeployment = protectedRouter
   .route({
@@ -159,7 +153,7 @@ const createAppDeployment = protectedRouter
     z.object({
       body: z.object({
         assets: z.tuple([deploymentAssetUpload]),
-        deployment: DeploymentWithAssetUrl,
+        deployment: AppDeployment,
       }),
     }),
   )
@@ -237,11 +231,7 @@ const createAppDeployment = protectedRouter
             uploadUrl: uploadUrl.uploadUrl,
           },
         ],
-        deployment: withAssetUrl(
-          createdDeployment,
-          context.organization.publicId,
-          context.project.id,
-        ),
+        deployment: createdDeployment,
       },
     };
   });
@@ -260,7 +250,7 @@ const publishAppDeployment = protectedRouter
       params: z.object({ deploymentId: z.string() }),
     }),
   )
-  .output(z.object({ body: DeploymentWithAssetUrl }))
+  .output(z.object({ body: AppDeployment }))
   .use(requireDeployment, ({ body: { scopeId }, params: { deploymentId } }) => ({
     deploymentId,
     scopeId,
@@ -341,9 +331,7 @@ const publishAppDeployment = protectedRouter
         .where(and(eq(app.id, context.app.id), eq(app.projectId, context.project.id)));
     }
 
-    return {
-      body: withAssetUrl(publishedDeployment, context.organization.publicId, context.project.id),
-    };
+    return { body: publishedDeployment };
   });
 
 export const deploymentRouter = o.prefix("/deployments").router({

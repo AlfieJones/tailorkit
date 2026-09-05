@@ -1,15 +1,15 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@tailorkit/db";
-import { App, app } from "@tailorkit/db/schema/apps";
+import { App, app, AppDeployment } from "@tailorkit/db/schema/apps";
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
 import { createPublicId } from "../public-id";
-import { DeploymentWithAssetUrl, withAppAssetUrl } from "../asset-url";
+import { withAppAssetUrl } from "../asset-url";
 
 const AppWithCurrentDeployment = App.extend({
-  currentDeployment: DeploymentWithAssetUrl.nullable(),
+  currentDeployment: AppDeployment.nullable(),
   clientPath: z.url().optional(),
 });
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
