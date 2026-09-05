@@ -5,8 +5,8 @@ const projectId = "22222222-2222-4222-8222-222222222222";
 const appId = "33333333-3333-4333-8333-333333333333";
 const deploymentId = "44444444-4444-4444-8444-444444444444";
 const path = `/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`;
-const url = `https://abc123def4.tailorkit.app${path}`;
-const key = `teams/abc123def4/projects/${projectId}/apps/${appId}/deployments/${deploymentId}/files/client.js`;
+const url = `https://abc123def45678.tailorkit.app${path}`;
+const key = `teams/abc123def45678/projects/${projectId}/apps/${appId}/deployments/${deploymentId}/files/client.js`;
 const bundle = "export default 'tenant bundle';";
 const get = vi.fn();
 const head = vi.fn();
@@ -38,17 +38,43 @@ describe("tenant asset gateway", () => {
 
   it("uses the hostname tenant ID as part of the storage namespace", async () => {
     get.mockResolvedValueOnce(object());
-    const otherUrl = url.replace("abc123def4", "xyz123def4");
+    const otherUrl = url.replace("abc123def45678", "xyz123def45678");
     await worker.fetch(new Request(otherUrl), env);
-    expect(get).toHaveBeenCalledWith(key.replace("abc123def4", "xyz123def4"));
+    expect(get).toHaveBeenCalledWith(key.replace("abc123def45678", "xyz123def45678"));
   });
+
+  it.each(["team-abcdefghi", "a------------z", "0123456789abcd"])(
+    "serves bundles for hyphenated team ID %s",
+    async (publicId) => {
+      get.mockResolvedValueOnce(object());
+      const response = await worker.fetch(
+        new Request(url.replace("abc123def45678", publicId)),
+        env,
+      );
+      expect(response.status).toBe(200);
+      expect(get).toHaveBeenCalledWith(key.replace("abc123def45678", publicId));
+      expect(await response.text()).toBe(bundle);
+    },
+  );
 
   it("rejects foreign hosts, slugs, malformed paths and query strings before R2", async () => {
     for (const invalid of [
-      url.replace("abc123def4", "team-abc123def4"),
-      url.replace("abc123def4", "editable-slug"),
+      url.replace("abc123def45678", "abc123def4"),
+      url.replace("abc123def45678", "team-abcde"),
+      url.replace("abc123def45678", "team-abc123def45678"),
+      url.replace("abc123def45678", "editable-slug"),
+      url.replace("abc123def45678", "-bc123def4"),
+      url.replace("abc123def45678", "abc123def-"),
+      url.replace("abc123def45678", "abc_23def4"),
+      url.replace("abc123def45678", "-bc123def45678"),
+      url.replace("abc123def45678", "abc123def4567-"),
+      url.replace("abc123def45678", "abc_23def45678"),
+      url.replace("abc123def45678", "01234567890"),
+      url.replace("abc123def45678", "012345678901"),
+      url.replace("abc123def45678", "0123456789012"),
+      url.replace("abc123def45678", "012345678901234"),
       url.replace("tailorkit.app", "tailorkit.app.evil.example"),
-      url.replace("abc123def4", "nested.abc123def4"),
+      url.replace("abc123def45678", "nested.abc123def45678"),
       `${url}?token=anything`,
       url.replace("client.js", "secret.js"),
       url.replace(appId, "app-slug"),

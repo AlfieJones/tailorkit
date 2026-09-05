@@ -27,8 +27,8 @@ describe("hosted asset URLs", () => {
         updatedAt: new Date(),
       },
     };
-    expect(withAppAssetUrl(app, "abc123def4", projectId).clientPath).toBe(
-      `https://abc123def4.tailorkit.app/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`,
+    expect(withAppAssetUrl(app, "abc123def45678", projectId).clientPath).toBe(
+      `https://abc123def45678.tailorkit.app/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`,
     );
   });
 
@@ -45,7 +45,7 @@ describe("hosted asset URLs", () => {
       updatedAt: new Date(),
     };
     expect(
-      withAppAssetUrl({ currentDeployment: deployment }, "abc123def4", projectId).clientPath,
+      withAppAssetUrl({ currentDeployment: deployment }, "abc123def45678", projectId).clientPath,
     ).toBeUndefined();
   });
 });
