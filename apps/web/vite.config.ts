@@ -29,7 +29,15 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       tanstackStart(),
       nitro({
-        serverDir: "server",
+        // Nitro's dev server otherwise treats client.js as a Vite static asset.
+        // Forward this prefix to Start, which owns the endpoint and its handlers.
+        handlers: [{ route: "/api/assets/**", handler: "#start-assets", env: "dev" }],
+        virtual: {
+          "#start-assets": `
+            import { fetchViteEnv } from "nitro/vite/runtime";
+            export default ({ req }) => fetchViteEnv("ssr", req);
+          `,
+        },
         routeRules: {
           "/signup": {
             redirect: {
