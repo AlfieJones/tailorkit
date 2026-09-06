@@ -154,6 +154,10 @@ importers:
         version: 0.2.9(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(esbuild@0.28.2)(happy-dom@20.11.6)(jiti@2.7.0)(tsx@4.23.12)(typescript@7.0.2)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(yaml@2.9.0)
 
   apps/assets:
+    dependencies:
+      '@tailorkit/asset-delivery':
+        specifier: workspace:*
+        version: link:../../packages/asset-delivery
     devDependencies:
       typescript:
         specifier: 'catalog:'
@@ -814,6 +818,9 @@ importers:
       '@tailorkit/api-utils':
         specifier: workspace:*
         version: link:../api-utils
+      '@tailorkit/asset-delivery':
+        specifier: workspace:*
+        version: link:../asset-delivery
       '@tailorkit/auth':
         specifier: workspace:*
         version: link:../auth
@@ -925,6 +932,24 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+
+  packages/asset-delivery:
+    devDependencies:
+      '@tailorkit/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.2.0
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(tsx@4.23.12)(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(@vitest/browser-preview@4.1.10(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vitest@4.1.10))(happy-dom@20.11.6)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
 
   packages/auth:
     dependencies:

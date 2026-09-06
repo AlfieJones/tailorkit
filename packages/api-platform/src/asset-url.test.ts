@@ -57,7 +57,7 @@ describe("hosted asset URLs", () => {
       },
     };
     expect(withAppAssetUrl(app, "abc123def45678", projectId).clientPath).toBe(
-      `http://localhost:3000/api/assets?team=abc123def45678&project=${projectId}&app=${appId}&deployment=${deploymentId}`,
+      `http://localhost:3000/api/assets/t/abc123def45678/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`,
     );
   });
 
@@ -77,7 +77,7 @@ describe("hosted asset URLs", () => {
       },
     };
     expect(withAppAssetUrl(app, "abc123def45678", projectId).clientPath).toBe(
-      `https://tailorkit.example.com/api/assets?team=abc123def45678&project=${projectId}&app=${appId}&deployment=${deploymentId}`,
+      `https://tailorkit.example.com/api/assets/t/abc123def45678/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`,
     );
   });
 

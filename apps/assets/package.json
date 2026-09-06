@@ -11,6 +11,9 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy"
   },
+  "dependencies": {
+    "@tailorkit/asset-delivery": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "catalog:",
     "vitest": "catalog:",

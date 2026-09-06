@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       tanstackStart(),
       nitro({
+        serverDir: "server",
         routeRules: {
           "/signup": {
             redirect: {

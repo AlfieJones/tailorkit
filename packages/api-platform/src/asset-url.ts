@@ -10,11 +10,12 @@ export function withAppAssetUrl<T extends { currentDeployment: AppDeployment | n
   const nodeBaseUrl =
     env.ASSET_BASE_URL ??
     (env.NODE_ENV === "development" ? `${getBaseUrl()}/api/assets` : undefined);
+  const assetBaseUrl = nodeBaseUrl
+    ? `${nodeBaseUrl.replace(/\/$/u, "")}/t/${publicTeamId}`
+    : `https://${publicTeamId}.${env.ASSET_DOMAIN}`;
   let clientPath: string | undefined;
   if (deployment?.status === "published" && deployment.clientEntryFileId) {
-    clientPath = nodeBaseUrl
-      ? `${nodeBaseUrl.replace(/\/$/u, "")}?team=${encodeURIComponent(publicTeamId)}&project=${encodeURIComponent(projectId)}&app=${encodeURIComponent(deployment.appId)}&deployment=${encodeURIComponent(deployment.id)}`
-      : `https://${publicTeamId}.${env.ASSET_DOMAIN}/p/${projectId}/a/${deployment.appId}/d/${deployment.id}/client.js`;
+    clientPath = `${assetBaseUrl}/p/${projectId}/a/${deployment.appId}/d/${deployment.id}/client.js`;
   }
   return { ...app, clientPath };
 }
