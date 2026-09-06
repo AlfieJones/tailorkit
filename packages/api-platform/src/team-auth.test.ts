@@ -28,7 +28,7 @@ describe("Better Auth public team identity", () => {
       .values({ id: userId, name: "Owner", email: "owner@example.test", emailVerified: true });
     const body = { name: "Original", slug: "original", userId, publicId: "attacker00" };
     const created = await auth.api.createOrganization({ body });
-    expect(created?.publicId).toMatch(/^[a-z0-9]{10}$/u);
+    expect(created?.publicId).toMatch(/^[a-z0-9][a-z0-9-]{12}[a-z0-9]$/u);
     expect(created?.publicId).not.toBe("attacker00");
     if (!created) {
       throw new Error("Organization not created");

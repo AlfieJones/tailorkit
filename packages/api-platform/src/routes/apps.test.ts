@@ -29,7 +29,7 @@ const userId = "44444444-4444-4444-8444-444444444444";
 function createContext(overrides: Partial<Context> = {}): Context {
   return {
     organization: {
-      publicId: "team000001",
+      publicId: "team0000000001",
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
       id: orgId,
       logo: null,
@@ -76,7 +76,7 @@ describe("platform appRouter", () => {
     });
 
     await db.insert(organization).values({
-      publicId: "team000001",
+      publicId: "team0000000001",
       id: orgId,
       name: "Analytical Engines",
       slug: "analytical-engines",
