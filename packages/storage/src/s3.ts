@@ -109,6 +109,10 @@ export function createS3CompatibleStorage(options: S3CompatibleStorageOptions): 
           () =>
             getSignedUrl(client, command, {
               expiresIn: input.expiresInSeconds ?? 300,
+              // The upload contract sends this checksum as a header. Keep it
+              // signed there instead of also hoisting it into the query string.
+              unhoistableHeaders: new Set(["x-amz-checksum-sha256"]),
+              signableHeaders: new Set(["content-type"]),
             }),
         ),
         headers: {

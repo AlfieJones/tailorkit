@@ -34,7 +34,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/procedures.ts src/public-id.ts src/asset-url.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts --format esm --dts --clean",
+    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/procedures.ts src/public-id.ts src/asset-url.ts src/assets.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit",
     "generate:openapi": "tsx scripts/generate-openapi.ts",
     "test": "vitest run"
@@ -44,6 +44,7 @@
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "@tailorkit/api-utils": "workspace:*",
+    "@tailorkit/asset-delivery": "workspace:*",
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/env": "workspace:*",
