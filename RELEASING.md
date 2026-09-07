@@ -12,6 +12,6 @@ The public packages are versioned as one fixed group so their versions stay alig
 
 After changes reach `main`, the `Prerelease` GitHub Actions workflow opens or updates a version PR. That PR contains the prerelease versions and generated `CHANGELOG.md` files. Review and merge it to trigger publishing under npm's `beta` dist-tag and creation of GitHub releases.
 
-Publishing supports npm trusted publishing through GitHub OIDC. Configure each npm package to trust repository `AlfieJones/tailorkit`, workflow `release.yml`, and environment `npm-prerelease`. The version PR job does not receive npm permissions; only the protected publish environment can request an identity token. For the very first publish, when a trusted publisher cannot yet be attached to a package, add a short-lived npm automation token as the `NPM_TOKEN` secret on the `npm-prerelease` environment and remove it after trusted publishing is configured.
+Publishing uses npm trusted publishing through GitHub OIDC. Each npm package trusts repository `AlfieJones/tailorkit`, workflow `release.yml`, and environment `npm-release`. The version PR job does not receive npm permissions; only the protected publish environment can request an identity token.
 
 Do not run `changeset pre exit` while stable releases are disabled. The publish guard is a second line of defence, but `.changeset/pre.json` is the source of truth for the active channel.
