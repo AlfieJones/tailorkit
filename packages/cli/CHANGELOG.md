@@ -1,5 +1,13 @@
 # @tailorkit/cli
 
+## 0.1.0-beta.2
+
+### Patch Changes
+
+- Updated dependencies [586cc14]
+  - @tailorkit/core@0.1.0-beta.2
+  - @tailorkit/app@0.1.0-beta.2
+
 ## 0.1.0-beta.1
 
 ### Patch Changes
