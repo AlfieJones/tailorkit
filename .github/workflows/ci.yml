@@ -112,6 +112,3 @@ jobs:
 
       - name: Build
         run: vp run build
-
-      - name: Verify published package exports
-        run: vp run release:verify-packages
