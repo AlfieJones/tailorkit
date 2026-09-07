@@ -1,6 +1,6 @@
-import { createScreen } from "tailorkit/app";
+import { createScreen } from "./app";
 
-declare module "tailorkit/app" {
+declare module "@tailorkit/app" {
   interface TailorKitScreens {
     "/package-test": { context: { customerId: string } };
   }
