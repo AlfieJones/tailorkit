@@ -12,7 +12,8 @@
   },
   "files": [
     "bin",
-    "dist"
+    "dist",
+    "src"
   ],
   "type": "module",
   "imports": {
@@ -40,6 +41,16 @@
       "types": "./dist/react.d.ts",
       "import": "./dist/react.js"
     },
+    "./app": {
+      "development": "./src/app.ts",
+      "types": "./dist/app.d.ts",
+      "import": "./dist/app.js"
+    },
+    "./app/config": {
+      "development": "./src/app-config.ts",
+      "types": "./dist/app-config.d.ts",
+      "import": "./dist/app-config.js"
+    },
     "./zod": {
       "development": "./src/zod.ts",
       "types": "./dist/zod.d.ts",
@@ -60,10 +71,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup ./src/index.ts ./src/server.ts ./src/react.ts ./src/zod.ts ./src/valibot.ts ./src/arktype.ts --out-dir ./dist --format esm --target node20 --minify --clean && tsc -p tsconfig.build.json",
+    "build": "tsup ./src/index.ts ./src/server.ts ./src/react.ts ./src/app.ts ./src/app-config.ts ./src/zod.ts ./src/valibot.ts ./src/arktype.ts --out-dir ./dist --format esm --target node20 --minify --clean && tsc -p tsconfig.build.json",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@tailorkit/app": "workspace:*",
     "@tailorkit/cli": "workspace:*",
     "@tailorkit/core": "workspace:*",
     "@tailorkit/react": "workspace:*"
