@@ -60,7 +60,7 @@ const generatedHeader = `/* eslint-disable */
 // Do not make changes to this file directly, as it will be overwritten.
 // Exclude this file from linting and formatting to avoid checking generated code.
 
-import { createRemoteComponent } from "@tailorkit/app";
+import { createRemoteComponent } from "tailorkit/app";
 `;
 
 const fallbackObjectType = "Record<string, never>";
@@ -453,7 +453,7 @@ export const renderGeneratedTypes = (schema: TailorKitSchemaFile): string => {
   const chunks = [
     generatedHeader,
     renderScreenProps(schema.screens ?? {}),
-    `declare module "@tailorkit/app" {
+    `declare module "tailorkit/app" {
   interface TailorKitScreens extends ScreenPropsByPath {}
 }
 

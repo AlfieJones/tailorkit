@@ -8,22 +8,11 @@
     "directory": "packages/react"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "type": "module",
-  "imports": {
-    "#*": [
-      "./src/*",
-      "./src/*.ts",
-      "./src/*.tsx",
-      "./src/*/index.ts",
-      "./src/*/index.tsx"
-    ]
-  },
   "exports": {
     ".": {
-      "development": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }

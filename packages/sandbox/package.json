@@ -8,42 +8,27 @@
     "directory": "packages/sandbox"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "type": "module",
-  "imports": {
-    "#*": [
-      "./src/*",
-      "./src/*.ts",
-      "./src/*.tsx",
-      "./src/*/index.ts",
-      "./src/*/index.tsx"
-    ]
-  },
   "exports": {
     "./host": {
-      "development": "./src/host/index.ts",
       "types": "./dist/host/index.d.ts",
       "import": "./dist/host.js"
     },
     "./protocol": {
-      "development": "./src/protocol.ts",
       "types": "./dist/protocol.d.ts",
       "import": "./dist/protocol.js"
     },
     "./worker": {
-      "development": "./src/worker/worker.ts",
       "types": "./dist/worker/worker.d.ts",
       "import": "./dist/worker.js"
     },
     "./worker-dom": {
-      "development": "./src/worker-dom/index.ts",
       "types": "./dist/worker-dom/index.d.ts",
       "import": "./dist/worker-dom/index.js"
     },
     "./worker-dom/dom": {
-      "development": "./src/worker-dom/dom.ts",
       "types": "./dist/worker-dom/dom.d.ts",
       "import": "./dist/worker-dom/dom.js"
     }

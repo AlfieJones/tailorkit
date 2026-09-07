@@ -51,16 +51,19 @@
       "dependsOn": ["^lint"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^build", "^check-types"]
     },
     "test": {
+      "dependsOn": ["^build"],
       "outputs": []
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
     "web#dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
       "with": ["//#services:watch", "@tailorkit/db#db:studio"]

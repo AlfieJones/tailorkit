@@ -1,4 +1,4 @@
-import type { TailorKitSchemaSpec } from "../spec";
+import type { TailorKitSchemaSpec } from "../spec/index";
 import type { ActionTree, NoMixedActionContexts } from "./actions";
 import { serializeActions } from "./actions";
 import type {

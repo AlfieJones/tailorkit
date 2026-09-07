@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { createActions } from "../schema";
+import { createActions } from "../schema/index";
 import { createTailorKitClient } from "./client";
 import { createTailorKitServer } from "./handler";
 

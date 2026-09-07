@@ -9,7 +9,7 @@ import type {
   ScreenDefinition,
   ScreenDefinitions,
   TailorKitSchema,
-} from "../schema";
+} from "../schema/index";
 import type { ClientOptions as PlatformClientOptions } from "@tailorkit/client-platform/client/types.gen";
 import type { TailorKitRouter } from "./router";
 
