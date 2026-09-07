@@ -8,8 +8,7 @@
     "directory": "packages/core"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "type": "module",
   "imports": {
@@ -23,42 +22,42 @@
   },
   "exports": {
     "./server": {
-      "development": "./src/server/index.ts",
+      "tailorkit-source": "./src/server/index.ts",
       "types": "./dist/server/index.d.ts",
       "import": "./dist/server.js"
     },
     "./server/types": {
-      "development": "./src/server/types.ts",
+      "tailorkit-source": "./src/server/types.ts",
       "types": "./dist/server/types.d.ts",
       "import": "./dist/server-types.js"
     },
     "./schema": {
-      "development": "./src/schema/index.ts",
+      "tailorkit-source": "./src/schema/index.ts",
       "types": "./dist/schema/index.d.ts",
       "import": "./dist/schema.js"
     },
     "./spec": {
-      "development": "./src/spec/index.ts",
+      "tailorkit-source": "./src/spec/index.ts",
       "types": "./dist/spec/index.d.ts",
       "import": "./dist/spec.js"
     },
     "./primitives/theme": {
-      "development": "./src/primitives/theme.ts",
+      "tailorkit-source": "./src/primitives/theme.ts",
       "types": "./dist/primitives/theme.d.ts",
       "import": "./dist/primitives-theme.js"
     },
     "./primitives/zod": {
-      "development": "./src/primitives/zod.ts",
+      "tailorkit-source": "./src/primitives/zod.ts",
       "types": "./dist/primitives/zod.d.ts",
       "import": "./dist/primitives-zod.js"
     },
     "./primitives/valibot": {
-      "development": "./src/primitives/valibot.ts",
+      "tailorkit-source": "./src/primitives/valibot.ts",
       "types": "./dist/primitives/valibot.d.ts",
       "import": "./dist/primitives-valibot.js"
     },
     "./primitives/arktype": {
-      "development": "./src/primitives/arktype.ts",
+      "tailorkit-source": "./src/primitives/arktype.ts",
       "types": "./dist/primitives/arktype.d.ts",
       "import": "./dist/primitives-arktype.js"
     }

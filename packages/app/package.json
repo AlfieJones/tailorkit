@@ -8,8 +8,7 @@
     "directory": "packages/app"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "type": "module",
   "imports": {
@@ -23,22 +22,22 @@
   },
   "exports": {
     ".": {
-      "development": "./src/index.ts",
+      "tailorkit-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./config": {
-      "development": "./src/config/index.ts",
+      "tailorkit-source": "./src/config/index.ts",
       "types": "./dist/config/index.d.ts",
       "import": "./dist/config.js"
     },
     "./config/loader": {
-      "development": "./src/config/loader.ts",
+      "tailorkit-source": "./src/config/loader.ts",
       "types": "./dist/config/loader.d.ts",
       "import": "./dist/config-loader.js"
     },
     "./builder": {
-      "development": "./src/builder/index.ts",
+      "tailorkit-source": "./src/builder/index.ts",
       "types": "./dist/builder/index.d.ts",
       "import": "./dist/builder.js"
     }

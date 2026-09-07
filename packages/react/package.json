@@ -8,8 +8,7 @@
     "directory": "packages/react"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "type": "module",
   "imports": {
@@ -23,7 +22,7 @@
   },
   "exports": {
     ".": {
-      "development": "./src/index.ts",
+      "tailorkit-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }

@@ -12,8 +12,7 @@
   },
   "files": [
     "bin",
-    "dist",
-    "src"
+    "dist"
   ],
   "type": "module",
   "imports": {
@@ -27,42 +26,42 @@
   },
   "exports": {
     ".": {
-      "development": "./src/index.ts",
+      "tailorkit-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./server": {
-      "development": "./src/server.ts",
+      "tailorkit-source": "./src/server.ts",
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
     },
     "./react": {
-      "development": "./src/react.ts",
+      "tailorkit-source": "./src/react.ts",
       "types": "./dist/react.d.ts",
       "import": "./dist/react.js"
     },
     "./app": {
-      "development": "./src/app.ts",
+      "tailorkit-source": "./src/app.ts",
       "types": "./dist/app.d.ts",
       "import": "./dist/app.js"
     },
     "./app/config": {
-      "development": "./src/app-config.ts",
+      "tailorkit-source": "./src/app-config.ts",
       "types": "./dist/app-config.d.ts",
       "import": "./dist/app-config.js"
     },
     "./zod": {
-      "development": "./src/zod.ts",
+      "tailorkit-source": "./src/zod.ts",
       "types": "./dist/zod.d.ts",
       "import": "./dist/zod.js"
     },
     "./valibot": {
-      "development": "./src/valibot.ts",
+      "tailorkit-source": "./src/valibot.ts",
       "types": "./dist/valibot.d.ts",
       "import": "./dist/valibot.js"
     },
     "./arktype": {
-      "development": "./src/arktype.ts",
+      "tailorkit-source": "./src/arktype.ts",
       "types": "./dist/arktype.d.ts",
       "import": "./dist/arktype.js"
     }
