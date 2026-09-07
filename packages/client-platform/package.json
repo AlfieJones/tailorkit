@@ -8,7 +8,8 @@
     "directory": "packages/client-platform"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "type": "module",
   "imports": {

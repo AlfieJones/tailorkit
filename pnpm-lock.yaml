@@ -1405,6 +1405,9 @@ importers:
 
   packages/tailorkit:
     dependencies:
+      '@tailorkit/app':
+        specifier: workspace:*
+        version: link:../app
       '@tailorkit/cli':
         specifier: workspace:*
         version: link:../cli
