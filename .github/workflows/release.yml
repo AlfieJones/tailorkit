@@ -102,7 +102,7 @@ jobs:
     needs: select-mode
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: npm-prerelease
+    environment: npm-release
     permissions:
       contents: write
       id-token: write
@@ -140,7 +140,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.normalize_only
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: npm-prerelease
+    environment: npm-release
     permissions:
       contents: read
     env:
