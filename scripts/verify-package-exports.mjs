@@ -27,8 +27,9 @@ const matchesTarget = (files, target) => {
   const pattern = new RegExp(
     `^${target
       .split("*")
-      .map((part) => part.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .map((part) => part.replaceAll(/[.*+?^${}()|[\]\\]/gu, "\\$&"))
       .join(".+")}$`,
+    "u",
   );
   return [...files].some((file) => pattern.test(file));
 };
@@ -51,7 +52,7 @@ try {
     }
 
     const result = JSON.parse(
-      execFileSync("npm", ["pack", "--dry-run", "--json"], {
+      execFileSync("npm", ["pack", "--dry-run", "--json", "--loglevel=error"], {
         cwd: packageDirectory,
         encoding: "utf-8",
         env: { ...process.env, npm_config_cache: npmCache },
