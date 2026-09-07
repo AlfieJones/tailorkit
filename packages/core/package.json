@@ -11,15 +11,6 @@
     "dist"
   ],
   "type": "module",
-  "imports": {
-    "#*": [
-      "./src/*",
-      "./src/*.ts",
-      "./src/*.tsx",
-      "./src/*/index.ts",
-      "./src/*/index.tsx"
-    ]
-  },
   "exports": {
     "./server": {
       "types": "./dist/server/index.d.ts",

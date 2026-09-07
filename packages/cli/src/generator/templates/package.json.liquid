@@ -17,14 +17,13 @@
     "fix": "{{ fixScript }}"{% endif %}
   },
   "dependencies": {
-    "@tailorkit/app": "{{ tailorkitAppVersion }}",
+    "tailorkit": "{{ tailorkitVersion }}",
     "preact": "{{ preactVersion }}"
   },
   "devDependencies": {
-    "@tailorkit/cli": "{{ tailorkitCLIVersion }}"{% if linting %},
+    "typescript": "{{ typescriptVersion }}"{% if linting %},
     "oxlint": "{{ oxlintVersion }}"{% endif %}{% if formatting %},
-    "oxfmt": "{{ oxfmtVersion }}"{% endif %},
-    "typescript": "{{ typescriptVersion }}"
+    "oxfmt": "{{ oxfmtVersion }}"{% endif %}
   },
   "type": "module"
 }
