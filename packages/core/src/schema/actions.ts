@@ -1,5 +1,5 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
-import type { TailorKitSchemaSpec } from "../spec";
+import type { TailorKitSchemaSpec } from "../spec/index";
 import type { InferSchema, MaybePromise, Schema, SchemaSerializer } from "./shared";
 import { serializeSchema } from "./shared";
 

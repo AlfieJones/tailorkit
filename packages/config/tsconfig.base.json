@@ -4,7 +4,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "customConditions": ["tailorkit-source", "development"],
+    "customConditions": ["development"],
     "jsx": "react-jsx",
     "lib": ["ESNext"],
     "verbatimModuleSyntax": true,

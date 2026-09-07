@@ -22,17 +22,14 @@
   },
   "exports": {
     ".": {
-      "tailorkit-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./client": {
-      "tailorkit-source": "./src/client/index.ts",
       "types": "./dist/client/index.d.ts",
       "import": "./dist/client/index.js"
     },
     "./client/*": {
-      "tailorkit-source": "./src/client/*.ts",
       "types": "./dist/client/*.d.ts",
       "import": "./dist/client/*.js"
     }

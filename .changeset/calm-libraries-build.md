@@ -7,4 +7,4 @@
 "@tailorkit/sandbox": patch
 ---
 
-Resolve installed packages to compiled distribution files while retaining an explicit source condition for TailorKit's own monorepo development.
+Resolve public packages to compiled distribution files in both development and production, without custom source export conditions.

@@ -22,42 +22,34 @@
   },
   "exports": {
     "./server": {
-      "tailorkit-source": "./src/server/index.ts",
       "types": "./dist/server/index.d.ts",
       "import": "./dist/server.js"
     },
     "./server/types": {
-      "tailorkit-source": "./src/server/types.ts",
       "types": "./dist/server/types.d.ts",
       "import": "./dist/server-types.js"
     },
     "./schema": {
-      "tailorkit-source": "./src/schema/index.ts",
       "types": "./dist/schema/index.d.ts",
       "import": "./dist/schema.js"
     },
     "./spec": {
-      "tailorkit-source": "./src/spec/index.ts",
       "types": "./dist/spec/index.d.ts",
       "import": "./dist/spec.js"
     },
     "./primitives/theme": {
-      "tailorkit-source": "./src/primitives/theme.ts",
       "types": "./dist/primitives/theme.d.ts",
       "import": "./dist/primitives-theme.js"
     },
     "./primitives/zod": {
-      "tailorkit-source": "./src/primitives/zod.ts",
       "types": "./dist/primitives/zod.d.ts",
       "import": "./dist/primitives-zod.js"
     },
     "./primitives/valibot": {
-      "tailorkit-source": "./src/primitives/valibot.ts",
       "types": "./dist/primitives/valibot.d.ts",
       "import": "./dist/primitives-valibot.js"
     },
     "./primitives/arktype": {
-      "tailorkit-source": "./src/primitives/arktype.ts",
       "types": "./dist/primitives/arktype.d.ts",
       "import": "./dist/primitives-arktype.js"
     }

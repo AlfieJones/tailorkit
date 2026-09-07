@@ -6,7 +6,7 @@ import type {
   NoMixedActionContexts,
   ResolveActionTreeContext,
   ScreenContextHierarchy,
-} from "../schema";
+} from "../schema/index";
 import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
 import { normalizeBasePath } from "./apps";

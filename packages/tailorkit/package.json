@@ -26,42 +26,34 @@
   },
   "exports": {
     ".": {
-      "tailorkit-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./server": {
-      "tailorkit-source": "./src/server.ts",
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
     },
     "./react": {
-      "tailorkit-source": "./src/react.ts",
       "types": "./dist/react.d.ts",
       "import": "./dist/react.js"
     },
     "./app": {
-      "tailorkit-source": "./src/app.ts",
       "types": "./dist/app.d.ts",
       "import": "./dist/app.js"
     },
     "./app/config": {
-      "tailorkit-source": "./src/app-config.ts",
       "types": "./dist/app-config.d.ts",
       "import": "./dist/app-config.js"
     },
     "./zod": {
-      "tailorkit-source": "./src/zod.ts",
       "types": "./dist/zod.d.ts",
       "import": "./dist/zod.js"
     },
     "./valibot": {
-      "tailorkit-source": "./src/valibot.ts",
       "types": "./dist/valibot.d.ts",
       "import": "./dist/valibot.js"
     },
     "./arktype": {
-      "tailorkit-source": "./src/arktype.ts",
       "types": "./dist/arktype.d.ts",
       "import": "./dist/arktype.js"
     }
