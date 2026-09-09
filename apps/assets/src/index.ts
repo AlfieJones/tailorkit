@@ -9,8 +9,9 @@ import {
 
 function downstreamResponse(response: Response, method: string) {
   const headers = new Headers(response.headers);
-  // Keep requests flowing through the Worker so a takedown check can be added later.
-  headers.set("Cache-Control", "no-store");
+  // Deployment URLs are immutable, but keep the browser TTL bounded so removed
+  // deployments stop being reused locally within a predictable window.
+  headers.set("Cache-Control", "private, max-age=3600");
   return new Response(method === "HEAD" ? null : response.body, {
     headers,
     status: response.status,

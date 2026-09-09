@@ -48,7 +48,7 @@ describe("tenant asset gateway", () => {
     expect(put).toHaveBeenCalledOnce();
     expect(waitUntil).toHaveBeenCalledOnce();
     expect(await response.text()).toBe(bundle);
-    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Cache-Control")).toBe("private, max-age=3600");
     const cachedResponse = put.mock.calls[0]?.[1];
     expect(cachedResponse?.headers.get("Cache-Control")).toBe("public, max-age=86400");
     expect(response.headers.get("Content-Type")).toBe("application/javascript; charset=utf-8");
@@ -65,7 +65,7 @@ describe("tenant asset gateway", () => {
     const response = await fetchAsset(new Request(url));
     expect(await response.text()).toBe(bundle);
     expect(response.headers.get("ETag")).toBe('"cached"');
-    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Cache-Control")).toBe("private, max-age=3600");
     expect(get).not.toHaveBeenCalled();
     expect(put).not.toHaveBeenCalled();
   });
