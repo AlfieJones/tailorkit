@@ -1,5 +1,6 @@
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-const assetPath = new RegExp(`^/p/(${uuid})/a/(${uuid})/d/(${uuid})/client\\.js$`, "u");
+const publicId = "[0-9a-z]{10}(?:[0-9a-z]{2})?";
+const assetPath = new RegExp(`^/p/(${uuid})/a/(${publicId})/d/(${publicId})/client\\.js$`, "u");
 const teamIdPattern = /^[a-z0-9][a-z0-9-]{12}[a-z0-9]$/u;
 const nodeAssetPath = /^\/api\/assets\/t\/([^/]+)(\/p\/.*)$/u;
 const methods = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -89,7 +90,7 @@ export function assetPreflight(): Response {
 export function assetHeaders(input: { contentLength: number; etag?: string }): Headers {
   const headers = new Headers({
     "Access-Control-Allow-Origin": "*",
-    "Cache-Control": "public, max-age=31536000, immutable",
+    "Cache-Control": "public, max-age=86400",
     "Content-Length": String(input.contentLength),
     "Content-Security-Policy": "default-src 'none'; sandbox",
     "Content-Type": "application/javascript; charset=utf-8",
