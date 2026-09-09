@@ -32,6 +32,19 @@ export interface TailorKitServerBaseOptions {
   assetsBaseUrl?: string;
   basePath?: string;
   /**
+   * Configuration for browser-based TailorKit CLI authentication.
+   */
+  cliAuth?: {
+    /**
+     * Root-relative path to the host application's sign-in page.
+     *
+     * When configured, unauthenticated visitors to the CLI approval page are
+     * redirected here with a `returnTo` query parameter that points back to
+     * the approval page.
+     */
+    signInPath: `/${string}`;
+  };
+  /**
    * Internal TailorKit implementation options.
    *
    * These options are not covered by semantic versioning and may change or
