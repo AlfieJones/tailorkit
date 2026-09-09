@@ -75,7 +75,7 @@ describe("createIframeUiHost", () => {
       credentials: "omit",
     });
     expect(fetch).toHaveBeenCalledWith(new URL("https://host.test/runtime.js"), {
-      credentials: "omit",
+      credentials: "same-origin",
     });
 
     emitFromIframe(host.iframe, {
