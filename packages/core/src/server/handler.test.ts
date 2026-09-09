@@ -245,6 +245,52 @@ describe("createTailorKitServer", () => {
     expect(html).toContain("prefers-color-scheme: dark");
   });
 
+  it("redirects unauthenticated CLI approvals to the host sign-in page", async () => {
+    const server = createTailorKitServer({
+      cliAuth: { signInPath: "/admin/sign-in?source=tailorkit" },
+      components: {},
+    });
+    const response = await server.handler(
+      new Request("https://example.com/api/tailorkit/cli-auth/approve?code=ABC-123-XYZ"),
+      { authenticate: () => null },
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(response.headers.get("location")).toBe(
+      "https://example.com/admin/sign-in?source=tailorkit&returnTo=%2Fapi%2Ftailorkit%2Fcli-auth%2Fapprove%3Fcode%3DABC-123-XYZ",
+    );
+  });
+
+  it("renders configured CLI approvals for authenticated users", async () => {
+    const server = createTailorKitServer({
+      cliAuth: { signInPath: "/admin/sign-in" },
+      components: {},
+    });
+    const response = await server.handler(
+      new Request("https://example.com/api/tailorkit/cli-auth/approve?code=ABC-123-XYZ"),
+      { authenticate: () => ({ scopeId: "test" }) },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.text()).resolves.toContain("Approve CLI login");
+  });
+
+  it("rejects cross-origin CLI sign-in redirects", async () => {
+    const server = createTailorKitServer({
+      cliAuth: { signInPath: "//evil.example/sign-in" },
+      components: {},
+    });
+
+    await expect(
+      server.handler(
+        new Request("https://example.com/api/tailorkit/cli-auth/approve?code=ABC-123-XYZ"),
+        { authenticate: () => null },
+      ),
+    ).rejects.toThrow("TailorKit cliAuth.signInPath must be a same-origin path.");
+  });
+
   it("approves CLI auth from the built-in approval page", async () => {
     const requests: Request[] = [];
     const server = createTailorKitServer({

@@ -129,6 +129,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
         platform: context.platform,
         platformHeaders: context.platformHeaders,
         request,
+        signInPath: options.cliAuth?.signInPath,
       });
     }
 
