@@ -1,5 +1,12 @@
 # @tailorkit/core
 
+## 0.1.0-beta.5
+
+### Patch Changes
+
+- 695cdad: Redirect unauthenticated CLI approval visits through a host application's sign-in page.
+- @tailorkit/client-platform@0.1.0-beta.5
+
 ## 0.1.0-beta.4
 
 ### Patch Changes
