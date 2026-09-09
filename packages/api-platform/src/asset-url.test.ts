@@ -14,6 +14,8 @@ vi.mock("@tailorkit/env/server", () => ({
 const projectId = "22222222-2222-4222-8222-222222222222";
 const appId = "33333333-3333-4333-8333-333333333333";
 const deploymentId = "44444444-4444-4444-8444-444444444444";
+const appPublicId = "app000000001";
+const deploymentPublicId = "deploy000001";
 
 describe("hosted asset URLs", () => {
   afterEach(() => {
@@ -24,10 +26,11 @@ describe("hosted asset URLs", () => {
   it("uses stable team, project, app and deployment identifiers", () => {
     const app = {
       id: appId,
+      publicId: appPublicId,
       currentDeployment: {
         id: deploymentId,
         appId,
-        publicId: "deployment1",
+        publicId: deploymentPublicId,
         status: "published" as const,
         clientEntryFileId: "55555555-5555-4555-8555-555555555555",
         errorMessage: null,
@@ -37,17 +40,18 @@ describe("hosted asset URLs", () => {
       },
     };
     expect(withAppAssetUrl(app, "abc123def45678", projectId).clientPath).toBe(
-      `https://abc123def45678.tailorkit.app/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`,
+      `https://abc123def45678.tailorkit.app/p/${projectId}/a/${appPublicId}/d/${deploymentPublicId}/client.js`,
     );
   });
 
   it("uses the same-origin Node route in local development", () => {
     env.NODE_ENV = "development";
     const app = {
+      publicId: appPublicId,
       currentDeployment: {
         id: deploymentId,
         appId,
-        publicId: "deployment1",
+        publicId: deploymentPublicId,
         status: "published" as const,
         clientEntryFileId: "55555555-5555-4555-8555-555555555555",
         errorMessage: null,
@@ -57,17 +61,18 @@ describe("hosted asset URLs", () => {
       },
     };
     expect(withAppAssetUrl(app, "abc123def45678", projectId).clientPath).toBe(
-      `http://localhost:3000/api/assets/t/abc123def45678/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`,
+      `http://localhost:3000/api/assets/t/abc123def45678/p/${projectId}/a/${appPublicId}/d/${deploymentPublicId}/client.js`,
     );
   });
 
   it("supports the Node asset route in self-hosted production", () => {
     env.ASSET_BASE_URL = "https://tailorkit.example.com/api/assets/";
     const app = {
+      publicId: appPublicId,
       currentDeployment: {
         id: deploymentId,
         appId,
-        publicId: "deployment1",
+        publicId: deploymentPublicId,
         status: "published" as const,
         clientEntryFileId: "55555555-5555-4555-8555-555555555555",
         errorMessage: null,
@@ -77,7 +82,7 @@ describe("hosted asset URLs", () => {
       },
     };
     expect(withAppAssetUrl(app, "abc123def45678", projectId).clientPath).toBe(
-      `https://tailorkit.example.com/api/assets/t/abc123def45678/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`,
+      `https://tailorkit.example.com/api/assets/t/abc123def45678/p/${projectId}/a/${appPublicId}/d/${deploymentPublicId}/client.js`,
     );
   });
 
@@ -85,7 +90,7 @@ describe("hosted asset URLs", () => {
     const deployment = {
       id: deploymentId,
       appId,
-      publicId: "deployment1",
+      publicId: deploymentPublicId,
       status: "uploading" as const,
       clientEntryFileId: null,
       errorMessage: null,
@@ -94,7 +99,11 @@ describe("hosted asset URLs", () => {
       updatedAt: new Date(),
     };
     expect(
-      withAppAssetUrl({ currentDeployment: deployment }, "abc123def45678", projectId).clientPath,
+      withAppAssetUrl(
+        { currentDeployment: deployment, publicId: appPublicId },
+        "abc123def45678",
+        projectId,
+      ).clientPath,
     ).toBeUndefined();
   });
 });

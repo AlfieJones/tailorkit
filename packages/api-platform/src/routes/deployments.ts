@@ -161,8 +161,9 @@ const createAppDeployment = protectedRouter
   .handler(async ({ context, input }) => {
     const [asset] = input.body.assets;
     const deploymentId = crypto.randomUUID();
+    const deploymentPublicId = createPublicId();
     const fileId = crypto.randomUUID();
-    const objectKey = `teams/${context.organization.publicId}/projects/${context.project.id}/apps/${context.app.id}/deployments/${deploymentId}/files/${asset.objectKey}`;
+    const objectKey = `teams/${context.organization.publicId}/projects/${context.project.id}/apps/${context.app.publicId}/deployments/${deploymentPublicId}/files/${asset.objectKey}`;
     const checksumSha256 = hexToBase64(asset.checksum);
     const uploadUrl = await context.storage.createUploadUrl({
       checksumSha256,
@@ -182,7 +183,7 @@ const createAppDeployment = protectedRouter
         .values({
           id: deploymentId,
           appId: context.app.id,
-          publicId: createPublicId(),
+          publicId: deploymentPublicId,
           status: "uploading",
         })
         .returning();

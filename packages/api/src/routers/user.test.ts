@@ -36,6 +36,7 @@ vi.mock("@tailorkit/env/server", () => ({
 }));
 
 const { userRouter } = await import("./user");
+const { orgRouter } = await import("./org");
 const { auth } = await import("@tailorkit/auth");
 
 const userId = "11111111-1111-4111-8111-111111111111";
@@ -132,6 +133,34 @@ describe("userRouter", () => {
   afterEach(async () => {
     await client.close();
     vi.clearAllMocks();
+  });
+
+  it("requires invitation management permission to enumerate pending invitations", async () => {
+    await db.insert(invitation).values({
+      organizationId: orgId,
+      email: "charles@example.com",
+      role: "member",
+      status: "pending",
+      expiresAt: new Date("2099-02-01T00:00:00.000Z"),
+      inviterId: userId,
+    });
+    vi.mocked(auth.api.hasPermission).mockResolvedValueOnce({ error: null, success: false });
+
+    await expect(
+      call(
+        orgRouter.getOrgInvitations,
+        { orgSlug: "analytical-engines" },
+        { context: createContext() },
+      ),
+    ).rejects.toEqual(expect.objectContaining({ code: "FORBIDDEN" }));
+
+    expect(auth.api.hasPermission).toHaveBeenCalledWith({
+      body: {
+        organizationId: orgId,
+        permissions: { invitation: ["read"] },
+      },
+      headers: expect.any(Headers),
+    });
   });
 
   it("returns the current session and user", async () => {

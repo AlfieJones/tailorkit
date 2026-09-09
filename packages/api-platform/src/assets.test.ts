@@ -4,8 +4,8 @@ import { handleAssetRequest } from "./assets";
 
 const teamId = "abc123def45678";
 const projectId = "22222222-2222-4222-8222-222222222222";
-const appId = "33333333-3333-4333-8333-333333333333";
-const deploymentId = "44444444-4444-4444-8444-444444444444";
+const appId = "app000000001";
+const deploymentId = "deploy000001";
 const url = `http://localhost:3000/api/assets/t/${teamId}/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`;
 const key = `teams/${teamId}/projects/${projectId}/apps/${appId}/deployments/${deploymentId}/files/client.js`;
 const bundle = "export default 'local asset';";

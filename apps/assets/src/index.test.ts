@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import worker from "./index";
 
 const projectId = "22222222-2222-4222-8222-222222222222";
-const appId = "33333333-3333-4333-8333-333333333333";
-const deploymentId = "44444444-4444-4444-8444-444444444444";
+const appId = "app000000001";
+const deploymentId = "deploy000001";
 const path = `/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`;
 const url = `https://abc123def45678.tailorkit.app${path}`;
 const key = `teams/abc123def45678/projects/${projectId}/apps/${appId}/deployments/${deploymentId}/files/client.js`;
@@ -48,11 +48,9 @@ describe("tenant asset gateway", () => {
     expect(put).toHaveBeenCalledOnce();
     expect(waitUntil).toHaveBeenCalledOnce();
     expect(await response.text()).toBe(bundle);
-    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Cache-Control")).toBe("private, max-age=3600");
     const cachedResponse = put.mock.calls[0]?.[1];
-    expect(cachedResponse?.headers.get("Cache-Control")).toBe(
-      "public, max-age=31536000, immutable",
-    );
+    expect(cachedResponse?.headers.get("Cache-Control")).toBe("public, max-age=86400");
     expect(response.headers.get("Content-Type")).toBe("application/javascript; charset=utf-8");
     expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
     expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
@@ -67,7 +65,7 @@ describe("tenant asset gateway", () => {
     const response = await fetchAsset(new Request(url));
     expect(await response.text()).toBe(bundle);
     expect(response.headers.get("ETag")).toBe('"cached"');
-    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Cache-Control")).toBe("private, max-age=3600");
     expect(get).not.toHaveBeenCalled();
     expect(put).not.toHaveBeenCalled();
   });

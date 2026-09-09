@@ -21,7 +21,7 @@ export const app = pgTable(
     id: uuid("id")
       .default(sql`pg_catalog.gen_random_uuid()`)
       .primaryKey(),
-    publicId: varchar("public_id", { length: 10 }).notNull(),
+    publicId: varchar("public_id", { length: 12 }).notNull(),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
@@ -68,7 +68,7 @@ export const appDeployment = pgTable(
     id: uuid("id")
       .default(sql`pg_catalog.gen_random_uuid()`)
       .primaryKey(),
-    publicId: varchar("public_id", { length: 10 }).notNull(),
+    publicId: varchar("public_id", { length: 12 }).notNull(),
     appId: uuid("app_id")
       .notNull()
       .references(() => app.id, { onDelete: "cascade" }),

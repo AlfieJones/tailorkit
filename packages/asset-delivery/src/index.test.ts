@@ -11,8 +11,8 @@ import {
 
 const teamId = "abc123def45678";
 const projectId = "22222222-2222-4222-8222-222222222222";
-const appId = "33333333-3333-4333-8333-333333333333";
-const deploymentId = "44444444-4444-4444-8444-444444444444";
+const appId = "app000000001";
+const deploymentId = "deploy000001";
 const assetPath = `/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`;
 const localUrl = `http://localhost:3000/api/assets/t/${teamId}${assetPath}`;
 const hostedUrl = `https://${teamId}.tailorkit.app${assetPath}`;
@@ -66,5 +66,6 @@ describe("asset delivery contract", () => {
     expect(headers.get("Content-Length")).toBe("10");
     expect(headers.get("ETag")).toBe('"etag"');
     expect(headers.get("Access-Control-Allow-Origin")).toBe("*");
+    expect(headers.get("Cache-Control")).toBe("public, max-age=86400");
   });
 });
