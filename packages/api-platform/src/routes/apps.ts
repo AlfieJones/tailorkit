@@ -11,6 +11,7 @@ import { withAppAssetUrl } from "../asset-url";
 const AppWithCurrentDeployment = App.extend({
   currentDeployment: AppDeployment.nullable(),
   clientPath: z.url().optional(),
+  logoPaths: z.object({ dark: z.url().optional(), light: z.url().optional() }).optional(),
 });
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 

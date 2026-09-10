@@ -36,10 +36,18 @@ export type AppsListResponses = {
         appId: string;
         status: "uploading" | "deploying" | "verifying" | "published";
         clientEntryFileId: string | null;
+        logoLightFileId: string | null;
+        logoDarkFileId: string | null;
+        logoLightPath: string | null;
+        logoDarkPath: string | null;
         createdAt: string;
         updatedAt: string;
       } | null;
       clientPath?: string;
+      logoPaths?: {
+        dark?: string;
+        light?: string;
+      };
     }>;
     pagination: {
       hasMore: boolean;
@@ -82,10 +90,18 @@ export type AppsCreateResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
     clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -144,10 +160,18 @@ export type AppsGetResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
     clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -187,10 +211,18 @@ export type AppsUpdateResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
     clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -229,10 +261,18 @@ export type AppsDeployResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
     clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -377,6 +417,10 @@ export type DeploymentsListResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     }>;
@@ -395,13 +439,25 @@ export type DeploymentsCreateData = {
     appId: string;
     assets: [
       {
-        contentType: "application/javascript";
-        encoding: "utf-8";
         checksum: string;
         contentLength: number;
+        contentType: "application/javascript";
+        encoding: "utf-8";
         objectKey: "client.js";
       },
     ];
+    logos?: {
+      dark?: {
+        checksum: string;
+        contentLength: number;
+        contentType: "image/svg+xml" | "image/png" | "image/webp";
+      };
+      light?: {
+        checksum: string;
+        contentLength: number;
+        contentType: "image/svg+xml" | "image/png" | "image/webp";
+      };
+    };
     scopeId: string;
   };
   path?: never;
@@ -414,14 +470,45 @@ export type DeploymentsCreateResponses = {
    * OK
    */
   200: {
-    assets: [
-      {
+    assets: Array<{
+      file: {
+        id: string;
+        appDeploymentId: string;
+        objectKey: string;
+        contentType: "application/javascript" | "image/svg+xml" | "image/png" | "image/webp";
+        encoding: "utf-8" | null;
+        contentLength: number;
+        checksum: string | null;
+        status: "uploading" | "verifying" | "verified" | "failed";
+        createdAt: string;
+        updatedAt: string;
+      };
+      headers?: {
+        [key: string]: string;
+      };
+      uploadUrl: string;
+    }>;
+    deployment: {
+      id: string;
+      publicId: string;
+      appId: string;
+      status: "uploading" | "deploying" | "verifying" | "published";
+      clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    logos?: {
+      dark?: {
         file: {
           id: string;
           appDeploymentId: string;
           objectKey: string;
-          contentType: "application/javascript";
-          encoding: "utf-8";
+          contentType: "image/svg+xml" | "image/png" | "image/webp";
+          encoding: "utf-8" | null;
           contentLength: number;
           checksum: string | null;
           status: "uploading" | "verifying" | "verified" | "failed";
@@ -432,16 +519,25 @@ export type DeploymentsCreateResponses = {
           [key: string]: string;
         };
         uploadUrl: string;
-      },
-    ];
-    deployment: {
-      id: string;
-      publicId: string;
-      appId: string;
-      status: "uploading" | "deploying" | "verifying" | "published";
-      clientEntryFileId: string | null;
-      createdAt: string;
-      updatedAt: string;
+      };
+      light?: {
+        file: {
+          id: string;
+          appDeploymentId: string;
+          objectKey: string;
+          contentType: "image/svg+xml" | "image/png" | "image/webp";
+          encoding: "utf-8" | null;
+          contentLength: number;
+          checksum: string | null;
+          status: "uploading" | "verifying" | "verified" | "failed";
+          createdAt: string;
+          updatedAt: string;
+        };
+        headers?: {
+          [key: string]: string;
+        };
+        uploadUrl: string;
+      };
     };
   };
 };
@@ -470,6 +566,10 @@ export type DeploymentsGetResponses = {
     appId: string;
     status: "uploading" | "deploying" | "verifying" | "published";
     clientEntryFileId: string | null;
+    logoLightFileId: string | null;
+    logoDarkFileId: string | null;
+    logoLightPath: string | null;
+    logoDarkPath: string | null;
     createdAt: string;
     updatedAt: string;
   };
@@ -499,6 +599,10 @@ export type DeploymentsPublishResponses = {
     appId: string;
     status: "uploading" | "deploying" | "verifying" | "published";
     clientEntryFileId: string | null;
+    logoLightFileId: string | null;
+    logoDarkFileId: string | null;
+    logoLightPath: string | null;
+    logoDarkPath: string | null;
     createdAt: string;
     updatedAt: string;
   };

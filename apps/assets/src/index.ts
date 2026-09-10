@@ -47,7 +47,11 @@ export default {
         }
         return downstreamResponse(
           new Response(null, {
-            headers: assetHeaders({ contentLength: object.size, etag: object.httpEtag }),
+            headers: assetHeaders({
+              contentLength: object.size,
+              contentType: identity.contentType,
+              etag: object.httpEtag,
+            }),
           }),
           request.method,
         );
@@ -57,7 +61,11 @@ export default {
         return assetFailure(404);
       }
       const response = new Response(object.body, {
-        headers: assetHeaders({ contentLength: object.size, etag: object.httpEtag }),
+        headers: assetHeaders({
+          contentLength: object.size,
+          contentType: identity.contentType,
+          etag: object.httpEtag,
+        }),
       });
       ctx.waitUntil(
         caches.default.put(cacheKey, response.clone()).catch(() => {
