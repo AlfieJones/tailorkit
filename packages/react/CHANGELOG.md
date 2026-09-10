@@ -1,5 +1,15 @@
 # @tailorkit/react
 
+## 0.1.0-beta.7
+
+### Patch Changes
+
+- 2e7b3a4: Add optional light and dark app logos to the deployment pipeline, including validated SVG, PNG, and WebP uploads, hosted logo URLs, and a 1 MiB combined client asset limit.
+- Updated dependencies [2e7b3a4]
+- Updated dependencies [d75e2fe]
+  - @tailorkit/core@0.1.0-beta.7
+  - @tailorkit/sandbox@0.1.0-beta.7
+
 ## 0.1.0-beta.6
 
 ### Patch Changes
