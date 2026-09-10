@@ -39,7 +39,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1.18.0
+        uses: voidzero-dev/setup-vp@v1.19.0
         with:
           node-version: 24
           cache: false
@@ -50,7 +50,7 @@ jobs:
 
       - name: Select Changesets mode
         id: changesets
-        uses: changesets/action/select-mode@v2.1.1
+        uses: changesets/action/select-mode@v2.1.2
 
   version:
     name: Update version PR
@@ -72,7 +72,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1.18.0
+        uses: voidzero-dev/setup-vp@v1.19.0
         with:
           node-version: 24
           cache: false
@@ -82,7 +82,7 @@ jobs:
         run: vp install --frozen-lockfile
 
       - name: Create or update version PR
-        uses: changesets/action/version@v2.1.1
+        uses: changesets/action/version@v2.1.2
         with:
           script: vp run release:version
           commit-message: "chore: version beta packages"
@@ -113,7 +113,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1.18.0
+        uses: voidzero-dev/setup-vp@v1.19.0
         with:
           node-version: 24
           cache: false
@@ -123,7 +123,7 @@ jobs:
         run: vp install --frozen-lockfile
 
       - name: Build and publish prerelease
-        uses: changesets/action/publish@v2.1.1
+        uses: changesets/action/publish@v2.1.2
         with:
           script: vp run release:publish
           create-github-releases: true
