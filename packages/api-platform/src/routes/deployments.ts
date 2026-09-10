@@ -13,7 +13,12 @@ import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
 import { setSpanAttributes } from "@tailorkit/observability";
 import { createPublicId } from "../public-id";
-import { maxDeploymentBytes, maxLogoBytes, validateLogoAsset } from "@tailorkit/asset-delivery";
+import {
+  logoContentTypes,
+  maxDeploymentBytes,
+  maxLogoBytes,
+  validateLogoAsset,
+} from "@tailorkit/asset-delivery";
 import type { LogoContentType } from "@tailorkit/asset-delivery";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
@@ -23,6 +28,7 @@ const logoExtensionByContentType = {
   "image/svg+xml": "svg",
   "image/webp": "webp",
 } as const;
+const logoContentType = z.enum(logoContentTypes);
 
 const deploymentFileMetadataShape = {
   checksum: z
@@ -42,7 +48,7 @@ const createDeploymentAssetInput = z.object({
 const createDeploymentLogoInput = z.object({
   ...deploymentFileMetadataShape,
   contentLength: z.number().int().min(1).max(maxLogoBytes),
-  contentType: z.enum(["image/svg+xml", "image/png", "image/webp"]),
+  contentType: logoContentType,
 });
 
 const createDeploymentInput = z
@@ -69,9 +75,13 @@ const deploymentAssetUpload = z.object({
   uploadUrl: z.url(),
 });
 
+const deploymentLogoUpload = deploymentAssetUpload.extend({
+  file: AppDeploymentFile.extend({ contentType: logoContentType }),
+});
+
 const deploymentLogoUploads = z.object({
-  dark: deploymentAssetUpload.optional(),
-  light: deploymentAssetUpload.optional(),
+  dark: deploymentLogoUpload.optional(),
+  light: deploymentLogoUpload.optional(),
 });
 
 const requireDeployment = o.middleware(

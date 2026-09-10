@@ -507,7 +507,7 @@ export type DeploymentsCreateResponses = {
           id: string;
           appDeploymentId: string;
           objectKey: string;
-          contentType: "application/javascript" | "image/svg+xml" | "image/png" | "image/webp";
+          contentType: "image/svg+xml" | "image/png" | "image/webp";
           encoding: "utf-8" | null;
           contentLength: number;
           checksum: string | null;
@@ -525,7 +525,7 @@ export type DeploymentsCreateResponses = {
           id: string;
           appDeploymentId: string;
           objectKey: string;
-          contentType: "application/javascript" | "image/svg+xml" | "image/png" | "image/webp";
+          contentType: "image/svg+xml" | "image/png" | "image/webp";
           encoding: "utf-8" | null;
           contentLength: number;
           checksum: string | null;

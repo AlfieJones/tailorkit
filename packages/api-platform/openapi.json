@@ -2027,12 +2027,7 @@
                                   "pattern": "^(?:[a-zA-Z0-9._-]+\\/)*[a-zA-Z0-9._-]+\\.[a-zA-Z0-9]+$"
                                 },
                                 "contentType": {
-                                  "enum": [
-                                    "application/javascript",
-                                    "image/svg+xml",
-                                    "image/png",
-                                    "image/webp"
-                                  ],
+                                  "enum": ["image/svg+xml", "image/png", "image/webp"],
                                   "type": "string"
                                 },
                                 "encoding": {
@@ -2126,12 +2121,7 @@
                                   "pattern": "^(?:[a-zA-Z0-9._-]+\\/)*[a-zA-Z0-9._-]+\\.[a-zA-Z0-9]+$"
                                 },
                                 "contentType": {
-                                  "enum": [
-                                    "application/javascript",
-                                    "image/svg+xml",
-                                    "image/png",
-                                    "image/webp"
-                                  ],
+                                  "enum": ["image/svg+xml", "image/png", "image/webp"],
                                   "type": "string"
                                 },
                                 "encoding": {
