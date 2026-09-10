@@ -904,9 +904,6 @@ importers:
 
   packages/app:
     dependencies:
-      '@tailorkit/asset-delivery':
-        specifier: workspace:*
-        version: link:../asset-delivery
       '@tailorkit/core':
         specifier: workspace:*
         version: link:../core
@@ -920,6 +917,9 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@tailorkit/asset-delivery':
+        specifier: workspace:*
+        version: link:../asset-delivery
       '@tailorkit/config':
         specifier: workspace:*
         version: link:../config
