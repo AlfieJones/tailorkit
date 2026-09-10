@@ -1,7 +1,11 @@
 import { ORPCError } from "@orpc/server";
-import { logoContentTypes, maxLogoBytes, validateLogoAsset } from "@tailorkit/app-assets";
-import type { LogoContentType } from "@tailorkit/app-assets";
 import { maxDeploymentBytes } from "@tailorkit/asset-delivery";
+import {
+  logoContentTypes,
+  maxLogoBytes,
+  validateLogoAsset,
+} from "@tailorkit/asset-delivery/logo-validation";
+import type { LogoContentType } from "@tailorkit/asset-delivery/logo-validation";
 import { db } from "@tailorkit/db";
 import {
   app,

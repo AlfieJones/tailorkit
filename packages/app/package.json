@@ -43,7 +43,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@tailorkit/app-assets": "workspace:*",
+    "@tailorkit/asset-delivery": "workspace:*",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "preact": "^10.29.8",

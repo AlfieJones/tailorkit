@@ -44,7 +44,6 @@
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "@tailorkit/api-utils": "workspace:*",
-    "@tailorkit/app-assets": "workspace:*",
     "@tailorkit/asset-delivery": "workspace:*",
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateLogoAsset } from "./index";
+import { validateLogoAsset } from "./logo-validation";
 
 describe("logo validation", () => {
   const png = (width: number, height: number): Uint8Array => {

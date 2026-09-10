@@ -1,4 +1,4 @@
-import type { LogoContentType } from "@tailorkit/app-assets";
+import type { LogoContentType } from "./logo-validation";
 
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const publicId = "[0-9a-z]{10}(?:[0-9a-z]{2})?";
