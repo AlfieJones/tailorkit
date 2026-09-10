@@ -1,5 +1,11 @@
 # @tailorkit/sandbox
 
+## 0.1.0-beta.7
+
+### Patch Changes
+
+- d75e2fe: Fix TailorKit sandbox workers served from package paths by Vite development servers so injected HMR imports resolve inside the isolated worker runtime.
+
 ## 0.1.0-beta.6
 
 ### Patch Changes
