@@ -1712,73 +1712,80 @@
                   },
                   "assets": {
                     "type": "array",
-                    "minItems": 1,
-                    "maxItems": 3,
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "contentType": {
-                              "const": "application/javascript"
-                            },
-                            "checksum": {
-                              "type": "string",
-                              "pattern": "^[a-f0-9]{64}$"
-                            },
-                            "contentLength": {
-                              "type": "integer",
-                              "minimum": 1,
-                              "maximum": 1048576
-                            },
-                            "encoding": {
-                              "const": "utf-8"
-                            },
-                            "objectKey": {
-                              "const": "client.js"
-                            }
+                    "prefixItems": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "checksum": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
                           },
-                          "required": [
-                            "contentType",
-                            "checksum",
-                            "contentLength",
-                            "encoding",
-                            "objectKey"
-                          ]
+                          "contentLength": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1048576
+                          },
+                          "contentType": {
+                            "const": "application/javascript"
+                          },
+                          "encoding": {
+                            "const": "utf-8"
+                          },
+                          "objectKey": {
+                            "const": "client.js"
+                          }
                         },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "contentType": {
-                              "enum": ["image/svg+xml", "image/png", "image/webp"],
-                              "type": "string"
-                            },
-                            "checksum": {
-                              "type": "string",
-                              "pattern": "^[a-f0-9]{64}$"
-                            },
-                            "contentLength": {
-                              "type": "integer",
-                              "minimum": 1,
-                              "maximum": 262144
-                            },
-                            "encoding": {
-                              "type": "null"
-                            },
-                            "objectKey": {
-                              "type": "string",
-                              "pattern": "^logo-(?:light|dark)\\.(?:svg|png|webp)$"
-                            }
+                        "required": [
+                          "checksum",
+                          "contentLength",
+                          "contentType",
+                          "encoding",
+                          "objectKey"
+                        ]
+                      }
+                    ]
+                  },
+                  "logos": {
+                    "type": "object",
+                    "properties": {
+                      "dark": {
+                        "type": "object",
+                        "properties": {
+                          "checksum": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
                           },
-                          "required": [
-                            "contentType",
-                            "checksum",
-                            "contentLength",
-                            "encoding",
-                            "objectKey"
-                          ]
-                        }
-                      ]
+                          "contentLength": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 262144
+                          },
+                          "contentType": {
+                            "enum": ["image/svg+xml", "image/png", "image/webp"],
+                            "type": "string"
+                          }
+                        },
+                        "required": ["checksum", "contentLength", "contentType"]
+                      },
+                      "light": {
+                        "type": "object",
+                        "properties": {
+                          "checksum": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          },
+                          "contentLength": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 262144
+                          },
+                          "contentType": {
+                            "enum": ["image/svg+xml", "image/png", "image/webp"],
+                            "type": "string"
+                          }
+                        },
+                        "required": ["checksum", "contentLength", "contentType"]
+                      }
                     }
                   },
                   "scopeId": {
@@ -1996,6 +2003,209 @@
                         "createdAt",
                         "updatedAt"
                       ]
+                    },
+                    "logos": {
+                      "type": "object",
+                      "properties": {
+                        "dark": {
+                          "type": "object",
+                          "properties": {
+                            "file": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "appDeploymentId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "objectKey": {
+                                  "type": "string",
+                                  "maxLength": 512,
+                                  "pattern": "^(?:[a-zA-Z0-9._-]+\\/)*[a-zA-Z0-9._-]+\\.[a-zA-Z0-9]+$"
+                                },
+                                "contentType": {
+                                  "enum": [
+                                    "application/javascript",
+                                    "image/svg+xml",
+                                    "image/png",
+                                    "image/webp"
+                                  ],
+                                  "type": "string"
+                                },
+                                "encoding": {
+                                  "anyOf": [
+                                    {
+                                      "enum": ["utf-8"],
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "contentLength": {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                "checksum": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 64
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "status": {
+                                  "enum": ["uploading", "verifying", "verified", "failed"],
+                                  "type": "string"
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "x-native-type": "date"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "x-native-type": "date"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "appDeploymentId",
+                                "objectKey",
+                                "contentType",
+                                "encoding",
+                                "contentLength",
+                                "checksum",
+                                "status",
+                                "createdAt",
+                                "updatedAt"
+                              ]
+                            },
+                            "headers": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "uploadUrl": {
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
+                          "required": ["file", "uploadUrl"]
+                        },
+                        "light": {
+                          "type": "object",
+                          "properties": {
+                            "file": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "appDeploymentId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "objectKey": {
+                                  "type": "string",
+                                  "maxLength": 512,
+                                  "pattern": "^(?:[a-zA-Z0-9._-]+\\/)*[a-zA-Z0-9._-]+\\.[a-zA-Z0-9]+$"
+                                },
+                                "contentType": {
+                                  "enum": [
+                                    "application/javascript",
+                                    "image/svg+xml",
+                                    "image/png",
+                                    "image/webp"
+                                  ],
+                                  "type": "string"
+                                },
+                                "encoding": {
+                                  "anyOf": [
+                                    {
+                                      "enum": ["utf-8"],
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "contentLength": {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                "checksum": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 64
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "status": {
+                                  "enum": ["uploading", "verifying", "verified", "failed"],
+                                  "type": "string"
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "x-native-type": "date"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "x-native-type": "date"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "appDeploymentId",
+                                "objectKey",
+                                "contentType",
+                                "encoding",
+                                "contentLength",
+                                "checksum",
+                                "status",
+                                "createdAt",
+                                "updatedAt"
+                              ]
+                            },
+                            "headers": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "uploadUrl": {
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
+                          "required": ["file", "uploadUrl"]
+                        }
+                      }
                     }
                   },
                   "required": ["assets", "deployment"]

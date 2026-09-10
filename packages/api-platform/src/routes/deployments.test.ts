@@ -110,21 +110,23 @@ describe("platform deployment uploads", () => {
               encoding: "utf-8",
               objectKey: "client.js",
             },
-            {
+          ],
+          logos: {
+            dark: {
               checksum: "b".repeat(64),
               contentLength: 262_144,
               contentType: "image/svg+xml",
-              encoding: null,
-              objectKey: "logo-dark.svg",
             },
-          ],
+          },
           scopeId: "production",
         },
       },
       { context },
     );
 
-    expect(result.body.assets).toHaveLength(2);
+    expect(result.body.assets).toHaveLength(1);
+    expect(result.body.logos?.dark?.file.objectKey).toMatch(/\/logo-dark\.svg$/u);
+    expect(result.body.logos?.light).toBeUndefined();
     expect(result.body.deployment).toEqual(
       expect.objectContaining({
         clientEntryFileId: expect.any(String),
@@ -185,14 +187,14 @@ describe("platform deployment uploads", () => {
                 encoding: "utf-8",
                 objectKey: "client.js",
               },
-              {
+            ],
+            logos: {
+              light: {
                 checksum: "b".repeat(64),
                 contentLength: 262_144,
                 contentType: "image/png",
-                encoding: null,
-                objectKey: "logo-light.png",
               },
-            ],
+            },
             scopeId: "production",
           },
         },

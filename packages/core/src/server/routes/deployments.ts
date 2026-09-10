@@ -29,14 +29,15 @@ const logoAssetInput = z.object({
     .min(1)
     .max(256 * 1024),
   contentType: z.enum(["image/svg+xml", "image/png", "image/webp"]),
-  encoding: z.null(),
-  objectKey: z.string().regex(/^logo-(?:light|dark)\.(?:svg|png|webp)$/u),
 });
 
-const deploymentAssetsInput = z
-  .array(z.union([clientAssetInput, logoAssetInput]))
-  .min(1)
-  .max(3);
+const deploymentAssetsInput = z.tuple([clientAssetInput]);
+const deploymentLogosInput = z
+  .object({
+    dark: logoAssetInput.optional(),
+    light: logoAssetInput.optional(),
+  })
+  .optional();
 
 const getErrorMessage = (error: unknown): string | undefined => {
   if (error instanceof Error) {
@@ -65,13 +66,16 @@ const preservePlatformNotFound = (error: unknown): never => {
 export const deploymentRouter = {
   create: o
     .use(requireCliDeployToken)
-    .input(z.object({ appId: z.string(), assets: deploymentAssetsInput }))
+    .input(
+      z.object({ appId: z.string(), assets: deploymentAssetsInput, logos: deploymentLogosInput }),
+    )
     .handler(async ({ context, input }) => {
       try {
         return await deploymentsCreate({
           body: {
             appId: input.appId,
             assets: input.assets,
+            logos: input.logos,
             scopeId: getTailorKitScopeId(context),
           },
           client: context.platform,

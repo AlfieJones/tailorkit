@@ -437,22 +437,27 @@ export type DeploymentsListResponse = DeploymentsListResponses[keyof Deployments
 export type DeploymentsCreateData = {
   body: {
     appId: string;
-    assets: Array<
-      | {
-          contentType: "application/javascript";
-          checksum: string;
-          contentLength: number;
-          encoding: "utf-8";
-          objectKey: "client.js";
-        }
-      | {
-          contentType: "image/svg+xml" | "image/png" | "image/webp";
-          checksum: string;
-          contentLength: number;
-          encoding: null;
-          objectKey: string;
-        }
-    >;
+    assets: [
+      {
+        checksum: string;
+        contentLength: number;
+        contentType: "application/javascript";
+        encoding: "utf-8";
+        objectKey: "client.js";
+      },
+    ];
+    logos?: {
+      dark?: {
+        checksum: string;
+        contentLength: number;
+        contentType: "image/svg+xml" | "image/png" | "image/webp";
+      };
+      light?: {
+        checksum: string;
+        contentLength: number;
+        contentType: "image/svg+xml" | "image/png" | "image/webp";
+      };
+    };
     scopeId: string;
   };
   path?: never;
@@ -495,6 +500,44 @@ export type DeploymentsCreateResponses = {
       logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
+    };
+    logos?: {
+      dark?: {
+        file: {
+          id: string;
+          appDeploymentId: string;
+          objectKey: string;
+          contentType: "application/javascript" | "image/svg+xml" | "image/png" | "image/webp";
+          encoding: "utf-8" | null;
+          contentLength: number;
+          checksum: string | null;
+          status: "uploading" | "verifying" | "verified" | "failed";
+          createdAt: string;
+          updatedAt: string;
+        };
+        headers?: {
+          [key: string]: string;
+        };
+        uploadUrl: string;
+      };
+      light?: {
+        file: {
+          id: string;
+          appDeploymentId: string;
+          objectKey: string;
+          contentType: "application/javascript" | "image/svg+xml" | "image/png" | "image/webp";
+          encoding: "utf-8" | null;
+          contentLength: number;
+          checksum: string | null;
+          status: "uploading" | "verifying" | "verified" | "failed";
+          createdAt: string;
+          updatedAt: string;
+        };
+        headers?: {
+          [key: string]: string;
+        };
+        uploadUrl: string;
+      };
     };
   };
 };

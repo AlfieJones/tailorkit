@@ -43,6 +43,10 @@ interface DeploymentCreateResult {
   deployment: {
     id: string;
   };
+  logos?: {
+    dark?: DeploymentAssetUpload;
+    light?: DeploymentAssetUpload;
+  };
 }
 
 interface DeploymentPublishResult {
@@ -377,7 +381,7 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
       if (!contentType) {
         throw new Error(`Unsupported ${variant} logo format.`);
       }
-      return { content, contentType, filename };
+      return { content, contentType, filename, variant };
     }),
   );
   const deploymentAssets = [
@@ -438,23 +442,28 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
     unwrapRpcResult<DeploymentCreateResult>(
       await client.deployments.create({
         appId: targetAppId,
-        assets: deploymentAssets.map((asset) =>
-          asset.encoding === "utf-8"
-            ? {
-                checksum: sha256Hex(asset.content),
-                contentLength: asset.content.byteLength,
-                contentType: "application/javascript" as const,
-                encoding: "utf-8" as const,
-                objectKey: "client.js" as const,
-              }
-            : {
-                checksum: sha256Hex(asset.content),
-                contentLength: asset.content.byteLength,
-                contentType: asset.contentType,
-                encoding: null,
-                objectKey: asset.filename,
-              },
-        ),
+        assets: [
+          {
+            checksum: sha256Hex(clientAsset),
+            contentLength: clientAsset.byteLength,
+            contentType: "application/javascript" as const,
+            encoding: "utf-8" as const,
+            objectKey: "client.js" as const,
+          },
+        ],
+        logos:
+          logoAssets.length > 0
+            ? Object.fromEntries(
+                logoAssets.map((asset) => [
+                  asset.variant,
+                  {
+                    checksum: sha256Hex(asset.content),
+                    contentLength: asset.content.byteLength,
+                    contentType: asset.contentType,
+                  },
+                ]),
+              )
+            : undefined,
       }),
     );
 
@@ -470,18 +479,19 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
     created = await createDeployment(appId);
   }
 
-  if (created.assets.length !== deploymentAssets.length) {
-    throw new Error("Deployment did not return an upload URL for every asset.");
+  if (created.assets.length !== 1 || !created.assets[0]) {
+    throw new Error("Deployment did not return an upload URL for the client asset.");
   }
-  await Promise.all(
-    created.assets.map((asset, index) => {
-      const deploymentAsset = deploymentAssets[index];
-      if (!deploymentAsset) {
-        throw new Error("Deployment did not return matching assets.");
+  await Promise.all([
+    uploadAsset(created.assets[0], clientAsset),
+    ...logoAssets.map((logo) => {
+      const upload = created.logos?.[logo.variant];
+      if (!upload) {
+        throw new Error(`Deployment did not return an upload URL for the ${logo.variant} logo.`);
       }
-      return uploadAsset(asset, deploymentAsset.content);
+      return uploadAsset(upload, logo.content);
     }),
-  );
+  ]);
 
   const published = unwrapRpcResult<DeploymentPublishResult>(
     await client.deployments.publish({
