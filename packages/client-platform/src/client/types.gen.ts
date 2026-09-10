@@ -36,10 +36,18 @@ export type AppsListResponses = {
         appId: string;
         status: "uploading" | "deploying" | "verifying" | "published";
         clientEntryFileId: string | null;
+        logoLightFileId: string | null;
+        logoDarkFileId: string | null;
+        logoLightPath: string | null;
+        logoDarkPath: string | null;
         createdAt: string;
         updatedAt: string;
       } | null;
       clientPath?: string;
+      logoPaths?: {
+        dark?: string;
+        light?: string;
+      };
     }>;
     pagination: {
       hasMore: boolean;
@@ -82,10 +90,18 @@ export type AppsCreateResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
     clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -144,10 +160,18 @@ export type AppsGetResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
     clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -187,10 +211,18 @@ export type AppsUpdateResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
     clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -229,10 +261,18 @@ export type AppsDeployResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
     clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -377,6 +417,10 @@ export type DeploymentsListResponses = {
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     }>;
@@ -393,15 +437,22 @@ export type DeploymentsListResponse = DeploymentsListResponses[keyof Deployments
 export type DeploymentsCreateData = {
   body: {
     appId: string;
-    assets: [
-      {
-        contentType: "application/javascript";
-        encoding: "utf-8";
-        checksum: string;
-        contentLength: number;
-        objectKey: "client.js";
-      },
-    ];
+    assets: Array<
+      | {
+          contentType: "application/javascript";
+          checksum: string;
+          contentLength: number;
+          encoding: "utf-8";
+          objectKey: "client.js";
+        }
+      | {
+          contentType: "image/svg+xml" | "image/png" | "image/webp";
+          checksum: string;
+          contentLength: number;
+          encoding: null;
+          objectKey: string;
+        }
+    >;
     scopeId: string;
   };
   path?: never;
@@ -414,32 +465,34 @@ export type DeploymentsCreateResponses = {
    * OK
    */
   200: {
-    assets: [
-      {
-        file: {
-          id: string;
-          appDeploymentId: string;
-          objectKey: string;
-          contentType: "application/javascript";
-          encoding: "utf-8";
-          contentLength: number;
-          checksum: string | null;
-          status: "uploading" | "verifying" | "verified" | "failed";
-          createdAt: string;
-          updatedAt: string;
-        };
-        headers?: {
-          [key: string]: string;
-        };
-        uploadUrl: string;
-      },
-    ];
+    assets: Array<{
+      file: {
+        id: string;
+        appDeploymentId: string;
+        objectKey: string;
+        contentType: "application/javascript" | "image/svg+xml" | "image/png" | "image/webp";
+        encoding: "utf-8" | null;
+        contentLength: number;
+        checksum: string | null;
+        status: "uploading" | "verifying" | "verified" | "failed";
+        createdAt: string;
+        updatedAt: string;
+      };
+      headers?: {
+        [key: string]: string;
+      };
+      uploadUrl: string;
+    }>;
     deployment: {
       id: string;
       publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     };
@@ -470,6 +523,10 @@ export type DeploymentsGetResponses = {
     appId: string;
     status: "uploading" | "deploying" | "verifying" | "published";
     clientEntryFileId: string | null;
+    logoLightFileId: string | null;
+    logoDarkFileId: string | null;
+    logoLightPath: string | null;
+    logoDarkPath: string | null;
     createdAt: string;
     updatedAt: string;
   };
@@ -499,6 +556,10 @@ export type DeploymentsPublishResponses = {
     appId: string;
     status: "uploading" | "deploying" | "verifying" | "published";
     clientEntryFileId: string | null;
+    logoLightFileId: string | null;
+    logoDarkFileId: string | null;
+    logoLightPath: string | null;
+    logoDarkPath: string | null;
     createdAt: string;
     updatedAt: string;
   };

@@ -43,7 +43,11 @@ export async function handleAssetRequest(
     if (!isValidAssetSize(object.contentLength)) {
       return assetFailure(404);
     }
-    const headers = assetHeaders({ contentLength: object.contentLength, etag: object.etag });
+    const headers = assetHeaders({
+      contentLength: object.contentLength,
+      contentType: identity.contentType,
+      etag: object.etag,
+    });
     if (request.method === "HEAD") {
       return new Response(null, { headers });
     }

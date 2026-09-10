@@ -33,6 +33,8 @@ describe("hosted asset URLs", () => {
         publicId: deploymentPublicId,
         status: "published" as const,
         clientEntryFileId: "55555555-5555-4555-8555-555555555555",
+        logoDarkPath: "logo-dark.svg",
+        logoLightPath: "logo-light.webp",
         errorMessage: null,
         publishedAt: new Date(),
         createdAt: new Date(),
@@ -42,6 +44,10 @@ describe("hosted asset URLs", () => {
     expect(withAppAssetUrl(app, "abc123def45678", projectId).clientPath).toBe(
       `https://abc123def45678.tailorkit.app/p/${projectId}/a/${appPublicId}/d/${deploymentPublicId}/client.js`,
     );
+    expect(withAppAssetUrl(app, "abc123def45678", projectId).logoPaths).toEqual({
+      dark: `https://abc123def45678.tailorkit.app/p/${projectId}/a/${appPublicId}/d/${deploymentPublicId}/logo-dark.svg`,
+      light: `https://abc123def45678.tailorkit.app/p/${projectId}/a/${appPublicId}/d/${deploymentPublicId}/logo-light.webp`,
+    });
   });
 
   it("uses the same-origin Node route in local development", () => {

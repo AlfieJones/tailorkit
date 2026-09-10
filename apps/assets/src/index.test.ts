@@ -70,6 +70,13 @@ describe("tenant asset gateway", () => {
     expect(put).not.toHaveBeenCalled();
   });
 
+  it("serves logos with their image content type", async () => {
+    get.mockResolvedValueOnce(object("<svg/>"));
+    const response = await fetchAsset(new Request(url.replace("client.js", "logo-light.svg")));
+    expect(response.headers.get("Content-Type")).toBe("image/svg+xml");
+    expect(get).toHaveBeenCalledWith(key.replace("client.js", "logo-light.svg"));
+  });
+
   it("uses the hostname tenant ID as part of the storage namespace", async () => {
     get.mockResolvedValueOnce(object());
     const otherUrl = url.replace("abc123def45678", "xyz123def45678");

@@ -1,6 +1,8 @@
 import path from "node:path";
 import { createRequire } from "node:module";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
+import { validateLogoAsset } from "@tailorkit/asset-delivery";
+import type { LogoContentType } from "@tailorkit/asset-delivery";
 import { build as viteBuild } from "vite";
 import { loadTailorKitConfig } from "../config/loader";
 import { assertSupportedPreactVersion } from "../preact-version";
@@ -86,9 +88,33 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
     root: loaded.root,
   });
 
+  const logoManifest: { dark?: string; light?: string } = {};
+  for (const variant of ["light", "dark"] as const) {
+    const configuredPath = loaded.config.logos?.[variant];
+    if (!configuredPath) {
+      continue;
+    }
+
+    const extension = path.extname(configuredPath).toLowerCase().slice(1);
+    const contentType = {
+      png: "image/png",
+      svg: "image/svg+xml",
+      webp: "image/webp",
+    }[extension] as LogoContentType | undefined;
+    if (!contentType) {
+      throw new Error(`The ${variant} logo must be an SVG, PNG, or WebP file.`);
+    }
+
+    const content = await readFile(path.resolve(loaded.root, configuredPath));
+    validateLogoAsset(content, contentType);
+    const filename = `logo-${variant}.${extension}`;
+    await writeFile(path.join(resolvedOutDir, filename), content);
+    logoManifest[variant] = filename;
+  }
+
   await writeFile(
     path.join(resolvedOutDir, "tailorkit-upload.json"),
-    `${JSON.stringify(createTailorKitUploadManifest(), null, 2)}\n`,
+    `${JSON.stringify(createTailorKitUploadManifest(logoManifest), null, 2)}\n`,
     "utf-8",
   );
 

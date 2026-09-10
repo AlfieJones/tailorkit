@@ -8,11 +8,17 @@ const buildConfigSchema = z.object({
   outDir: z.string().default(".tailorkit"),
 });
 
+const logosConfigSchema = z.object({
+  dark: z.string().min(1).optional(),
+  light: z.string().min(1).optional(),
+});
+
 const tailorkitConfigSchema = z.object({
   appId: z.string().min(1).optional(),
   build: buildConfigSchema.optional(),
   client: clientConfigSchema.optional(),
   host: z.string().url(),
+  logos: logosConfigSchema.optional(),
 });
 
 export type TailorKitConfig = z.input<typeof tailorkitConfigSchema>;

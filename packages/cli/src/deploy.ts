@@ -39,7 +39,7 @@ interface DeploymentAssetUpload {
 }
 
 interface DeploymentCreateResult {
-  assets: [DeploymentAssetUpload];
+  assets: DeploymentAssetUpload[];
   deployment: {
     id: string;
   };
@@ -71,6 +71,11 @@ interface UploadedFileSummary {
 
 const maxUploadBytes = 1024 * 1024;
 const gzipAsync = promisify(gzip);
+const logoContentTypeByExtension: Record<string, "image/png" | "image/svg+xml" | "image/webp"> = {
+  png: "image/png",
+  svg: "image/svg+xml",
+  webp: "image/webp",
+};
 
 const unwrapRpcResult = <T>(result: unknown): T => {
   if (result && typeof result === "object" && "error" in result && result.error !== undefined) {
@@ -363,6 +368,27 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
   const clientAssetPath = path.join(outDir, manifest.assets.client);
   const clientAsset = await readFile(clientAssetPath);
   const clientAssetGzip = await gzipAsync(clientAsset);
+  const logoEntries = Object.entries(manifest.assets.logos ?? {}) as ["dark" | "light", string][];
+  const logoAssets = await Promise.all(
+    logoEntries.map(async ([variant, filename]) => {
+      const content = await readFile(path.join(outDir, filename));
+      const extension = path.extname(filename).slice(1);
+      const contentType = logoContentTypeByExtension[extension];
+      if (!contentType) {
+        throw new Error(`Unsupported ${variant} logo format.`);
+      }
+      return { content, contentType, filename };
+    }),
+  );
+  const deploymentAssets = [
+    {
+      content: clientAsset,
+      contentType: "application/javascript" as const,
+      encoding: "utf-8" as const,
+      filename: manifest.assets.client,
+    },
+    ...logoAssets.map((asset) => ({ ...asset, encoding: null })),
+  ];
 
   const client = createTailorKitClient({
     headers: { authorization: `Bearer ${storedAuth.deployToken}` },
@@ -403,15 +429,23 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
     unwrapRpcResult<DeploymentCreateResult>(
       await client.deployments.create({
         appId: targetAppId,
-        assets: [
-          {
-            checksum: sha256Hex(clientAsset),
-            contentLength: clientAsset.byteLength,
-            contentType: "application/javascript",
-            encoding: "utf-8",
-            objectKey: manifest.assets.client,
-          },
-        ],
+        assets: deploymentAssets.map((asset) =>
+          asset.encoding === "utf-8"
+            ? {
+                checksum: sha256Hex(asset.content),
+                contentLength: asset.content.byteLength,
+                contentType: "application/javascript" as const,
+                encoding: "utf-8" as const,
+                objectKey: "client.js" as const,
+              }
+            : {
+                checksum: sha256Hex(asset.content),
+                contentLength: asset.content.byteLength,
+                contentType: asset.contentType,
+                encoding: null,
+                objectKey: asset.filename,
+              },
+        ),
       }),
     );
 
@@ -427,12 +461,34 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
     created = await createDeployment(appId);
   }
 
-  await uploadAsset(created.assets[0], clientAsset);
+  if (created.assets.length !== deploymentAssets.length) {
+    throw new Error("Deployment did not return an upload URL for every asset.");
+  }
+  await Promise.all(
+    created.assets.map((asset, index) => {
+      const deploymentAsset = deploymentAssets[index];
+      if (!deploymentAsset) {
+        throw new Error("Deployment did not return matching assets.");
+      }
+      return uploadAsset(asset, deploymentAsset.content);
+    }),
+  );
 
   const published = unwrapRpcResult<DeploymentPublishResult>(
     await client.deployments.publish({
       deploymentId: created.deployment.id,
       rollout: true,
+    }),
+  );
+
+  const uploadedLogos = await Promise.all(
+    logoAssets.map(async (asset) => {
+      const compressed = await gzipAsync(asset.content);
+      return {
+        gzipSize: compressed.byteLength,
+        path: asset.filename,
+        size: asset.content.byteLength,
+      };
     }),
   );
 
@@ -448,6 +504,7 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
         path: manifest.assets.client,
         size: clientAsset.byteLength,
       },
+      ...uploadedLogos,
     ],
   };
 };
