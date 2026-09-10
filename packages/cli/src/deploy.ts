@@ -69,7 +69,7 @@ interface UploadedFileSummary {
   size: number;
 }
 
-const maxUploadBytes = 1024 * 1024;
+const maxDeploymentBytes = 1024 * 1024;
 const gzipAsync = promisify(gzip);
 const logoContentTypeByExtension: Record<string, "image/png" | "image/svg+xml" | "image/webp"> = {
   png: "image/png",
@@ -162,8 +162,8 @@ const writeAppIdToConfig = async (configPath: string, appId: string): Promise<vo
 };
 
 const uploadAsset = async (asset: DeploymentAssetUpload, content: Buffer): Promise<void> => {
-  if (content.byteLength > maxUploadBytes) {
-    throw new Error(`Deployment asset exceeds ${maxUploadBytes} bytes.`);
+  if (content.byteLength > maxDeploymentBytes) {
+    throw new Error(`Deployment asset exceeds ${maxDeploymentBytes} bytes.`);
   }
 
   const headers = new Headers(asset.headers);
@@ -389,6 +389,15 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
     },
     ...logoAssets.map((asset) => ({ ...asset, encoding: null })),
   ];
+  const deploymentSize = deploymentAssets.reduce(
+    (total, asset) => total + asset.content.byteLength,
+    0,
+  );
+  if (deploymentSize > maxDeploymentBytes) {
+    throw new Error(
+      `Combined deployment assets are ${deploymentSize} bytes and cannot exceed ${maxDeploymentBytes} bytes.`,
+    );
+  }
 
   const client = createTailorKitClient({
     headers: { authorization: `Bearer ${storedAuth.deployToken}` },

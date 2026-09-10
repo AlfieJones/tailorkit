@@ -8,7 +8,8 @@ const teamIdPattern = /^[a-z0-9][a-z0-9-]{12}[a-z0-9]$/u;
 const nodeAssetPath = /^\/api\/assets\/t\/([^/]+)(\/p\/.*)$/u;
 const methods = new Set(["GET", "HEAD", "OPTIONS"]);
 
-export const maxAssetBytes = 1024 * 1024;
+export const maxDeploymentBytes = 1024 * 1024;
+export const maxAssetBytes = maxDeploymentBytes;
 export const maxLogoBytes = 256 * 1024;
 export const maxLogoDimension = 2048;
 

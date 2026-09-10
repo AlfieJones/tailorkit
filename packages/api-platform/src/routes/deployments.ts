@@ -13,7 +13,7 @@ import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
 import { setSpanAttributes } from "@tailorkit/observability";
 import { createPublicId } from "../public-id";
-import { maxLogoBytes, validateLogoAsset } from "@tailorkit/asset-delivery";
+import { maxDeploymentBytes, maxLogoBytes, validateLogoAsset } from "@tailorkit/asset-delivery";
 import type { LogoContentType } from "@tailorkit/asset-delivery";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
@@ -72,6 +72,12 @@ const createDeploymentAssetsInput = z
       assets.length
     ) {
       context.addIssue({ code: "custom", message: "Deployment asset variants must be unique." });
+    }
+    if (assets.reduce((total, asset) => total + asset.contentLength, 0) > maxDeploymentBytes) {
+      context.addIssue({
+        code: "custom",
+        message: `Combined deployment assets cannot exceed ${maxDeploymentBytes} bytes.`,
+      });
     }
   });
 

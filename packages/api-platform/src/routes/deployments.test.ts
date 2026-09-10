@@ -105,14 +105,14 @@ describe("platform deployment uploads", () => {
           assets: [
             {
               checksum: "a".repeat(64),
-              contentLength: 100,
+              contentLength: 786_432,
               contentType: "application/javascript",
               encoding: "utf-8",
               objectKey: "client.js",
             },
             {
               checksum: "b".repeat(64),
-              contentLength: 200,
+              contentLength: 262_144,
               contentType: "image/svg+xml",
               encoding: null,
               objectKey: "logo-dark.svg",
@@ -135,5 +135,70 @@ describe("platform deployment uploads", () => {
       }),
     );
     expect(createUploadUrl).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects assets whose combined size exceeds 1 MiB", async () => {
+    const createUploadUrl = vi.fn();
+    const context = {
+      organization: {
+        createdAt: new Date(),
+        id: organizationId,
+        logo: null,
+        metadata: null,
+        name: "Analytical Engines",
+        publicId: "team0000000001",
+        slug: "analytical-engines",
+      },
+      project: {
+        createdAt: new Date(),
+        id: projectId,
+        name: "Compiler",
+        organizationId,
+        slug: "compiler",
+        updatedAt: new Date(),
+      },
+      storage: {
+        type: "s3",
+        createDownloadUrl: vi.fn(),
+        createUploadUrl,
+        delete: vi.fn(),
+        head: vi.fn(),
+      },
+    } satisfies Context;
+
+    const app = await db.query.app.findFirst();
+    if (!app) {
+      throw new Error("Test app was not created.");
+    }
+
+    await expect(
+      call(
+        deploymentRouter.create,
+        {
+          body: {
+            appId: app.id,
+            assets: [
+              {
+                checksum: "a".repeat(64),
+                contentLength: 786_433,
+                contentType: "application/javascript",
+                encoding: "utf-8",
+                objectKey: "client.js",
+              },
+              {
+                checksum: "b".repeat(64),
+                contentLength: 262_144,
+                contentType: "image/png",
+                encoding: null,
+                objectKey: "logo-light.png",
+              },
+            ],
+            scopeId: "production",
+          },
+        },
+        { context },
+      ),
+    ).rejects.toThrow("Input validation failed");
+    expect(createUploadUrl).not.toHaveBeenCalled();
   });
 });
