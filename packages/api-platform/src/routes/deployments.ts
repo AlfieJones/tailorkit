@@ -1,4 +1,7 @@
 import { ORPCError } from "@orpc/server";
+import { logoContentTypes, maxLogoBytes, validateLogoAsset } from "@tailorkit/app-assets";
+import type { LogoContentType } from "@tailorkit/app-assets";
+import { maxDeploymentBytes } from "@tailorkit/asset-delivery";
 import { db } from "@tailorkit/db";
 import {
   app,
@@ -13,13 +16,6 @@ import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
 import { setSpanAttributes } from "@tailorkit/observability";
 import { createPublicId } from "../public-id";
-import {
-  logoContentTypes,
-  maxDeploymentBytes,
-  maxLogoBytes,
-  validateLogoAsset,
-} from "@tailorkit/asset-delivery";
-import type { LogoContentType } from "@tailorkit/asset-delivery";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
 const logoInspectionTimeoutMs = 10_000;

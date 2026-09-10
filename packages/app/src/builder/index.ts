@@ -1,8 +1,8 @@
 import path from "node:path";
 import { createRequire } from "node:module";
 import { readFile, writeFile } from "node:fs/promises";
-import { validateLogoAsset } from "@tailorkit/asset-delivery";
-import type { LogoContentType } from "@tailorkit/asset-delivery";
+import { validateLogoAsset } from "@tailorkit/app-assets";
+import type { LogoContentType } from "@tailorkit/app-assets";
 import { build as viteBuild } from "vite";
 import { loadTailorKitConfig } from "../config/loader";
 import { assertSupportedPreactVersion } from "../preact-version";

@@ -1,5 +1,5 @@
 {
-  "name": "@tailorkit/asset-delivery",
+  "name": "@tailorkit/app-assets",
   "version": "0.0.0",
   "private": true,
   "license": "AGPL-3.0-only",
@@ -17,7 +17,6 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@tailorkit/app-assets": "workspace:*",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
