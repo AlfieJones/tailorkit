@@ -286,7 +286,15 @@ function absolutizeViteImports(source: string, runtimeUrl: URL): string {
 }
 
 function isViteDevelopmentWorker(url: URL): boolean {
-  return url.searchParams.has("worker_file");
+  if (url.searchParams.has("worker_file")) {
+    return true;
+  }
+
+  const currentOrigin = globalThis.location?.origin;
+  return (
+    url.origin === currentOrigin &&
+    (url.pathname.startsWith("/@fs/") || url.pathname.includes("/node_modules/"))
+  );
 }
 
 function createChannelId(): string {

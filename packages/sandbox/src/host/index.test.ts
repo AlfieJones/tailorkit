@@ -103,6 +103,41 @@ describe("createIframeUiHost", () => {
     });
   });
 
+  it("absolutizes Vite imports for package-served runtime workers", async () => {
+    const runtimeUrl = new URL(
+      "/node_modules/@tailorkit/sandbox/dist/assets/worker.js",
+      window.location.origin,
+    );
+    const fetch = vi.fn<typeof globalThis.fetch>((input) => {
+      const source =
+        input.toString() === runtimeUrl.toString()
+          ? 'import { injectQuery } from "/@vite/client";'
+          : "// app";
+      return Promise.resolve(new Response(source));
+    });
+    const host = createIframeUiHost("https://assets.test/app.js", { fetch, runtimeUrl });
+    host.mount();
+    const postMessage = vi.spyOn(getContentWindow(host.iframe), "postMessage");
+    const channel = getChannel(host.iframe);
+
+    emitFromIframe(host.iframe, { channel, type: iframeReadyType });
+
+    await vi.waitFor(() => {
+      expect(postMessage).toHaveBeenCalledWith(
+        {
+          channel,
+          type: "tailorkit:bootstrap",
+          workerSource: `import { injectQuery } from "${window.location.origin}/@vite/client";`,
+        },
+        "*",
+      );
+    });
+
+    expect(host.iframe.srcdoc).toContain(
+      `script-src 'unsafe-inline' data: ${window.location.origin}`,
+    );
+  });
+
   it("stores snapshots received through the iframe bridge", () => {
     const host = createIframeUiHost("https://assets.test/app.js", { fetch: createFetch() });
     const channel = getChannel(host.iframe);
