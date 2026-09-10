@@ -105,7 +105,7 @@ describe("platform deployment uploads", () => {
           assets: [
             {
               checksum: "a".repeat(64),
-              contentLength: 786_432,
+              contentLength: 1_048_576,
               contentType: "application/javascript",
               encoding: "utf-8",
               objectKey: "client.js",
@@ -139,7 +139,7 @@ describe("platform deployment uploads", () => {
     expect(createUploadUrl).toHaveBeenCalledTimes(2);
   });
 
-  it("rejects assets whose combined size exceeds 1 MiB", async () => {
+  it("rejects the client assets array when it exceeds 1 MiB", async () => {
     const createUploadUrl = vi.fn();
     const context = {
       organization: {
@@ -182,19 +182,12 @@ describe("platform deployment uploads", () => {
             assets: [
               {
                 checksum: "a".repeat(64),
-                contentLength: 786_433,
+                contentLength: 1_048_577,
                 contentType: "application/javascript",
                 encoding: "utf-8",
                 objectKey: "client.js",
               },
             ],
-            logos: {
-              light: {
-                checksum: "b".repeat(64),
-                contentLength: 262_144,
-                contentType: "image/png",
-              },
-            },
             scopeId: "production",
           },
         },

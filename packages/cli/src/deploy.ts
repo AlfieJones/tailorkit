@@ -384,22 +384,9 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
       return { content, contentType, filename, variant };
     }),
   );
-  const deploymentAssets = [
-    {
-      content: clientAsset,
-      contentType: "application/javascript" as const,
-      encoding: "utf-8" as const,
-      filename: manifest.assets.client,
-    },
-    ...logoAssets.map((asset) => ({ ...asset, encoding: null })),
-  ];
-  const deploymentSize = deploymentAssets.reduce(
-    (total, asset) => total + asset.content.byteLength,
-    0,
-  );
-  if (deploymentSize > maxDeploymentBytes) {
+  if (clientAsset.byteLength > maxDeploymentBytes) {
     throw new Error(
-      `Combined deployment assets are ${deploymentSize} bytes and cannot exceed ${maxDeploymentBytes} bytes.`,
+      `Combined client assets are ${clientAsset.byteLength} bytes and cannot exceed ${maxDeploymentBytes} bytes.`,
     );
   }
 

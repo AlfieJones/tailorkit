@@ -32,7 +32,7 @@ const deploymentFileMetadataShape = {
 
 const createDeploymentAssetInput = z.object({
   ...deploymentFileMetadataShape,
-  contentLength: z.number().int().min(1).max(maxDeploymentBytes),
+  contentLength: z.number().int().min(1),
   contentType: z.literal("application/javascript"),
   encoding: z.literal("utf-8"),
   objectKey: z.literal("client.js"),
@@ -57,12 +57,9 @@ const createDeploymentInput = z
     scopeId: z.string(),
   })
   .refine(
-    ({ assets, logos }) =>
-      [...assets, ...Object.values(logos ?? {})].reduce(
-        (total, file) => total + file.contentLength,
-        0,
-      ) <= maxDeploymentBytes,
-    { message: `Combined deployment assets cannot exceed ${maxDeploymentBytes} bytes.` },
+    ({ assets }) =>
+      assets.reduce((total, asset) => total + asset.contentLength, 0) <= maxDeploymentBytes,
+    { message: `Combined client assets cannot exceed ${maxDeploymentBytes} bytes.` },
   );
 
 const deploymentAssetUpload = z.object({
