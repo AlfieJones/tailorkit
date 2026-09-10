@@ -87,6 +87,17 @@ describe("asset delivery contract", () => {
 });
 
 describe("logo validation", () => {
+  const png = (width: number, height: number): Uint8Array => {
+    const content = new Uint8Array(33);
+    content.set([137, 80, 78, 71, 13, 10, 26, 10]);
+    content.set([73, 72, 68, 82], 12);
+    const view = new DataView(content.buffer);
+    view.setUint32(8, 13);
+    view.setUint32(16, width);
+    view.setUint32(20, height);
+    return content;
+  };
+
   it("accepts safe SVG logos", () => {
     const content = new TextEncoder().encode(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M0 0h32v32H0z"/></svg>',
@@ -111,12 +122,18 @@ describe("logo validation", () => {
   });
 
   it("enforces raster dimensions", () => {
-    const content = new Uint8Array(24);
-    content.set([137, 80, 78, 71, 13, 10, 26, 10]);
-    const view = new DataView(content.buffer);
-    view.setUint32(16, 2049);
-    view.setUint32(20, 512);
-    expect(() => validateLogoAsset(content, "image/png")).toThrow("cannot exceed 2048 by 2048");
+    expect(() => validateLogoAsset(png(2049, 512), "image/png")).toThrow(
+      "cannot exceed 2048 by 2048",
+    );
+  });
+
+  it("requires a complete PNG IHDR chunk", () => {
+    const content = png(32, 32);
+    content.set([73, 68, 65, 84], 12);
+    expect(() => validateLogoAsset(content, "image/png")).toThrow("not a valid PNG file");
+    expect(() => validateLogoAsset(content.subarray(0, 32), "image/png")).toThrow(
+      "not a valid PNG file",
+    );
   });
 
   it("enforces the 256 KiB file limit", () => {

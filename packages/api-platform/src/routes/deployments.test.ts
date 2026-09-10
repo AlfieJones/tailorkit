@@ -1,5 +1,5 @@
 import { call } from "@orpc/server";
-import { app as appTable } from "@tailorkit/db/schema/apps";
+import { app as appTable, appDeployment, appDeploymentFile } from "@tailorkit/db/schema/apps";
 import { organization } from "@tailorkit/db/schema/auth";
 import { project as projectTable } from "@tailorkit/db/schema/project";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,6 +19,8 @@ const { deploymentRouter } = await import("./deployments");
 
 const organizationId = "11111111-1111-4111-8111-111111111111";
 const projectId = "22222222-2222-4222-8222-222222222222";
+const logoChecksum = "b".repeat(64);
+const logoChecksumBase64 = Buffer.from(logoChecksum, "hex").toString("base64");
 
 describe("platform deployment uploads", () => {
   let client: Awaited<ReturnType<typeof createTestDb>>["client"];
@@ -54,8 +56,64 @@ describe("platform deployment uploads", () => {
   });
 
   afterEach(async () => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
     await client.close();
     vi.clearAllMocks();
+  });
+
+  const createLogoDeployment = async () => {
+    const currentApp = await db.query.app.findFirst();
+    if (!currentApp) {
+      throw new Error("Test app was not created.");
+    }
+    const [deployment] = await db
+      .insert(appDeployment)
+      .values({ appId: currentApp.id, publicId: "dep000000001", status: "uploading" })
+      .returning();
+    if (!deployment) {
+      throw new Error("Test deployment was not created.");
+    }
+    await db.insert(appDeploymentFile).values({
+      appDeploymentId: deployment.id,
+      checksum: logoChecksum,
+      contentLength: 11,
+      contentType: "image/svg+xml",
+      encoding: null,
+      objectKey: "teams/team0000000001/logo-dark.svg",
+    });
+    return deployment;
+  };
+
+  const publishContext = (downloadUrl: string): Context => ({
+    organization: {
+      createdAt: new Date(),
+      id: organizationId,
+      logo: null,
+      metadata: null,
+      name: "Analytical Engines",
+      publicId: "team0000000001",
+      slug: "analytical-engines",
+    },
+    project: {
+      createdAt: new Date(),
+      id: projectId,
+      name: "Compiler",
+      organizationId,
+      slug: "compiler",
+      updatedAt: new Date(),
+    },
+    storage: {
+      type: "s3",
+      createDownloadUrl: vi.fn().mockResolvedValue({ url: downloadUrl }),
+      createUploadUrl: vi.fn(),
+      delete: vi.fn(),
+      head: vi.fn().mockResolvedValue({
+        checksumSha256: logoChecksumBase64,
+        contentLength: 11,
+        contentType: "image/svg+xml",
+      }),
+    },
   });
 
   it("creates optional logo assets alongside the client bundle", async () => {
@@ -195,5 +253,54 @@ describe("platform deployment uploads", () => {
       ),
     ).rejects.toThrow("Input validation failed");
     expect(createUploadUrl).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-HTTPS logo inspection URLs before fetching", async () => {
+    const deployment = await createLogoDeployment();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      call(
+        deploymentRouter.publish,
+        {
+          body: { rollout: true, scopeId: "production" },
+          params: { deploymentId: deployment.id },
+        },
+        { context: publishContext("http://uploads.example/logo-dark.svg") },
+      ),
+    ).rejects.toThrow("Logo download URL must use HTTPS.");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("aborts logo inspection while reading the response body", async () => {
+    const deployment = await createLogoDeployment();
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: URL, init?: RequestInit) =>
+        Promise.resolve({
+          arrayBuffer: () =>
+            new Promise<ArrayBuffer>((_resolve, reject) => {
+              init?.signal?.addEventListener("abort", () =>
+                reject(new DOMException("Aborted", "AbortError")),
+              );
+            }),
+          ok: true,
+        }),
+      ),
+    );
+
+    const publish = call(
+      deploymentRouter.publish,
+      {
+        body: { rollout: true, scopeId: "production" },
+        params: { deploymentId: deployment.id },
+      },
+      { context: publishContext("https://uploads.example/logo-dark.svg") },
+    );
+    const rejection = expect(publish).rejects.toThrow("Aborted");
+    await vi.advanceTimersByTimeAsync(10_000);
+    await rejection;
   });
 });

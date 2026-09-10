@@ -17,6 +17,7 @@ import { maxDeploymentBytes, maxLogoBytes, validateLogoAsset } from "@tailorkit/
 import type { LogoContentType } from "@tailorkit/asset-delivery";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
+const logoInspectionTimeoutMs = 10_000;
 const logoExtensionByContentType = {
   "image/png": "png",
   "image/svg+xml": "svg",
@@ -384,14 +385,27 @@ const publishAppDeployment = protectedRouter
             key: file.objectKey,
             expiresInSeconds: 60,
           });
-          const response = await fetch(download.url);
-          if (!response.ok) {
-            throw new Error("Failed to inspect uploaded logo.");
+          const downloadUrl = new URL(download.url);
+          if (downloadUrl.protocol !== "https:") {
+            throw new Error("Logo download URL must use HTTPS.");
           }
-          validateLogoAsset(
-            new Uint8Array(await response.arrayBuffer()),
-            file.contentType as LogoContentType,
-          );
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), logoInspectionTimeoutMs);
+          try {
+            const response = await fetch(downloadUrl, {
+              redirect: "error",
+              signal: controller.signal,
+            });
+            if (!response.ok) {
+              throw new Error("Failed to inspect uploaded logo.");
+            }
+            validateLogoAsset(
+              new Uint8Array(await response.arrayBuffer()),
+              file.contentType as LogoContentType,
+            );
+          } finally {
+            clearTimeout(timeout);
+          }
         }
 
         await db

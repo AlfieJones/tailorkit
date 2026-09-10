@@ -142,10 +142,15 @@ interface LogoDimensions {
 
 const readPngDimensions = (content: Uint8Array): LogoDimensions => {
   const signature = [137, 80, 78, 71, 13, 10, 26, 10];
-  if (content.length < 24 || !signature.every((byte, index) => content[index] === byte)) {
+  if (content.length < 33 || !signature.every((byte, index) => content[index] === byte)) {
     throw new Error("Logo content is not a valid PNG file.");
   }
   const view = new DataView(content.buffer, content.byteOffset, content.byteLength);
+  const isIhdr =
+    content[12] === 73 && content[13] === 72 && content[14] === 68 && content[15] === 82;
+  if (view.getUint32(8) !== 13 || !isIhdr) {
+    throw new Error("Logo content is not a valid PNG file.");
+  }
   return { width: view.getUint32(16), height: view.getUint32(20) };
 };
 
