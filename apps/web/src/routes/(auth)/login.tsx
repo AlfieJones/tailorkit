@@ -66,6 +66,8 @@ function RouteComponent() {
   const [visible, setVisible] = useState(true);
   const [email, setEmail] = useState(emailFromSearch || "");
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [githubError, setGithubError] = useState<string | null>(null);
+  const [githubPending, setGithubPending] = useState(false);
 
   const transition = (nextStep: Step, nextEmail?: string) => {
     setVisible(false);
@@ -91,6 +93,29 @@ function RouteComponent() {
   });
 
   const queryClient = useQueryClient();
+
+  const signInWithGitHub = async () => {
+    setGithubError(null);
+    setGithubPending(true);
+
+    try {
+      const callbackURL =
+        return_to?.startsWith("/") && !return_to.startsWith("//") ? return_to : "/";
+      const result = await authClient.signIn.social({
+        callbackURL,
+        errorCallbackURL: "/login",
+        provider: "github",
+      });
+
+      if (result.error) {
+        setGithubError(result.error.message || result.error.statusText || "GitHub sign in failed");
+        setGithubPending(false);
+      }
+    } catch {
+      setGithubError("GitHub sign in failed");
+      setGithubPending(false);
+    }
+  };
 
   const passwordForm = useAppForm({
     defaultValues: { password: "" },
@@ -174,6 +199,11 @@ function RouteComponent() {
                     </div>
 
                     <div className="flex flex-col gap-2">
+                      {githubError && (
+                        <p className="text-destructive text-sm" role="alert">
+                          {githubError}
+                        </p>
+                      )}
                       <Tooltip>
                         <TooltipTrigger
                           render={<Button variant="outline" className="w-full" disabled />}
@@ -183,15 +213,16 @@ function RouteComponent() {
                         </TooltipTrigger>
                         <TooltipPopup>Coming soon</TooltipPopup>
                       </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={<Button variant="outline" className="w-full" disabled />}
-                        >
-                          <GitHubIcon />
-                          Continue with GitHub
-                        </TooltipTrigger>
-                        <TooltipPopup>Coming soon</TooltipPopup>
-                      </Tooltip>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        disabled={githubPending}
+                        onClick={() => void signInWithGitHub()}
+                      >
+                        <GitHubIcon />
+                        {githubPending ? "Connecting to GitHub…" : "Continue with GitHub"}
+                      </Button>
                     </div>
                   </CardPanel>
                 </form>

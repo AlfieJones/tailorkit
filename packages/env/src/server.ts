@@ -57,6 +57,14 @@ export const env = createEnv({
           path: ["KV_REDIS_URL"],
         });
       }
+
+      if (Boolean(values.GITHUB_CLIENT_ID) !== Boolean(values.GITHUB_CLIENT_SECRET)) {
+        context.addIssue({
+          code: "custom",
+          message: "GitHub OAuth requires both GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET.",
+          path: ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET"],
+        });
+      }
     }),
   emptyStringAsUndefined: true,
   extends: [vercel()],
@@ -65,13 +73,18 @@ export const env = createEnv({
     // Auth
     AUTH_SECRET:
       process.env.NODE_ENV === "production" ? z.string().min(32) : z.string().min(32).optional(),
+    AUTH_TRUSTED_ORIGINS: z.string().min(1).optional(),
     BETTER_AUTH_API_KEY: z.string().min(1).optional(),
+    GITHUB_CLIENT_ID: z.string().min(1).optional(),
+    GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
+    OAUTH_PROXY_SECRET: z.string().min(32).optional(),
 
     // Database
     DATABASE_URL: z.string().min(1),
 
     // Deployment
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    AUTH_PRODUCTION_URL: z.url().optional(),
     PORT: z.number().optional(),
 
     // Observability
@@ -124,6 +137,13 @@ export function getBaseUrl() {
 export function getTrustedOrigins() {
   const origins = new Set([getBaseUrl()]);
 
+  for (const origin of env.AUTH_TRUSTED_ORIGINS?.split(",") ?? []) {
+    const trimmedOrigin = origin.trim().replace(/\/$/u, "");
+    if (trimmedOrigin) {
+      origins.add(trimmedOrigin);
+    }
+  }
+
   if (env.VERCEL_ENV === "production" && env.VERCEL_PROJECT_PRODUCTION_URL) {
     origins.add(`https://${env.VERCEL_PROJECT_PRODUCTION_URL}`);
   }
@@ -139,4 +159,14 @@ export function getTrustedOrigins() {
   }
 
   return [...origins];
+}
+
+export function getProductionUrl() {
+  if (env.AUTH_PRODUCTION_URL) {
+    return env.AUTH_PRODUCTION_URL.replace(/\/$/u, "");
+  }
+
+  if (env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
 }
