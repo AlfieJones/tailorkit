@@ -1,5 +1,5 @@
 import type { Client as PlatformClient } from "@tailorkit/client-platform/client/client/index";
-import type { ImplementedAction, TailorKitSchema } from "../schema";
+import type { ImplementedAction, TailorKitSchema } from "../schema/index";
 import type { TailorKitPlatformOptions } from "./types";
 
 export interface TailorKitRuntimeContext {

@@ -13,13 +13,31 @@ const paginationInput = z.object({
   pageSize: z.number().int().min(1).max(100).optional(),
 });
 
-const deploymentAssetInput = z.object({
+const clientAssetInput = z.object({
   checksum: z.string(),
   contentLength: z.number().int().min(1),
   contentType: z.literal("application/javascript"),
   encoding: z.literal("utf-8"),
-  objectKey: z.string(),
+  objectKey: z.literal("client.js"),
 });
+
+const logoAssetInput = z.object({
+  checksum: z.string(),
+  contentLength: z
+    .number()
+    .int()
+    .min(1)
+    .max(256 * 1024),
+  contentType: z.enum(["image/svg+xml", "image/png", "image/webp"]),
+});
+
+const deploymentAssetsInput = z.tuple([clientAssetInput]);
+const deploymentLogosInput = z
+  .object({
+    dark: logoAssetInput.optional(),
+    light: logoAssetInput.optional(),
+  })
+  .optional();
 
 const getErrorMessage = (error: unknown): string | undefined => {
   if (error instanceof Error) {
@@ -48,13 +66,16 @@ const preservePlatformNotFound = (error: unknown): never => {
 export const deploymentRouter = {
   create: o
     .use(requireCliDeployToken)
-    .input(z.object({ appId: z.string(), assets: z.tuple([deploymentAssetInput]) }))
+    .input(
+      z.object({ appId: z.string(), assets: deploymentAssetsInput, logos: deploymentLogosInput }),
+    )
     .handler(async ({ context, input }) => {
       try {
         return await deploymentsCreate({
           body: {
             appId: input.appId,
             assets: input.assets,
+            logos: input.logos,
             scopeId: getTailorKitScopeId(context),
           },
           client: context.platform,

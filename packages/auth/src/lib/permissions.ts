@@ -10,6 +10,7 @@ const statement = {
   ...defaultStatements,
 
   apiKey: ["create", "read", "update", "delete"],
+  invitation: [...defaultStatements.invitation, "read"],
   projectApiKey: ["create", "read", "update", "delete"],
   project: ["create", "share", "update", "delete"],
 } as const;
@@ -28,6 +29,7 @@ const admin = ac.newRole({
   projectApiKey: ["create", "read", "update", "delete"],
   project: ["create", "update"],
   ...adminAc.statements,
+  invitation: [...adminAc.statements.invitation, "read"],
 });
 
 const owner = ac.newRole({
@@ -35,6 +37,7 @@ const owner = ac.newRole({
   projectApiKey: ["create", "read", "update", "delete"],
   project: ["create", "update", "delete"],
   ...ownerAc.statements,
+  invitation: [...ownerAc.statements.invitation, "read"],
 });
 
 export const roles = {

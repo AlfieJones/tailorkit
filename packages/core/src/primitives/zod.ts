@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ComponentDefinition } from "../schema";
+import type { ComponentDefinition } from "../schema/index";
 import { primitiveDefinitions, primitiveNames } from "./definition";
 import type { PrimitiveName, PrimitivePropDefinition } from "./definition";
 import { resolveTheme } from "./theme";

@@ -1,10 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { createIsomorphicFn } from "@tanstack/react-start";
-import { getCookie } from "@tanstack/react-start/server";
-
-const getActiveOrgId = createIsomorphicFn()
-  .server(() => getCookie("active-org-id"))
-  .client(() => sessionStorage.getItem("active-org-id") ?? "");
+import { clearActiveOrg, getActiveOrg } from "#lib/active-org";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
@@ -20,12 +15,19 @@ export const Route = createFileRoute("/")({
       });
     }
 
+    const activeOrg = await getActiveOrg();
+    // This query does not use the saved selection, so a failure is not evidence
+    // that the selection is invalid. Only clear it after a successful lookup.
     const orgs = await context.queryClient.ensureQueryData(
       context.orpc.user.getOrgs.queryOptions(),
     );
 
-    const orgId = getActiveOrgId();
-    const org = orgs.find((org) => org.id === orgId) || orgs[0];
+    // The cookie stores a slug; accept IDs saved by older clients as well.
+    const selectedOrg = orgs.find((org) => org.slug === activeOrg || org.id === activeOrg);
+    if (activeOrg && !selectedOrg) {
+      await clearActiveOrg();
+    }
+    const org = selectedOrg ?? orgs[0];
     if (org?.slug) {
       throw redirect({ params: { orgSlug: org.slug }, to: "/$orgSlug/~/projects" });
     }

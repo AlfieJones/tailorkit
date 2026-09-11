@@ -28,10 +28,15 @@
       "development": "./src/dev-delay.ts",
       "types": "./dist/dev-delay.d.mts",
       "default": "./dist/dev-delay.mjs"
+    },
+    "./app-asset-url": {
+      "development": "./src/app-asset-url.ts",
+      "types": "./dist/app-asset-url.d.mts",
+      "default": "./dist/app-asset-url.mjs"
     }
   },
   "scripts": {
-    "build": "tsdown src/rate-limiting.ts src/hashing.ts src/dev-delay.ts --format esm --dts --clean",
+    "build": "tsdown src/rate-limiting.ts src/hashing.ts src/dev-delay.ts src/app-asset-url.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

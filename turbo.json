@@ -5,7 +5,12 @@
     "VERCEL",
     "VERCEL_*",
     "AUTH_SECRET",
+    "AUTH_PRODUCTION_URL",
+    "AUTH_TRUSTED_ORIGINS",
     "BETTER_AUTH_API_KEY",
+    "GITHUB_CLIENT_ID",
+    "GITHUB_CLIENT_SECRET",
+    "OAUTH_PROXY_SECRET",
     "DATABASE_URL",
     "NODE_ENV",
     "EMAIL_SMTP_URL",
@@ -30,6 +35,8 @@
     "BLOB_SECRET_ACCESS_KEY",
     "BLOB_ACCESS_KEY_ID",
     "BLOB_PUBLIC_BASE_URL",
+    "ASSET_DOMAIN",
+    "ASSET_BASE_URL",
     "OTEL_EXPORTER_OTLP_ENDPOINT",
     "OTEL_EXPORTER_OTLP_HEADERS",
     "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
@@ -49,16 +56,19 @@
       "dependsOn": ["^lint"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^build", "^check-types"]
     },
     "test": {
+      "dependsOn": ["^build"],
       "outputs": []
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
     "web#dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
       "with": ["//#services:watch", "@tailorkit/db#db:studio"]

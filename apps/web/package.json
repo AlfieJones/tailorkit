@@ -13,6 +13,8 @@
     ]
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
     "build": "vite build",
     "preview": "vite preview",
     "dev": "vite dev --port 3000"
@@ -31,6 +33,7 @@
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/observability": "workspace:*",
+    "@tailorkit/storage": "workspace:*",
     "@tailorkit/ui": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/devtools-a11y": "^0.2.2",
@@ -63,6 +66,7 @@
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "^1.0.0",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

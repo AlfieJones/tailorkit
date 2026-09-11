@@ -5,7 +5,7 @@ import { baseOptions } from "#lib/layout.shared";
 
 export function NotFound() {
   return (
-    <HomeLayout {...baseOptions()}>
+    <HomeLayout {...baseOptions()} className="min-h-dvh">
       <DefaultNotFound />
     </HomeLayout>
   );

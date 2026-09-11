@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { createActions } from "../schema";
+import { createActions } from "../schema/index";
 import { createTailorKitClient } from "./client";
 import { createTailorKitServer } from "./handler";
 
@@ -55,6 +55,28 @@ optionalSchemaTailor.handler(new Request("https://example.com/api/tailorkit/sche
 });
 
 describe("createTailorKitServer", () => {
+  it("preserves hosted bundle URLs without an assetsBaseUrl override", async () => {
+    const app = {
+      id: "app",
+      clientPath:
+        "https://abc123def4.tailorkit.app/p/22222222-2222-4222-8222-222222222222/a/33333333-3333-4333-8333-333333333333/d/44444444-4444-4444-8444-444444444444/client.js",
+    };
+    const server = createTailorKitServer({
+      projectKey: "server-only-key",
+      components: {},
+      $internal: {
+        platformFetch: () =>
+          Promise.resolve(
+            Response.json({ items: [app], pagination: { hasMore: false, page: 1, pageSize: 100 } }),
+          ),
+      },
+    });
+    const response = await server.handler(new Request("https://host.test/api/tailorkit/apps"), {
+      authenticate: () => ({ scopeId: "workspace" }),
+    });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual([app]);
+  });
   it("dispatches actions with host context and validated input", async () => {
     const requests: Request[] = [];
     const client = createTailorKitClient({
@@ -221,6 +243,52 @@ describe("createTailorKitServer", () => {
     expect(html).toContain("Approve CLI login");
     expect(html).toContain('value="ABC-123-XYZ"');
     expect(html).toContain("prefers-color-scheme: dark");
+  });
+
+  it("redirects unauthenticated CLI approvals to the host sign-in page", async () => {
+    const server = createTailorKitServer({
+      cliAuth: { signInPath: "/admin/sign-in?source=tailorkit" },
+      components: {},
+    });
+    const response = await server.handler(
+      new Request("https://example.com/api/tailorkit/cli-auth/approve?code=ABC-123-XYZ"),
+      { authenticate: () => null },
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(response.headers.get("location")).toBe(
+      "https://example.com/admin/sign-in?source=tailorkit&returnTo=%2Fapi%2Ftailorkit%2Fcli-auth%2Fapprove%3Fcode%3DABC-123-XYZ",
+    );
+  });
+
+  it("renders configured CLI approvals for authenticated users", async () => {
+    const server = createTailorKitServer({
+      cliAuth: { signInPath: "/admin/sign-in" },
+      components: {},
+    });
+    const response = await server.handler(
+      new Request("https://example.com/api/tailorkit/cli-auth/approve?code=ABC-123-XYZ"),
+      { authenticate: () => ({ scopeId: "test" }) },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.text()).resolves.toContain("Approve CLI login");
+  });
+
+  it("rejects cross-origin CLI sign-in redirects", async () => {
+    const server = createTailorKitServer({
+      cliAuth: { signInPath: "//evil.example/sign-in" },
+      components: {},
+    });
+
+    await expect(
+      server.handler(
+        new Request("https://example.com/api/tailorkit/cli-auth/approve?code=ABC-123-XYZ"),
+        { authenticate: () => null },
+      ),
+    ).rejects.toThrow("TailorKit cliAuth.signInPath must be a same-origin path.");
   });
 
   it("approves CLI auth from the built-in approval page", async () => {
