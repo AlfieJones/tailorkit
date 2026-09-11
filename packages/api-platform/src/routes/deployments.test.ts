@@ -146,7 +146,7 @@ describe("platform deployment uploads", () => {
         createDownloadUrl: vi.fn(),
         createUploadUrl,
         delete: vi.fn(),
-        head: vi.fn(),
+        head: vi.fn().mockRejectedValue({ name: "NoSuchKey" }),
       },
     } satisfies Context;
 
@@ -175,6 +175,11 @@ describe("platform deployment uploads", () => {
               contentLength: 262_144,
               contentType: "image/svg+xml",
             },
+            light: {
+              checksum: "b".repeat(64),
+              contentLength: 262_144,
+              contentType: "image/svg+xml",
+            },
           },
           scopeId: "production",
         },
@@ -183,18 +188,93 @@ describe("platform deployment uploads", () => {
     );
 
     expect(result.body.assets).toHaveLength(1);
-    expect(result.body.logos?.dark?.file.objectKey).toMatch(/\/logo-dark\.svg$/u);
-    expect(result.body.logos?.light).toBeUndefined();
+    expect(result.body.logos?.dark?.file.objectKey).toMatch(
+      new RegExp(`/logos/${"b".repeat(64)}\\.svg$`, "u"),
+    );
+    expect(result.body.logos?.light?.file.id).toBe(result.body.logos?.dark?.file.id);
     expect(result.body.deployment).toEqual(
       expect.objectContaining({
         clientEntryFileId: expect.any(String),
         logoDarkFileId: expect.any(String),
-        logoDarkPath: "logo-dark.svg",
-        logoLightFileId: null,
-        logoLightPath: null,
+        logoDarkPath: `logos/${"b".repeat(64)}.svg`,
+        logoLightFileId: expect.any(String),
+        logoLightPath: `logos/${"b".repeat(64)}.svg`,
       }),
     );
     expect(createUploadUrl).toHaveBeenCalledTimes(2);
+  });
+
+  it("reuses a matching app logo without creating another upload URL", async () => {
+    const createUploadUrl = vi.fn(({ key }: { key: string }) =>
+      Promise.resolve({ key, uploadUrl: `https://uploads.example/${key}` }),
+    );
+    const context = {
+      organization: {
+        createdAt: new Date(),
+        id: organizationId,
+        logo: null,
+        metadata: null,
+        name: "Analytical Engines",
+        publicId: "team0000000001",
+        slug: "analytical-engines",
+      },
+      project: {
+        createdAt: new Date(),
+        id: projectId,
+        name: "Compiler",
+        organizationId,
+        slug: "compiler",
+        updatedAt: new Date(),
+      },
+      storage: {
+        type: "s3",
+        createDownloadUrl: vi.fn(),
+        createUploadUrl,
+        delete: vi.fn(),
+        head: vi.fn().mockResolvedValue({
+          checksumSha256: logoChecksumBase64,
+          contentLength: 262_144,
+          contentType: "image/svg+xml",
+        }),
+      },
+    } satisfies Context;
+    const currentApp = await db.query.app.findFirst();
+    if (!currentApp) {
+      throw new Error("Test app was not created.");
+    }
+
+    const result = await call(
+      deploymentRouter.create,
+      {
+        body: {
+          appId: currentApp.id,
+          assets: [
+            {
+              checksum: "a".repeat(64),
+              contentLength: 1,
+              contentType: "application/javascript",
+              encoding: "utf-8",
+              objectKey: "client.js",
+            },
+          ],
+          logos: {
+            dark: {
+              checksum: logoChecksum,
+              contentLength: 262_144,
+              contentType: "image/svg+xml",
+            },
+          },
+          scopeId: "production",
+        },
+      },
+      { context },
+    );
+
+    expect(result.body.logos?.dark?.uploadUrl).toBeUndefined();
+    expect(createUploadUrl).toHaveBeenCalledTimes(1);
+    expect(context.storage.head).toHaveBeenCalledWith({
+      key: `teams/team0000000001/projects/${projectId}/apps/app000000001/logos/${logoChecksum}.svg`,
+    });
   });
 
   it("rejects the client assets array when it exceeds 1 MiB", async () => {

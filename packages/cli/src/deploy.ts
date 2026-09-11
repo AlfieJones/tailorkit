@@ -38,14 +38,19 @@ interface DeploymentAssetUpload {
   uploadUrl: string;
 }
 
+interface DeploymentLogoUpload {
+  headers?: Record<string, string>;
+  uploadUrl?: string;
+}
+
 interface DeploymentCreateResult {
   assets: DeploymentAssetUpload[];
   deployment: {
     id: string;
   };
   logos?: {
-    dark?: DeploymentAssetUpload;
-    light?: DeploymentAssetUpload;
+    dark?: DeploymentLogoUpload;
+    light?: DeploymentLogoUpload;
   };
 }
 
@@ -165,7 +170,14 @@ const writeAppIdToConfig = async (configPath: string, appId: string): Promise<vo
   );
 };
 
-const uploadAsset = async (asset: DeploymentAssetUpload, content: Buffer): Promise<void> => {
+const uploadAsset = async (
+  asset: DeploymentAssetUpload | DeploymentLogoUpload,
+  content: Buffer,
+): Promise<void> => {
+  if (!asset.uploadUrl) {
+    return;
+  }
+
   if (content.byteLength > maxDeploymentBytes) {
     throw new Error(`Deployment asset exceeds ${maxDeploymentBytes} bytes.`);
   }

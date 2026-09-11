@@ -20,6 +20,7 @@ import { paginatedOutput, paginationQuery } from "../pagination";
 import { o, protectedRouter, requireApp } from "../procedures";
 import { setSpanAttributes } from "@tailorkit/observability";
 import { createPublicId } from "../public-id";
+import type { Context } from "../context";
 
 const uploadUrlExpiresInSeconds = 15 * 60;
 const logoInspectionTimeoutMs = 10_000;
@@ -77,12 +78,46 @@ const deploymentAssetUpload = z.object({
 
 const deploymentLogoUpload = deploymentAssetUpload.extend({
   file: AppDeploymentFile.extend({ contentType: logoContentType }),
+  uploadUrl: z.url().optional(),
 });
 
 const deploymentLogoUploads = z.object({
   dark: deploymentLogoUpload.optional(),
   light: deploymentLogoUpload.optional(),
 });
+
+function isNotFound(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const value = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+  return (
+    value.name === "NoSuchKey" ||
+    value.name === "NotFound" ||
+    value.$metadata?.httpStatusCode === 404
+  );
+}
+
+async function hasMatchingLogo(
+  storage: Context["storage"],
+  logo: z.output<typeof createDeploymentLogoInput>,
+  objectKey: string,
+) {
+  try {
+    const object = await storage.head({ key: objectKey });
+    return (
+      object.contentLength === logo.contentLength &&
+      object.contentType === logo.contentType &&
+      object.checksumSha256 === hexToBase64(logo.checksum)
+    );
+  } catch (error) {
+    if (isNotFound(error)) {
+      return false;
+    }
+    throw error;
+  }
+}
 
 const requireDeployment = o.middleware(
   async ({ next, context }, input: { deploymentId: string; scopeId: string }) => {
@@ -208,22 +243,39 @@ const createAppDeployment = protectedRouter
       asset: {
         ...logo,
         encoding: null,
-        objectKey: `logo-${variant}.${logoExtensionByContentType[logo.contentType]}`,
+        objectKey: `logos/${logo.checksum}.${logoExtensionByContentType[logo.contentType]}`,
       },
       variant,
     }));
-    const requestedAssets = [...input.body.assets, ...requestedLogos.map(({ asset }) => asset)];
+    const uniqueLogoAssets = [
+      ...new Map(requestedLogos.map(({ asset }) => [asset.objectKey, asset])).values(),
+    ];
+    const requestedAssets = [
+      ...input.body.assets.map((asset) => ({ asset, kind: "deployment" as const })),
+      ...uniqueLogoAssets.map((asset) => ({ asset, kind: "logo" as const })),
+    ];
     const assets = await Promise.all(
-      requestedAssets.map(async (asset) => {
+      requestedAssets.map(async ({ asset, kind }) => {
         const fileId = crypto.randomUUID();
-        const objectKey = `teams/${context.organization.publicId}/projects/${context.project.id}/apps/${context.app.publicId}/deployments/${deploymentPublicId}/files/${asset.objectKey}`;
-        const uploadUrl = await context.storage.createUploadUrl({
-          checksumSha256: hexToBase64(asset.checksum),
-          contentType: asset.contentType,
-          expiresInSeconds: uploadUrlExpiresInSeconds,
-          key: objectKey,
-          metadata: { appDeploymentId: deploymentId, appId: context.app.id, fileId },
-        });
+        const appBaseKey = `teams/${context.organization.publicId}/projects/${context.project.id}/apps/${context.app.publicId}`;
+        const objectKey =
+          kind === "logo"
+            ? `${appBaseKey}/${asset.objectKey}`
+            : `${appBaseKey}/deployments/${deploymentPublicId}/files/${asset.objectKey}`;
+        const shouldReuse =
+          kind === "logo" && (await hasMatchingLogo(context.storage, asset, objectKey));
+        const uploadUrl = shouldReuse
+          ? undefined
+          : await context.storage.createUploadUrl({
+              checksumSha256: hexToBase64(asset.checksum),
+              contentType: asset.contentType,
+              expiresInSeconds: uploadUrlExpiresInSeconds,
+              key: objectKey,
+              metadata:
+                kind === "logo"
+                  ? { appId: context.app.id, checksum: asset.checksum }
+                  : { appDeploymentId: deploymentId, appId: context.app.id, fileId },
+            });
         return { asset, fileId, objectKey, uploadUrl };
       }),
     );
@@ -262,8 +314,8 @@ const createAppDeployment = protectedRouter
         throw new ORPCError("BAD_REQUEST", { message: "Failed to create deployment asset." });
       }
 
-      const fileByName = new Map(
-        files.map((file) => [file.objectKey.slice(file.objectKey.lastIndexOf("/") + 1), file]),
+      const fileByAssetPath = new Map(
+        files.map((file, index) => [assets[index]?.asset.objectKey, file]),
       );
       const logoDarkPath = requestedLogos.find(({ variant }) => variant === "dark")?.asset
         .objectKey;
@@ -273,9 +325,9 @@ const createAppDeployment = protectedRouter
       const [updatedDeployment] = await tx
         .update(appDeployment)
         .set({
-          clientEntryFileId: fileByName.get("client.js")?.id,
-          logoDarkFileId: logoDarkPath ? fileByName.get(logoDarkPath)?.id : undefined,
-          logoLightFileId: logoLightPath ? fileByName.get(logoLightPath)?.id : undefined,
+          clientEntryFileId: fileByAssetPath.get("client.js")?.id,
+          logoDarkFileId: logoDarkPath ? fileByAssetPath.get(logoDarkPath)?.id : undefined,
+          logoLightFileId: logoLightPath ? fileByAssetPath.get(logoLightPath)?.id : undefined,
           logoDarkPath,
           logoLightPath,
         })
@@ -300,18 +352,18 @@ const createAppDeployment = protectedRouter
           asset.objectKey,
           {
             file,
-            headers: uploadUrl.headers,
-            uploadUrl: uploadUrl.uploadUrl,
+            headers: uploadUrl?.headers,
+            uploadUrl: uploadUrl?.uploadUrl,
           },
         ] as const;
       }),
     );
     const uploadedAssets = input.body.assets.map((asset) => {
       const upload = uploadedAssetByName.get(asset.objectKey);
-      if (!upload) {
+      if (!upload?.uploadUrl) {
         throw new ORPCError("BAD_REQUEST", { message: "Failed to resolve deployment asset." });
       }
-      return upload;
+      return { ...upload, uploadUrl: upload.uploadUrl };
     });
     const uploadedLogos = Object.fromEntries(
       requestedLogos.map(({ asset, variant }) => {

@@ -14,6 +14,7 @@ const projectId = "22222222-2222-4222-8222-222222222222";
 const appId = "app000000001";
 const deploymentId = "deploy000001";
 const assetPath = `/p/${projectId}/a/${appId}/d/${deploymentId}/client.js`;
+const logoHash = "b".repeat(64);
 const localUrl = `http://localhost:3000/api/assets/t/${teamId}${assetPath}`;
 const hostedUrl = `https://${teamId}.tailorkit.app${assetPath}`;
 
@@ -38,6 +39,29 @@ describe("asset delivery contract", () => {
       expect.objectContaining({
         contentType: "image/svg+xml",
         key: expect.stringMatching(/\/files\/logo-dark\.svg$/u),
+      }),
+    );
+  });
+
+  it("maps content-addressed app logos to shared storage keys", () => {
+    const logoPath = `/p/${projectId}/a/${appId}/logos/${logoHash}.webp`;
+    expect(
+      parseNodeAssetRequest(new Request(`http://localhost:3000/api/assets/t/${teamId}${logoPath}`)),
+    ).toEqual({
+      appId,
+      contentType: "image/webp",
+      key: `teams/${teamId}/projects/${projectId}/apps/${appId}/logos/${logoHash}.webp`,
+      projectId,
+      publicTeamId: teamId,
+    });
+    expect(
+      parseHostedAssetRequest(
+        new Request(`https://${teamId}.tailorkit.app${logoPath}`),
+        "tailorkit.app",
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        key: `teams/${teamId}/projects/${projectId}/apps/${appId}/logos/${logoHash}.webp`,
       }),
     );
   });
