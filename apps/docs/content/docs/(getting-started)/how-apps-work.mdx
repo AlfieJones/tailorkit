@@ -50,18 +50,18 @@ the app-side and host-side details.
 
 ## Sandbox and security
 
-App code runs in a hidden, opaque-origin iframe sandbox with an internal worker.
-It receives screen context, returns a description of the UI, and responds to
-events. The host renders the real UI and keeps direct access to routing, data,
-secrets, and browser APIs.
+App code runs in a hidden, opaque-origin iframe sandbox. It receives screen
+context, renders approved declarative elements inside that iframe, and relays
+the validated UI description and events to the host. The host renders the real
+UI and keeps direct access to routing, data, secrets, and browser APIs.
 
 ### Isolated runtime
 
-TailorKit treats app code as untrusted by default. Apps run in an internal
-worker behind a sandboxed iframe, do not run on the main thread, and do not get
-direct access to the DOM. They describe UI instead of mutating the page, and
-can only render through the screens, components, props, callbacks, children, and
-tokens your host exposes.
+TailorKit treats app code as untrusted by default. Apps run directly inside a
+sandboxed opaque-origin iframe and can only render through the screens,
+components, props, callbacks, children, and tokens your host exposes. The host
+receives only the validated declarative UI protocol; app DOM never becomes part
+of the host document.
 
 The iframe allows scripts but not same-origin access. Its content security
 policy blocks network connections, images, styles, nested frames, and form

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createIframeUiHost } from "./index.js";
 
 const iframeReadyType = "tailorkit:iframe-ready";
-const workerMessageType = "tailorkit:worker-message";
+const sandboxMessageType = "tailorkit:worker-message";
 
 function getChannel(iframe: HTMLIFrameElement): string {
   const match = /const channel = "([a-f0-9]+)"/u.exec(iframe.srcdoc);
@@ -15,27 +15,18 @@ function getChannel(iframe: HTMLIFrameElement): string {
 }
 
 function emitFromIframe(iframe: HTMLIFrameElement, data: unknown): void {
-  window.dispatchEvent(
-    new MessageEvent("message", {
-      data,
-      source: iframe.contentWindow,
-    }),
-  );
+  window.dispatchEvent(new MessageEvent("message", { data, source: iframe.contentWindow }));
 }
 
 function getContentWindow(iframe: HTMLIFrameElement): Window {
-  const contentWindow = iframe.contentWindow;
-  if (!contentWindow) {
+  if (!iframe.contentWindow) {
     throw new Error("Expected iframe content window.");
   }
-  return contentWindow;
+  return iframe.contentWindow;
 }
 
-function createFetch() {
-  return vi.fn<typeof fetch>((input) => {
-    const url = input.toString();
-    return Promise.resolve(new Response(url.includes("runtime") ? "// runtime" : "// app"));
-  });
+function createFetch(source = "// bundled app client") {
+  return vi.fn<typeof fetch>(() => Promise.resolve(new Response(source)));
 }
 
 describe("createIframeUiHost", () => {
@@ -44,12 +35,9 @@ describe("createIframeUiHost", () => {
     vi.restoreAllMocks();
   });
 
-  it("runs the extension behind a hidden, opaque-origin iframe", async () => {
+  it("loads app code directly into a hidden opaque-origin iframe", async () => {
     const fetch = createFetch();
-    const host = createIframeUiHost("https://assets.test/app.js", {
-      fetch,
-      runtimeUrl: "https://host.test/runtime.js",
-    });
+    const host = createIframeUiHost("https://assets.test/app.js", { fetch });
     host.mount();
     const postMessage = vi.spyOn(getContentWindow(host.iframe), "postMessage");
     const channel = getChannel(host.iframe);
@@ -60,8 +48,15 @@ describe("createIframeUiHost", () => {
       expect(postMessage).toHaveBeenCalledWith(
         {
           channel,
-          type: "tailorkit:bootstrap",
-          workerSource: "// runtime",
+          payload: {
+            data: {
+              appSource: "// bundled app client",
+              appUrl: "https://assets.test/app.js",
+              props: undefined,
+            },
+            type: "init",
+          },
+          type: sandboxMessageType,
         },
         "*",
       );
@@ -71,75 +66,45 @@ describe("createIframeUiHost", () => {
     expect(host.iframe.getAttribute("sandbox")).toBe("allow-scripts");
     expect(host.iframe.getAttribute("sandbox")).not.toContain("allow-same-origin");
     expect(host.iframe.srcdoc).toContain("connect-src 'none'");
+    expect(host.iframe.srcdoc).toContain("worker-src 'none'");
+    expect(host.iframe.srcdoc).toContain("loadedModule = await import(moduleUrl)");
+    expect(host.iframe.srcdoc).toContain("new MutationObserver");
+    expect(host.iframe.srcdoc).toContain("nodes.set(id, new WeakRef(node))");
+    expect(host.iframe.srcdoc).toContain("const target = derefNode(payload.data.nodeId)");
+    expect(host.iframe.srcdoc).not.toContain("new Worker");
     expect(fetch).toHaveBeenCalledWith(new URL("https://assets.test/app.js"), {
       credentials: "omit",
     });
-    expect(fetch).toHaveBeenCalledWith(new URL("https://host.test/runtime.js"), {
-      credentials: "same-origin",
-    });
-
-    emitFromIframe(host.iframe, {
-      channel,
-      payload: { type: "ready" },
-      type: workerMessageType,
-    });
-
-    await vi.waitFor(() => {
-      expect(postMessage).toHaveBeenCalledWith(
-        {
-          channel,
-          payload: {
-            data: {
-              appSource: "// app",
-              appUrl: "https://assets.test/app.js",
-              props: undefined,
-            },
-            type: "init",
-          },
-          type: workerMessageType,
-        },
-        "*",
-      );
-    });
   });
 
-  it("absolutizes Vite imports for package-served runtime workers", async () => {
-    const runtimeUrl = new URL(
-      "/node_modules/@tailorkit/sandbox/dist/assets/worker.js",
-      window.location.origin,
-    );
-    const fetch = vi.fn<typeof globalThis.fetch>((input) => {
-      const source =
-        input.toString() === runtimeUrl.toString()
-          ? 'import { injectQuery } from "/@vite/client";'
-          : "// app";
-      return Promise.resolve(new Response(source));
-    });
-    const host = createIframeUiHost("https://assets.test/app.js", { fetch, runtimeUrl });
+  it("queues callback events until the iframe is ready", async () => {
+    const host = createIframeUiHost("https://assets.test/app.js", { fetch: createFetch() });
     host.mount();
     const postMessage = vi.spyOn(getContentWindow(host.iframe), "postMessage");
     const channel = getChannel(host.iframe);
+    const callback = {
+      data: { event: "tailorkitcallbackonclick", nodeId: "n:2" },
+      type: "dispatchCallback" as const,
+    };
 
+    host.dispatch(callback);
+    expect(postMessage).not.toHaveBeenCalled();
     emitFromIframe(host.iframe, { channel, type: iframeReadyType });
 
     await vi.waitFor(() => {
-      expect(postMessage).toHaveBeenCalledWith(
-        {
-          channel,
-          type: "tailorkit:bootstrap",
-          workerSource: `import { injectQuery } from "${window.location.origin}/@vite/client";`,
-        },
+      expect(postMessage).toHaveBeenLastCalledWith(
+        { channel, payload: callback, type: sandboxMessageType },
         "*",
       );
     });
-
-    expect(host.iframe.srcdoc).toContain(
-      `script-src 'unsafe-inline' data: ${window.location.origin}`,
-    );
   });
 
-  it("stores snapshots received through the iframe bridge", () => {
-    const host = createIframeUiHost("https://assets.test/app.js", { fetch: createFetch() });
+  it("stores strictly validated snapshots received through the iframe bridge", () => {
+    const onError = vi.fn();
+    const host = createIframeUiHost("https://assets.test/app.js", {
+      fetch: createFetch(),
+      onError,
+    });
     const channel = getChannel(host.iframe);
 
     emitFromIframe(host.iframe, {
@@ -155,42 +120,20 @@ describe("createIframeUiHost", () => {
         },
         type: "snapshot",
       },
-      type: workerMessageType,
+      type: sandboxMessageType,
     });
-
     expect(host.getSnapshot()).toMatchObject({ children: [{ text: "Hello" }] });
-  });
-
-  it("bridges animation frames back into the sandbox", () => {
-    const requestFrame = vi
-      .spyOn(globalThis, "requestAnimationFrame")
-      .mockImplementation((callback: FrameRequestCallback) => {
-        callback(123);
-        return 1;
-      });
-    const host = createIframeUiHost("https://assets.test/app.js", { fetch: createFetch() });
-    host.mount();
-    const channel = getChannel(host.iframe);
-    const postMessage = vi.spyOn(getContentWindow(host.iframe), "postMessage");
 
     emitFromIframe(host.iframe, {
       channel,
-      payload: { data: {}, type: "requestAnimationFrame" },
-      type: workerMessageType,
+      payload: { data: { revision: "2", tree: {} }, type: "snapshot" },
+      type: sandboxMessageType,
     });
-
-    expect(postMessage).toHaveBeenCalledWith(
-      {
-        channel,
-        payload: { data: { timestamp: 123 }, type: "animationFrame" },
-        type: workerMessageType,
-      },
-      "*",
-    );
-    requestFrame.mockRestore();
+    expect(onError).toHaveBeenCalledOnce();
+    expect(host.getRevision()).toBe(1);
   });
 
-  it("rejects messages from other windows and reports invalid sandbox messages", () => {
+  it("rejects messages from other windows", () => {
     const onError = vi.fn();
     const host = createIframeUiHost("https://assets.test/app.js", {
       fetch: createFetch(),
@@ -200,25 +143,17 @@ describe("createIframeUiHost", () => {
 
     window.dispatchEvent(
       new MessageEvent("message", {
-        data: { channel, payload: { type: "wat" }, type: workerMessageType },
+        data: { channel, payload: { type: "wat" }, type: sandboxMessageType },
         source: window,
       }),
     );
     expect(onError).not.toHaveBeenCalled();
-
-    emitFromIframe(host.iframe, {
-      channel,
-      payload: { type: "wat" },
-      type: workerMessageType,
-    });
-    expect(onError).toHaveBeenCalledOnce();
   });
 
   it("removes the iframe when destroyed", () => {
     const host = createIframeUiHost("https://assets.test/app.js", { fetch: createFetch() });
     host.mount();
     expect(document.body.contains(host.iframe)).toBe(true);
-
     host.destroy();
     expect(document.body.contains(host.iframe)).toBe(false);
   });

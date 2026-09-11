@@ -19,18 +19,6 @@
     "./protocol": {
       "types": "./dist/protocol.d.ts",
       "import": "./dist/protocol.js"
-    },
-    "./worker": {
-      "types": "./dist/worker/worker.d.ts",
-      "import": "./dist/worker.js"
-    },
-    "./worker-dom": {
-      "types": "./dist/worker-dom/index.d.ts",
-      "import": "./dist/worker-dom/index.js"
-    },
-    "./worker-dom/dom": {
-      "types": "./dist/worker-dom/dom.d.ts",
-      "import": "./dist/worker-dom/dom.js"
     }
   },
   "publishConfig": {
@@ -42,7 +30,6 @@
     "build": "vite build && tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "preact": "^10.29.8",
     "zod": "catalog:"
   },
   "devDependencies": {

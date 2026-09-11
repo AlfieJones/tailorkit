@@ -239,7 +239,7 @@ cli
   });
 
 cli
-  .command("experimental-preview", "Build and preview the TailorKit worker")
+  .command("experimental-preview", "Build and preview the TailorKit app")
   .option("--config <path>", "Path to tailorkit config")
   .option("--entry <path>", "Client entry file")
   .option("--out-dir <path>", "Build output directory")

@@ -21,7 +21,7 @@ describe("createRemoteUiStore", () => {
   it("stores snapshots", () => {
     const store = createRemoteUiStore();
 
-    store.handleWorkerMessage({
+    store.handleSandboxMessage({
       data: { revision: 1, tree },
       type: "snapshot",
     });
@@ -35,7 +35,7 @@ describe("createRemoteUiStore", () => {
     store.subscribe(listener);
     store.setSnapshot(tree, 1);
 
-    store.handleWorkerMessage({
+    store.handleSandboxMessage({
       data: {
         patches: [
           { nodeId: "text", op: "setText", text: "Saved" },

@@ -4,8 +4,8 @@ TailorKit is infrastructure for adding a secure app ecosystem to a SaaS
 product.
 
 The host product owns the routes, data, permissions, actions, and design system.
-TailorKit apps run separately, in a sandboxed iframe with an internal worker,
-and render through the screens and components the host exposes. That lets
+TailorKit apps run separately in a sandboxed iframe and render through the
+screens and components the host exposes. That lets
 customers, partners, or AI builders extend a product without getting direct
 access to the product internals.
 
@@ -15,7 +15,7 @@ access to the product internals.
 - `@tailorkit/core`: schema, server handler, actions, and platform routing.
 - `@tailorkit/react`: React host runtime for rendering installed apps.
 - `@tailorkit/app`: app-side client, config loader, and build pipeline.
-- `@tailorkit/sandbox`: iframe sandbox, worker runtime, and host protocol.
+- `@tailorkit/sandbox`: iframe sandbox and host protocol.
 - `@tailorkit/cli`: local app preview and deployment commands.
 - `apps/web`: the TailorKit platform app.
 - `apps/docs`: the docs site.
@@ -29,7 +29,7 @@ access to the product internals.
 3. Host routes call `useCurrentScreen` to publish their typed context.
 4. The host renders installed apps with `AppView`.
 5. TailorKit loads app code inside an opaque-origin iframe sandbox and proxies
-   UI/events across the host boundary.
+   declarative UI/events across the host boundary.
 
 Apps describe UI. The host renders the real UI and keeps control of sensitive
 work.

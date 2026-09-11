@@ -1361,9 +1361,6 @@ importers:
 
   packages/sandbox:
     dependencies:
-      preact:
-        specifier: ^10.29.8
-        version: 10.29.8
       zod:
         specifier: 'catalog:'
         version: 4.4.3

@@ -14,7 +14,6 @@ export {
   type TailorKitUploadManifest,
 } from "./upload-manifest";
 
-const preactExternal = /^preact(?:\/.*)?$/u;
 const preactPackageJson = "preact/package.json";
 const preactPackageJsonModuleId = "\0tailorkit-preact-package-json";
 
@@ -48,8 +47,6 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
       watch: options.watch ? {} : null,
       minify: "oxc",
       rollupOptions: {
-        external: (id) =>
-          id !== preactPackageJson && id !== preactPackageJsonModuleId && preactExternal.test(id),
         output: {
           comments: {
             annotation: false,
