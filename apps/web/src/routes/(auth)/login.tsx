@@ -20,7 +20,7 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { authClient } from "#lib/auth-client";
-import { getSameOriginPath } from "#lib/safe-return-url";
+import { getSameOriginPath, getSameOriginUrl } from "#lib/safe-return-url";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/(auth)/login")({
@@ -107,7 +107,8 @@ function RouteComponent() {
     setGithubPending(true);
 
     try {
-      const callbackURL = getSameOriginPath(return_to, window.location.origin) ?? "/";
+      const callbackURL =
+        getSameOriginUrl(return_to, window.location.origin) ?? window.location.origin;
       const result = await authClient.signIn.social({
         callbackURL,
         errorCallbackURL: "/login",

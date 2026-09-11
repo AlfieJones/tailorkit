@@ -14,3 +14,13 @@ export function getSameOriginPath(value: string | undefined, currentOrigin: stri
     // Invalid URLs are not safe redirect targets.
   }
 }
+
+export function getSameOriginUrl(value: string | undefined, currentOrigin: string) {
+  const path = getSameOriginPath(value, currentOrigin);
+
+  if (!path) {
+    return;
+  }
+
+  return new URL(path, currentOrigin).href;
+}
