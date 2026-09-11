@@ -129,6 +129,30 @@ function ActiveSessions() {
     },
   });
 
+  const revokeOtherMutation = useMutation({
+    mutationFn: async () => {
+      const result = await authClient.revokeOtherSessions();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to sign out other sessions");
+      }
+    },
+    onError: (mutationError) => {
+      toastManager.add({
+        description: mutationError.message,
+        title: "Couldn't sign out other sessions",
+        type: "error",
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: activeSessionsQueryKey });
+      toastManager.add({
+        description: "All other devices have been signed out.",
+        title: "Other sessions ended",
+        type: "success",
+      });
+    },
+  });
+
   const sortedSessions = sessions
     ? [
         ...sessions.filter((session) => session.token === currentSession?.token),
@@ -201,7 +225,19 @@ function ActiveSessions() {
     <CardFrame className="w-full">
       <Card>
         <CardHeader>
-          <CardTitle>Active sessions</CardTitle>
+          <CardTitle className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>Active sessions</span>
+            <Button
+              disabled={!sortedSessions?.some((session) => session.token !== currentSession?.token)}
+              loading={revokeOtherMutation.isPending}
+              onClick={() => revokeOtherMutation.mutate()}
+              size="sm"
+              type="button"
+              variant="destructive-outline"
+            >
+              Sign out all other sessions
+            </Button>
+          </CardTitle>
           <CardDescription>Manage the devices currently signed in to your account.</CardDescription>
         </CardHeader>
 
