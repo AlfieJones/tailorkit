@@ -66,6 +66,7 @@ function addStaticSegments(
   id: string,
   params: Record<string, string>,
   segments: BreadcrumbSegment[],
+  loaderData: unknown,
 ) {
   if (id.includes("/account") && !segments.some((s) => s.label === "Account")) {
     segments.push({ href: "/account/profile", label: "Account" });
@@ -84,7 +85,15 @@ function addStaticSegments(
     } else {
       segments.push({ href: `/${params.orgSlug}/${params.projectSlug}/apps`, label: "Apps" });
     }
-    segments.push({ label: params.appId });
+    const appName =
+      typeof loaderData === "object" &&
+      loaderData !== null &&
+      "name" in loaderData &&
+      typeof loaderData.name === "string"
+        ? loaderData.name
+        : params.appId;
+
+    segments.push({ label: appName });
   }
   if (id.includes("/support")) {
     segments.push({ label: "Support" });
@@ -129,7 +138,7 @@ export function NavBreadcrumb() {
 
     addOrgSegment(params, segments);
     addProjectSegment(id, params, segments);
-    addStaticSegments(id, params, segments);
+    addStaticSegments(id, params, segments, match.loaderData);
   }
 
   if (segments.length === 0) {
