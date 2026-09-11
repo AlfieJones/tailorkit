@@ -206,11 +206,11 @@ function RouteComponent() {
                         type="button"
                         variant="outline"
                         className="w-full"
-                        disabled={githubPending}
+                        loading={githubPending}
                         onClick={() => void signUpWithGitHub()}
                       >
                         <GitHubIcon />
-                        {githubPending ? "Connecting to GitHub…" : "Continue with GitHub"}
+                        Continue with GitHub
                       </Button>
                     </div>
                   </CardPanel>
