@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
+import { SerializedComponent as SerializedComponentSchema } from "@tailorkit/core/spec";
 
 interface JsonSchema {
   additionalProperties?: boolean | JsonSchema;
@@ -462,7 +463,8 @@ export const actions = ${renderActionRuntime(schema.actions ?? {})} as TailorKit
   ];
 
   for (const [name, component] of Object.entries(components)) {
-    chunks.push(renderComponent(name, component, fieldAliases));
+    const { children } = SerializedComponentSchema.parse(component);
+    chunks.push(renderComponent(name, { ...component, children }, fieldAliases));
   }
 
   return `${chunks.join("\n\n")}\n`;

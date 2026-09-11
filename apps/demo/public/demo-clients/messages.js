@@ -30,7 +30,7 @@ function createRemoteComponent(name, options) {
       nextProps["data-tailorkit-callbacks"] = JSON.stringify(callbackMap);
     }
 
-    return h(tagName, nextProps, children);
+    return options.children ? h(tagName, nextProps, children) : h(tagName, nextProps);
   };
 }
 

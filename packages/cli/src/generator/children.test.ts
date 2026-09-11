@@ -6,9 +6,9 @@ describe("children-only components", () => {
   it("generates opt-in children and leaf component bindings", () => {
     const output = renderGeneratedTypes({
       components: {
-        Card: { children: true },
-        Input: {},
-        Image: { children: false },
+        Card: { callbacks: {}, children: true },
+        Input: { callbacks: {}, children: false },
+        Image: { callbacks: {}, children: false },
       },
       screens: {},
     });
@@ -19,6 +19,17 @@ describe("children-only components", () => {
     expect(output).toContain(
       'createRemoteComponent<ImageProps, false>("Image", {\n  children: false,',
     );
+  });
+
+  it("rejects components without a serialized children value", () => {
+    expect(() =>
+      renderGeneratedTypes({
+        components: {
+          Input: { callbacks: {} },
+        },
+        screens: {},
+      }),
+    ).toThrow();
   });
 
   it("preserves multiple children and nested remote components", () => {
