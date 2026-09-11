@@ -1,10 +1,12 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,
+  CardDescription,
   CardFrame,
   CardFrameFooter,
   CardHeader,
@@ -13,8 +15,9 @@ import {
 } from "@tailorkit/ui/components/card";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { useAppForm } from "@tailorkit/ui/form";
-import { Link2Icon } from "lucide-react";
+import { LaptopIcon, Link2Icon, SmartphoneIcon } from "lucide-react";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { z } from "zod";
 
 import { AccountLayout } from "#components/account-layout";
@@ -28,6 +31,223 @@ export const Route = createFileRoute("/(app)/account/security")({
     error_description: z.string().optional(),
   }),
 });
+
+const activeSessionsQueryKey = ["auth", "active-sessions"] as const;
+
+function getDeviceDetails(userAgent?: string | null) {
+  if (!userAgent) {
+    return { browser: "Unknown browser", isMobile: false, os: "Unknown device" };
+  }
+
+  const isMobile = /Android|iPhone|iPad|iPod/iu.test(userAgent);
+  let os = "Unknown device";
+  let browser = "Unknown browser";
+
+  if (/iPhone|iPad|iPod/iu.test(userAgent)) {
+    os = "iOS";
+  } else if (/Android/iu.test(userAgent)) {
+    os = "Android";
+  } else if (/Windows/iu.test(userAgent)) {
+    os = "Windows";
+  } else if (/Mac OS X|Macintosh/iu.test(userAgent)) {
+    os = "macOS";
+  } else if (/Linux/iu.test(userAgent)) {
+    os = "Linux";
+  }
+
+  if (/Edg\//iu.test(userAgent)) {
+    browser = "Edge";
+  } else if (/Firefox\/|FxiOS\//iu.test(userAgent)) {
+    browser = "Firefox";
+  } else if (/Chrome\/|CriOS\//iu.test(userAgent)) {
+    browser = "Chrome";
+  } else if (/Safari\//iu.test(userAgent)) {
+    browser = "Safari";
+  }
+
+  return { browser, isMobile, os };
+}
+
+function formatLastActive(value: Date | string) {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function ActiveSessions() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: currentSession } = useQuery({
+    enabled: typeof window !== "undefined",
+    queryFn: async () => {
+      const result = await authClient.getSession();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to load the current session");
+      }
+      return result.data?.session ?? null;
+    },
+    queryKey: ["auth", "current-session"],
+  });
+  const {
+    data: sessions,
+    error,
+    isPending,
+  } = useQuery({
+    enabled: typeof window !== "undefined",
+    queryFn: async () => {
+      const result = await authClient.listSessions();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to load active sessions");
+      }
+      return result.data ?? [];
+    },
+    queryKey: activeSessionsQueryKey,
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: async (token: string) => {
+      const result = await authClient.revokeSession({ token });
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to sign out session");
+      }
+    },
+    onError: (mutationError) => {
+      toastManager.add({
+        description: mutationError.message,
+        title: "Couldn't sign out session",
+        type: "error",
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: activeSessionsQueryKey });
+      toastManager.add({
+        description: "The session has been signed out.",
+        title: "Session ended",
+        type: "success",
+      });
+    },
+  });
+
+  const revokeOtherMutation = useMutation({
+    mutationFn: async () => {
+      const result = await authClient.revokeOtherSessions();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to sign out other sessions");
+      }
+    },
+    onError: (mutationError) => {
+      toastManager.add({
+        description: mutationError.message,
+        title: "Couldn't sign out other sessions",
+        type: "error",
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: activeSessionsQueryKey });
+      toastManager.add({
+        description: "All other devices have been signed out.",
+        title: "Other sessions ended",
+        type: "success",
+      });
+    },
+  });
+
+  const sortedSessions = sessions
+    ? [
+        ...sessions.filter((session) => session.token === currentSession?.token),
+        ...sessions.filter((session) => session.token !== currentSession?.token),
+      ]
+    : undefined;
+
+  let sessionsContent: ReactNode;
+  if (isPending) {
+    sessionsContent = (
+      <p className="px-4 py-6 text-muted-foreground text-sm">Loading active sessions...</p>
+    );
+  } else if (error) {
+    sessionsContent = (
+      <p className="px-4 py-6 text-destructive-foreground text-sm">
+        Active sessions could not be loaded. Please try again.
+      </p>
+    );
+  } else if (!sortedSessions?.length) {
+    sessionsContent = (
+      <p className="px-4 py-6 text-muted-foreground text-sm">No active sessions found.</p>
+    );
+  } else {
+    sessionsContent = sortedSessions.map((session) => {
+      const device = getDeviceDetails(session.userAgent);
+      const isCurrent = session.token === currentSession?.token;
+      const DeviceIcon = device.isMobile ? SmartphoneIcon : LaptopIcon;
+
+      return (
+        <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center" key={session.id}>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-full bg-muted">
+              <DeviceIcon aria-hidden="true" className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium text-sm">
+                  {device.os}, {device.browser}
+                </p>
+                {isCurrent ? <Badge variant="secondary">Current</Badge> : null}
+              </div>
+              <p className="mt-0.5 text-muted-foreground text-sm">
+                Last active {formatLastActive(session.updatedAt)}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            className="self-start sm:self-center"
+            loading={revokeMutation.isPending && revokeMutation.variables === session.token}
+            onClick={() => {
+              if (isCurrent) {
+                navigate({ to: "/logout" });
+                return;
+              }
+              revokeMutation.mutate(session.token);
+            }}
+            size="sm"
+            type="button"
+            variant="destructive-outline"
+          >
+            Sign out
+          </Button>
+        </div>
+      );
+    });
+  }
+
+  return (
+    <CardFrame className="w-full">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>Active sessions</span>
+            <Button
+              disabled={!sortedSessions?.some((session) => session.token !== currentSession?.token)}
+              loading={revokeOtherMutation.isPending}
+              onClick={() => revokeOtherMutation.mutate()}
+              size="sm"
+              type="button"
+              variant="destructive-outline"
+            >
+              Sign out all other sessions
+            </Button>
+          </CardTitle>
+          <CardDescription>Manage the devices currently signed in to your account.</CardDescription>
+        </CardHeader>
+
+        <CardPanel className="pt-0">
+          <div className="divide-y overflow-hidden rounded-xl border">{sessionsContent}</div>
+        </CardPanel>
+      </Card>
+    </CardFrame>
+  );
+}
 
 const GitHubIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5">
@@ -142,108 +362,114 @@ function SecurityPage() {
   return (
     <AccountLayout>
       <PageLayout description="Update your password and keep your account secure." title="Security">
-        <CardFrame className="w-full">
-          <Card>
-            <CardHeader>
-              <CardTitle>Change password</CardTitle>
-            </CardHeader>
+        <div className="flex flex-col gap-6">
+          <CardFrame className="w-full">
+            <Card>
+              <CardHeader>
+                <CardTitle>Change password</CardTitle>
+              </CardHeader>
 
-            <form
-              id="change-password-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-              }}
-            >
-              <CardPanel className="flex flex-col gap-4 max-w-lg">
-                <form.AppField name="currentPassword">
-                  {(field) => (
-                    <field.SecretTextField label="Current password" placeholder="••••••••" />
-                  )}
-                </form.AppField>
+              <form
+                id="change-password-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  form.handleSubmit();
+                }}
+              >
+                <CardPanel className="flex flex-col gap-4 max-w-lg">
+                  <form.AppField name="currentPassword">
+                    {(field) => (
+                      <field.SecretTextField label="Current password" placeholder="••••••••" />
+                    )}
+                  </form.AppField>
 
-                <form.AppField name="newPassword">
-                  {(field) => <field.SecretTextField label="New password" placeholder="••••••••" />}
-                </form.AppField>
+                  <form.AppField name="newPassword">
+                    {(field) => (
+                      <field.SecretTextField label="New password" placeholder="••••••••" />
+                    )}
+                  </form.AppField>
 
-                <form.AppField name="newPasswordRepeat">
-                  {(field) => (
-                    <field.SecretTextField label="Confirm new password" placeholder="••••••••" />
-                  )}
-                </form.AppField>
-              </CardPanel>
-            </form>
-          </Card>
+                  <form.AppField name="newPasswordRepeat">
+                    {(field) => (
+                      <field.SecretTextField label="Confirm new password" placeholder="••••••••" />
+                    )}
+                  </form.AppField>
+                </CardPanel>
+              </form>
+            </Card>
 
-          <CardFrameFooter className="flex justify-end">
-            <form.AppForm>
-              <form.SubmitButton form="change-password-form" size="sm">
-                Update password
-              </form.SubmitButton>
-            </form.AppForm>
-          </CardFrameFooter>
-        </CardFrame>
+            <CardFrameFooter className="flex justify-end">
+              <form.AppForm>
+                <form.SubmitButton form="change-password-form" size="sm">
+                  Update password
+                </form.SubmitButton>
+              </form.AppForm>
+            </CardFrameFooter>
+          </CardFrame>
 
-        <CardFrame className="w-full">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Link2Icon />
-                Linked accounts
-              </CardTitle>
-              <p className="text-muted-foreground text-sm">
-                Connect an external account for another way to sign in.
-              </p>
-            </CardHeader>
-
-            <CardPanel>
-              {(error_description || error || accountsQuery.error) && (
-                <p className="mb-4 text-destructive text-sm" role="alert">
-                  {error_description || error || accountsQuery.error?.message}
+          <CardFrame className="w-full">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Link2Icon />
+                  Linked accounts
+                </CardTitle>
+                <p className="text-muted-foreground text-sm">
+                  Connect an external account for another way to sign in.
                 </p>
-              )}
+              </CardHeader>
 
-              <div className="flex items-center gap-3 rounded-xl border p-4">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                  <GitHubIcon />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm">GitHub</p>
-                  <p className="text-muted-foreground text-sm">
-                    {githubAccount ? "Connected" : "Sign in with GitHub"}
+              <CardPanel>
+                {(error_description || error || accountsQuery.error) && (
+                  <p className="mb-4 text-destructive text-sm" role="alert">
+                    {error_description || error || accountsQuery.error?.message}
                   </p>
-                </div>
-
-                {githubAccount ? (
-                  <Button
-                    variant="destructive-outline"
-                    size="sm"
-                    disabled={!canUnlinkGitHub}
-                    loading={unlinkPending}
-                    onClick={() => void unlinkGitHub()}
-                    title={
-                      canUnlinkGitHub
-                        ? "Unlink GitHub"
-                        : "GitHub cannot be unlinked because it is your only sign-in method"
-                    }
-                  >
-                    Unlink
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    loading={linkPending || accountsQuery.isPending}
-                    onClick={() => void linkGitHub()}
-                  >
-                    Link
-                  </Button>
                 )}
-              </div>
-            </CardPanel>
-          </Card>
-        </CardFrame>
+
+                <div className="flex items-center gap-3 rounded-xl border p-4">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
+                    <GitHubIcon />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm">GitHub</p>
+                    <p className="text-muted-foreground text-sm">
+                      {githubAccount ? "Connected" : "Sign in with GitHub"}
+                    </p>
+                  </div>
+
+                  {githubAccount ? (
+                    <Button
+                      disabled={!canUnlinkGitHub}
+                      loading={unlinkPending}
+                      onClick={() => void unlinkGitHub()}
+                      size="sm"
+                      title={
+                        canUnlinkGitHub
+                          ? "Unlink GitHub"
+                          : "GitHub cannot be unlinked because it is your only sign-in method"
+                      }
+                      variant="destructive-outline"
+                    >
+                      Unlink
+                    </Button>
+                  ) : (
+                    <Button
+                      loading={linkPending || accountsQuery.isPending}
+                      onClick={() => void linkGitHub()}
+                      size="sm"
+                      variant="outline"
+                    >
+                      Link
+                    </Button>
+                  )}
+                </div>
+              </CardPanel>
+            </Card>
+          </CardFrame>
+
+          <ActiveSessions />
+        </div>
       </PageLayout>
     </AccountLayout>
   );
