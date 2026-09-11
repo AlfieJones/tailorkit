@@ -518,7 +518,7 @@ export type DeploymentsCreateResponses = {
         headers?: {
           [key: string]: string;
         };
-        uploadUrl: string;
+        uploadUrl?: string;
       };
       light?: {
         file: {
@@ -536,7 +536,7 @@ export type DeploymentsCreateResponses = {
         headers?: {
           [key: string]: string;
         };
-        uploadUrl: string;
+        uploadUrl?: string;
       };
     };
   };

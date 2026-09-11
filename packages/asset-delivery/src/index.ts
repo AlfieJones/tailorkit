@@ -2,8 +2,12 @@ import type { LogoContentType } from "./logo-validation";
 
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const publicId = "[0-9a-z]{10}(?:[0-9a-z]{2})?";
-const assetPath = new RegExp(
+const deploymentAssetPath = new RegExp(
   `^/p/(${uuid})/a/(${publicId})/d/(${publicId})/(client\\.js|logo-(?:light|dark)\\.(?:svg|png|webp))$`,
+  "u",
+);
+const appLogoPath = new RegExp(
+  `^/p/(${uuid})/a/(${publicId})/logos/([a-f0-9]{64}\\.(?:svg|png|webp))$`,
   "u",
 );
 const teamIdPattern = /^[a-z0-9][a-z0-9-]{12}[a-z0-9]$/u;
@@ -15,7 +19,7 @@ export const maxAssetBytes = maxDeploymentBytes;
 
 export interface AssetIdentity {
   appId: string;
-  deploymentId: string;
+  deploymentId?: string;
   key: string;
   projectId: string;
   publicTeamId: string;
@@ -36,18 +40,37 @@ const getAssetContentType = (filename: string): AssetIdentity["contentType"] => 
 };
 
 function createIdentity(publicTeamId: string, pathname: string): AssetIdentity | undefined {
-  const match = assetPath.exec(pathname);
-  if (!teamIdPattern.test(publicTeamId) || !match) {
+  if (!teamIdPattern.test(publicTeamId)) {
     return;
   }
-  const [, projectId, appId, deploymentId, filename] = match;
-  if (!projectId || !appId || !deploymentId || !filename) {
+
+  const deploymentMatch = deploymentAssetPath.exec(pathname);
+  if (deploymentMatch) {
+    const [, projectId, appId, deploymentId, filename] = deploymentMatch;
+    if (!projectId || !appId || !deploymentId || !filename) {
+      return;
+    }
+    return {
+      appId,
+      deploymentId,
+      key: `teams/${publicTeamId}/projects/${projectId}/apps/${appId}/deployments/${deploymentId}/files/${filename}`,
+      projectId,
+      publicTeamId,
+      contentType: getAssetContentType(filename),
+    };
+  }
+
+  const logoMatch = appLogoPath.exec(pathname);
+  if (!logoMatch) {
+    return;
+  }
+  const [, projectId, appId, filename] = logoMatch;
+  if (!projectId || !appId || !filename) {
     return;
   }
   return {
     appId,
-    deploymentId,
-    key: `teams/${publicTeamId}/projects/${projectId}/apps/${appId}/deployments/${deploymentId}/files/${filename}`,
+    key: `teams/${publicTeamId}/projects/${projectId}/apps/${appId}/logos/${filename}`,
     projectId,
     publicTeamId,
     contentType: getAssetContentType(filename),

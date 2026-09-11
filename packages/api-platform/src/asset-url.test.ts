@@ -50,6 +50,24 @@ describe("hosted asset URLs", () => {
     });
   });
 
+  it("uses app-scoped URLs for content-addressed logos", () => {
+    const logoHash = "b".repeat(64);
+    const app = {
+      publicId: appPublicId,
+      currentDeployment: {
+        publicId: deploymentPublicId,
+        status: "published" as const,
+        clientEntryFileId: "55555555-5555-4555-8555-555555555555",
+        logoDarkPath: `logos/${logoHash}.svg`,
+        logoLightPath: null,
+      },
+    };
+
+    expect(withAppAssetUrl(app, "abc123def45678", projectId).logoPaths).toEqual({
+      dark: `https://abc123def45678.tailorkit.app/p/${projectId}/a/${appPublicId}/logos/${logoHash}.svg`,
+    });
+  });
+
   it("uses the same-origin Node route in local development", () => {
     env.NODE_ENV = "development";
     const app = {

@@ -2099,7 +2099,7 @@
                               "format": "uri"
                             }
                           },
-                          "required": ["file", "uploadUrl"]
+                          "required": ["file"]
                         },
                         "light": {
                           "type": "object",
@@ -2193,7 +2193,7 @@
                               "format": "uri"
                             }
                           },
-                          "required": ["file", "uploadUrl"]
+                          "required": ["file"]
                         }
                       }
                     }

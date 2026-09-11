@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@tailorkit/ui/components/table";
 import { DateAgo } from "@tailorkit/ui/date";
+import { AppLogo } from "#components/apps/app-logo";
 import { renderSortableHeader } from "#components/members/member-table-utils";
 import { PageLayout } from "#components/page-layout";
 import { orpc } from "#lib/orpc";
@@ -179,7 +180,12 @@ function AppPage() {
         </Button>
       }
       description={app.description || `Scope: ${app.scopeId}`}
-      title={app.name}
+      title={
+        <span className="flex items-center gap-3">
+          <AppLogo className="size-11" logoPaths={app.logoPaths} name={app.name} />
+          <span>{app.name}</span>
+        </span>
+      }
     >
       <div className="grid gap-3 sm:grid-cols-3">
         <CardFrame>
