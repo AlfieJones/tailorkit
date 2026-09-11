@@ -20,12 +20,15 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { authClient } from "#lib/auth-client";
+import { getSameOriginPath } from "#lib/safe-return-url";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/(auth)/login")({
-  validateSearch: (search) => ({
-    email: search.email as string | undefined,
-    return_to: search.return_to as string | undefined,
+  validateSearch: z.object({
+    email: z.string().optional(),
+    error: z.string().optional(),
+    error_description: z.string().optional(),
+    return_to: z.string().optional(),
   }),
   component: RouteComponent,
 });
@@ -60,12 +63,19 @@ const GitHubIcon = () => (
 type Step = "email" | "password";
 
 function RouteComponent() {
-  const { email: emailFromSearch, return_to } = useSearch({ from: "/(auth)/login" });
+  const {
+    email: emailFromSearch,
+    error,
+    error_description,
+    return_to,
+  } = useSearch({ from: "/(auth)/login" });
   const navigate = Route.useNavigate();
   const [step, setStep] = useState<Step>("email");
   const [visible, setVisible] = useState(true);
   const [email, setEmail] = useState(emailFromSearch || "");
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [githubError, setGithubError] = useState<string | null>(null);
+  const [githubPending, setGithubPending] = useState(false);
 
   const transition = (nextStep: Step, nextEmail?: string) => {
     setVisible(false);
@@ -92,6 +102,28 @@ function RouteComponent() {
 
   const queryClient = useQueryClient();
 
+  const signInWithGitHub = async () => {
+    setGithubError(null);
+    setGithubPending(true);
+
+    try {
+      const callbackURL = getSameOriginPath(return_to, window.location.origin) ?? "/";
+      const result = await authClient.signIn.social({
+        callbackURL,
+        errorCallbackURL: "/login",
+        provider: "github",
+      });
+
+      if (result.error) {
+        setGithubError(result.error.message || result.error.statusText || "GitHub sign in failed");
+        setGithubPending(false);
+      }
+    } catch {
+      setGithubError("GitHub sign in failed");
+      setGithubPending(false);
+    }
+  };
+
   const passwordForm = useAppForm({
     defaultValues: { password: "" },
     onSubmit: async ({ value }) => {
@@ -108,8 +140,9 @@ function RouteComponent() {
           },
           onSuccess: async () => {
             await queryClient.invalidateQueries();
-            if (return_to) {
-              window.location.href = return_to;
+            const returnPath = getSameOriginPath(return_to, window.location.origin);
+            if (returnPath) {
+              window.location.href = returnPath;
             } else {
               navigate({ to: "/" });
             }
@@ -174,6 +207,11 @@ function RouteComponent() {
                     </div>
 
                     <div className="flex flex-col gap-2">
+                      {(githubError || error_description || error) && (
+                        <p className="text-destructive text-sm" role="alert">
+                          {githubError || error_description || error}
+                        </p>
+                      )}
                       <Tooltip>
                         <TooltipTrigger
                           render={<Button variant="outline" className="w-full" disabled />}
@@ -183,15 +221,16 @@ function RouteComponent() {
                         </TooltipTrigger>
                         <TooltipPopup>Coming soon</TooltipPopup>
                       </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={<Button variant="outline" className="w-full" disabled />}
-                        >
-                          <GitHubIcon />
-                          Continue with GitHub
-                        </TooltipTrigger>
-                        <TooltipPopup>Coming soon</TooltipPopup>
-                      </Tooltip>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        loading={githubPending}
+                        onClick={() => void signInWithGitHub()}
+                      >
+                        <GitHubIcon />
+                        Continue with GitHub
+                      </Button>
                     </div>
                   </CardPanel>
                 </form>
