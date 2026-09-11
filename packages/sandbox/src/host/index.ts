@@ -1,26 +1,22 @@
-/* oxlint-disable import/default, typescript/ban-ts-comment, typescript/prefer-ts-expect-error */
-// @ts-ignore -- Vite compiles this worker entry and returns its emitted asset URL.
-import runtimeWorkerUrl from "../worker/worker.ts?worker&url";
-/* oxlint-enable import/default, typescript/ban-ts-comment, typescript/prefer-ts-expect-error */
-import { HostToWorkerPayload, WorkerToHostPayload } from "../protocol.js";
-import type { HostToWorkerPayload as HostToWorkerPayloadType } from "../protocol.js";
+import { HostToIframePayload, IframeToHostPayload } from "../protocol.js";
+import type { HostToIframePayload as HostToIframePayloadType } from "../protocol.js";
 import { createRemoteUiStore } from "./store.js";
 import type { RemoteUiStore } from "./store.js";
 
 const iframeReadyType = "tailorkit:iframe-ready";
-const bootstrapType = "tailorkit:bootstrap";
-const workerMessageType = "tailorkit:worker-message";
+// This wire value is part of the public host/iframe protocol. Its historical
+// name is intentionally unchanged even though there is no worker anymore.
+const sandboxMessageType = "tailorkit:worker-message";
 
 interface IframeBridgeMessage {
   channel: string;
   payload?: unknown;
   type: string;
-  workerSource?: string;
 }
 
 export interface IframeUiHost extends RemoteUiStore {
   destroy(): void;
-  dispatch(payload: HostToWorkerPayloadType): void;
+  dispatch(payload: HostToIframePayloadType): void;
   iframe: HTMLIFrameElement;
   mount(): void;
 }
@@ -31,7 +27,6 @@ export interface IframeUiHostOptions {
   mountTarget?: HTMLElement;
   onError?: (error: Error) => void;
   props?: Record<string, unknown>;
-  runtimeUrl?: string | URL;
 }
 
 export function createIframeUiHost(
@@ -47,39 +42,31 @@ export function createIframeUiHost(
   const channel = createChannelId();
   const fetchImplementation = options.fetch ?? globalThis.fetch;
   const resolvedAppUrl = toUrl(appUrl);
-  const resolvedRuntimeUrl = toUrl(options.runtimeUrl ?? runtimeWorkerUrl);
-  const runtimeImportOrigin = isViteDevelopmentWorker(resolvedRuntimeUrl)
-    ? resolvedRuntimeUrl.origin
-    : undefined;
-  const queuedPayloads: HostToWorkerPayloadType[] = [];
+  const queuedPayloads: HostToIframePayloadType[] = [];
   let appSourcePromise: Promise<string> | null = null;
-  let bootstrapSent = false;
   let destroyed = false;
   let iframeReady = false;
   let mounted = false;
-  let runtimeSourcePromise: Promise<string> | null = null;
-  let workerReady = false;
 
-  configureIframe(iframe, channel, runtimeImportOrigin);
+  configureIframe(iframe, channel);
 
   const reportError = (error: unknown): void => {
     options.onError?.(error instanceof Error ? error : new Error(String(error)));
   };
 
-  const postToIframe = (message: IframeBridgeMessage): void => {
-    iframe.contentWindow?.postMessage(message, "*");
-  };
-
-  const postToWorker = (payload: HostToWorkerPayloadType): void => {
-    postToIframe({ channel, payload, type: workerMessageType });
+  const postToIframe = (payload: HostToIframePayloadType): void => {
+    iframe.contentWindow?.postMessage({ channel, payload, type: sandboxMessageType }, "*");
   };
 
   const sendInit = async (): Promise<void> => {
+    if (!mounted || !iframeReady || destroyed) {
+      return;
+    }
     const appSource = await appSourcePromise;
     if (destroyed || appSource === null) {
       return;
     }
-    postToWorker({
+    postToIframe({
       data: {
         appSource,
         appUrl: resolvedAppUrl.toString(),
@@ -88,23 +75,7 @@ export function createIframeUiHost(
       type: "init",
     });
     for (const payload of queuedPayloads.splice(0)) {
-      postToWorker(payload);
-    }
-  };
-
-  const sendBootstrap = async (): Promise<void> => {
-    if (!mounted || !iframeReady || bootstrapSent || destroyed) {
-      return;
-    }
-    bootstrapSent = true;
-    try {
-      const workerSource = await runtimeSourcePromise;
-      if (destroyed || workerSource === null) {
-        return;
-      }
-      postToIframe({ channel, type: bootstrapType, workerSource });
-    } catch (error) {
-      reportError(error);
+      postToIframe(payload);
     }
   };
 
@@ -114,30 +85,20 @@ export function createIframeUiHost(
     }
     if (event.data.type === iframeReadyType) {
       iframeReady = true;
-      void sendBootstrap();
+      void sendInit().catch(reportError);
       return;
     }
-    if (event.data.type !== workerMessageType) {
+    if (event.data.type !== sandboxMessageType) {
       return;
     }
 
-    const result = WorkerToHostPayload.safeParse(event.data.payload);
+    const result = IframeToHostPayload.safeParse(event.data.payload);
     if (!result.success) {
       reportError(new Error(`Invalid sandbox message: ${result.error.message}`));
       return;
     }
-    if (result.data.type === "requestAnimationFrame") {
-      requestAnimationFrame((timestamp) => {
-        postToWorker({ data: { timestamp }, type: "animationFrame" });
-      });
-      return;
-    }
-    if (result.data.type === "ready") {
-      workerReady = true;
-      void sendInit().catch(reportError);
-    }
     try {
-      store.handleWorkerMessage(result.data);
+      store.handleSandboxMessage(result.data);
     } catch (error) {
       reportError(error);
     }
@@ -157,12 +118,12 @@ export function createIframeUiHost(
       iframe.remove();
     },
     dispatch(payload) {
-      HostToWorkerPayload.parse(payload);
-      if (!workerReady) {
+      HostToIframePayload.parse(payload);
+      if (!iframeReady) {
         queuedPayloads.push(payload);
         return;
       }
-      postToWorker(payload);
+      postToIframe(payload);
     },
     iframe,
     mount() {
@@ -170,91 +131,205 @@ export function createIframeUiHost(
         return;
       }
       mounted = true;
-      appSourcePromise = fetchSource(fetchImplementation, resolvedAppUrl, "app client", "omit");
-      runtimeSourcePromise = fetchSource(
-        fetchImplementation,
-        resolvedRuntimeUrl,
-        "sandbox runtime",
-        "same-origin",
-      ).then((source) => absolutizeViteImports(source, resolvedRuntimeUrl));
+      appSourcePromise = fetchSource(fetchImplementation, resolvedAppUrl);
       (options.mountTarget ?? document.body).append(iframe);
-      void sendBootstrap();
+      void sendInit().catch(reportError);
     },
   };
 }
 
-function configureIframe(
-  iframe: HTMLIFrameElement,
-  channel: string,
-  runtimeImportOrigin?: string,
-): void {
+function configureIframe(iframe: HTMLIFrameElement, channel: string): void {
   iframe.hidden = true;
   iframe.tabIndex = -1;
   iframe.title = "TailorKit extension sandbox";
   iframe.setAttribute("aria-hidden", "true");
   iframe.setAttribute("referrerpolicy", "no-referrer");
   iframe.setAttribute("sandbox", "allow-scripts");
-  iframe.srcdoc = createIframeDocument(channel, runtimeImportOrigin);
+  iframe.srcdoc = createIframeDocument(channel);
 }
 
-function createIframeDocument(channel: string, runtimeImportOrigin?: string): string {
+function createIframeDocument(channel: string): string {
   const encodedChannel = JSON.stringify(channel);
-  const developmentScriptSource = runtimeImportOrigin ? ` ${runtimeImportOrigin}` : "";
   return `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' data:${developmentScriptSource}; worker-src data:; connect-src 'none'; img-src 'none'; style-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' data:; worker-src 'none'; connect-src 'none'; img-src 'none'; style-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
   </head>
   <body>
+    <div id="tailorkit-root"></div>
     <script>
       (() => {
         const channel = ${encodedChannel};
-        let worker;
+        const messageType = ${JSON.stringify(sandboxMessageType)};
+        const root = document.getElementById("tailorkit-root");
+        const nodeIds = new WeakMap();
+        const nodes = new Map();
+        let nextNodeId = 1;
+        let revision = 0;
+        let loadedAppUrl = null;
+        let loadedModule = null;
+        let rendering = false;
+
+        const send = (payload) => parent.postMessage({ channel, payload, type: messageType }, "*");
+        const sendError = (error) => send({
+          data: { message: error instanceof Error ? (error.stack || error.message) : String(error) },
+          type: "error"
+        });
+        const getNodeId = (node) => {
+          let id = nodeIds.get(node);
+          if (!id) {
+            id = "n:" + nextNodeId++;
+            nodeIds.set(node, id);
+            nodes.set(id, node);
+          }
+          return id;
+        };
+        const readCallbacks = (element) => {
+          const value = element.getAttribute("data-tailorkit-callbacks");
+          if (!value) return [];
+          try {
+            const callbacks = JSON.parse(value);
+            if (!callbacks || typeof callbacks !== "object" || Array.isArray(callbacks)) return [];
+            return Object.entries(callbacks).flatMap(([event, config]) =>
+              config && typeof config === "object" && typeof config.callback === "string" &&
+                typeof config.inputCount === "number"
+                ? [{ callback: config.callback, event, inputCount: config.inputCount }]
+                : []
+            );
+          } catch {
+            return [];
+          }
+        };
+        const serializeNode = (node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            return { id: getNodeId(node), kind: "text", text: node.data };
+          }
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const props = {};
+            for (const attribute of node.attributes) {
+              if (attribute.name.toLowerCase() !== "data-tailorkit-callbacks") {
+                props[attribute.name] = attribute.value;
+              }
+            }
+            return {
+              callbacks: readCallbacks(node),
+              children: Array.from(node.childNodes, serializeNode),
+              id: getNodeId(node),
+              kind: "element",
+              props,
+              type: node.localName
+            };
+          }
+          return {
+            children: Array.from(node.childNodes, serializeNode),
+            id: getNodeId(node),
+            kind: "fragment"
+          };
+        };
+        const sendSnapshot = () => {
+          revision += 1;
+          send({
+            data: {
+              revision,
+              tree: {
+                children: Array.from(root.childNodes, serializeNode),
+                id: getNodeId(root),
+                kind: "fragment"
+              }
+            },
+            type: "snapshot"
+          });
+        };
+        const observer = new MutationObserver(() => {
+          if (!rendering) sendSnapshot();
+        });
+        observer.observe(root, { attributes: true, characterData: true, childList: true, subtree: true });
+
+        const createScreenHierarchy = (screen) => {
+          const hierarchy = [screen];
+          let current = screen;
+          while (current !== "/") {
+            const separator = current.lastIndexOf("/");
+            current = separator <= 0 ? "/" : current.slice(0, separator);
+            hierarchy.push(current);
+          }
+          return hierarchy;
+        };
+        const renderClient = (client, props) => {
+          const screens = client && client.screens;
+          if (!screens) throw new Error("TailorKit app client is missing screens.");
+          const requested = props && typeof props.screen === "object" && props.screen !== null
+            ? props.screen
+            : null;
+          const hierarchy = requested && typeof requested.path === "string"
+            ? createScreenHierarchy(requested.path)
+            : [];
+          const selected = hierarchy.find((path) => screens[path] !== undefined);
+          if (!selected) {
+            throw new Error("TailorKit app client does not define the current screen or one of its parents.");
+          }
+          const screen = screens[selected];
+          if (typeof screen.component !== "function") {
+            throw new TypeError('TailorKit app client screen "' + selected + '" is missing a component.');
+          }
+          if (!client.$runtime || typeof client.$runtime.h !== "function" ||
+              typeof client.$runtime.render !== "function") {
+            throw new TypeError("TailorKit app client is missing its bundled Preact runtime.");
+          }
+          const selectedProps = {
+            context: requested && requested.context,
+            screen: selected,
+            status: requested && (requested.status === "error" || requested.status === "loading")
+              ? requested.status
+              : "ready"
+          };
+          client.$runtime.render(client.$runtime.h(screen.component, selectedProps), root);
+        };
+        const loadApp = async ({ appSource, appUrl, props = {} }) => {
+          if (loadedAppUrl !== appUrl) {
+            const moduleUrl = "data:text/javascript;charset=utf-8," + encodeURIComponent(appSource);
+            loadedModule = await import(moduleUrl);
+            loadedAppUrl = appUrl;
+          }
+          rendering = true;
+          try {
+            if (typeof loadedModule.mount === "function") {
+              await loadedModule.mount({ document, props, root });
+            } else {
+              renderClient(loadedModule.default, props);
+            }
+          } finally {
+            observer.takeRecords();
+            rendering = false;
+          }
+          sendSnapshot();
+        };
 
         addEventListener("message", (event) => {
-          if (event.source !== parent || event.data?.channel !== channel) return;
-
-          if (event.data.type === "${bootstrapType}" && !worker) {
-            const runtimeBootstrap =
-              "const source = " + JSON.stringify(event.data.workerSource) + ";" +
-              "const url = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(source);" +
-              "import(url).catch((error) => postMessage({" +
-                "data: { message: error instanceof Error ? (error.stack || error.message) : String(error) }," +
-                "type: 'error'" +
-              "}));";
-            const workerUrl =
-              "data:text/javascript;charset=utf-8," + encodeURIComponent(runtimeBootstrap);
-            worker = new Worker(workerUrl, { type: "module" });
-            worker.addEventListener("message", (workerEvent) => {
-              parent.postMessage({ channel, payload: workerEvent.data, type: "${workerMessageType}" }, "*");
-            });
-            worker.addEventListener("error", (workerEvent) => {
-              const location = workerEvent.filename
-                ? " at " + workerEvent.filename + ":" + workerEvent.lineno + ":" + workerEvent.colno
-                : "";
-              parent.postMessage({
-                channel,
-                payload: {
-                  data: { message: (workerEvent.message || "TailorKit sandbox failed.") + location },
-                  type: "error"
-                },
-                type: "${workerMessageType}"
-              }, "*");
-            });
+          if (event.source !== parent || event.data?.channel !== channel ||
+              event.data.type !== messageType) return;
+          const payload = event.data.payload;
+          if (payload?.type === "init" && payload.data) {
+            loadApp(payload.data).catch(sendError);
             return;
           }
-
-          if (event.data.type === "${workerMessageType}") {
-            worker?.postMessage(event.data.payload);
+          if (payload?.type === "dispatchCallback" && payload.data) {
+            const target = nodes.get(payload.data.nodeId);
+            if (!(target instanceof Element)) {
+              sendError(new Error('Cannot dispatch callback to unknown node "' + payload.data.nodeId + '".'));
+              return;
+            }
+            target.dispatchEvent(new CustomEvent(payload.data.event, {
+              bubbles: false,
+              cancelable: true,
+              detail: payload.data.args || []
+            }));
           }
         });
 
-        addEventListener("unload", () => {
-          worker?.terminate();
-        });
-
-        parent.postMessage({ channel, type: "${iframeReadyType}" }, "*");
+        parent.postMessage({ channel, type: ${JSON.stringify(iframeReadyType)} }, "*");
+        send({ type: "ready" });
       })();
     </script>
   </body>
@@ -264,37 +339,12 @@ function createIframeDocument(channel: string, runtimeImportOrigin?: string): st
 async function fetchSource(
   fetchImplementation: typeof globalThis.fetch,
   url: URL,
-  label: string,
-  credentials: RequestCredentials,
 ): Promise<string> {
-  const response = await fetchImplementation(url, { credentials });
+  const response = await fetchImplementation(url, { credentials: "omit" });
   if (!response.ok) {
-    throw new Error(`Unable to load TailorKit ${label} from ${url.toString()}.`);
+    throw new Error(`Unable to load TailorKit app client from ${url.toString()}.`);
   }
   return response.text();
-}
-
-function absolutizeViteImports(source: string, runtimeUrl: URL): string {
-  if (!isViteDevelopmentWorker(runtimeUrl)) {
-    return source;
-  }
-  return source.replaceAll(
-    /(from\s*["']|import\s*["'])(\/[^"']+)(["'])/gu,
-    (_match, prefix: string, specifier: string, suffix: string) =>
-      `${prefix}${new URL(specifier, runtimeUrl.origin).toString()}${suffix}`,
-  );
-}
-
-function isViteDevelopmentWorker(url: URL): boolean {
-  if (url.searchParams.has("worker_file")) {
-    return true;
-  }
-
-  const currentOrigin = globalThis.location?.origin;
-  return (
-    url.origin === currentOrigin &&
-    (url.pathname.startsWith("/@fs/") || url.pathname.includes("/node_modules/"))
-  );
 }
 
 function createChannelId(): string {

@@ -1,10 +1,10 @@
-import type { RemoteNode, RemotePatch, WorkerToHostPayload } from "../protocol.js";
+import type { IframeToHostPayload, RemoteNode, RemotePatch } from "../protocol.js";
 
 export interface RemoteUiStore {
   applyPatches(patches: readonly RemotePatch[]): void;
   getRevision(): number;
   getSnapshot(): RemoteNode | null;
-  handleWorkerMessage(message: WorkerToHostPayload): void;
+  handleSandboxMessage(message: IframeToHostPayload): void;
   setSnapshot(tree: RemoteNode, revision: number): void;
   subscribe(listener: () => void): () => void;
 }
@@ -38,7 +38,7 @@ export function createRemoteUiStore(): RemoteUiStore {
     getSnapshot() {
       return snapshot;
     },
-    handleWorkerMessage(message) {
+    handleSandboxMessage(message) {
       switch (message.type) {
         case "snapshot": {
           this.setSnapshot(message.data.tree, message.data.revision);

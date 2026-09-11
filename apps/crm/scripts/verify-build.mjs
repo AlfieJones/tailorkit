@@ -10,17 +10,8 @@ for (const app of ["stripe-revenue", "renewal-coach"]) {
 }
 
 const assets = await readdir(new URL("static/assets/", output));
-const appBundles = assets.filter((name) => name.startsWith("crm-app-") && name.endsWith(".js"));
-assert.ok(appBundles.length > 0, "CRM client bundle is missing.");
-const workers = new Set();
-for (const bundle of appBundles) {
-  const source = await readFile(new URL(`static/assets/${bundle}`, output), "utf-8");
-  for (const match of source.matchAll(/\/assets\/(worker-[\w-]+\.js)/gu)) {
-    workers.add(match[1]);
-  }
-}
-assert.ok(workers.size > 0, "CRM must reference a bundled sandbox worker.");
-for (const worker of workers) {
-  await access(new URL(`static/assets/${worker}`, output));
-}
-console.log("Verified Vercel server, demo apps, and sandbox worker assets.");
+assert.ok(
+  assets.some((name) => name.startsWith("crm-app-") && name.endsWith(".js")),
+  "CRM client bundle is missing.",
+);
+console.log("Verified Vercel server, demo apps, and client assets.");

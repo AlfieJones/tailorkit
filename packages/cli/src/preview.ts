@@ -160,5 +160,5 @@ export const runExperimentalPreview = async (options: PreviewOptions): Promise<v
   });
 
   log.info(pc.green(`Experimental preview running at http://${host}:${port}`));
-  log.info(pc.dim(`Serving built worker assets from ${outDir}`));
+  log.info(pc.dim(`Serving built app client from ${outDir}`));
 };

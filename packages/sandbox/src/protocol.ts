@@ -64,39 +64,31 @@ export type RemotePatch =
       op: "setCallbacks";
     };
 
-export interface WorkerUiMountOptions {
-  appSource: string;
-  appUrl: string;
-  props?: Record<string, unknown>;
-}
-
-export const HostToWorkerPayload = z.discriminatedUnion("type", [
-  z.object({
-    data: z.object({
+export const HostToIframePayload = z.discriminatedUnion("type", [
+  z.strictObject({
+    data: z.strictObject({
       appSource: z.string(),
       appUrl: z.string(),
       props: z.record(z.string(), z.unknown()).optional(),
     }),
     type: z.literal("init"),
   }),
-  z.object({
-    data: z.object({
+  z.strictObject({
+    data: z.strictObject({
       args: z.array(z.unknown()).optional(),
       event: z.string(),
       nodeId: z.string(),
     }),
     type: z.literal("dispatchCallback"),
   }),
-  z.object({
-    data: z.object({
-      timestamp: z.number(),
-    }),
+  z.strictObject({
+    data: z.strictObject({ timestamp: z.number() }),
     type: z.literal("animationFrame"),
   }),
 ]);
-export type HostToWorkerPayload = z.output<typeof HostToWorkerPayload>;
+export type HostToIframePayload = z.output<typeof HostToIframePayload>;
 
-const RemoteCallbackBindingSchema = z.object({
+const RemoteCallbackBindingSchema = z.strictObject({
   callback: z.string(),
   inputCount: z.number(),
   event: z.string(),
@@ -105,17 +97,17 @@ const RemoteCallbackBindingSchema = z.object({
 type RemoteNodeSchemaType = z.ZodType<RemoteNode>;
 const RemoteNodeSchema: RemoteNodeSchemaType = z.lazy(() =>
   z.discriminatedUnion("kind", [
-    z.object({
+    z.strictObject({
       id: z.string(),
       kind: z.literal("text"),
       text: z.string(),
     }),
-    z.object({
+    z.strictObject({
       children: z.array(RemoteNodeSchema),
       id: z.string(),
       kind: z.literal("fragment"),
     }),
-    z.object({
+    z.strictObject({
       callbacks: z.array(RemoteCallbackBindingSchema).optional(),
       children: z.array(RemoteNodeSchema),
       id: z.string(),
@@ -127,66 +119,61 @@ const RemoteNodeSchema: RemoteNodeSchemaType = z.lazy(() =>
 );
 
 const RemotePatchSchema: z.ZodType<RemotePatch> = z.discriminatedUnion("op", [
-  z.object({
+  z.strictObject({
     beforeId: z.string().optional(),
     node: RemoteNodeSchema,
     op: z.literal("insert"),
     parentId: z.string(),
   }),
-  z.object({
+  z.strictObject({
     nodeId: z.string(),
     op: z.literal("remove"),
   }),
-  z.object({
+  z.strictObject({
     name: z.string(),
     nodeId: z.string(),
     op: z.literal("setProp"),
     value: z.unknown(),
   }),
-  z.object({
+  z.strictObject({
     name: z.string(),
     nodeId: z.string(),
     op: z.literal("removeProp"),
   }),
-  z.object({
+  z.strictObject({
     nodeId: z.string(),
     op: z.literal("setText"),
     text: z.string(),
   }),
-  z.object({
+  z.strictObject({
     callbacks: z.array(RemoteCallbackBindingSchema),
     nodeId: z.string(),
     op: z.literal("setCallbacks"),
   }),
 ]);
 
-export const WorkerToHostPayload = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("ready"),
-  }),
-  z.object({
-    data: z.object({
+export const IframeToHostPayload = z.discriminatedUnion("type", [
+  z.strictObject({ type: z.literal("ready") }),
+  z.strictObject({
+    data: z.strictObject({
       revision: z.number(),
       tree: RemoteNodeSchema,
     }),
     type: z.literal("snapshot"),
   }),
-  z.object({
-    data: z.object({
+  z.strictObject({
+    data: z.strictObject({
       patches: z.array(RemotePatchSchema),
       revision: z.number(),
     }),
     type: z.literal("patches"),
   }),
-  z.object({
-    data: z.object({
+  z.strictObject({
+    data: z.strictObject({
       message: z.string(),
     }),
     type: z.literal("error"),
   }),
-  z.object({
-    data: z.object({}),
-    type: z.literal("requestAnimationFrame"),
-  }),
+  z.strictObject({ data: z.strictObject({}), type: z.literal("requestAnimationFrame") }),
 ]);
-export type WorkerToHostPayload = z.output<typeof WorkerToHostPayload>;
+export type IframeToHostPayload = z.output<typeof IframeToHostPayload>;

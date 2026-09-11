@@ -41,9 +41,9 @@ const FEATURES = [
     heading: "A narrow boundary around third-party code",
     description: (
       <>
-        Extension code runs in an <B>opaque-origin iframe sandbox</B> with an internal worker, with
-        UI events and rendering <B>proxied through your host app</B>. The extension can build real
-        product experiences without running inside your main application runtime.
+        Extension code runs in an <B>opaque-origin iframe sandbox</B>, with UI events and rendering
+        <B>proxied through your host app</B>. The extension can build real product experiences
+        without running inside your main application runtime.
       </>
     ),
   },

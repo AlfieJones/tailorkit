@@ -13,7 +13,7 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import { createIframeUiHost } from "@tailorkit/sandbox/host";
-import type { HostToWorkerPayload, RemoteElementNode } from "@tailorkit/sandbox/protocol";
+import type { HostToIframePayload, RemoteElementNode } from "@tailorkit/sandbox/protocol";
 import { NodeStore } from "./node-store";
 import { RemoteUIContext } from "./remote-context";
 import type { RemoteViewContext } from "./remote-context";
@@ -53,7 +53,6 @@ interface RemoteViewHostProps {
   components: Record<string, unknown>;
   createIframe?: () => HTMLIFrameElement;
   props?: Record<string, unknown>;
-  runtimeUrl?: string | URL;
 }
 
 export function RemoteViewHost({
@@ -61,7 +60,6 @@ export function RemoteViewHost({
   components,
   createIframe,
   props,
-  runtimeUrl,
 }: RemoteViewHostProps): ReactNode {
   const appKey = appUrl.toString();
   const storeRef = useRef<NodeStore | null>(null);
@@ -75,7 +73,7 @@ export function RemoteViewHost({
     store.clear();
   }
 
-  const dispatchRef = useRef<((payload: HostToWorkerPayload) => void) | null>(null);
+  const dispatchRef = useRef<((payload: HostToIframePayload) => void) | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [status, setStatus] = useState<"error" | "ready" | "starting">("starting");
 
@@ -111,7 +109,6 @@ export function RemoteViewHost({
         setStatus("error");
       },
       props,
-      runtimeUrl,
     });
 
     dispatchRef.current = (payload) => host.dispatch(payload);
@@ -133,7 +130,7 @@ export function RemoteViewHost({
       dispatchRef.current = null;
       host.destroy();
     };
-  }, [appUrl, createIframe, props, runtimeUrl, store]);
+  }, [appUrl, createIframe, props, store]);
 
   if (status === "error" && error) {
     return createElement("div", null, formatError(error));

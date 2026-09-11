@@ -78,7 +78,6 @@ interface AppViewBaseProps {
   app: TailorKitApp;
   createIframe?: () => HTMLIFrameElement;
   fallback?: ReactNode;
-  runtimeUrl?: string | URL;
 }
 
 type AppViewScreenProps<
@@ -212,7 +211,6 @@ function createReactTailorKitClient<
     app,
     createIframe,
     fallback = null,
-    runtimeUrl,
     ...screenProps
   }: AppViewProps<TScreens>): ReactNode => {
     const reactId = useId();
@@ -275,7 +273,6 @@ function createReactTailorKitClient<
             components={wrappedComponents}
             createIframe={createIframe}
             props={props}
-            runtimeUrl={runtimeUrl}
           />
         </div>
       </PrimitiveThemeContext.Provider>

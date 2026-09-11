@@ -18,9 +18,10 @@ The production rule is simple: expose the pieces an app needs, validate the
 values it sends back, and keep side effects limited to the work your app
 expects.
 
-The runtime uses a hidden iframe with an opaque origin and an internal worker.
-The iframe allows scripts but not same-origin access, and its content security
-policy blocks direct network connections. The host still fetches app code,
+The runtime uses a hidden iframe with an opaque origin and executes the client
+directly in that sandboxed document. The iframe allows scripts but not
+same-origin access, and its content security policy blocks direct network
+connections. The host still fetches app code,
 passes context into the runtime, renders the returned UI, and executes approved
 actions. Those host-controlled edges require the same care as any public API.
 

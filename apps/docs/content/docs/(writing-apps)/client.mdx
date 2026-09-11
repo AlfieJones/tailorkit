@@ -4,7 +4,7 @@ description: Register TailorKit app screens and access typed screen context.
 ---
 
 The app client is the runtime entry point for a TailorKit app. It maps screen
-keys to Preact components and is loaded by the host's iframe-and-worker sandbox
+keys to Preact components and is loaded directly by the host's iframe sandbox
 runtime.
 
 ## `defineClient`
@@ -78,10 +78,10 @@ When a host renders:
 <tailor.AppView app={app} />
 ```
 
-TailorKit resolves the app's client URL, loads the client in the worker, and
-renders the current screen into the app.
+TailorKit resolves the app's client URL, loads the client in the iframe, and
+renders the current screen into the iframe's sandboxed document.
 
-If the current screen is not implemented by the app client, the worker walks
+If the current screen is not implemented by the app client, the iframe runtime walks
 back through its parent paths. For example, `/pages/detail` falls back to
 `/pages` and then `/`. The nested context is safe for a parent screen because
 the host schema requires nested contexts to include their parent context.
