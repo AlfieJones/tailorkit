@@ -9,6 +9,10 @@
         {
           "type": "cookie",
           "key": "__Secure-tailorkit.session_token"
+        },
+        {
+          "type": "cookie",
+          "key": "__Secure-tailorkit-dev.session_token"
         }
       ]
     },
