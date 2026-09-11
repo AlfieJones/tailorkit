@@ -171,13 +171,7 @@ export const createRemoteComponent = <TProps extends object, TChildren extends b
   options: { callbacks?: Record<string, number>; children?: TChildren } = {},
 ): View<TProps & { children?: TChildren extends true ? ComponentChildren : never }> => {
   const tagName = toComponentTagName(name);
-  const callbacks = options.callbacks;
-
-  if (!callbacks || Object.keys(callbacks).length === 0) {
-    return function RemoteComponent({ children, ...props }) {
-      return h(tagName, props, options.children ? children : undefined);
-    };
-  }
+  const callbacks = options.callbacks ?? {};
 
   return function RemoteComponent({ children, ...props }) {
     const nextProps = { ...props } as Record<string, unknown>;
@@ -196,6 +190,11 @@ export const createRemoteComponent = <TProps extends object, TChildren extends b
         callback(...(event.detail ?? []).slice(0, inputCount));
       };
     }
+
+    const serializedProps = Object.fromEntries(
+      Object.entries(nextProps).filter(([, value]) => typeof value !== "function"),
+    );
+    nextProps["data-tailorkit-props"] = JSON.stringify(serializedProps);
 
     if (Object.keys(callbackMap).length > 0) {
       nextProps["data-tailorkit-callbacks"] = JSON.stringify(callbackMap);

@@ -5,10 +5,10 @@ export function mount({ root }) {
   layout.setAttribute("gap", "md");
   layout.setAttribute("padding", "md");
   const title = document.createElement("tailorkit-box");
-  title.setAttribute("textColor", "default");
+  title.setAttribute("data-tailorkit-props", JSON.stringify({ textColor: "default" }));
   title.textContent = "Payments, at a glance";
   const summary = document.createElement("tailorkit-box");
-  summary.setAttribute("textColor", "muted");
+  summary.setAttribute("data-tailorkit-props", JSON.stringify({ textColor: "muted" }));
   summary.textContent = "MONTHLY RECURRING REVENUE · $18,480 · ↑ 14% from last month";
   const button = document.createElement("tailorkit-button");
   button.setAttribute(

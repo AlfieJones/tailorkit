@@ -5,10 +5,10 @@ export function mount({ root }) {
   layout.setAttribute("gap", "md");
   layout.setAttribute("padding", "md");
   const title = document.createElement("tailorkit-box");
-  title.setAttribute("textColor", "default");
+  title.setAttribute("data-tailorkit-props", JSON.stringify({ textColor: "default" }));
   title.textContent = "Renewal signals";
   const summary = document.createElement("tailorkit-box");
-  summary.setAttribute("textColor", "muted");
+  summary.setAttribute("data-tailorkit-props", JSON.stringify({ textColor: "muted" }));
   summary.textContent = "LUMA HEALTH · RENEWS IN 24 DAYS · Health score: 72 / 100";
   const button = document.createElement("tailorkit-button");
   button.setAttribute(

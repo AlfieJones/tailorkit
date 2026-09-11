@@ -69,6 +69,8 @@ describe("createIframeUiHost", () => {
     expect(host.iframe.srcdoc).toContain("worker-src 'none'");
     expect(host.iframe.srcdoc).toContain("loadedModule = await import(moduleUrl)");
     expect(host.iframe.srcdoc).toContain("new MutationObserver");
+    expect(host.iframe.srcdoc).toContain("nodes.set(id, new WeakRef(node))");
+    expect(host.iframe.srcdoc).toContain("const target = derefNode(payload.data.nodeId)");
     expect(host.iframe.srcdoc).not.toContain("new Worker");
     expect(fetch).toHaveBeenCalledWith(new URL("https://assets.test/app.js"), {
       credentials: "omit",

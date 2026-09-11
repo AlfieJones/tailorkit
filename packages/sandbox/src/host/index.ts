@@ -2,6 +2,7 @@ import { HostToIframePayload, IframeToHostPayload } from "../protocol.js";
 import type { HostToIframePayload as HostToIframePayloadType } from "../protocol.js";
 import { createRemoteUiStore } from "./store.js";
 import type { RemoteUiStore } from "./store.js";
+import { readElementProps } from "./serialize.js";
 
 const iframeReadyType = "tailorkit:iframe-ready";
 // This wire value is part of the public host/iframe protocol. Its historical
@@ -150,6 +151,7 @@ function configureIframe(iframe: HTMLIFrameElement, channel: string): void {
 
 function createIframeDocument(channel: string): string {
   const encodedChannel = JSON.stringify(channel);
+  const readPropsSource = readElementProps.toString();
   return `<!doctype html>
 <html>
   <head>
@@ -181,10 +183,17 @@ function createIframeDocument(channel: string): string {
           if (!id) {
             id = "n:" + nextNodeId++;
             nodeIds.set(node, id);
-            nodes.set(id, node);
+            nodes.set(id, new WeakRef(node));
           }
           return id;
         };
+        const derefNode = (id) => {
+          const reference = nodes.get(id);
+          const node = reference?.deref();
+          if (!node) nodes.delete(id);
+          return node;
+        };
+        const readProps = ${readPropsSource};
         const readCallbacks = (element) => {
           const value = element.getAttribute("data-tailorkit-callbacks");
           if (!value) return [];
@@ -206,18 +215,12 @@ function createIframeDocument(channel: string): string {
             return { id: getNodeId(node), kind: "text", text: node.data };
           }
           if (node.nodeType === Node.ELEMENT_NODE) {
-            const props = {};
-            for (const attribute of node.attributes) {
-              if (attribute.name.toLowerCase() !== "data-tailorkit-callbacks") {
-                props[attribute.name] = attribute.value;
-              }
-            }
             return {
               callbacks: readCallbacks(node),
               children: Array.from(node.childNodes, serializeNode),
               id: getNodeId(node),
               kind: "element",
-              props,
+              props: readProps(node),
               type: node.localName
             };
           }
@@ -315,7 +318,7 @@ function createIframeDocument(channel: string): string {
             return;
           }
           if (payload?.type === "dispatchCallback" && payload.data) {
-            const target = nodes.get(payload.data.nodeId);
+            const target = derefNode(payload.data.nodeId);
             if (!(target instanceof Element)) {
               sendError(new Error('Cannot dispatch callback to unknown node "' + payload.data.nodeId + '".'));
               return;
