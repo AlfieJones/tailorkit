@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2Icon, MailIcon, PlusIcon } from "lucide-react";
 
 import { AccountLayout } from "#components/account-layout";
@@ -54,6 +54,7 @@ function formatDate(value: Date | string) {
 }
 
 function OrganizationsPage() {
+  const navigate = useNavigate();
   const { data: orgs } = useSuspenseQuery(orpc.user.getOrgs.queryOptions());
   const { data: invitations } = useSuspenseQuery(orpc.user.getPendingInvitations.queryOptions());
   const pendingInviteCount = invitations.length;
@@ -128,13 +129,31 @@ function OrganizationsPage() {
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-[48%]">Organisation</TableHead>
                   <TableHead className="w-[24%]">Slug</TableHead>
-                  <TableHead className="w-[18%]">Created</TableHead>
-                  <TableHead className="w-[10%] text-right">Action</TableHead>
+                  <TableHead className="w-[28%]">Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {orgs.map((org) => (
-                  <TableRow key={org.id}>
+                  <TableRow
+                    className={
+                      org.slug
+                        ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                        : undefined
+                    }
+                    key={org.id}
+                    onClick={() => {
+                      if (org.slug) {
+                        navigate({ params: { orgSlug: org.slug }, to: "/$orgSlug/~/projects" });
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (org.slug && (event.key === "Enter" || event.key === " ")) {
+                        event.preventDefault();
+                        navigate({ params: { orgSlug: org.slug }, to: "/$orgSlug/~/projects" });
+                      }
+                    }}
+                    tabIndex={org.slug ? 0 : undefined}
+                  >
                     <TableCell>
                       <div className="flex min-w-0 items-center gap-3">
                         <Avatar className="size-8 rounded-md">
@@ -150,23 +169,6 @@ function OrganizationsPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(org.createdAt)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end">
-                        {org.slug ? (
-                          <Button
-                            render={
-                              <Link params={{ orgSlug: org.slug }} to="/$orgSlug/~/projects" />
-                            }
-                            size="sm"
-                            variant="outline"
-                          >
-                            Open
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Unavailable</span>
-                        )}
-                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
