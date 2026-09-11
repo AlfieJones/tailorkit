@@ -1,7 +1,7 @@
 import { createDb } from "@tailorkit/db";
 import * as schema from "@tailorkit/db/schema/auth";
 import { sendBetterAuthOtpEmail, sendOrganizationInvitationEmail } from "@tailorkit/email";
-import { env, getBaseUrl, getTrustedOrigins } from "@tailorkit/env/server";
+import { env, getBaseUrl, getProductionUrl, getTrustedOrigins } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
 import { initializeObservability } from "@tailorkit/observability";
 import type { SecondaryStorage } from "better-auth";
@@ -12,6 +12,7 @@ import { waitUntil as vercelWaitUntil } from "@vercel/functions";
 import { haveIBeenPwned } from "better-auth/plugins";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { organization } from "better-auth/plugins/organization";
+import { oAuthProxy } from "better-auth/plugins/oauth-proxy";
 import { ac, roles } from "./lib/permissions";
 import { apiKey } from "@better-auth/api-key";
 import { dash } from "@better-auth/infra";
@@ -42,6 +43,7 @@ export function createAuth() {
 
   const backgroundTaskHandler = env.VERCEL ? vercelWaitUntil : noopWaitUntil;
   const secondaryStorage = createSecondaryStorage();
+  const productionUrl = getProductionUrl();
 
   return betterAuth({
     appName: "TailorKit",
@@ -77,6 +79,16 @@ export function createAuth() {
     emailVerification: {
       sendOnSignUp: false,
     },
+    socialProviders:
+      env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
+        ? {
+            github: {
+              clientId: env.GITHUB_CLIENT_ID,
+              clientSecret: env.GITHUB_CLIENT_SECRET,
+              scope: ["user:email"],
+            },
+          }
+        : undefined,
     plugins: [
       haveIBeenPwned(),
       emailOTP({
@@ -143,6 +155,14 @@ export function createAuth() {
         ? [
             dash({
               apiKey: env.BETTER_AUTH_API_KEY,
+            }),
+          ]
+        : []),
+      ...(productionUrl && env.OAUTH_PROXY_SECRET
+        ? [
+            oAuthProxy({
+              productionURL: productionUrl,
+              secret: env.OAUTH_PROXY_SECRET,
             }),
           ]
         : []),
