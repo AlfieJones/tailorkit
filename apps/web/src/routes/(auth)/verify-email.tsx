@@ -18,6 +18,7 @@ import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/compon
 import { toastManager } from "@tailorkit/ui/components/toast";
 
 import { authClient } from "#lib/auth-client";
+import { getSameOriginPath } from "#lib/safe-return-url";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeftIcon } from "lucide-react";
 
@@ -113,8 +114,9 @@ function RouteComponent() {
 
     queryClient.clear();
 
-    if (return_to) {
-      window.location.href = return_to;
+    const returnPath = getSameOriginPath(return_to, window.location.origin);
+    if (returnPath) {
+      window.location.href = returnPath;
     } else {
       navigate({ to: "/" });
     }

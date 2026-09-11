@@ -3,6 +3,30 @@ import { createEnv } from "@t3-oss/env-core";
 import { vercel } from "@t3-oss/env-core/presets-zod";
 import { z } from "zod";
 
+function resolveProductionUrl(values: {
+  AUTH_PRODUCTION_URL?: string;
+  VERCEL_PROJECT_PRODUCTION_URL?: string;
+}) {
+  let value = values.AUTH_PRODUCTION_URL;
+  if (!value && values.VERCEL_PROJECT_PRODUCTION_URL) {
+    value = `https://${values.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+
+  if (!value) {
+    return;
+  }
+
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return;
+    }
+    return url.href.replace(/\/$/u, "");
+  } catch {
+    // Invalid production URLs are handled by environment validation below.
+  }
+}
+
 config({
   path: ["../../apps/web/.env.local", "../../apps/web/.env"],
   quiet: true,
@@ -64,6 +88,31 @@ export const env = createEnv({
           message: "GitHub OAuth requires both GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET.",
           path: ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET"],
         });
+      }
+
+      const hasGitHubCredentials = Boolean(values.GITHUB_CLIENT_ID && values.GITHUB_CLIENT_SECRET);
+      if (process.env.VERCEL_ENV === "preview" && hasGitHubCredentials) {
+        if (!values.OAUTH_PROXY_SECRET) {
+          context.addIssue({
+            code: "custom",
+            message: "GitHub OAuth on Vercel previews requires OAUTH_PROXY_SECRET.",
+            path: ["OAUTH_PROXY_SECRET"],
+          });
+        }
+
+        if (
+          !resolveProductionUrl({
+            AUTH_PRODUCTION_URL: values.AUTH_PRODUCTION_URL,
+            VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
+          })
+        ) {
+          context.addIssue({
+            code: "custom",
+            message:
+              "GitHub OAuth on Vercel previews requires AUTH_PRODUCTION_URL or VERCEL_PROJECT_PRODUCTION_URL.",
+            path: ["AUTH_PRODUCTION_URL", "VERCEL_PROJECT_PRODUCTION_URL"],
+          });
+        }
       }
     }),
   emptyStringAsUndefined: true,
@@ -167,11 +216,5 @@ export function getTrustedOrigins() {
 }
 
 export function getProductionUrl() {
-  if (env.AUTH_PRODUCTION_URL) {
-    return env.AUTH_PRODUCTION_URL.replace(/\/$/u, "");
-  }
-
-  if (env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  }
+  return resolveProductionUrl(env);
 }

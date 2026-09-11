@@ -28,7 +28,8 @@
   "scripts": {
     "build": "tsdown src/index.ts src/lib/email.ts src/lib/permissions.ts src/lib/public-team-id.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit",
-    "generate": "pnpm dlx auth@1.7.1 generate --config src/index.ts --output ../db/src/schema/auth.ts"
+    "generate": "pnpm dlx auth@1.7.1 generate --config src/index.ts --output ../db/src/schema/auth.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@better-auth/api-key": "1.7.1",
@@ -50,6 +51,7 @@
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

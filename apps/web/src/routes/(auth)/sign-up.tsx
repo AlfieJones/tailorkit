@@ -20,11 +20,14 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { authClient } from "#lib/auth-client";
+import { getSameOriginPath } from "#lib/safe-return-url";
 
 export const Route = createFileRoute("/(auth)/sign-up")({
-  validateSearch: (search) => ({
-    email: search.email as string | undefined,
-    return_to: search.return_to as string | undefined,
+  validateSearch: z.object({
+    email: z.string().optional(),
+    error: z.string().optional(),
+    error_description: z.string().optional(),
+    return_to: z.string().optional(),
   }),
   component: RouteComponent,
 });
@@ -59,7 +62,12 @@ const GitHubIcon = () => (
 type Step = "email" | "details";
 
 function RouteComponent() {
-  const { email: emailFromSearch, return_to } = useSearch({ from: "/(auth)/sign-up" });
+  const {
+    email: emailFromSearch,
+    error,
+    error_description,
+    return_to,
+  } = useSearch({ from: "/(auth)/sign-up" });
   const navigate = Route.useNavigate();
   const [step, setStep] = useState<Step>("email");
   const [visible, setVisible] = useState(true);
@@ -120,8 +128,7 @@ function RouteComponent() {
     setGithubPending(true);
 
     try {
-      const callbackURL =
-        return_to?.startsWith("/") && !return_to.startsWith("//") ? return_to : "/";
+      const callbackURL = getSameOriginPath(return_to, window.location.origin) ?? "/";
       const result = await authClient.signIn.social({
         callbackURL,
         errorCallbackURL: "/sign-up",
@@ -188,9 +195,9 @@ function RouteComponent() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      {githubError && (
+                      {(githubError || error_description || error) && (
                         <p className="text-destructive text-sm" role="alert">
-                          {githubError}
+                          {githubError || error_description || error}
                         </p>
                       )}
                       <Tooltip>
