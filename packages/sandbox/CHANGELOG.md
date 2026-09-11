@@ -1,5 +1,11 @@
 # @tailorkit/sandbox
 
+## 0.1.0-beta.8
+
+### Minor Changes
+
+- 9e46a8b: Run app clients directly inside the opaque-origin iframe sandbox while preserving the validated host messaging boundary. Remove the worker runtime and Worker DOM exports, bundle Preact into app clients, preserve typed component props, and use weak callback target references.
+
 ## 0.1.0-beta.7
 
 ### Patch Changes
