@@ -4,22 +4,21 @@ import type { EmptyObject, InferSchema, MergeProps, Schema } from "./shared";
 type EmptyCallbackMap = Record<never, never>;
 
 export type Fields = Schema;
-export type Slots = readonly string[];
 
 export interface ComponentDefinition<
   TFields extends Fields | undefined = Fields | undefined,
   TCallbacks extends Callbacks = EmptyCallbackMap,
-  TSlots extends Slots | undefined = Slots | undefined,
+  TChildren extends boolean | undefined = boolean | undefined,
 > {
   callbacks?: TCallbacks;
   fields?: TFields;
-  slots?: TSlots;
+  children?: TChildren;
 }
 
 type AnyComponentDefinition = ComponentDefinition<
   Schema | undefined,
   CallbackMap,
-  readonly string[] | undefined
+  boolean | undefined
 >;
 
 export type ComponentDefinitions = Record<string, AnyComponentDefinition>;
@@ -29,16 +28,10 @@ export type ComponentProps<TComponent> = MergeProps<
   TComponent extends { callbacks: infer TCallbacks } ? InferCallbacks<TCallbacks> : EmptyObject
 >;
 
-export type ComponentSlots<TComponent> = TComponent extends { slots: infer TSlots }
-  ? TSlots extends readonly string[]
-    ? Record<TSlots[number], unknown>
-    : EmptyObject
-  : EmptyObject;
-
 export interface ResolvedComponentMetadata {
   callbacks: CallbackMap;
   fields?: Schema;
-  slots: readonly string[];
+  children: boolean;
 }
 
 type FieldCallbackConflictKeys<TFields, TCallbacks> = Extract<
@@ -61,7 +54,7 @@ export type NoComponentFieldCallbackConflicts<TComponents> = {
   [TName in keyof TComponents]: TComponents[TName] extends ComponentDefinition<
     infer TFields,
     infer TCallbacks,
-    readonly string[] | undefined
+    boolean | undefined
   >
     ? NoFieldCallbackConflicts<TFields, TCallbacks>
     : unknown;
@@ -116,7 +109,7 @@ export const resolveComponentMetadata = (
   return {
     callbacks: definition.callbacks ?? {},
     fields,
-    slots: [...(definition.slots ?? [])],
+    children: definition.children ?? false,
   };
 };
 

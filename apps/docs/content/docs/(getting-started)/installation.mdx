@@ -46,7 +46,7 @@ const Button = {
   callbacks: {
     onClick: {},
   },
-  slots: ["default"],
+  children: true,
 };
 
 // Type the context your server passes to actions.
@@ -91,7 +91,7 @@ export const tailorKit = createTailorKit({
 ```
 
 <Callout title="Treat Your TailorKit Config As Public API" type="warn">
-  TailorKit apps are built against the screens, components, actions, slots, and tokens you define
+  TailorKit apps are built against the screens, components, actions, children, and tokens you define
   here. Removing or renaming them can break existing apps.
 </Callout>
 
@@ -282,9 +282,9 @@ export const tailorKitClient = createTailorKitClient<typeof tailorKit>({
   components: {
     ...primitives,
 
-    Button: ({ props, slots }) => (
+    Button: ({ props, children }) => (
       <Button variant={props.variant} onClick={props.onClick}>
-        {slots.default}
+        {children}
       </Button>
     ),
   },

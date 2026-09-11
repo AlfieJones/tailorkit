@@ -38,22 +38,22 @@ const server = createTailorKitServer({
 const tailor = createTailorKitClient<typeof server>({ baseUrl: "http://runtime.test" });
 const app = { clientPath: "/apps/todo.js", id: "todo" };
 
-const slotsServer = createTailorKitServer({
+const childrenServer = createTailorKitServer({
   components: {
     Button: {
-      slots: ["default"] as const,
+      children: true,
     },
   },
 });
 
-const slotsSchema = slotsServer.$internal.schema;
+const childrenSchema = childrenServer.$internal.schema;
 
-createTailorKitClient<typeof slotsServer>({
+createTailorKitClient<typeof childrenServer>({
   baseUrl: "http://runtime.test",
   components: {
-    Button: ({ slots }) => {
-      const slot: ReactNode = slots.default;
-      return slot;
+    Button: ({ children }) => {
+      const content: ReactNode = children;
+      return content;
     },
   },
 });
@@ -73,12 +73,12 @@ createTailorKitClient<typeof requiredComponentsServer>({
   },
 });
 
-components(slotsSchema, {
-  Button: ({ props, slots }) => {
+components(childrenSchema, {
+  Button: ({ props, children }) => {
     const typedProps = props satisfies Record<string, never>;
-    const typedSlot: ReactNode = slots.default;
+    const typedChildren: ReactNode = children;
     void typedProps;
-    void typedSlot;
+    void typedChildren;
     return null;
   },
 });
@@ -90,7 +90,7 @@ const callbackServer = createTailorKitServer({
       callbacks: {
         onClick: {},
       },
-      slots: ["default"] as const,
+      children: true,
     },
   },
 });

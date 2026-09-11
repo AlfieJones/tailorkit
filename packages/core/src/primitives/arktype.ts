@@ -7,7 +7,7 @@ import type { TailorKitTheme } from "./theme";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Shape = Record<string, any>;
-type PrimitiveComponents = Record<PrimitiveName, ComponentDefinition>;
+type PrimitiveComponents = Record<PrimitiveName, ComponentDefinition & { children: true }>;
 
 const tokenExpr = (tokens: Record<string, string> | undefined): string => {
   const keys = Object.keys(tokens ?? {});
@@ -55,7 +55,7 @@ export const primitives = (theme: TailorKitTheme = {}): PrimitiveComponents => {
     components[name] = {
       callbacks: {},
       fields: type(primitiveShape(name, resolvedTheme)).onDeepUndeclaredKey("reject"),
-      slots: ["default"] as const,
+      children: true,
     };
   }
   return components;

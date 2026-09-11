@@ -1,11 +1,6 @@
 import { expectTypeOf } from "vitest";
 import type { z } from "zod";
-import type {
-  Component,
-  ComponentProps,
-  ComponentSlots,
-  NoComponentFieldCallbackConflicts,
-} from "./components";
+import type { Component, ComponentProps, NoComponentFieldCallbackConflicts } from "./components";
 
 interface Button {
   fields: z.ZodObject<{
@@ -14,7 +9,7 @@ interface Button {
   callbacks: {
     onClick: Record<never, never>;
   };
-  slots: readonly ["default", "icon"];
+  children: true;
 }
 
 expectTypeOf<ComponentProps<Button>>().toMatchTypeOf<{
@@ -22,10 +17,7 @@ expectTypeOf<ComponentProps<Button>>().toMatchTypeOf<{
   onClick: () => void;
 }>();
 
-expectTypeOf<ComponentSlots<Button>>().toEqualTypeOf<{
-  default: unknown;
-  icon: unknown;
-}>();
+expectTypeOf<Button["children"]>().toEqualTypeOf<true>();
 
 const annotatedComponent: Component = {
   callbacks: {

@@ -166,16 +166,16 @@ const toCallbackEventName = (name: string): string =>
 
 const toEventProp = (event: string): string => `on${event}`;
 
-export const createRemoteComponent = <TProps extends object, TSlots extends readonly string[]>(
+export const createRemoteComponent = <TProps extends object, TChildren extends boolean = false>(
   name: string,
-  options: { callbacks?: Record<string, number>; slots: TSlots },
-): View<TProps & { children?: ComponentChildren }> => {
+  options: { callbacks?: Record<string, number>; children?: TChildren } = {},
+): View<TProps & { children?: TChildren extends true ? ComponentChildren : never }> => {
   const tagName = toComponentTagName(name);
   const callbacks = options.callbacks;
 
   if (!callbacks || Object.keys(callbacks).length === 0) {
     return function RemoteComponent({ children, ...props }) {
-      return h(tagName, props, children);
+      return h(tagName, props, options.children ? children : undefined);
     };
   }
 
@@ -201,6 +201,6 @@ export const createRemoteComponent = <TProps extends object, TSlots extends read
       nextProps["data-tailorkit-callbacks"] = JSON.stringify(callbackMap);
     }
 
-    return h(tagName, nextProps, children);
+    return h(tagName, nextProps, options.children ? children : undefined);
   };
 };

@@ -30,18 +30,18 @@ function createRemoteComponent(name, options) {
       nextProps["data-tailorkit-callbacks"] = JSON.stringify(callbackMap);
     }
 
-    return h(tagName, nextProps, children);
+    return options.children ? h(tagName, nextProps, children) : h(tagName, nextProps);
   };
 }
 
 const Button = createRemoteComponent("Button", {
   callbacks: { onClick: 0 },
-  slots: ["default"],
+  children: true,
 });
 
 const Input = createRemoteComponent("Input", {
   callbacks: { onValueChange: 1 },
-  slots: [],
+  children: false,
 });
 
 const customers = [

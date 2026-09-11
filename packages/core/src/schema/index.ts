@@ -28,11 +28,9 @@ export {
   type Components,
   type ComponentDefinition,
   type ComponentProps,
-  type ComponentSlots,
   type Fields,
   type NoComponentFieldCallbackConflicts,
   type ResolvedComponentMetadata,
-  type Slots,
 } from "./components";
 export {
   type Screen,

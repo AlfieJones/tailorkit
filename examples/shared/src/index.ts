@@ -15,7 +15,7 @@ const Button = {
   callbacks: {
     onClick: {},
   },
-  slots: ["default"],
+  children: true,
 } as const satisfies Component;
 
 const Tabs = {
@@ -27,25 +27,25 @@ const Tabs = {
       input: z.object({ value: z.string() }),
     },
   },
-  slots: ["default"],
+  children: true,
 } as const satisfies Component;
 
 const TabsList = {
-  slots: ["default"],
+  children: true,
 } as const satisfies Component;
 
 const TabsTab = {
   fields: z.object({
     value: z.string(),
   }),
-  slots: ["default"],
+  children: true,
 } as const satisfies Component;
 
 const TabsPanel = {
   fields: z.object({
     value: z.string(),
   }),
-  slots: ["default"],
+  children: true,
 } as const satisfies Component;
 
 const Input = {
@@ -57,7 +57,7 @@ const Input = {
       input: z.object({ value: z.string() }),
     },
   },
-  slots: ["default"],
+  children: true,
 } as const satisfies Component;
 
 const TextArea = {
@@ -70,7 +70,7 @@ const TextArea = {
       input: z.object({ value: z.string() }),
     },
   },
-  slots: ["default"],
+  children: true,
 } as const satisfies Component;
 
 export const primitiveTheme = {

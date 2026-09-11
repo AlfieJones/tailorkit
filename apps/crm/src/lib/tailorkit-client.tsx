@@ -24,15 +24,9 @@ export const tailor = createTailorKitClient({
       : new URL("/api/tailorkit/", window.location.origin),
   components: {
     ...primitives,
-    Button: ({
-      props,
-      slots,
-    }: {
-      props: { onClick?: () => void };
-      slots: { default?: ReactNode };
-    }) => (
+    Button: ({ props, children }: { props: { onClick?: () => void }; children?: ReactNode }) => (
       <button className="tailorkit-remote-button" onClick={props.onClick} type="button">
-        {slots.default}
+        {children}
       </button>
     ),
   },
