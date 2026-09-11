@@ -57,7 +57,7 @@ pnpm generate
 
 The generator reads the host schema configured in `tailorkit.config.ts` and
 updates `src/tailorkit.gen.ts`. Regenerate after the host adds or changes a
-screen, component, action, callback, slot, or theme token.
+screen, component, action, callback, child content, or theme token.
 
 Generated bindings expose host components and screen props to the app.
 
@@ -91,7 +91,7 @@ Components imported from `#tailorkit` render through the host's React adapter
 component renderers.
 
 The app renders `Button`; the host decides how that named component looks and
-behaves. App code can pass only the fields, callbacks, and slots declared in the
+behaves. App code can pass only the fields, callbacks, and children declared in the
 host contract.
 
 ## Call host actions

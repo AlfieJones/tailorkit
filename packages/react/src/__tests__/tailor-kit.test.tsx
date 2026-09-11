@@ -58,7 +58,7 @@ const emptySchema = {
 
 const server = createTailorKitServer({
   components: {
-    Button: {},
+    Button: { children: true },
   },
   screens: {
     "/": { context: emptySchema },
@@ -69,8 +69,7 @@ const server = createTailorKitServer({
 });
 
 const components = {
-  Button: ({ slots }: { slots: { default?: ReactNode } }) =>
-    createElement("button", null, slots.default),
+  Button: ({ children }: { children?: ReactNode }) => createElement("button", null, children),
 };
 
 const schema = server.$internal.schema;

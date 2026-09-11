@@ -1,5 +1,5 @@
 import { createActions, createTailorKitSchema } from "./schema";
-import type { ComponentProps, ComponentSlots, InferActionInput, InferActionOutput } from "./schema";
+import type { ComponentProps, InferActionInput, InferActionOutput } from "./schema";
 import { expectTypeOf } from "vitest";
 import { z } from "zod";
 
@@ -18,7 +18,7 @@ createTailorKitSchema({
       fields: z.object({
         variant: z.enum(["default", "secondary"]),
       }),
-      slots: ["default"] as const,
+      children: true,
     },
   },
 });
@@ -42,7 +42,7 @@ const tailor = createTailorKitSchema({
       fields: z.object({
         variant: z.enum(["default", "secondary"]),
       }),
-      slots: ["default"] as const,
+      children: true,
     },
   },
   screens: {
@@ -77,9 +77,7 @@ void buttonProps;
 expectTypeOf<ComponentProps<typeof tailor.components.Button>>().toMatchTypeOf<{
   variant: "default" | "secondary";
 }>();
-expectTypeOf<ComponentSlots<typeof tailor.components.Button>>().toEqualTypeOf<{
-  default: unknown;
-}>();
+expectTypeOf<typeof tailor.components.Button.children>().toEqualTypeOf<true>();
 expectTypeOf<typeof screen.context>().toEqualTypeOf<z.ZodObject<{ customerId: z.ZodString }>>();
 expectTypeOf<InferActionInput<typeof tailor.actions.withInput>>().toEqualTypeOf<{ id: string }>();
 expectTypeOf<InferActionOutput<typeof tailor.actions.withOutput>>().toEqualTypeOf<{ ok: true }>();
@@ -152,7 +150,7 @@ createTailorKitSchema({
       callbacks: {
         onClick: {},
       },
-      slots: ["default"] as const,
+      children: true,
     },
   },
 });

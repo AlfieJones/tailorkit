@@ -60,7 +60,7 @@ secrets, and browser APIs.
 TailorKit treats app code as untrusted by default. Apps run in an internal
 worker behind a sandboxed iframe, do not run on the main thread, and do not get
 direct access to the DOM. They describe UI instead of mutating the page, and
-can only render through the screens, components, props, callbacks, slots, and
+can only render through the screens, components, props, callbacks, children, and
 tokens your host exposes.
 
 The iframe allows scripts but not same-origin access. Its content security

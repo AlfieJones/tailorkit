@@ -236,24 +236,24 @@ const Primitive = ({
 };
 
 export const primitives = {
-  Box: ({ props, slots }: { props: PrimitiveProps; slots: { default?: ReactNode } }) => (
+  Box: ({ props, children }: { props: PrimitiveProps; children?: ReactNode }) => (
     <Primitive display="block" element="div" props={props}>
-      {slots.default}
+      {children}
     </Primitive>
   ),
-  Flex: ({ props, slots }: { props: PrimitiveProps; slots: { default?: ReactNode } }) => (
+  Flex: ({ props, children }: { props: PrimitiveProps; children?: ReactNode }) => (
     <Primitive display="flex" element="div" props={props}>
-      {slots.default}
+      {children}
     </Primitive>
   ),
-  Grid: ({ props, slots }: { props: PrimitiveProps; slots: { default?: ReactNode } }) => (
+  Grid: ({ props, children }: { props: PrimitiveProps; children?: ReactNode }) => (
     <Primitive display="grid" element="div" props={props}>
-      {slots.default}
+      {children}
     </Primitive>
   ),
-  Inline: ({ props, slots }: { props: PrimitiveProps; slots: { default?: ReactNode } }) => (
+  Inline: ({ props, children }: { props: PrimitiveProps; children?: ReactNode }) => (
     <Primitive display="inline" element="span" props={props}>
-      {slots.default}
+      {children}
     </Primitive>
   ),
 } as const;

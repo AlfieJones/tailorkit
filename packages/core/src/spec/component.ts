@@ -12,7 +12,7 @@ export type SerializedCallback = z.infer<typeof SerializedCallback>;
 export const SerializedComponent = z.object({
   fields: JsonSchema.optional(),
   callbacks: z.record(z.string(), SerializedCallback),
-  slots: z.array(z.string()),
+  children: z.boolean(),
 });
 
 export type SerializedComponent = z.infer<typeof SerializedComponent>;

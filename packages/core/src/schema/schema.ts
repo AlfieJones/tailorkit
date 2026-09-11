@@ -89,7 +89,7 @@ export const createTailorKitSchema = <
       serializedComponents[name] = {
         callbacks,
         fields: serializeSchema(metadata.fields, schemaSerializer),
-        slots: [...metadata.slots],
+        children: metadata.children,
       };
     }
 
@@ -151,11 +151,9 @@ export {
   type ComponentDefinitions,
   type ComponentProps,
   type Components,
-  type ComponentSlots,
   type Fields,
   type NoComponentFieldCallbackConflicts,
   type ResolvedComponentMetadata,
-  type Slots,
 } from "./components";
 export {
   type ResolvedScreenMetadata,

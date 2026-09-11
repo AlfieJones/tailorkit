@@ -16,19 +16,19 @@ export const tailor = createTailorKitClient<typeof tailorKit>({
   theme: primitiveTheme,
   components: {
     ...reactPrimitives,
-    Button: ({ props, slots }) => <Button {...props}>{slots.default}</Button>,
-    Input: ({ props: { onValueChange, ...rest }, slots }) => (
+    Button: ({ props, children }) => <Button {...props}>{children}</Button>,
+    Input: ({ props: { onValueChange, ...rest }, children }) => (
       <Input onChange={(event) => onValueChange({ value: event.target.value })} {...rest}>
-        {slots.default}
+        {children}
       </Input>
     ),
-    Tabs: ({ props, slots }) => <Tabs {...props}>{slots.default}</Tabs>,
-    TabsList: ({ props, slots }) => <TabsList {...props}>{slots.default}</TabsList>,
-    TabsTab: ({ props, slots }) => <TabsTab {...props}>{slots.default}</TabsTab>,
-    TabsPanel: ({ props, slots }) => <TabsPanel {...props}>{slots.default}</TabsPanel>,
-    TextArea: ({ props: { onValueChange, ...rest }, slots }) => (
+    Tabs: ({ props, children }) => <Tabs {...props}>{children}</Tabs>,
+    TabsList: ({ props, children }) => <TabsList {...props}>{children}</TabsList>,
+    TabsTab: ({ props, children }) => <TabsTab {...props}>{children}</TabsTab>,
+    TabsPanel: ({ props, children }) => <TabsPanel {...props}>{children}</TabsPanel>,
+    TextArea: ({ props: { onValueChange, ...rest }, children }) => (
       <Textarea onChange={(event) => onValueChange({ value: event.target.value })} {...rest}>
-        {slots.default}
+        {children}
       </Textarea>
     ),
   },

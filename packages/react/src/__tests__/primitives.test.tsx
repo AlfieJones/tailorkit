@@ -51,7 +51,7 @@ describe("react primitives", () => {
             padding: { base: "md", lg: "lg" },
             textColor: { base: "muted", lg: "foreground" },
           },
-          slots: { default: createElement("span", null, "Content") },
+          children: createElement("span", null, "Content"),
         })}
       </PrimitiveThemeContext.Provider>,
     );
@@ -75,7 +75,7 @@ describe("react primitives", () => {
       <PrimitiveThemeContext.Provider value={{ screenId: "screen-2", theme }}>
         {primitives.Inline({
           props: { padding: "md" },
-          slots: { default: "Label" },
+          children: "Label",
         })}
       </PrimitiveThemeContext.Provider>,
     );

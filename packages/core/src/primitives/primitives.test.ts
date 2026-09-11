@@ -75,7 +75,7 @@ describe("primitive schema components", () => {
 
   it("serializes primitive components without schema theme metadata", () => {
     expect("theme" in schema.serialize()).toBe(false);
-    expect(schema.serialize().components.Box?.slots).toEqual(["default"]);
+    expect(schema.serialize().components.Box?.children).toBe(true);
   });
 
   it("validates default primitive tokens", () => {

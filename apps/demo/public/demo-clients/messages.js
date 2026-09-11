@@ -36,12 +36,12 @@ function createRemoteComponent(name, options) {
 
 const Button = createRemoteComponent("Button", {
   callbacks: { onClick: 0 },
-  slots: ["default"],
+  children: true,
 });
 
 const Input = createRemoteComponent("Input", {
   callbacks: { onValueChange: 1 },
-  slots: [],
+  children: false,
 });
 
 const customers = [

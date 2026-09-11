@@ -53,7 +53,7 @@ describe("renderGeneratedTypes", () => {
             required: ["label"],
             type: "object",
           },
-          slots: ["default"],
+          children: true,
         },
       },
       screens: {},
@@ -66,7 +66,7 @@ describe("renderGeneratedTypes", () => {
     expect(output).toContain("onClick?: () => void;");
     expect(output).toContain("onValueChange?: (input: {");
     expect(output).toContain("value: string;");
-    expect(output).toContain('createRemoteComponent<ButtonProps, readonly ["default"]>');
+    expect(output).toContain("createRemoteComponent<ButtonProps, true>");
     expect(output).toContain('callbacks: { "onClick": 0, "onValueChange": 1 }');
   });
 
@@ -76,7 +76,7 @@ describe("renderGeneratedTypes", () => {
         Button: {
           callbacks: {},
           fieldKeys: ["variant"],
-          slots: ["default"],
+          children: true,
         },
       },
       screens: {},
@@ -100,7 +100,7 @@ describe("renderGeneratedTypes", () => {
             },
             type: "object",
           },
-          slots: ["default"],
+          children: true,
         },
       },
       screens: {},
@@ -109,7 +109,7 @@ describe("renderGeneratedTypes", () => {
     expect(output).toContain("export interface BoxProps");
     expect(output).toContain('export type Padding = "sm" | "md" | "lg";');
     expect(output).toContain("padding?: Padding;");
-    expect(output).toContain('createRemoteComponent<BoxProps, readonly ["default"]>');
+    expect(output).toContain("createRemoteComponent<BoxProps, true>");
   });
 
   it("generates literal responsive primitive token props", () => {
@@ -144,7 +144,7 @@ describe("renderGeneratedTypes", () => {
             },
             type: "object",
           },
-          slots: ["default"],
+          children: true,
         },
       },
       screens: {},
@@ -196,7 +196,7 @@ describe("renderGeneratedTypes", () => {
             },
             type: "object",
           },
-          slots: ["default"],
+          children: true,
         },
       },
       screens: {},
@@ -244,7 +244,7 @@ describe("renderGeneratedTypes", () => {
             },
             type: "object",
           },
-          slots: ["default"],
+          children: true,
         },
       },
       screens: {},

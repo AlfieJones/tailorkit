@@ -32,13 +32,13 @@ export interface ButtonProps {
   onClick?: () => void;
 }
 
-export const Button = createRemoteComponent<ButtonProps, readonly ["default"]>("Button", {
-  slots: ["default"] as const,
+export const Button = createRemoteComponent<ButtonProps, true>("Button", {
+  children: true,
 });
 
 export interface CardProps {
 }
 
-export const Card = createRemoteComponent<CardProps, readonly ["header", "content", "footer"]>("Card", {
-  slots: ["header", "content", "footer"] as const,
+export const Card = createRemoteComponent<CardProps, true>("Card", {
+  children: true,
 });

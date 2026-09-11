@@ -24,7 +24,7 @@ interface SerializedComponent {
   callbacks?: Record<string, SerializedCallback>;
   fieldKeys?: string[];
   fields?: JsonSchema;
-  slots?: string[];
+  children?: boolean;
 }
 
 interface SerializedScreen {
@@ -356,7 +356,6 @@ const renderComponent = (
   const propsName = toPropsName(name);
   const fields = getComponentFields(component);
   const callbacks = component.callbacks ?? {};
-  const slots = component.slots ?? [];
   const lines = [`export interface ${propsName} {`];
 
   for (const [key, schema] of Object.entries(fields)) {
@@ -372,8 +371,6 @@ const renderComponent = (
   lines.push("}");
   lines.push("");
 
-  const slotsType = `readonly [${slots.map(quote).join(", ")}]`;
-  const slotsValue = `[${slots.map(quote).join(", ")}] as const`;
   const callbackEntries = Object.entries(callbacks).map(
     ([key, callback]) => `${quote(key)}: ${callback.input === undefined ? 0 : 1}`,
   );
@@ -381,9 +378,9 @@ const renderComponent = (
     callbackEntries.length > 0 ? `,\n  callbacks: { ${callbackEntries.join(", ")} }` : "";
 
   lines.push(
-    `export const ${toIdentifier(name)} = /* @__PURE__ */ createRemoteComponent<${propsName}, ${slotsType}>(${quote(name)}, {`,
+    `export const ${toIdentifier(name)} = /* @__PURE__ */ createRemoteComponent<${propsName}, ${component.children === true}>(${quote(name)}, {`,
   );
-  lines.push(`  slots: ${slotsValue}${callbackOptions},`);
+  lines.push(`  children: ${component.children === true}${callbackOptions},`);
   lines.push("});");
 
   return lines.join("\n");

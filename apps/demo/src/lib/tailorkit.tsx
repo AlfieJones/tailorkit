@@ -38,7 +38,7 @@ const ButtonComponent = component({
     size: z.enum(["default", "sm", "lg", "icon", "icon-sm", "icon-lg"]).optional(),
     variant: z.enum(["default", "secondary", "ghost", "outline", "destructive"]).optional(),
   }),
-  slots: ["default"],
+  children: true,
 });
 
 const BadgeComponent = component({
@@ -48,7 +48,7 @@ const BadgeComponent = component({
       .enum(["default", "secondary", "outline", "success", "warning", "info", "error"])
       .optional(),
   }),
-  slots: ["default"],
+  children: true,
 });
 
 const CheckboxComponent = component({
@@ -62,12 +62,12 @@ const CheckboxComponent = component({
   }),
 });
 
-const CardComponent = component({ slots: ["default"] });
-const CardHeaderComponent = component({ slots: ["default"] });
-const CardTitleComponent = component({ slots: ["default"] });
-const CardDescriptionComponent = component({ slots: ["default"] });
-const CardContentComponent = component({ slots: ["default"] });
-const CardFooterComponent = component({ slots: ["default"] });
+const CardComponent = component({ children: true });
+const CardHeaderComponent = component({ children: true });
+const CardTitleComponent = component({ children: true });
+const CardDescriptionComponent = component({ children: true });
+const CardContentComponent = component({ children: true });
+const CardFooterComponent = component({ children: true });
 
 const InputComponent = component({
   callbacks: {
@@ -90,38 +90,38 @@ const TabsComponent = component({
       input: z.string(),
     },
   },
-  slots: ["default"],
+  children: true,
 });
 
 const TabsListComponent = component({
-  slots: ["default"],
+  children: true,
 });
 
 const TabsTabComponent = component({
   fields: z.object({
     value: z.string(),
   }),
-  slots: ["default"],
+  children: true,
 });
 
 const TabsPanelComponent = component({
   fields: z.object({
     value: z.string(),
   }),
-  slots: ["default"],
+  children: true,
 });
 
 const SeparatorComponent = component({});
 
-const DropdownMenuComponent = component({ slots: ["default"] });
-const DropdownMenuTriggerComponent = component({ slots: ["default"] });
-const DropdownMenuContentComponent = component({ slots: ["default"] });
+const DropdownMenuComponent = component({ children: true });
+const DropdownMenuTriggerComponent = component({ children: true });
+const DropdownMenuContentComponent = component({ children: true });
 const DropdownMenuItemComponent = component({
   callbacks: { onClick: {} },
   fields: z.object({
     variant: z.enum(["default", "destructive"]).optional(),
   }),
-  slots: ["default"],
+  children: true,
 });
 const DropdownMenuSeparatorComponent = component({});
 
@@ -185,29 +185,29 @@ export function createDemoTailorClient(theme: TailorKitTheme) {
         : new URL("/api/tailorkit/", window.location.origin),
     components: {
       ...reactPrimitives,
-      Button: ({ props, slots }) => (
+      Button: ({ props, children }) => (
         <Button
           onClick={typeof props.onClick === "function" ? props.onClick : undefined}
           size={props.size as React.ComponentProps<typeof Button>["size"]}
           variant={props.variant as React.ComponentProps<typeof Button>["variant"]}
         >
-          {slots.default}
+          {children}
         </Button>
       ),
-      Badge: ({ props, slots }) => (
+      Badge: ({ props, children }) => (
         <Badge
           size={props.size as React.ComponentProps<typeof Badge>["size"]}
           variant={props.variant as React.ComponentProps<typeof Badge>["variant"]}
         >
-          {slots.default}
+          {children}
         </Badge>
       ),
-      Card: ({ slots }) => <Card>{slots.default}</Card>,
-      CardHeader: ({ slots }) => <CardHeader>{slots.default}</CardHeader>,
-      CardTitle: ({ slots }) => <CardTitle>{slots.default}</CardTitle>,
-      CardDescription: ({ slots }) => <CardDescription>{slots.default}</CardDescription>,
-      CardContent: ({ slots }) => <CardContent>{slots.default}</CardContent>,
-      CardFooter: ({ slots }) => <CardFooter>{slots.default}</CardFooter>,
+      Card: ({ children }) => <Card>{children}</Card>,
+      CardHeader: ({ children }) => <CardHeader>{children}</CardHeader>,
+      CardTitle: ({ children }) => <CardTitle>{children}</CardTitle>,
+      CardDescription: ({ children }) => <CardDescription>{children}</CardDescription>,
+      CardContent: ({ children }) => <CardContent>{children}</CardContent>,
+      CardFooter: ({ children }) => <CardFooter>{children}</CardFooter>,
       Checkbox: ({ props }) => (
         <Checkbox
           checked={props.checked === "true"}
@@ -236,42 +236,34 @@ export function createDemoTailorClient(theme: TailorKitTheme) {
         );
       },
       Separator: () => <Separator />,
-      DropdownMenu: ({ slots }) => <DropdownMenu>{slots.default}</DropdownMenu>,
-      DropdownMenuTrigger: ({ slots }) => (
-        <DropdownMenuTrigger>{slots.default}</DropdownMenuTrigger>
-      ),
-      DropdownMenuContent: ({ slots }) => (
-        <DropdownMenuContent>{slots.default}</DropdownMenuContent>
-      ),
-      DropdownMenuItem: ({ props, slots }) => (
+      DropdownMenu: ({ children }) => <DropdownMenu>{children}</DropdownMenu>,
+      DropdownMenuTrigger: ({ children }) => <DropdownMenuTrigger>{children}</DropdownMenuTrigger>,
+      DropdownMenuContent: ({ children }) => <DropdownMenuContent>{children}</DropdownMenuContent>,
+      DropdownMenuItem: ({ props, children }) => (
         <DropdownMenuItem
           onClick={typeof props.onClick === "function" ? props.onClick : undefined}
           variant={props.variant as React.ComponentProps<typeof DropdownMenuItem>["variant"]}
         >
-          {slots.default}
+          {children}
         </DropdownMenuItem>
       ),
       DropdownMenuSeparator: () => <DropdownMenuSeparator />,
-      Tabs: ({ props, slots }) => (
+      Tabs: ({ props, children }) => (
         <Tabs
           value={typeof props.value === "string" ? props.value : undefined}
           onValueChange={
             typeof props.onValueChange === "function" ? props.onValueChange : undefined
           }
         >
-          {slots.default}
+          {children}
         </Tabs>
       ),
-      TabsList: ({ slots }) => <TabsList>{slots.default}</TabsList>,
-      TabsTab: ({ props, slots }) => (
-        <TabsTab value={typeof props.value === "string" ? props.value : ""}>
-          {slots.default}
-        </TabsTab>
+      TabsList: ({ children }) => <TabsList>{children}</TabsList>,
+      TabsTab: ({ props, children }) => (
+        <TabsTab value={typeof props.value === "string" ? props.value : ""}>{children}</TabsTab>
       ),
-      TabsPanel: ({ props, slots }) => (
-        <TabsPanel value={typeof props.value === "string" ? props.value : ""}>
-          {slots.default}
-        </TabsPanel>
+      TabsPanel: ({ props, children }) => (
+        <TabsPanel value={typeof props.value === "string" ? props.value : ""}>{children}</TabsPanel>
       ),
     },
   });

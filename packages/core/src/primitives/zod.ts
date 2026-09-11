@@ -6,7 +6,7 @@ import { resolveTheme } from "./theme";
 import type { TailorKitTheme } from "./theme";
 
 type Shape = Record<string, z.ZodTypeAny>;
-type PrimitiveComponents = Record<PrimitiveName, ComponentDefinition>;
+type PrimitiveComponents = Record<PrimitiveName, ComponentDefinition & { children: true }>;
 
 const tokenEnum = (tokens: Record<string, string> | undefined): z.ZodTypeAny => {
   const keys = Object.keys(tokens ?? {});
@@ -54,7 +54,7 @@ export const primitives = (theme: TailorKitTheme = {}): PrimitiveComponents => {
           ]),
         ),
       ),
-      slots: ["default"] as const,
+      children: true,
     };
   }
   return components;

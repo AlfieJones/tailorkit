@@ -59,9 +59,9 @@ export const tailorClient = createTailorKitClient<typeof tailorKit>({
   baseUrl: "/api/tailorkit",
   components: {
     ...primitives,
-    Button: ({ props, slots }) => (
+    Button: ({ props, children }) => (
       <Button variant={props.variant} onClick={props.onClick}>
-        {slots.default}
+        {children}
       </Button>
     ),
   },

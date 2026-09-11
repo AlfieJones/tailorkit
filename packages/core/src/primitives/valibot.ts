@@ -7,7 +7,7 @@ import type { TailorKitTheme } from "./theme";
 
 type Schema = v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>;
 type Shape = Record<string, Schema>;
-type PrimitiveComponents = Record<PrimitiveName, ComponentDefinition>;
+type PrimitiveComponents = Record<PrimitiveName, ComponentDefinition & { children: true }>;
 
 const tokenPicklist = (tokens: Record<string, string> | undefined): Schema => {
   const keys = Object.keys(tokens ?? {});
@@ -53,7 +53,7 @@ export const primitives = (theme: TailorKitTheme = {}): PrimitiveComponents => {
       fields: v.strictObject(
         primitiveShape(name, resolvedTheme) as v.ObjectEntries,
       ) as unknown as ComponentDefinition["fields"],
-      slots: ["default"] as const,
+      children: true,
     };
   }
   return components;

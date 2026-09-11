@@ -36,26 +36,26 @@ function createRemoteComponent(name, options) {
 
 const Button = createRemoteComponent("Button", {
   callbacks: { onClick: 0 },
-  slots: ["default"],
+  children: true,
 });
 
-const DropdownMenu = createRemoteComponent("DropdownMenu", { slots: ["default"] });
-const DropdownMenuTrigger = createRemoteComponent("DropdownMenuTrigger", { slots: ["default"] });
-const DropdownMenuContent = createRemoteComponent("DropdownMenuContent", { slots: ["default"] });
+const DropdownMenu = createRemoteComponent("DropdownMenu", { children: true });
+const DropdownMenuTrigger = createRemoteComponent("DropdownMenuTrigger", { children: true });
+const DropdownMenuContent = createRemoteComponent("DropdownMenuContent", { children: true });
 const DropdownMenuItem = createRemoteComponent("DropdownMenuItem", {
   callbacks: { onClick: 0 },
-  slots: ["default"],
+  children: true,
 });
 const DropdownMenuSeparator = createRemoteComponent("DropdownMenuSeparator", {});
 
 const Checkbox = createRemoteComponent("Checkbox", {
   callbacks: { onCheckedChange: 1 },
-  slots: [],
+  children: false,
 });
 
 const Input = createRemoteComponent("Input", {
   callbacks: { onValueChange: 1 },
-  slots: [],
+  children: false,
 });
 
 const todoTasks = [

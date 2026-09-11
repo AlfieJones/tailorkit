@@ -6,7 +6,6 @@ import type {
   CallbackMap,
   ComponentDefinition,
   ComponentProps,
-  ComponentSlots,
   Schema,
   ScreenDefinition,
   TailorKitSchema,
@@ -20,19 +19,15 @@ import type { CurrentScreenOptions, ScreenName } from "./hooks/use-current-scree
 import { buildThemeCss, PrimitiveThemeContext } from "./primitives";
 import { RemoteViewHost } from "./remote-view";
 
-type ReactComponentSlots<TComponent> = {
-  [TSlot in keyof ComponentSlots<TComponent>]: ReactNode;
-};
-
 type AnyComponentDefinition = ComponentDefinition<
   Schema | undefined,
   CallbackMap,
-  readonly string[] | undefined
+  boolean | undefined
 >;
 
 type ComponentRenderer<TComponent extends AnyComponentDefinition> = (args: {
   props: ComponentProps<TComponent>;
-  slots: ReactComponentSlots<TComponent>;
+  children?: TComponent extends { children: true } ? ReactNode : never;
 }) => ReactNode;
 
 type ComponentRenderers<TComponents extends Record<string, AnyComponentDefinition>> = {
@@ -200,9 +195,9 @@ function createReactTailorKitClient<
         children,
         ...props
       }: Record<string, unknown> & { children?: ReactNode }) {
-        return (renderer as ComponentRenderer<ComponentDefinition>)({
+        return (renderer as ComponentRenderer<ComponentDefinition & { children: true }>)({
           props: props as ComponentProps<ComponentDefinition>,
-          slots: { default: children } as ReactComponentSlots<ComponentDefinition>,
+          children,
         });
       };
       wrappedComponents[name] = TailorKitComponent;
