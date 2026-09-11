@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getSameOriginPath } from "./safe-return-url";
+import { getSameOriginPath, getSameOriginUrl } from "./safe-return-url";
 
 const ORIGIN = "https://tailorkit.dev";
 
@@ -16,5 +16,12 @@ describe("getSameOriginPath", () => {
     expect(getSameOriginPath("https://attacker.example/apps", ORIGIN)).toBeUndefined();
     expect(getSameOriginPath("//attacker.example/apps", ORIGIN)).toBeUndefined();
     expect(getSameOriginPath("https://%", ORIGIN)).toBeUndefined();
+  });
+
+  it("returns an absolute same-origin URL for auth callbacks", () => {
+    expect(getSameOriginUrl("/tailorkit/~/projects", ORIGIN)).toBe(
+      "https://tailorkit.dev/tailorkit/~/projects",
+    );
+    expect(getSameOriginUrl("https://attacker.example/apps", ORIGIN)).toBeUndefined();
   });
 });
