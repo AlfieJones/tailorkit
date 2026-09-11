@@ -1,4 +1,5 @@
 import { ORPCError } from "@orpc/server";
+import { withAppAssetUrl } from "@tailorkit/api-utils/app-asset-url";
 import { db } from "@tailorkit/db";
 import { app, appDeployment } from "@tailorkit/db/schema/apps";
 import { and, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
@@ -119,14 +120,20 @@ export const appsRouter = {
       );
 
       return {
-        items: items.map((item) => ({
-          ...item,
-          currentDeployment: item.currentDeploymentId
-            ? (currentDeploymentById.get(item.currentDeploymentId) ?? null)
-            : null,
-          deploymentCount: deploymentCountByAppId.get(item.id) ?? 0,
-          latestDeployment: latestDeploymentByAppId.get(item.id) ?? null,
-        })),
+        items: items.map((item) =>
+          withAppAssetUrl(
+            {
+              ...item,
+              currentDeployment: item.currentDeploymentId
+                ? (currentDeploymentById.get(item.currentDeploymentId) ?? null)
+                : null,
+              deploymentCount: deploymentCountByAppId.get(item.id) ?? 0,
+              latestDeployment: latestDeploymentByAppId.get(item.id) ?? null,
+            },
+            context.org.publicId,
+            context.project.id,
+          ),
+        ),
         pagination: {
           hasMore: pageItems.length > pageSize,
           page,
@@ -161,13 +168,17 @@ export const appsRouter = {
         throw new ORPCError("NOT_FOUND", { message: "App not found." });
       }
 
-      return {
-        ...appWithDeployments,
-        currentDeployment:
-          appWithDeployments.deployments.find(
-            (deployment) => deployment.id === appWithDeployments.currentDeploymentId,
-          ) ?? null,
-        deployments: appWithDeployments.deployments,
-      };
+      return withAppAssetUrl(
+        {
+          ...appWithDeployments,
+          currentDeployment:
+            appWithDeployments.deployments.find(
+              (deployment) => deployment.id === appWithDeployments.currentDeploymentId,
+            ) ?? null,
+          deployments: appWithDeployments.deployments,
+        },
+        context.org.publicId,
+        context.project.id,
+      );
     }),
 };

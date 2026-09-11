@@ -1,6 +1,6 @@
 import type { ORPCError } from "@orpc/server";
 import { call } from "@orpc/server";
-import { app as appTable, appDeployment } from "@tailorkit/db/schema/apps";
+import { app as appTable, appDeployment, appDeploymentFile } from "@tailorkit/db/schema/apps";
 import { organization, user } from "@tailorkit/db/schema/auth";
 import { project as projectTable } from "@tailorkit/db/schema/project";
 import { eq } from "drizzle-orm";
@@ -29,6 +29,7 @@ const userId = "44444444-4444-4444-8444-444444444444";
 function createContext(overrides: Partial<Context> = {}): Context {
   return {
     organization: {
+      publicId: "team0000000001",
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
       id: orgId,
       logo: null,
@@ -75,6 +76,7 @@ describe("platform appRouter", () => {
     });
 
     await db.insert(organization).values({
+      publicId: "team0000000001",
       id: orgId,
       name: "Analytical Engines",
       slug: "analytical-engines",
@@ -126,7 +128,7 @@ describe("platform appRouter", () => {
         description: "Embedded inbox",
         name: "Inbox",
         projectId,
-        publicId: expect.stringMatching(/^[0-9a-z]{10}$/u),
+        publicId: expect.stringMatching(/^[0-9a-z]{12}$/u),
         scopeId: "production",
       }),
     );
@@ -177,6 +179,28 @@ describe("platform appRouter", () => {
       throw new Error("Expected test deployment to be created.");
     }
 
+    const [clientEntryFile] = await db
+      .insert(appDeploymentFile)
+      .values({
+        appDeploymentId: deployment.id,
+        checksum: "0".repeat(64),
+        contentLength: 1,
+        contentType: "application/javascript",
+        encoding: "utf-8",
+        objectKey: "client.js",
+        status: "verified",
+      })
+      .returning();
+
+    if (!clientEntryFile) {
+      throw new Error("Expected client entry file to be created.");
+    }
+
+    await db
+      .update(appDeployment)
+      .set({ clientEntryFileId: clientEntryFile.id })
+      .where(eq(appDeployment.id, deployment.id));
+
     await db
       .update(appTable)
       .set({ currentDeploymentId: deployment.id })
@@ -189,6 +213,9 @@ describe("platform appRouter", () => {
     );
 
     expect(result.body.items[0]?.currentDeployment?.id).toBe(deployment.id);
+    expect(result.body.items[0]?.clientPath).toBe(
+      `https://team0000000001.tailorkit.app/p/${projectId}/a/notes00001/d/deploy0001/client.js`,
+    );
   });
 
   it("does not resolve apps outside the current project or scope", async () => {

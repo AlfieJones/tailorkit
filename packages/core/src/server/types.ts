@@ -9,7 +9,7 @@ import type {
   ScreenDefinition,
   ScreenDefinitions,
   TailorKitSchema,
-} from "../schema";
+} from "../schema/index";
 import type { ClientOptions as PlatformClientOptions } from "@tailorkit/client-platform/client/types.gen";
 import type { TailorKitRouter } from "./router";
 
@@ -28,8 +28,22 @@ export interface TailorKitServerBaseOptions {
    * @default process.env.TAILORKIT_PROJECT_KEY
    */
   projectKey?: string;
+  /** Optional custom asset origin. Hosted apps receive a tenant-scoped clientPath from TailorKit automatically. */
   assetsBaseUrl?: string;
   basePath?: string;
+  /**
+   * Configuration for browser-based TailorKit CLI authentication.
+   */
+  cliAuth?: {
+    /**
+     * Root-relative path to the host application's sign-in page.
+     *
+     * When configured, unauthenticated visitors to the CLI approval page are
+     * redirected here with a `returnTo` query parameter that points back to
+     * the approval page.
+     */
+    signInPath: `/${string}`;
+  };
   /**
    * Internal TailorKit implementation options.
    *

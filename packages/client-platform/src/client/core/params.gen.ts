@@ -62,7 +62,7 @@ type KeyMap = Map<
     }
 >;
 
-const buildKeyMap = (fields: FieldsConfig, map?: KeyMap): KeyMap => {
+function buildKeyMap(fields: FieldsConfig, map?: KeyMap): KeyMap {
   if (!map) {
     map = new Map();
   }
@@ -85,32 +85,63 @@ const buildKeyMap = (fields: FieldsConfig, map?: KeyMap): KeyMap => {
   }
 
   return map;
-};
+}
 
 interface Params {
-  body: unknown;
+  body?: unknown;
   headers: Record<string, unknown>;
   path: Record<string, unknown>;
   query: Record<string, unknown>;
 }
 
-const stripEmptySlots = (params: Params) => {
+function stripEmptySlots(params: Params): void {
   for (const [slot, value] of Object.entries(params)) {
+    if (slot === "body") continue;
     if (value && typeof value === "object" && !Array.isArray(value) && !Object.keys(value).length) {
       delete params[slot as Slot];
     }
   }
-};
+}
 
-export const buildClientParams = (args: ReadonlyArray<unknown>, fields: FieldsConfig) => {
+export function buildClientParams(args: ReadonlyArray<unknown>, fields: FieldsConfig): Params {
   const params: Params = {
-    body: {},
-    headers: {},
-    path: {},
-    query: {},
+    headers: Object.create(null),
+    path: Object.create(null),
+    query: Object.create(null),
   };
 
   const map = buildKeyMap(fields);
+  let bodyMode: "mapped" | "raw" | undefined;
+
+  function writeSlot(slot: Slot, key: string, value: unknown): void {
+    if (slot === "body") {
+      if (bodyMode === "raw") {
+        throw new Error("Cannot mix raw and mapped body parameters.");
+      }
+      bodyMode = "mapped";
+    }
+    let record = params[slot] as Record<string, unknown> | undefined;
+    if (record === undefined) {
+      record = Object.create(null) as Record<string, unknown>;
+      params[slot] = record;
+    }
+    if (record === null || typeof record !== "object" || Array.isArray(record)) {
+      throw new Error(`Cannot map fields into a non-object ${slot} parameter.`);
+    }
+    record[key] = value;
+  }
+
+  function writeRawSlot(slot: Slot, value: unknown): void {
+    if (slot === "body") {
+      if (bodyMode === "mapped") {
+        throw new Error("Cannot mix raw and mapped body parameters.");
+      }
+      bodyMode = "raw";
+      params.body = value;
+      return;
+    }
+    params[slot] = value as Record<string, unknown>;
+  }
 
   let config: FieldsConfig[number] | undefined;
 
@@ -128,10 +159,10 @@ export const buildClientParams = (args: ReadonlyArray<unknown>, fields: FieldsCo
         const field = map.get(config.key)!;
         const name = field.map || config.key;
         if (field.in) {
-          (params[field.in] as Record<string, unknown>)[name] = arg;
+          writeSlot(field.in, name, arg);
         }
       } else {
-        params.body = arg;
+        writeRawSlot("body", arg);
       }
     } else {
       for (const [key, value] of Object.entries(arg ?? {})) {
@@ -140,20 +171,20 @@ export const buildClientParams = (args: ReadonlyArray<unknown>, fields: FieldsCo
         if (field) {
           if (field.in) {
             const name = field.map || key;
-            (params[field.in] as Record<string, unknown>)[name] = value;
+            writeSlot(field.in, name, value);
           } else {
-            params[field.map] = value;
+            writeRawSlot(field.map, value);
           }
         } else {
           const extra = extraPrefixes.find(([prefix]) => key.startsWith(prefix));
 
           if (extra) {
             const [prefix, slot] = extra;
-            (params[slot] as Record<string, unknown>)[key.slice(prefix.length)] = value;
+            writeSlot(slot, key.slice(prefix.length), value);
           } else if ("allowExtra" in config && config.allowExtra) {
             for (const [slot, allowed] of Object.entries(config.allowExtra)) {
               if (allowed) {
-                (params[slot as Slot] as Record<string, unknown>)[key] = value;
+                writeSlot(slot as Slot, key, value);
                 break;
               }
             }
@@ -166,4 +197,4 @@ export const buildClientParams = (args: ReadonlyArray<unknown>, fields: FieldsCo
   stripEmptySlots(params);
 
   return params;
-};
+}

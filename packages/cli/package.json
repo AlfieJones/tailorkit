@@ -1,6 +1,6 @@
 {
   "name": "@tailorkit/cli",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.7",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
@@ -15,15 +15,6 @@
     "dist"
   ],
   "type": "module",
-  "imports": {
-    "#*": [
-      "./src/*",
-      "./src/*.ts",
-      "./src/*.tsx",
-      "./src/*/index.ts",
-      "./src/*/index.tsx"
-    ]
-  },
   "exports": {
     ".": "./dist/index.js"
   },

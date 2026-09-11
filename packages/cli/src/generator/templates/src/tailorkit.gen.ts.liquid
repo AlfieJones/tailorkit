@@ -6,7 +6,7 @@
 // Do not make changes to this file directly, as it will be overwritten.
 // Exclude this file from linting and formatting to avoid checking generated code.
 
-import { createRemoteComponent } from "@tailorkit/app";
+import { createRemoteComponent } from "tailorkit/app";
 
 
 export interface ScreenPropsByPath {
@@ -19,7 +19,7 @@ export interface ScreenPropsByPath {
   };
 }
 
-declare module "@tailorkit/app" {
+declare module "tailorkit/app" {
   interface TailorKitScreens extends ScreenPropsByPath {}
 }
 

@@ -1,4 +1,4 @@
-import type { ImplementedAction } from "../schema";
+import type { ImplementedAction } from "../schema/index";
 
 export const flattenActionRouter = (
   router: unknown,

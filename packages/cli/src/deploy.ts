@@ -38,10 +38,19 @@ interface DeploymentAssetUpload {
   uploadUrl: string;
 }
 
+interface DeploymentLogoUpload {
+  headers?: Record<string, string>;
+  uploadUrl?: string;
+}
+
 interface DeploymentCreateResult {
-  assets: [DeploymentAssetUpload];
+  assets: DeploymentAssetUpload[];
   deployment: {
     id: string;
+  };
+  logos?: {
+    dark?: DeploymentLogoUpload;
+    light?: DeploymentLogoUpload;
   };
 }
 
@@ -69,8 +78,13 @@ interface UploadedFileSummary {
   size: number;
 }
 
-const maxUploadBytes = 1024 * 1024;
+const maxDeploymentBytes = 1024 * 1024;
 const gzipAsync = promisify(gzip);
+const logoContentTypeByExtension: Record<string, "image/png" | "image/svg+xml" | "image/webp"> = {
+  png: "image/png",
+  svg: "image/svg+xml",
+  webp: "image/webp",
+};
 
 const unwrapRpcResult = <T>(result: unknown): T => {
   if (result && typeof result === "object" && "error" in result && result.error !== undefined) {
@@ -156,9 +170,16 @@ const writeAppIdToConfig = async (configPath: string, appId: string): Promise<vo
   );
 };
 
-const uploadAsset = async (asset: DeploymentAssetUpload, content: Buffer): Promise<void> => {
-  if (content.byteLength > maxUploadBytes) {
-    throw new Error(`Deployment asset exceeds ${maxUploadBytes} bytes.`);
+const uploadAsset = async (
+  asset: DeploymentAssetUpload | DeploymentLogoUpload,
+  content: Buffer,
+): Promise<void> => {
+  if (!asset.uploadUrl) {
+    return;
+  }
+
+  if (content.byteLength > maxDeploymentBytes) {
+    throw new Error(`Deployment asset exceeds ${maxDeploymentBytes} bytes.`);
   }
 
   const headers = new Headers(asset.headers);
@@ -363,6 +384,23 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
   const clientAssetPath = path.join(outDir, manifest.assets.client);
   const clientAsset = await readFile(clientAssetPath);
   const clientAssetGzip = await gzipAsync(clientAsset);
+  const logoEntries = Object.entries(manifest.assets.logos ?? {}) as ["dark" | "light", string][];
+  const logoAssets = await Promise.all(
+    logoEntries.map(async ([variant, filename]) => {
+      const content = await readFile(path.join(outDir, filename));
+      const extension = path.extname(filename).slice(1);
+      const contentType = logoContentTypeByExtension[extension];
+      if (!contentType) {
+        throw new Error(`Unsupported ${variant} logo format.`);
+      }
+      return { content, contentType, filename, variant };
+    }),
+  );
+  if (clientAsset.byteLength > maxDeploymentBytes) {
+    throw new Error(
+      `Combined client assets are ${clientAsset.byteLength} bytes and cannot exceed ${maxDeploymentBytes} bytes.`,
+    );
+  }
 
   const client = createTailorKitClient({
     headers: { authorization: `Bearer ${storedAuth.deployToken}` },
@@ -407,11 +445,24 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
           {
             checksum: sha256Hex(clientAsset),
             contentLength: clientAsset.byteLength,
-            contentType: "application/javascript",
-            encoding: "utf-8",
-            objectKey: manifest.assets.client,
+            contentType: "application/javascript" as const,
+            encoding: "utf-8" as const,
+            objectKey: "client.js" as const,
           },
         ],
+        logos:
+          logoAssets.length > 0
+            ? Object.fromEntries(
+                logoAssets.map((asset) => [
+                  asset.variant,
+                  {
+                    checksum: sha256Hex(asset.content),
+                    contentLength: asset.content.byteLength,
+                    contentType: asset.contentType,
+                  },
+                ]),
+              )
+            : undefined,
       }),
     );
 
@@ -427,12 +478,35 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
     created = await createDeployment(appId);
   }
 
-  await uploadAsset(created.assets[0], clientAsset);
+  if (created.assets.length !== 1 || !created.assets[0]) {
+    throw new Error("Deployment did not return an upload URL for the client asset.");
+  }
+  await Promise.all([
+    uploadAsset(created.assets[0], clientAsset),
+    ...logoAssets.map((logo) => {
+      const upload = created.logos?.[logo.variant];
+      if (!upload) {
+        throw new Error(`Deployment did not return an upload URL for the ${logo.variant} logo.`);
+      }
+      return uploadAsset(upload, logo.content);
+    }),
+  ]);
 
   const published = unwrapRpcResult<DeploymentPublishResult>(
     await client.deployments.publish({
       deploymentId: created.deployment.id,
       rollout: true,
+    }),
+  );
+
+  const uploadedLogos = await Promise.all(
+    logoAssets.map(async (asset) => {
+      const compressed = await gzipAsync(asset.content);
+      return {
+        gzipSize: compressed.byteLength,
+        path: asset.filename,
+        size: asset.content.byteLength,
+      };
     }),
   );
 
@@ -448,6 +522,7 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
         path: manifest.assets.client,
         size: clientAsset.byteLength,
       },
+      ...uploadedLogos,
     ],
   };
 };

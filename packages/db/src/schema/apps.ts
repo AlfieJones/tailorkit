@@ -21,7 +21,7 @@ export const app = pgTable(
     id: uuid("id")
       .default(sql`pg_catalog.gen_random_uuid()`)
       .primaryKey(),
-    publicId: varchar("public_id", { length: 10 }).notNull(),
+    publicId: varchar("public_id", { length: 12 }).notNull(),
     projectId: uuid("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
@@ -68,7 +68,7 @@ export const appDeployment = pgTable(
     id: uuid("id")
       .default(sql`pg_catalog.gen_random_uuid()`)
       .primaryKey(),
-    publicId: varchar("public_id", { length: 10 }).notNull(),
+    publicId: varchar("public_id", { length: 12 }).notNull(),
     appId: uuid("app_id")
       .notNull()
       .references(() => app.id, { onDelete: "cascade" }),
@@ -79,6 +79,15 @@ export const appDeployment = pgTable(
       (): AnyPgColumn => appDeploymentFile.id,
       { onDelete: "restrict" },
     ),
+    logoLightFileId: uuid("logo_light_file_id").references(
+      (): AnyPgColumn => appDeploymentFile.id,
+      { onDelete: "restrict" },
+    ),
+    logoDarkFileId: uuid("logo_dark_file_id").references((): AnyPgColumn => appDeploymentFile.id, {
+      onDelete: "restrict",
+    }),
+    logoLightPath: text("logo_light_path"),
+    logoDarkPath: text("logo_dark_path"),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -96,6 +105,9 @@ export type AppDeployment = z.output<typeof AppDeployment>;
 
 export const appDeploymentFileContentType = pgEnum("app_deployment_file_content_type", [
   "application/javascript",
+  "image/svg+xml",
+  "image/png",
+  "image/webp",
 ]);
 
 export const appDeploymentFileEncoding = pgEnum("app_deployment_file_encoding", ["utf-8"]);
@@ -119,7 +131,7 @@ export const appDeploymentFile = pgTable(
 
     objectKey: text("object_key").notNull(),
     contentType: appDeploymentFileContentType("content_type").notNull(),
-    encoding: appDeploymentFileEncoding("encoding").notNull(),
+    encoding: appDeploymentFileEncoding("encoding"),
     contentLength: integer("content_length").notNull(),
     checksum: varchar("checksum", { length: 64 }),
     status: appDeploymentFileStatus("status").default("uploading").notNull(),

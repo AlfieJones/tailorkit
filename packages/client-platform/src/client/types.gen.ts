@@ -22,6 +22,7 @@ export type AppsListResponses = {
   200: {
     items: Array<{
       id: string;
+      publicId: string;
       projectId: string;
       scopeId: string;
       name: string;
@@ -31,12 +32,22 @@ export type AppsListResponses = {
       updatedAt: string;
       currentDeployment: {
         id: string;
+        publicId: string;
         appId: string;
         status: "uploading" | "deploying" | "verifying" | "published";
         clientEntryFileId: string | null;
+        logoLightFileId: string | null;
+        logoDarkFileId: string | null;
+        logoLightPath: string | null;
+        logoDarkPath: string | null;
         createdAt: string;
         updatedAt: string;
       } | null;
+      clientPath?: string;
+      logoPaths?: {
+        dark?: string;
+        light?: string;
+      };
     }>;
     pagination: {
       hasMore: boolean;
@@ -65,6 +76,7 @@ export type AppsCreateResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     projectId: string;
     scopeId: string;
     name: string;
@@ -74,12 +86,22 @@ export type AppsCreateResponses = {
     updatedAt: string;
     currentDeployment: {
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
+    clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -124,6 +146,7 @@ export type AppsGetResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     projectId: string;
     scopeId: string;
     name: string;
@@ -133,12 +156,22 @@ export type AppsGetResponses = {
     updatedAt: string;
     currentDeployment: {
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
+    clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -164,6 +197,7 @@ export type AppsUpdateResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     projectId: string;
     scopeId: string;
     name: string;
@@ -173,12 +207,22 @@ export type AppsUpdateResponses = {
     updatedAt: string;
     currentDeployment: {
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
+    clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -203,6 +247,7 @@ export type AppsDeployResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     projectId: string;
     scopeId: string;
     name: string;
@@ -212,12 +257,22 @@ export type AppsDeployResponses = {
     updatedAt: string;
     currentDeployment: {
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     } | null;
+    clientPath?: string;
+    logoPaths?: {
+      dark?: string;
+      light?: string;
+    };
   };
 };
 
@@ -358,9 +413,14 @@ export type DeploymentsListResponses = {
   200: {
     items: Array<{
       id: string;
+      publicId: string;
       appId: string;
       status: "uploading" | "deploying" | "verifying" | "published";
       clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
       createdAt: string;
       updatedAt: string;
     }>;
@@ -379,13 +439,25 @@ export type DeploymentsCreateData = {
     appId: string;
     assets: [
       {
-        contentType: "application/javascript";
-        encoding: "utf-8";
         checksum: string;
         contentLength: number;
-        objectKey: string;
+        contentType: "application/javascript";
+        encoding: "utf-8";
+        objectKey: "client.js";
       },
     ];
+    logos?: {
+      dark?: {
+        checksum: string;
+        contentLength: number;
+        contentType: "image/svg+xml" | "image/png" | "image/webp";
+      };
+      light?: {
+        checksum: string;
+        contentLength: number;
+        contentType: "image/svg+xml" | "image/png" | "image/webp";
+      };
+    };
     scopeId: string;
   };
   path?: never;
@@ -398,14 +470,45 @@ export type DeploymentsCreateResponses = {
    * OK
    */
   200: {
-    assets: [
-      {
+    assets: Array<{
+      file: {
+        id: string;
+        appDeploymentId: string;
+        objectKey: string;
+        contentType: "application/javascript" | "image/svg+xml" | "image/png" | "image/webp";
+        encoding: "utf-8" | null;
+        contentLength: number;
+        checksum: string | null;
+        status: "uploading" | "verifying" | "verified" | "failed";
+        createdAt: string;
+        updatedAt: string;
+      };
+      headers?: {
+        [key: string]: string;
+      };
+      uploadUrl: string;
+    }>;
+    deployment: {
+      id: string;
+      publicId: string;
+      appId: string;
+      status: "uploading" | "deploying" | "verifying" | "published";
+      clientEntryFileId: string | null;
+      logoLightFileId: string | null;
+      logoDarkFileId: string | null;
+      logoLightPath: string | null;
+      logoDarkPath: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    logos?: {
+      dark?: {
         file: {
           id: string;
           appDeploymentId: string;
           objectKey: string;
-          contentType: "application/javascript";
-          encoding: "utf-8";
+          contentType: "image/svg+xml" | "image/png" | "image/webp";
+          encoding: "utf-8" | null;
           contentLength: number;
           checksum: string | null;
           status: "uploading" | "verifying" | "verified" | "failed";
@@ -415,16 +518,26 @@ export type DeploymentsCreateResponses = {
         headers?: {
           [key: string]: string;
         };
-        uploadUrl: string;
-      },
-    ];
-    deployment: {
-      id: string;
-      appId: string;
-      status: "uploading" | "deploying" | "verifying" | "published";
-      clientEntryFileId: string | null;
-      createdAt: string;
-      updatedAt: string;
+        uploadUrl?: string;
+      };
+      light?: {
+        file: {
+          id: string;
+          appDeploymentId: string;
+          objectKey: string;
+          contentType: "image/svg+xml" | "image/png" | "image/webp";
+          encoding: "utf-8" | null;
+          contentLength: number;
+          checksum: string | null;
+          status: "uploading" | "verifying" | "verified" | "failed";
+          createdAt: string;
+          updatedAt: string;
+        };
+        headers?: {
+          [key: string]: string;
+        };
+        uploadUrl?: string;
+      };
     };
   };
 };
@@ -449,9 +562,14 @@ export type DeploymentsGetResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     appId: string;
     status: "uploading" | "deploying" | "verifying" | "published";
     clientEntryFileId: string | null;
+    logoLightFileId: string | null;
+    logoDarkFileId: string | null;
+    logoLightPath: string | null;
+    logoDarkPath: string | null;
     createdAt: string;
     updatedAt: string;
   };
@@ -477,9 +595,14 @@ export type DeploymentsPublishResponses = {
    */
   200: {
     id: string;
+    publicId: string;
     appId: string;
     status: "uploading" | "deploying" | "verifying" | "published";
     clientEntryFileId: string | null;
+    logoLightFileId: string | null;
+    logoDarkFileId: string | null;
+    logoLightPath: string | null;
+    logoDarkPath: string | null;
     createdAt: string;
     updatedAt: string;
   };

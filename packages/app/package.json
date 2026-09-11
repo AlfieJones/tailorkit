@@ -1,6 +1,6 @@
 {
   "name": "@tailorkit/app",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.7",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
@@ -11,33 +11,20 @@
     "dist"
   ],
   "type": "module",
-  "imports": {
-    "#*": [
-      "./src/*",
-      "./src/*.ts",
-      "./src/*.tsx",
-      "./src/*/index.ts",
-      "./src/*/index.tsx"
-    ]
-  },
   "exports": {
     ".": {
-      "development": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./config": {
-      "development": "./src/config/index.ts",
       "types": "./dist/config/index.d.ts",
       "import": "./dist/config.js"
     },
     "./config/loader": {
-      "development": "./src/config/loader.ts",
       "types": "./dist/config/loader.d.ts",
       "import": "./dist/config-loader.js"
     },
     "./builder": {
-      "development": "./src/builder/index.ts",
       "types": "./dist/builder/index.d.ts",
       "import": "./dist/builder.js"
     }
@@ -56,6 +43,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@tailorkit/asset-delivery": "workspace:*",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
     "preact": "^10.29.8",

@@ -67,7 +67,7 @@ export const orgRouter = {
    */
   getOrgInvitations: protectedProcedure
     .input(z.object({ orgSlug: z.string() }))
-    .use(requireOrg())
+    .use(requireOrg({ invitation: ["read"] }))
     .handler(({ context }) =>
       db.query.invitation.findMany({
         where: { organizationId: context.org.id, status: "pending", expiresAt: { gt: new Date() } },
