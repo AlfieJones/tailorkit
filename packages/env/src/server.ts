@@ -179,7 +179,10 @@ export const env = createEnv({
 
 export function getBaseUrl() {
   if (env.VERCEL_ENV === "production") {
-    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
+    // Prefer the public application URL over Vercel's generated project domain.
+    // Better Auth uses this origin when validating callback URLs, so using the
+    // generated domain here rejects callbacks initiated on a custom domain.
+    return getProductionUrl() ?? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }
   if (env.VERCEL_ENV === "preview") {
     return `https://${env.VERCEL_URL}`;
@@ -190,6 +193,11 @@ export function getBaseUrl() {
 
 export function getTrustedOrigins() {
   const origins = new Set([getBaseUrl()]);
+  const productionUrl = getProductionUrl();
+
+  if (productionUrl) {
+    origins.add(productionUrl);
+  }
 
   for (const origin of env.AUTH_TRUSTED_ORIGINS?.split(",") ?? []) {
     const trimmedOrigin = origin.trim().replace(/\/$/u, "");
