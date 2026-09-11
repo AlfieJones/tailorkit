@@ -47,6 +47,10 @@ export interface TailorKitApp {
   clientPath?: string;
   description?: string;
   id: string;
+  logoPaths?: {
+    dark?: string;
+    light?: string;
+  };
   projectId?: string;
   currentDeployment?: {
     id: string;

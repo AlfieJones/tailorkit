@@ -5,12 +5,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      normalize_only:
-        description: Repair npm visibility and prerelease dist-tags without publishing
-        required: false
-        type: boolean
-        default: false
 
 permissions: {}
 
@@ -27,7 +21,7 @@ env:
 jobs:
   select-mode:
     name: Select release mode
-    if: github.repository == 'AlfieJones/tailorkit' && github.ref == 'refs/heads/main' && !inputs.normalize_only
+    if: github.repository == 'AlfieJones/tailorkit' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -37,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -45,7 +39,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1.18.0
+        uses: voidzero-dev/setup-vp@v1.19.0
         with:
           node-version: 24
           cache: false
@@ -56,7 +50,7 @@ jobs:
 
       - name: Select Changesets mode
         id: changesets
-        uses: changesets/action/select-mode@v2.1.1
+        uses: changesets/action/select-mode@v2.1.2
 
   version:
     name: Update version PR
@@ -70,7 +64,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -78,7 +72,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1.18.0
+        uses: voidzero-dev/setup-vp@v1.19.0
         with:
           node-version: 24
           cache: false
@@ -88,7 +82,7 @@ jobs:
         run: vp install --frozen-lockfile
 
       - name: Create or update version PR
-        uses: changesets/action/version@v2.1.1
+        uses: changesets/action/version@v2.1.2
         with:
           script: vp run release:version
           commit-message: "chore: version beta packages"
@@ -102,17 +96,16 @@ jobs:
     needs: select-mode
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: npm-prerelease
+    environment: npm-release
     permissions:
       contents: write
       id-token: write
     env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       NPM_CONFIG_PROVENANCE: true
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -120,45 +113,18 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1.18.0
+        uses: voidzero-dev/setup-vp@v1.19.0
         with:
           node-version: 24
           cache: false
-          registry-url: ${{ secrets.NPM_TOKEN != '' && 'https://registry.npmjs.org' || '' }}
           run-install: false
 
       - name: Install dependencies
         run: vp install --frozen-lockfile
 
       - name: Build and publish prerelease
-        uses: changesets/action/publish@v2.1.1
+        uses: changesets/action/publish@v2.1.2
         with:
           script: vp run release:publish
           create-github-releases: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-  normalize:
-    name: Normalize npm prerelease access and tags
-    if: github.event_name == 'workflow_dispatch' && inputs.normalize_only
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: npm-prerelease
-    permissions:
-      contents: read
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1.18.0
-        with:
-          node-version: 24
-          cache: false
-          registry-url: ${{ secrets.NPM_TOKEN != '' && 'https://registry.npmjs.org' || '' }}
-          run-install: false
-
-      - name: Normalize prerelease packages
-        run: node ./scripts/check-prerelease.mjs && node ./scripts/normalize-prerelease.mjs

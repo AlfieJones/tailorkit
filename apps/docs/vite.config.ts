@@ -31,7 +31,7 @@ export default defineConfig(async ({ command }) => {
       assetsDir: "docs-assets",
     },
     plugins: [
-      mdx(await import("./source.config.ts")),
+      mdx(await import("./source.config")),
       tailwindcss(),
       tanstackStart({
         prerender: {

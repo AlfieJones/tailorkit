@@ -13,6 +13,7 @@
     ]
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview",
     "dev": "vite dev --port 3000"
@@ -31,6 +32,7 @@
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/observability": "workspace:*",
+    "@tailorkit/storage": "workspace:*",
     "@tailorkit/ui": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/devtools-a11y": "^0.2.2",

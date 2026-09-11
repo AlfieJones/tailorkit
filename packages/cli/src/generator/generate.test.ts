@@ -23,8 +23,7 @@ const defaultOptions = {
     oxfmt: "1.0.0",
     oxlint: "1.0.0",
     preact: "10.0.0",
-    tailorkitCLI: "1.2.3",
-    tailorkitApp: "4.5.6",
+    tailorkit: "4.5.6",
     typescript: "5.0.0",
   },
   useWorkspaceDependencies: false,
@@ -112,8 +111,8 @@ describe("generateApp", () => {
     await generateApp({ ...defaultOptions, targetDirectory, useWorkspaceDependencies: true });
 
     const content = await readFile(path.join(targetDirectory, "package.json"), "utf-8");
-    expect(content).toContain('"@tailorkit/app": "workspace:*"');
-    expect(content).toContain('"@tailorkit/cli": "workspace:*"');
+    expect(content).toContain('"tailorkit": "workspace:*"');
+    expect(content).not.toContain("@tailorkit/cli");
   });
 
   it("uses resolved dependency versions when useWorkspaceDependencies is false", async () => {
@@ -121,8 +120,8 @@ describe("generateApp", () => {
     await generateApp({ ...defaultOptions, targetDirectory, useWorkspaceDependencies: false });
 
     const content = await readFile(path.join(targetDirectory, "package.json"), "utf-8");
-    expect(content).toContain('"@tailorkit/app": "4.5.6"');
-    expect(content).toContain('"@tailorkit/cli": "1.2.3"');
+    expect(content).toContain('"tailorkit": "4.5.6"');
+    expect(content).not.toContain("@tailorkit/cli");
   });
 
   it("includes lint and format scripts when both are enabled", async () => {
@@ -189,7 +188,7 @@ describe("generateApp", () => {
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(path.join(targetDirectory, "tailorkit.config.ts"), "utf-8");
-    expect(content).toContain('import type { TailorKitConfig } from "@tailorkit/app/config"');
+    expect(content).toContain('import type { TailorKitConfig } from "tailorkit/app/config"');
     expect(content).toContain("satisfies TailorKitConfig");
     expect(content).toContain('host: "https://host.example.com/api/tailorkit"');
     expect(content).not.toContain("defineTailorKitConfig");
@@ -212,7 +211,7 @@ describe("generateApp", () => {
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(path.join(targetDirectory, "src", "client.ts"), "utf-8");
-    expect(content).toContain('import { defineClient } from "@tailorkit/app"');
+    expect(content).toContain('import { defineClient } from "tailorkit/app"');
     expect(content).toContain('import defaultScreen from "./screens/default"');
     expect(content).toContain("defineClient");
     expect(content).toContain('"/": defaultScreen');
@@ -233,7 +232,7 @@ describe("generateApp", () => {
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(path.join(targetDirectory, "src", "tailorkit.gen.ts"), "utf-8");
-    expect(content).toContain('import { createRemoteComponent } from "@tailorkit/app"');
+    expect(content).toContain('import { createRemoteComponent } from "tailorkit/app"');
     expect(content).toContain('"/": {');
     expect(content).toContain("user: {");
     expect(content).toContain("name: string;");

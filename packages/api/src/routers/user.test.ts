@@ -36,6 +36,7 @@ vi.mock("@tailorkit/env/server", () => ({
 }));
 
 const { userRouter } = await import("./user");
+const { orgRouter } = await import("./org");
 const { auth } = await import("@tailorkit/auth");
 
 const userId = "11111111-1111-4111-8111-111111111111";
@@ -108,12 +109,14 @@ describe("userRouter", () => {
         id: orgId,
         name: "Analytical Engines",
         slug: "analytical-engines",
+        publicId: "team0000000001",
         createdAt: new Date("2026-01-02T00:00:00.000Z"),
       },
       {
         id: otherOrgId,
         name: "Compilers Inc",
         slug: "compilers-inc",
+        publicId: "team0000000002",
         createdAt: new Date("2026-01-02T00:00:00.000Z"),
       },
     ]);
@@ -130,6 +133,34 @@ describe("userRouter", () => {
   afterEach(async () => {
     await client.close();
     vi.clearAllMocks();
+  });
+
+  it("requires invitation management permission to enumerate pending invitations", async () => {
+    await db.insert(invitation).values({
+      organizationId: orgId,
+      email: "charles@example.com",
+      role: "member",
+      status: "pending",
+      expiresAt: new Date("2099-02-01T00:00:00.000Z"),
+      inviterId: userId,
+    });
+    vi.mocked(auth.api.hasPermission).mockResolvedValueOnce({ error: null, success: false });
+
+    await expect(
+      call(
+        orgRouter.getOrgInvitations,
+        { orgSlug: "analytical-engines" },
+        { context: createContext() },
+      ),
+    ).rejects.toEqual(expect.objectContaining({ code: "FORBIDDEN" }));
+
+    expect(auth.api.hasPermission).toHaveBeenCalledWith({
+      body: {
+        organizationId: orgId,
+        permissions: { invitation: ["read"] },
+      },
+      headers: expect.any(Headers),
+    });
   });
 
   it("returns the current session and user", async () => {
@@ -197,6 +228,7 @@ describe("userRouter", () => {
     vi.mocked(auth.api.createOrganization).mockResolvedValue({
       createdAt: new Date("2026-01-04T00:00:00.000Z"),
       id: "77777777-7777-4777-8777-777777777777",
+      publicId: "team0000000003",
       members: [],
       metadata: null,
       name: "New Org",

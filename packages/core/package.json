@@ -1,6 +1,6 @@
 {
   "name": "@tailorkit/core",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.7",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
@@ -11,53 +11,36 @@
     "dist"
   ],
   "type": "module",
-  "imports": {
-    "#*": [
-      "./src/*",
-      "./src/*.ts",
-      "./src/*.tsx",
-      "./src/*/index.ts",
-      "./src/*/index.tsx"
-    ]
-  },
   "exports": {
     "./server": {
-      "development": "./src/server/index.ts",
       "types": "./dist/server/index.d.ts",
       "import": "./dist/server.js"
     },
     "./server/types": {
-      "development": "./src/server/types.ts",
       "types": "./dist/server/types.d.ts",
       "import": "./dist/server-types.js"
     },
     "./schema": {
-      "development": "./src/schema/index.ts",
       "types": "./dist/schema/index.d.ts",
       "import": "./dist/schema.js"
     },
     "./spec": {
-      "development": "./src/spec/index.ts",
       "types": "./dist/spec/index.d.ts",
       "import": "./dist/spec.js"
     },
     "./primitives/theme": {
-      "development": "./src/primitives/theme.ts",
       "types": "./dist/primitives/theme.d.ts",
       "import": "./dist/primitives-theme.js"
     },
     "./primitives/zod": {
-      "development": "./src/primitives/zod.ts",
       "types": "./dist/primitives/zod.d.ts",
       "import": "./dist/primitives-zod.js"
     },
     "./primitives/valibot": {
-      "development": "./src/primitives/valibot.ts",
       "types": "./dist/primitives/valibot.d.ts",
       "import": "./dist/primitives-valibot.js"
     },
     "./primitives/arktype": {
-      "development": "./src/primitives/arktype.ts",
       "types": "./dist/primitives/arktype.d.ts",
       "import": "./dist/primitives-arktype.js"
     }

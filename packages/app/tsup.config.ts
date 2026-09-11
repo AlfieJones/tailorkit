@@ -16,5 +16,6 @@ export default defineConfig({
     index: "src/index.ts",
   },
   format: ["esm"],
+  noExternal: [/^@tailorkit\/asset-delivery(?:\/|$)/u],
   target: "node20",
 });

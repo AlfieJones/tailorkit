@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { z } from "zod";
-import type { Schema } from "../../schema";
+import type { Schema } from "../../schema/index";
 import { getTailorKitContext, o, requireHostAuth } from "../procedures";
 
 const validateSchema = async <T>(schema: Schema | undefined, value: unknown): Promise<T> => {

@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@tailorkit/ui/components/table";
 import { DateAgo } from "@tailorkit/ui/date";
+import { AppLogo } from "#components/apps/app-logo";
 import { renderSortableHeader } from "#components/members/member-table-utils";
 import { PageLayout } from "#components/page-layout";
 import { orpc } from "#lib/orpc";
@@ -78,6 +79,7 @@ interface AppRow {
   createdAt: Date | string;
   currentDeployment: { status: string } | null;
   deploymentCount: number;
+  logoPaths?: { dark?: string; light?: string };
 }
 
 function getDeploymentStatusVariant(status?: string): "info" | "outline" | "success" | "warning" {
@@ -118,9 +120,18 @@ function AppsTable({
         header: "App",
         size: 280,
         cell: ({ row }) => (
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate font-medium text-sm">{row.original.name}</span>
-            <span className="truncate text-muted-foreground text-xs">{row.original.publicId}</span>
+          <div className="flex min-w-0 items-center gap-3">
+            <AppLogo
+              className="size-9"
+              logoPaths={row.original.logoPaths}
+              name={row.original.name}
+            />
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="truncate font-medium text-sm">{row.original.name}</span>
+              <span className="truncate text-muted-foreground text-xs">
+                {row.original.publicId}
+              </span>
+            </div>
           </div>
         ),
       },

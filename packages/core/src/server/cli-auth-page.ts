@@ -14,6 +14,7 @@ export interface CliAuthApprovalPageOptions {
   platform: PlatformClient;
   platformHeaders: HeaderInput;
   request: Request;
+  signInPath?: `/${string}`;
 }
 
 type ApprovalPageState =
@@ -26,9 +27,15 @@ export async function handleCliAuthApprovalPage({
   platform,
   platformHeaders,
   request,
+  signInPath,
 }: CliAuthApprovalPageOptions): Promise<Response> {
   if (request.method === "GET") {
     const url = new URL(request.url);
+
+    if (signInPath && !(await authenticate({ request }))) {
+      return redirectToSignIn({ approvalUrl: url, signInPath });
+    }
+
     return renderCliAuthApprovalPage({ code: url.searchParams.get("code") ?? "", status: "idle" });
   }
 
@@ -97,6 +104,31 @@ export async function handleCliAuthApprovalPage({
     code: userCode,
     error: "Choose whether to approve or deny this CLI login.",
     status: "idle",
+  });
+}
+
+function redirectToSignIn({
+  approvalUrl,
+  signInPath,
+}: {
+  approvalUrl: URL;
+  signInPath: `/${string}`;
+}): Response {
+  const signInUrl = new URL(signInPath, approvalUrl);
+
+  if (signInUrl.origin !== approvalUrl.origin) {
+    throw new Error("TailorKit cliAuth.signInPath must be a same-origin path.");
+  }
+
+  signInUrl.searchParams.set("returnTo", `${approvalUrl.pathname}${approvalUrl.search}`);
+
+  return new Response(null, {
+    headers: {
+      "cache-control": "no-store",
+      location: signInUrl.toString(),
+      "referrer-policy": "no-referrer",
+    },
+    status: 302,
   });
 }
 

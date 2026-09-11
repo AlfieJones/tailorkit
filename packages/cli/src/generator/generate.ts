@@ -26,8 +26,7 @@ export interface GenerateAppOptions {
     oxfmt: string;
     oxlint: string;
     preact: string;
-    tailorkitCLI: string;
-    tailorkitApp: string;
+    tailorkit: string;
     typescript: string;
   };
   useWorkspaceDependencies?: boolean;
@@ -64,12 +63,7 @@ export const generateApp = async (options: GenerateAppOptions): Promise<void> =>
     useWorkspaceDependencies,
   } = options;
 
-  const tailorkitAppVersion = useWorkspaceDependencies
-    ? "workspace:*"
-    : packageVersions.tailorkitApp;
-  const tailorkitCLIVersion = useWorkspaceDependencies
-    ? "workspace:*"
-    : packageVersions.tailorkitCLI;
+  const tailorkitVersion = useWorkspaceDependencies ? "workspace:*" : packageVersions.tailorkit;
 
   const checkParts: string[] = [];
   const fixParts: string[] = [];
@@ -92,8 +86,7 @@ export const generateApp = async (options: GenerateAppOptions): Promise<void> =>
     oxlintVersion: packageVersions.oxlint,
     packageName,
     preactVersion: packageVersions.preact,
-    tailorkitAppVersion,
-    tailorkitCLIVersion,
+    tailorkitVersion,
     typescriptVersion: packageVersions.typescript,
   };
 

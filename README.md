@@ -132,6 +132,25 @@ For local development, add the same variables to `apps/web/.env.local`, set
 `AUTH_PRODUCTION_URL` pointed at the deployed production site. The production deployment must be
 running the OAuth proxy before local or preview GitHub sign-in can complete.
 
+### Asset delivery
+
+The Compose stack includes Postgres and an S3-compatible SeaweedFS service. With
+the local blob variables documented in `packages/storage/README.md`, CLI uploads
+and asset reads stay on the machine.
+
+In development, published app URLs use the platform's built-in
+`/api/assets/t/<team-id>/p/...` Node endpoint. This lets the web app, API,
+database, and asset delivery run as one Node project backed by any S3-compatible
+store. For a self-hosted production deployment, set `ASSET_BASE_URL` to the
+public endpoint, for example `https://tailorkit.example.com/api/assets`.
+
+Hosted production keeps the performance-critical path on the asset Worker: the
+Worker reads R2 directly and serves immutable responses from
+`https://<team-id>.<ASSET_DOMAIN>/p/...`. The Worker and Node endpoint share the
+same asset path parser, storage-key mapping, size limit, and response headers
+through `@tailorkit/asset-delivery`. If `ASSET_BASE_URL` is unset in production,
+published app URLs use the wildcard asset domain.
+
 ## License
 
 TailorKit is licensed under AGPL-3.0-only. See [LICENSE](./LICENSE).

@@ -70,7 +70,7 @@
                           },
                           "publicId": {
                             "type": "string",
-                            "maxLength": 10
+                            "maxLength": 12
                           },
                           "projectId": {
                             "type": "string",
@@ -127,7 +127,7 @@
                                   },
                                   "publicId": {
                                     "type": "string",
-                                    "maxLength": 10
+                                    "maxLength": 12
                                   },
                                   "appId": {
                                     "type": "string",
@@ -142,6 +142,48 @@
                                       {
                                         "type": "string",
                                         "format": "uuid"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "logoLightFileId": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "format": "uuid"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "logoDarkFileId": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "format": "uuid"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "logoLightPath": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "logoDarkPath": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
                                       },
                                       {
                                         "type": "null"
@@ -165,6 +207,10 @@
                                   "appId",
                                   "status",
                                   "clientEntryFileId",
+                                  "logoLightFileId",
+                                  "logoDarkFileId",
+                                  "logoLightPath",
+                                  "logoDarkPath",
                                   "createdAt",
                                   "updatedAt"
                                 ]
@@ -173,6 +219,23 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "clientPath": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "logoPaths": {
+                            "type": "object",
+                            "properties": {
+                              "dark": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "light": {
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            }
                           }
                         },
                         "required": [
@@ -264,7 +327,7 @@
                     },
                     "publicId": {
                       "type": "string",
-                      "maxLength": 10
+                      "maxLength": 12
                     },
                     "projectId": {
                       "type": "string",
@@ -321,7 +384,7 @@
                             },
                             "publicId": {
                               "type": "string",
-                              "maxLength": 10
+                              "maxLength": 12
                             },
                             "appId": {
                               "type": "string",
@@ -336,6 +399,48 @@
                                 {
                                   "type": "string",
                                   "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoLightFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoDarkFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoLightPath": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoDarkPath": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
                                 },
                                 {
                                   "type": "null"
@@ -359,6 +464,10 @@
                             "appId",
                             "status",
                             "clientEntryFileId",
+                            "logoLightFileId",
+                            "logoDarkFileId",
+                            "logoLightPath",
+                            "logoDarkPath",
                             "createdAt",
                             "updatedAt"
                           ]
@@ -367,6 +476,23 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "clientPath": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "logoPaths": {
+                      "type": "object",
+                      "properties": {
+                        "dark": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "light": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      }
                     }
                   },
                   "required": [
@@ -425,7 +551,7 @@
                     },
                     "publicId": {
                       "type": "string",
-                      "maxLength": 10
+                      "maxLength": 12
                     },
                     "projectId": {
                       "type": "string",
@@ -482,7 +608,7 @@
                             },
                             "publicId": {
                               "type": "string",
-                              "maxLength": 10
+                              "maxLength": 12
                             },
                             "appId": {
                               "type": "string",
@@ -497,6 +623,48 @@
                                 {
                                   "type": "string",
                                   "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoLightFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoDarkFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoLightPath": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoDarkPath": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
                                 },
                                 {
                                   "type": "null"
@@ -520,6 +688,10 @@
                             "appId",
                             "status",
                             "clientEntryFileId",
+                            "logoLightFileId",
+                            "logoDarkFileId",
+                            "logoLightPath",
+                            "logoDarkPath",
                             "createdAt",
                             "updatedAt"
                           ]
@@ -528,6 +700,23 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "clientPath": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "logoPaths": {
+                      "type": "object",
+                      "properties": {
+                        "dark": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "light": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      }
                     }
                   },
                   "required": [
@@ -654,7 +843,7 @@
                     },
                     "publicId": {
                       "type": "string",
-                      "maxLength": 10
+                      "maxLength": 12
                     },
                     "projectId": {
                       "type": "string",
@@ -711,7 +900,7 @@
                             },
                             "publicId": {
                               "type": "string",
-                              "maxLength": 10
+                              "maxLength": 12
                             },
                             "appId": {
                               "type": "string",
@@ -726,6 +915,48 @@
                                 {
                                   "type": "string",
                                   "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoLightFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoDarkFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoLightPath": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoDarkPath": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
                                 },
                                 {
                                   "type": "null"
@@ -749,6 +980,10 @@
                             "appId",
                             "status",
                             "clientEntryFileId",
+                            "logoLightFileId",
+                            "logoDarkFileId",
+                            "logoLightPath",
+                            "logoDarkPath",
                             "createdAt",
                             "updatedAt"
                           ]
@@ -757,6 +992,23 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "clientPath": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "logoPaths": {
+                      "type": "object",
+                      "properties": {
+                        "dark": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "light": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      }
                     }
                   },
                   "required": [
@@ -831,7 +1083,7 @@
                     },
                     "publicId": {
                       "type": "string",
-                      "maxLength": 10
+                      "maxLength": 12
                     },
                     "projectId": {
                       "type": "string",
@@ -888,7 +1140,7 @@
                             },
                             "publicId": {
                               "type": "string",
-                              "maxLength": 10
+                              "maxLength": 12
                             },
                             "appId": {
                               "type": "string",
@@ -903,6 +1155,48 @@
                                 {
                                   "type": "string",
                                   "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoLightFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoDarkFileId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoLightPath": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "logoDarkPath": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
                                 },
                                 {
                                   "type": "null"
@@ -926,6 +1220,10 @@
                             "appId",
                             "status",
                             "clientEntryFileId",
+                            "logoLightFileId",
+                            "logoDarkFileId",
+                            "logoLightPath",
+                            "logoDarkPath",
                             "createdAt",
                             "updatedAt"
                           ]
@@ -934,6 +1232,23 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "clientPath": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "logoPaths": {
+                      "type": "object",
+                      "properties": {
+                        "dark": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "light": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      }
                     }
                   },
                   "required": [
@@ -1267,7 +1582,7 @@
                           },
                           "publicId": {
                             "type": "string",
-                            "maxLength": 10
+                            "maxLength": 12
                           },
                           "appId": {
                             "type": "string",
@@ -1282,6 +1597,48 @@
                               {
                                 "type": "string",
                                 "format": "uuid"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "logoLightFileId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "logoDarkFileId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "logoLightPath": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "logoDarkPath": {
+                            "anyOf": [
+                              {
+                                "type": "string"
                               },
                               {
                                 "type": "null"
@@ -1305,6 +1662,10 @@
                           "appId",
                           "status",
                           "clientEntryFileId",
+                          "logoLightFileId",
+                          "logoDarkFileId",
+                          "logoLightPath",
+                          "logoDarkPath",
                           "createdAt",
                           "updatedAt"
                         ]
@@ -1355,14 +1716,6 @@
                       {
                         "type": "object",
                         "properties": {
-                          "contentType": {
-                            "enum": ["application/javascript"],
-                            "type": "string"
-                          },
-                          "encoding": {
-                            "enum": ["utf-8"],
-                            "type": "string"
-                          },
                           "checksum": {
                             "type": "string",
                             "pattern": "^[a-f0-9]{64}$"
@@ -1370,23 +1723,70 @@
                           "contentLength": {
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 1048576
+                            "maximum": 9007199254740991
+                          },
+                          "contentType": {
+                            "const": "application/javascript"
+                          },
+                          "encoding": {
+                            "const": "utf-8"
                           },
                           "objectKey": {
-                            "type": "string",
-                            "maxLength": 255,
-                            "pattern": "^(?:[a-zA-Z0-9._-]+\\/)*[a-zA-Z0-9._-]+\\.[a-zA-Z0-9]+$"
+                            "const": "client.js"
                           }
                         },
                         "required": [
-                          "contentType",
-                          "encoding",
                           "checksum",
                           "contentLength",
+                          "contentType",
+                          "encoding",
                           "objectKey"
                         ]
                       }
                     ]
+                  },
+                  "logos": {
+                    "type": "object",
+                    "properties": {
+                      "dark": {
+                        "type": "object",
+                        "properties": {
+                          "checksum": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          },
+                          "contentLength": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 262144
+                          },
+                          "contentType": {
+                            "enum": ["image/svg+xml", "image/png", "image/webp"],
+                            "type": "string"
+                          }
+                        },
+                        "required": ["checksum", "contentLength", "contentType"]
+                      },
+                      "light": {
+                        "type": "object",
+                        "properties": {
+                          "checksum": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          },
+                          "contentLength": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 262144
+                          },
+                          "contentType": {
+                            "enum": ["image/svg+xml", "image/png", "image/webp"],
+                            "type": "string"
+                          }
+                        },
+                        "required": ["checksum", "contentLength", "contentType"]
+                      }
+                    }
                   },
                   "scopeId": {
                     "type": "string"
@@ -1407,8 +1807,207 @@
                   "properties": {
                     "assets": {
                       "type": "array",
-                      "prefixItems": [
-                        {
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "appDeploymentId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "objectKey": {
+                                "type": "string",
+                                "maxLength": 512,
+                                "pattern": "^(?:[a-zA-Z0-9._-]+\\/)*[a-zA-Z0-9._-]+\\.[a-zA-Z0-9]+$"
+                              },
+                              "contentType": {
+                                "enum": [
+                                  "application/javascript",
+                                  "image/svg+xml",
+                                  "image/png",
+                                  "image/webp"
+                                ],
+                                "type": "string"
+                              },
+                              "encoding": {
+                                "anyOf": [
+                                  {
+                                    "enum": ["utf-8"],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "contentLength": {
+                                "type": "integer",
+                                "minimum": -2147483648,
+                                "maximum": 2147483647
+                              },
+                              "checksum": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 64
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "status": {
+                                "enum": ["uploading", "verifying", "verified", "failed"],
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "x-native-type": "date"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "x-native-type": "date"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "appDeploymentId",
+                              "objectKey",
+                              "contentType",
+                              "encoding",
+                              "contentLength",
+                              "checksum",
+                              "status",
+                              "createdAt",
+                              "updatedAt"
+                            ]
+                          },
+                          "headers": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "uploadUrl": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        },
+                        "required": ["file", "uploadUrl"]
+                      }
+                    },
+                    "deployment": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "publicId": {
+                          "type": "string",
+                          "maxLength": 12
+                        },
+                        "appId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "status": {
+                          "enum": ["uploading", "deploying", "verifying", "published"],
+                          "type": "string"
+                        },
+                        "clientEntryFileId": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "logoLightFileId": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "logoDarkFileId": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "logoLightPath": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "logoDarkPath": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "x-native-type": "date"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "x-native-type": "date"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "publicId",
+                        "appId",
+                        "status",
+                        "clientEntryFileId",
+                        "logoLightFileId",
+                        "logoDarkFileId",
+                        "logoLightPath",
+                        "logoDarkPath",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    },
+                    "logos": {
+                      "type": "object",
+                      "properties": {
+                        "dark": {
                           "type": "object",
                           "properties": {
                             "file": {
@@ -1428,12 +2027,19 @@
                                   "pattern": "^(?:[a-zA-Z0-9._-]+\\/)*[a-zA-Z0-9._-]+\\.[a-zA-Z0-9]+$"
                                 },
                                 "contentType": {
-                                  "enum": ["application/javascript"],
+                                  "enum": ["image/svg+xml", "image/png", "image/webp"],
                                   "type": "string"
                                 },
                                 "encoding": {
-                                  "enum": ["utf-8"],
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "enum": ["utf-8"],
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 },
                                 "contentLength": {
                                   "type": "integer",
@@ -1493,60 +2099,103 @@
                               "format": "uri"
                             }
                           },
-                          "required": ["file", "uploadUrl"]
-                        }
-                      ]
-                    },
-                    "deployment": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string",
-                          "format": "uuid"
+                          "required": ["file"]
                         },
-                        "publicId": {
-                          "type": "string",
-                          "maxLength": 10
-                        },
-                        "appId": {
-                          "type": "string",
-                          "format": "uuid"
-                        },
-                        "status": {
-                          "enum": ["uploading", "deploying", "verifying", "published"],
-                          "type": "string"
-                        },
-                        "clientEntryFileId": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "uuid"
+                        "light": {
+                          "type": "object",
+                          "properties": {
+                            "file": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "appDeploymentId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "objectKey": {
+                                  "type": "string",
+                                  "maxLength": 512,
+                                  "pattern": "^(?:[a-zA-Z0-9._-]+\\/)*[a-zA-Z0-9._-]+\\.[a-zA-Z0-9]+$"
+                                },
+                                "contentType": {
+                                  "enum": ["image/svg+xml", "image/png", "image/webp"],
+                                  "type": "string"
+                                },
+                                "encoding": {
+                                  "anyOf": [
+                                    {
+                                      "enum": ["utf-8"],
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "contentLength": {
+                                  "type": "integer",
+                                  "minimum": -2147483648,
+                                  "maximum": 2147483647
+                                },
+                                "checksum": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 64
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "status": {
+                                  "enum": ["uploading", "verifying", "verified", "failed"],
+                                  "type": "string"
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "x-native-type": "date"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "x-native-type": "date"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "appDeploymentId",
+                                "objectKey",
+                                "contentType",
+                                "encoding",
+                                "contentLength",
+                                "checksum",
+                                "status",
+                                "createdAt",
+                                "updatedAt"
+                              ]
                             },
-                            {
-                              "type": "null"
+                            "headers": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "uploadUrl": {
+                              "type": "string",
+                              "format": "uri"
                             }
-                          ]
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "x-native-type": "date"
-                        },
-                        "updatedAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "x-native-type": "date"
+                          },
+                          "required": ["file"]
                         }
-                      },
-                      "required": [
-                        "id",
-                        "publicId",
-                        "appId",
-                        "status",
-                        "clientEntryFileId",
-                        "createdAt",
-                        "updatedAt"
-                      ]
+                      }
                     }
                   },
                   "required": ["assets", "deployment"]
@@ -1594,7 +2243,7 @@
                     },
                     "publicId": {
                       "type": "string",
-                      "maxLength": 10
+                      "maxLength": 12
                     },
                     "appId": {
                       "type": "string",
@@ -1609,6 +2258,48 @@
                         {
                           "type": "string",
                           "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "logoLightFileId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "logoDarkFileId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "logoLightPath": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "logoDarkPath": {
+                      "anyOf": [
+                        {
+                          "type": "string"
                         },
                         {
                           "type": "null"
@@ -1632,6 +2323,10 @@
                     "appId",
                     "status",
                     "clientEntryFileId",
+                    "logoLightFileId",
+                    "logoDarkFileId",
+                    "logoLightPath",
+                    "logoDarkPath",
                     "createdAt",
                     "updatedAt"
                   ]
@@ -1687,7 +2382,7 @@
                     },
                     "publicId": {
                       "type": "string",
-                      "maxLength": 10
+                      "maxLength": 12
                     },
                     "appId": {
                       "type": "string",
@@ -1702,6 +2397,48 @@
                         {
                           "type": "string",
                           "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "logoLightFileId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "logoDarkFileId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "logoLightPath": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "logoDarkPath": {
+                      "anyOf": [
+                        {
+                          "type": "string"
                         },
                         {
                           "type": "null"
@@ -1725,6 +2462,10 @@
                     "appId",
                     "status",
                     "clientEntryFileId",
+                    "logoLightFileId",
+                    "logoDarkFileId",
+                    "logoLightPath",
+                    "logoDarkPath",
                     "createdAt",
                     "updatedAt"
                   ]

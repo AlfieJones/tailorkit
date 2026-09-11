@@ -170,11 +170,12 @@ export function createIframeUiHost(
         return;
       }
       mounted = true;
-      appSourcePromise = fetchSource(fetchImplementation, resolvedAppUrl, "app client");
+      appSourcePromise = fetchSource(fetchImplementation, resolvedAppUrl, "app client", "omit");
       runtimeSourcePromise = fetchSource(
         fetchImplementation,
         resolvedRuntimeUrl,
         "sandbox runtime",
+        "same-origin",
       ).then((source) => absolutizeViteImports(source, resolvedRuntimeUrl));
       (options.mountTarget ?? document.body).append(iframe);
       void sendBootstrap();
@@ -264,8 +265,9 @@ async function fetchSource(
   fetchImplementation: typeof globalThis.fetch,
   url: URL,
   label: string,
+  credentials: RequestCredentials,
 ): Promise<string> {
-  const response = await fetchImplementation(url, { credentials: "omit" });
+  const response = await fetchImplementation(url, { credentials });
   if (!response.ok) {
     throw new Error(`Unable to load TailorKit ${label} from ${url.toString()}.`);
   }
@@ -284,7 +286,15 @@ function absolutizeViteImports(source: string, runtimeUrl: URL): string {
 }
 
 function isViteDevelopmentWorker(url: URL): boolean {
-  return url.searchParams.has("worker_file");
+  if (url.searchParams.has("worker_file")) {
+    return true;
+  }
+
+  const currentOrigin = globalThis.location?.origin;
+  return (
+    url.origin === currentOrigin &&
+    (url.pathname.startsWith("/@fs/") || url.pathname.includes("/node_modules/"))
+  );
 }
 
 function createChannelId(): string {

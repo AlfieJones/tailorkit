@@ -6,7 +6,7 @@ import type {
   NoMixedActionContexts,
   ResolveActionTreeContext,
   ScreenContextHierarchy,
-} from "../schema";
+} from "../schema/index";
 import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
 import { normalizeBasePath } from "./apps";
@@ -129,6 +129,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
         platform: context.platform,
         platformHeaders: context.platformHeaders,
         request,
+        signInPath: options.cliAuth?.signInPath,
       });
     }
 
