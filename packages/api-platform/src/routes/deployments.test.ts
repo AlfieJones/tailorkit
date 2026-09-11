@@ -15,7 +15,7 @@ vi.mock("@tailorkit/db", () => ({
   },
 }));
 
-const { deploymentRouter } = await import("./deployments");
+const { deploymentRouter, mapReturnedFilesByAssetPath } = await import("./deployments");
 
 const organizationId = "11111111-1111-4111-8111-111111111111";
 const projectId = "22222222-2222-4222-8222-222222222222";
@@ -114,6 +114,22 @@ describe("platform deployment uploads", () => {
         contentType: "image/svg+xml",
       }),
     },
+  });
+
+  it("maps reordered returned files using their generated file IDs", () => {
+    const assets = [
+      { asset: { objectKey: "client.js" }, fileId: "client-file-id" },
+      { asset: { objectKey: `logos/${logoChecksum}.svg` }, fileId: "logo-file-id" },
+    ];
+    const returnedFiles = [
+      { id: "logo-file-id", objectKey: "stored-logo" },
+      { id: "client-file-id", objectKey: "stored-client" },
+    ];
+
+    const filesByAssetPath = mapReturnedFilesByAssetPath(assets, returnedFiles);
+
+    expect(filesByAssetPath.get("client.js")?.id).toBe("client-file-id");
+    expect(filesByAssetPath.get(`logos/${logoChecksum}.svg`)?.id).toBe("logo-file-id");
   });
 
   it("creates optional logo assets alongside the client bundle", async () => {

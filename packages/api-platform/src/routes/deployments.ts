@@ -119,6 +119,23 @@ async function hasMatchingLogo(
   }
 }
 
+export function mapReturnedFilesByAssetPath<
+  TAsset extends { asset: { objectKey: string }; fileId: string },
+  TFile extends { id: string },
+>(assets: readonly TAsset[], files: readonly TFile[]) {
+  const fileById = new Map(files.map((file) => [file.id, file]));
+
+  return new Map(
+    assets.map(({ asset, fileId }) => {
+      const file = fileById.get(fileId);
+      if (!file) {
+        throw new ORPCError("BAD_REQUEST", { message: "Failed to resolve deployment asset." });
+      }
+      return [asset.objectKey, file] as const;
+    }),
+  );
+}
+
 const requireDeployment = o.middleware(
   async ({ next, context }, input: { deploymentId: string; scopeId: string }) => {
     setSpanAttributes({
@@ -314,9 +331,7 @@ const createAppDeployment = protectedRouter
         throw new ORPCError("BAD_REQUEST", { message: "Failed to create deployment asset." });
       }
 
-      const fileByAssetPath = new Map(
-        files.map((file, index) => [assets[index]?.asset.objectKey, file]),
-      );
+      const fileByAssetPath = mapReturnedFilesByAssetPath(assets, files);
       const logoDarkPath = requestedLogos.find(({ variant }) => variant === "dark")?.asset
         .objectKey;
       const logoLightPath = requestedLogos.find(({ variant }) => variant === "light")?.asset
