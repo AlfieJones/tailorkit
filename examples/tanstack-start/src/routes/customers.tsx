@@ -10,9 +10,8 @@ export const Route = createFileRoute("/customers")({ component: CustomersPage })
 function CustomersPage() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-  useScope({
+  useScope("/customers", {
     context: { customers },
-    scope: "/customers",
   });
 
   if (pathname !== "/customers") {

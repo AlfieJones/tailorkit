@@ -137,6 +137,6 @@ function EmbedPanel() {
 }
 
 function CurrentDemoScreen() {
-  useScope({ context: {}, scope: "/" });
+  useScope("/", { context: {} });
   return null;
 }

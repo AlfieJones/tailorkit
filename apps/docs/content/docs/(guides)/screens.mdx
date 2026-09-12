@@ -78,17 +78,17 @@ Call `useScope` in the layout or page that owns the data:
 import { useScope } from "tailorkit/react";
 
 function WorkspaceLayout({ workspaceId }) {
-  useScope({ scope: "/", context: { workspaceId } });
+  useScope("/", { context: { workspaceId } });
   return <Outlet />;
 }
 
 function UsersLayout({ canManageUsers }) {
-  useScope({ scope: "/users", context: { canManageUsers } });
+  useScope("/users", { context: { canManageUsers } });
   return <Outlet />;
 }
 
 function UserDetail({ user }) {
-  useScope({ scope: "/users/detail", context: { user } });
+  useScope("/users/detail", { context: { user } });
   return <UserDetails user={user} />;
 }
 ```
@@ -150,11 +150,12 @@ Keep the scope registered while its context is unresolved:
 
 ```tsx
 useScope(
+  "/users/detail",
   query.isPending
-    ? { scope: "/users/detail", status: "loading" }
+    ? { status: "loading" }
     : query.isError
-      ? { scope: "/users/detail", status: "error" }
-      : { scope: "/users/detail", context: { user: query.data } },
+      ? { status: "error" }
+      : { context: { user: query.data } },
 );
 ```
 

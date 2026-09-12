@@ -10,11 +10,11 @@ interface CustomerListContext {
 }
 
 export function CustomerListScreen({ context }: { context: CustomerListContext }) {
-  useScope({ context, scope: "/customers" });
+  useScope("/customers", { context });
   return null;
 }
 
 export function CustomerDetailScreen({ context }: { context: { customer: Customer } }) {
-  useScope({ context, scope: "/customers/detail" });
+  useScope("/customers/detail", { context });
   return null;
 }

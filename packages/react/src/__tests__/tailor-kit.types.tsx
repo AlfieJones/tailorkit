@@ -108,26 +108,25 @@ components(callbackServer.$internal.schema, {
   },
 });
 
-useScope({
-  scope: "/home",
+useScope("/home", {
   context: { page: { title: "Home" } },
 });
 
-useScope({ scope: "/user", status: "loading" });
+useScope("/user", { status: "loading" });
 
-useScope({ scope: "/user", status: "error" });
+useScope("/user", { status: "error" });
 
 // @ts-expect-error invalid screen name
-useScope({ scope: "missing", context: {} });
+useScope("missing", { context: {} });
 
 // @ts-expect-error invalid context shape for selected screen
-useScope({ scope: "/user", context: { page: { title: "Home" } } });
+useScope("/user", { context: { page: { title: "Home" } } });
 
 // @ts-expect-error ready matches require context
-useScope({ scope: "/home" });
+useScope("/home", {});
 
 // @ts-expect-error loading screens cannot expose partial context
-useScope({ scope: "/user", status: "loading", context: { userId: "user_1" } });
+useScope("/user", { status: "loading", context: { userId: "user_1" } });
 
 <AppView viewport="panel" app={app} />;
 
@@ -167,3 +166,6 @@ declare module "../tailor-kit" {
 // @ts-expect-error The navbar supports root only, despite /user being globally declared.
 <AppView app={app} viewport="navbar" scope="/user" context={{ userId: "u1" }} />;
 <AppView app={app} viewport="navbar" scope="/" context={{ user: { id: "u1" } }} />;
+
+// @ts-expect-error The former object-only hook signature is not supported.
+useScope({ scope: "/user", context: { userId: "u1" } });

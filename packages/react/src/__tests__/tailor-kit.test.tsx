@@ -90,14 +90,13 @@ function CurrentScreenRoute({
   tailor: ReturnType<typeof createTailorKitClient<typeof server>>;
 }) {
   useScope(
+    nested ? "/home/detail" : "/home",
     nested
       ? {
           context: { detail: { id: "profile" } },
-          scope: "/home/detail",
         }
       : {
           context: { page: { title: "home" } },
-          scope: "/home",
         },
   );
 
@@ -124,7 +123,7 @@ function HomeAppView({
   app: TailorKitApp;
   tailor: ReturnType<typeof createTailorKitClient<typeof server>>;
 }) {
-  useScope({ context: { page: { title: "home" } }, scope: "/home" });
+  useScope("/home", { context: { page: { title: "home" } } });
   return <AppView viewport="panel" app={app} />;
 }
 
@@ -216,7 +215,7 @@ describe("tailorKitClient React adapter", () => {
     });
 
     function Route({ status }: { status: "error" | "loading" }) {
-      useScope({ scope: "/home/detail", status });
+      useScope("/home/detail", { status });
       return <AppView viewport="panel" app={{ clientPath: "/apps/todo.js", id: "todo" }} />;
     }
 
@@ -253,7 +252,7 @@ describe("tailorKitClient React adapter", () => {
     });
 
     function Route() {
-      useScope({ context: { page: { title: "home" } }, scope: "/home" });
+      useScope("/home", { context: { page: { title: "home" } } });
       return (
         <>
           <AppView viewport="panel" app={{ clientPath: "/apps/b.js", id: "b" }} />
@@ -336,12 +335,12 @@ describe("tailorKitClient React adapter", () => {
     });
 
     function HomeRoute() {
-      useScope({ context: { page: { title: "home" } }, scope: "/home" });
+      useScope("/home", { context: { page: { title: "home" } } });
       return null;
     }
 
     function UserRoute() {
-      useScope({ context: { userId: "user_1" }, scope: "/user" });
+      useScope("/user", { context: { userId: "user_1" } });
       return <AppView viewport="panel" app={{ clientPath: "/apps/todo.js", id: "todo" }} />;
     }
 
@@ -453,8 +452,8 @@ describe("scope registries", () => {
   afterEach(cleanup);
 
   function Layers({ detail = true }: { detail?: boolean }) {
-    useScope({ scope: "/", context: { user: { id: "u1" } } });
-    useScope({ scope: "/home", context: { page: { title: "Home" } } });
+    useScope("/", { context: { user: { id: "u1" } } });
+    useScope("/home", { context: { page: { title: "Home" } } });
     return (
       <>
         {detail ? <Detail /> : null}
@@ -464,7 +463,7 @@ describe("scope registries", () => {
     );
   }
   function Detail() {
-    useScope({ scope: "/home/detail", status: "loading" });
+    useScope("/home/detail", { status: "loading" });
     return null;
   }
 
@@ -504,7 +503,7 @@ describe("scope registries", () => {
       components,
     });
     function OtherRoute() {
-      useScope({ scope: "/user", context: { userId: "other" } });
+      useScope("/user", { context: { userId: "other" } });
       return <AppView viewport="panel" app={{ id: "other", clientPath: "/other.js" }} />;
     }
     render(
@@ -543,7 +542,7 @@ it("replaces the root store only when the normalized endpoint changes", async ()
   });
   function Contents() {
     const { data } = useApps();
-    useScope({ scope: "/user", context: { userId: "u1" } });
+    useScope("/user", { context: { userId: "u1" } });
     return (
       <>
         <span>{data?.[0]?.id}</span>

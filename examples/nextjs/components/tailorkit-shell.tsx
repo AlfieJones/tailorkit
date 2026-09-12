@@ -57,7 +57,7 @@ function TailorKitShellContent({
   signOut: () => Promise<void>;
   user: DemoUser;
 }) {
-  useScope({ context: { user }, scope: "/" });
+  useScope("/", { context: { user } });
 
   return (
     <SidebarProvider className="isolate">

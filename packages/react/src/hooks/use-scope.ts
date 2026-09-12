@@ -45,8 +45,17 @@ export type ScopeOptions<
         | ErrorScreenOptions<TScreen>
     : never;
 
+export type ScopeState<
+  TScopes extends Record<string, ScopeDefinition> = RegisteredScopes,
+  TScope extends ScreenName<TScopes> = ScreenName<TScopes>,
+> =
+  | Omit<ReadyScreenOptions<TScopes, TScope>, "scope">
+  | Omit<LoadingScreenOptions<TScope>, "scope">
+  | Omit<ErrorScreenOptions<TScope>, "scope">;
+
 export function useScope<TScreen extends ScreenName<RegisteredScopes>>(
-  options: ScopeOptions<RegisteredScopes, TScreen>,
+  scope: TScreen,
+  options: ScopeState<RegisteredScopes, NoInfer<TScreen>>,
 ): void {
   const { store } = useTailorRootContext("useScope");
   const id = useMemo(() => Symbol("tailorkit-current-screen"), []);
@@ -70,8 +79,8 @@ export function useScope<TScreen extends ScreenName<RegisteredScopes>>(
     store.registerScreen({
       context: contextSnapshot,
       id,
-      screen: options.scope,
+      screen: scope,
       status,
     });
-  }, [contextSnapshot, id, options.scope, status, store]);
+  }, [contextSnapshot, id, scope, status, store]);
 }

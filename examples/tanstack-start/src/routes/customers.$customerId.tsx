@@ -27,13 +27,12 @@ function CustomerDetailPage() {
   const session = useAuthSession();
 
   useScope(
+    "/customers/detail",
     session.data
       ? {
           context: { customer },
-          scope: "/customers/detail",
         }
       : {
-          scope: "/customers/detail",
           status: "loading",
         },
   );
