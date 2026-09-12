@@ -1,24 +1,18 @@
+import { useScope } from "tailorkit/react";
 import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
 import { MetricCard, PageHeader } from "#components/crm-ui";
 import { CustomerTable } from "#components/customer-table";
 import { customers } from "#lib/crm-data";
-import tailor from "#lib/tailorkit-client.tsx";
-import { useAuthSession } from "#lib/auth-client.ts";
+import "#lib/tailorkit-client.tsx";
 
 export const Route = createFileRoute("/customers")({ component: CustomersPage });
 
 function CustomersPage() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-  const session = useAuthSession();
-
-  if (!session.data) {
-    return;
-  }
-
-  tailor.useCurrentScreen({
-    context: { user: session.data.user, customers },
-    screen: "/customers",
+  useScope({
+    context: { customers },
+    scope: "/customers",
   });
 
   if (pathname !== "/customers") {

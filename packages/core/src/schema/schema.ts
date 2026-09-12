@@ -7,7 +7,7 @@ import type {
   ResolvedComponentMetadata,
 } from "./components";
 import { resolveComponentMetadata } from "./components";
-import type { ResolvedScreenMetadata, ScreenContextHierarchy, ScreenDefinitions } from "./screens";
+import type { ResolvedScopeMetadata, ScopeContextHierarchy, ScopeDefinitions } from "./scopes";
 import { jsonSchemaSerializer, serializeSchema } from "./shared";
 import type { SchemaSerializer } from "./shared";
 
@@ -15,7 +15,7 @@ type EmptyActionMap = Record<never, never>;
 
 export interface TailorKitSchema<
   TComponents extends Record<string, unknown> = ComponentDefinitions,
-  TScreens extends Record<string, unknown> = ScreenDefinitions,
+  TScreens extends Record<string, unknown> = ScopeDefinitions,
   TActions extends ActionTree = EmptyActionMap,
 > {
   /**
@@ -33,13 +33,14 @@ export interface TailorKitSchema<
     components: {
       [TName in keyof TComponents]: ResolvedComponentMetadata;
     };
-    screens: {
-      [TName in keyof TScreens]: ResolvedScreenMetadata;
+    scopes: {
+      [TName in keyof TScreens]: ResolvedScopeMetadata;
     };
   };
+  viewports: Record<string, Record<string, never>>;
   actions: TActions;
   components: TComponents;
-  screens: TScreens;
+  scopes: TScreens;
   serialize(schemaSerializer?: SchemaSerializer): TailorKitSchemaSpec;
 }
 
@@ -48,30 +49,31 @@ export const createTailorKitSchema = <
   const TScreens extends Record<string, unknown> = Record<string, never>,
   const TActions extends ActionTree = EmptyActionMap,
 >(schema: {
+  viewports?: Record<string, Record<string, never>>;
   actions?: TActions & NoMixedActionContexts<NoInfer<TActions>>;
   components: TComponents & NoComponentFieldCallbackConflicts<NoInfer<TComponents>>;
-  screens?: TScreens & ScreenContextHierarchy<NoInfer<TScreens>>;
+  scopes?: TScreens & ScopeContextHierarchy<NoInfer<TScreens>>;
 }): TailorKitSchema<TComponents, TScreens, TActions> => {
   const components = {} as TailorKitSchema<
     TComponents,
     TScreens,
     TActions
   >["$internal"]["components"];
-  const screens = {} as TailorKitSchema<TComponents, TScreens, TActions>["$internal"]["screens"];
+  const scopes = {} as TailorKitSchema<TComponents, TScreens, TActions>["$internal"]["scopes"];
 
   for (const [name, definition] of Object.entries(schema.components as ComponentDefinitions)) {
     components[name as keyof TComponents] = resolveComponentMetadata(name, definition);
   }
 
-  for (const [name, definition] of Object.entries((schema.screens ?? {}) as ScreenDefinitions)) {
-    screens[name as keyof TScreens] = { context: definition.context };
+  for (const [name, definition] of Object.entries((schema.scopes ?? {}) as ScopeDefinitions)) {
+    scopes[name as keyof TScreens] = { context: definition.context };
   }
 
   const serialize = (
     schemaSerializer: SchemaSerializer = jsonSchemaSerializer,
   ): TailorKitSchemaSpec => {
     const serializedComponents: TailorKitSchemaSpec["components"] = {};
-    const serializedScreens: TailorKitSchemaSpec["screens"] = {};
+    const serializedScreens: TailorKitSchemaSpec["scopes"] = {};
 
     for (const [name, metadata] of Object.entries(components)) {
       const callbacks: TailorKitSchemaSpec["components"][string]["callbacks"] = {};
@@ -93,7 +95,7 @@ export const createTailorKitSchema = <
       };
     }
 
-    for (const [name, metadata] of Object.entries(screens)) {
+    for (const [name, metadata] of Object.entries(scopes)) {
       serializedScreens[name] = {
         context: serializeSchema(metadata.context, schemaSerializer),
       };
@@ -102,20 +104,22 @@ export const createTailorKitSchema = <
     return {
       actions: serializeActions(schema.actions ?? {}, schemaSerializer),
       components: serializedComponents,
-      screens: serializedScreens,
+      scopes: serializedScreens,
+      viewports: schema.viewports ?? {},
       version: 1,
     };
   };
 
   return {
+    viewports: schema.viewports ?? {},
     actions: (schema.actions ?? {}) as TActions,
     components: schema.components,
-    screens: (schema.screens ?? {}) as TScreens,
+    scopes: (schema.scopes ?? {}) as TScreens,
     serialize,
     $internal: {
       actions: (schema.actions ?? {}) as TActions,
       components,
-      screens,
+      scopes,
     },
   };
 };
@@ -156,12 +160,12 @@ export {
   type ResolvedComponentMetadata,
 } from "./components";
 export {
-  type ResolvedScreenMetadata,
-  type Screen,
-  type ScreenContextHierarchy,
-  type ScreenDefinition,
-  type ScreenDefinitions,
-  type Screens,
-} from "./screens";
+  type ResolvedScopeMetadata,
+  type Scope,
+  type ScopeContextHierarchy,
+  type ScopeDefinition,
+  type ScopeDefinitions,
+  type Scopes,
+} from "./scopes";
 export { jsonSchemaSerializer, type Schema, type SchemaSerializer } from "./shared";
 export type { TailorKitSchema as TailorKit };

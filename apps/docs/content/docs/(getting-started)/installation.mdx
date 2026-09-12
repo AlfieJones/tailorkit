@@ -72,7 +72,8 @@ export const tailorKit = createTailorKit({
     Button,
   },
 
-  screens: {
+  viewports: { panel: {} },
+  scopes: {
     // Define each screen TailorKit apps can be installed on.
     "/": {
       context: z.object({}),
@@ -278,7 +279,7 @@ import { createTailorKitClient, primitives } from "tailorkit/react";
 export const tailorKitClient = createTailorKitClient<typeof tailorKit>({
   // Use your custom handler path here, for example:
   // "http://localhost:3000/custom-path/tailorkit"
-  baseUrl: "/api/tailorkit",
+  baseUrl: "https://example.com/api/tailorkit/",
   components: {
     ...primitives,
 
@@ -290,12 +291,19 @@ export const tailorKitClient = createTailorKitClient<typeof tailorKit>({
   },
 });
 
+declare module "tailorkit/react" {
+  interface Register {
+    client: typeof tailorKitClient;
+  }
+}
+
 export default tailorKitClient;
 ```
 
-Use an absolute URL during server rendering if your framework cannot resolve
-`/api/tailorkit` without an origin. In the browser, a same-origin relative URL
-is usually the simplest option.
+Use an absolute URL, or construct a URL from `window.location.origin` in a
+browser-only integration. Wrap the host in `<Root client={tailorKitClient}>`
+and import `AppView`, `useApps`, and `useScope` from `tailorkit/react`.
+See [Scopes, screens, and viewports](/docs/screens) for the complete React setup.
 
 </Step>
 <Step>

@@ -14,3 +14,14 @@ Leaf({ children: "not allowed" });
 const ExplicitLeaf = createRemoteComponent<object, false>("Leaf", { children: false });
 // @ts-expect-error explicitly disabled children are rejected too
 ExplicitLeaf({ children: ["not allowed"] });
+
+declare module "./index" {
+  interface TailorKitScreens {
+    "/": { context: { workspaceId: string } };
+    "/users": { context: { workspaceId: string; userId: string } };
+  }
+  interface TailorKitViewports {
+    panel: unknown;
+    navbar: unknown;
+  }
+}

@@ -5,9 +5,9 @@ import type {
   NoMixedActionContexts,
   NoComponentFieldCallbackConflicts,
   ResolveActionTreeContext,
-  ScreenContextHierarchy,
-  ScreenDefinition,
-  ScreenDefinitions,
+  ScopeContextHierarchy,
+  ScopeDefinition,
+  ScopeDefinitions,
   TailorKitSchema,
 } from "../schema/index";
 import type { ClientOptions as PlatformClientOptions } from "@tailorkit/client-platform/client/types.gen";
@@ -22,6 +22,7 @@ export interface TailorKitPlatformOptions {
 }
 
 export interface TailorKitServerBaseOptions {
+  viewports?: Record<string, Record<string, never>>;
   /**
    * TailorKit.dev project key
    *
@@ -63,32 +64,32 @@ export interface TailorKitServerBaseOptions {
 
 export interface TailorKitServerSchemaOptions<
   TComponents extends ComponentDefinitions,
-  TScreens extends Record<string, ScreenDefinition>,
+  TScreens extends Record<string, ScopeDefinition>,
   TActions extends ActionTree = Record<never, never>,
 > {
   actions?: TActions & ActionDefinitions & NoMixedActionContexts<TActions>;
   components: TComponents & NoComponentFieldCallbackConflicts<TComponents>;
-  screens?: TScreens & ScreenContextHierarchy<TScreens>;
+  scopes?: TScreens & ScopeContextHierarchy<TScreens>;
 }
 
 export interface TailorKitServerInputOptions extends TailorKitServerBaseOptions {
   actions?: ActionDefinitions;
   components: ComponentDefinitions;
-  screens?: ScreenDefinitions;
+  scopes?: ScopeDefinitions;
 }
 
 export type InferTailorKitServerComponents<TOptions extends TailorKitServerInputOptions> =
   TOptions["components"];
 
-export type InferTailorKitServerScreens<TOptions extends TailorKitServerInputOptions> =
-  TOptions extends { screens: infer TScreens } ? TScreens : Record<never, never>;
+export type InferTailorKitServerScopes<TOptions extends TailorKitServerInputOptions> =
+  TOptions extends { scopes: infer TScreens } ? TScreens : Record<never, never>;
 
 export type InferTailorKitServerActions<TOptions extends TailorKitServerInputOptions> =
   TOptions extends { actions: infer TActions } ? TActions : Record<never, never>;
 
 export interface TailorKitServerOptions<
   TComponents extends ComponentDefinitions,
-  TScreens extends Record<string, ScreenDefinition>,
+  TScreens extends Record<string, ScopeDefinition>,
   TActions extends ActionTree = Record<never, never>,
 >
   extends
@@ -114,7 +115,7 @@ export type TailorKitHandlerContext<TActionContext = never> = TailorKitHostConte
 
 export interface TailorKitServer<
   TComponents extends ComponentDefinitions,
-  TScreens extends Record<string, ScreenDefinition>,
+  TScreens extends Record<string, ScopeDefinition>,
   TActions extends ActionTree = Record<never, never>,
   TActionContext = ResolveActionTreeContext<TActions>,
 > {

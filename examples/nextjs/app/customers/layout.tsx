@@ -14,7 +14,7 @@ export default async function CustomersLayout({ children }: { children: ReactNod
 
   return (
     <>
-      <CustomerListScreen context={{ customers, user }} />
+      <CustomerListScreen context={{ customers }} />
       {children}
     </>
   );

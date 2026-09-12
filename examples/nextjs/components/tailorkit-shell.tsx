@@ -1,5 +1,7 @@
 "use client";
 
+import { AppView, Root, useApps, useScope } from "tailorkit/react";
+
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,11 +14,11 @@ import type { TailorKitApp } from "tailorkit/react";
 import { AppSidebar } from "@/components/app-sidebar";
 import tailor from "@/lib/tailorkit-client";
 
-type Apps = NonNullable<ReturnType<typeof tailor.useApps>["data"]>;
+type Apps = NonNullable<ReturnType<typeof useApps>["data"]>;
 
-export function TailorKitShell({ children, user }: { children: ReactNode; user: DemoUser }) {
+function TailorKitShellWithApps({ children, user }: { children: ReactNode; user: DemoUser }) {
   const router = useRouter();
-  const { data: apps, isLoading } = tailor.useApps();
+  const { data: apps, isLoading } = useApps();
   const [currentApp, setCurrentApp] = useState<TailorKitApp | null>(null);
 
   async function signOut() {
@@ -25,18 +27,16 @@ export function TailorKitShell({ children, user }: { children: ReactNode; user: 
   }
 
   return (
-    <tailor.Root apps={apps}>
-      <TailorKitShellContent
-        apps={apps ?? []}
-        currentApp={currentApp}
-        isLoading={isLoading}
-        onSelectApp={setCurrentApp}
-        signOut={signOut}
-        user={user}
-      >
-        {children}
-      </TailorKitShellContent>
-    </tailor.Root>
+    <TailorKitShellContent
+      apps={apps ?? []}
+      currentApp={currentApp}
+      isLoading={isLoading}
+      onSelectApp={setCurrentApp}
+      signOut={signOut}
+      user={user}
+    >
+      {children}
+    </TailorKitShellContent>
   );
 }
 
@@ -57,7 +57,7 @@ function TailorKitShellContent({
   signOut: () => Promise<void>;
   user: DemoUser;
 }) {
-  tailor.useCurrentScreen({ context: { user }, screen: "/" });
+  useScope({ context: { user }, scope: "/" });
 
   return (
     <SidebarProvider className="isolate">
@@ -150,11 +150,20 @@ function TailorKitAppScreen({ app, onClose }: { app: TailorKitApp | null; onClos
         </Button>
       </header>
       <main className="min-h-0 flex-1 overflow-auto p-4">
-        <tailor.AppView
+        <AppView
+          viewport="panel"
           app={app}
           fallback={<p className="text-muted-foreground text-sm">Loading app…</p>}
         />
       </main>
     </aside>
+  );
+}
+
+export function TailorKitShell(props: Parameters<typeof TailorKitShellWithApps>[0]) {
+  return (
+    <Root client={tailor}>
+      <TailorKitShellWithApps {...props} />
+    </Root>
   );
 }

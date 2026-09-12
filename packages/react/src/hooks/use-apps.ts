@@ -1,3 +1,4 @@
+import { useTailorRootContext } from "../components/context";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import type { TailorKitApp, TailorKitAppsSnapshot, TailorKitStore } from "../tailor-kit";
 
@@ -12,22 +13,23 @@ export interface UseAppsResult {
   status: "error" | "idle" | "loading" | "ready";
 }
 
-export function createUseApps(store: TailorKitStore): () => UseAppsResult {
-  return function useApps(): UseAppsResult {
-    const snapshot = useSyncExternalStore(
-      store.subscribe,
-      store.getAppsSnapshot,
-      store.getAppsSnapshot,
-    );
+export function useApps(): UseAppsResult {
+  return useAppsStore(useTailorRootContext("useApps").store);
+}
+export function useAppsStore(store: TailorKitStore): UseAppsResult {
+  const snapshot = useSyncExternalStore(
+    store.subscribe,
+    store.getAppsSnapshot,
+    store.getAppsSnapshot,
+  );
 
-    useEffect(() => {
-      void store.fetchApps();
-    }, []);
+  useEffect(() => {
+    void store.fetchApps();
+  }, [store]);
 
-    const refetch = useCallback(() => store.fetchApps({ force: true }), []);
+  const refetch = useCallback(() => store.fetchApps({ force: true }), [store]);
 
-    return toUseAppsResult(snapshot, refetch);
-  };
+  return toUseAppsResult(snapshot, refetch);
 }
 
 function toUseAppsResult(

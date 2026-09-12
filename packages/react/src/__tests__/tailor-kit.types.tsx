@@ -1,3 +1,4 @@
+import { AppView, useScope } from "../index";
 import { createTailorKitServer } from "@tailorkit/core/server";
 import type { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import type { ReactNode } from "react";
@@ -18,20 +19,19 @@ const typedSchema = <TValue,>(): StandardSchemaV1<unknown, TValue> &
   }) as const satisfies StandardSchemaV1<unknown, TValue> & StandardJSONSchemaV1<unknown, TValue>;
 
 const server = createTailorKitServer({
+  viewports: { panel: {}, navbar: {} },
   components: {
     Button: {},
   },
-  screens: {
+  scopes: {
     "/": { context: typedSchema<{ user: { id: string } }>() },
-    "/home": { context: typedSchema<{ page: { title: string }; user: { id: string } }>() },
+    "/home": { context: typedSchema<{ page: { title: string } }>() },
     "/home/detail": {
       context: typedSchema<{
         detail: { id: string };
-        page: { title: string };
-        user: { id: string };
       }>(),
     },
-    "/user": { context: typedSchema<{ user: { id: string }; userId: string }>() },
+    "/user": { context: typedSchema<{ userId: string }>() },
   },
 });
 
@@ -105,47 +105,58 @@ components(callbackServer.$internal.schema, {
   },
 });
 
-tailor.useCurrentScreen({
-  screen: "/home",
-  context: { page: { title: "Home" }, user: { id: "user_1" } },
+useScope({
+  scope: "/home",
+  context: { page: { title: "Home" } },
 });
 
-tailor.useCurrentScreen({ screen: "/user", status: "loading" });
+useScope({ scope: "/user", status: "loading" });
 
-tailor.useCurrentScreen({ screen: "/user", status: "error" });
+useScope({ scope: "/user", status: "error" });
 
 // @ts-expect-error invalid screen name
-tailor.useCurrentScreen({ screen: "missing", context: {} });
+useScope({ scope: "missing", context: {} });
 
 // @ts-expect-error invalid context shape for selected screen
-tailor.useCurrentScreen({ screen: "/user", context: { page: { title: "Home" } } });
+useScope({ scope: "/user", context: { page: { title: "Home" } } });
 
 // @ts-expect-error ready matches require context
-tailor.useCurrentScreen({ screen: "/home" });
+useScope({ scope: "/home" });
 
 // @ts-expect-error loading screens cannot expose partial context
-tailor.useCurrentScreen({ screen: "/user", status: "loading", context: { userId: "user_1" } });
+useScope({ scope: "/user", status: "loading", context: { userId: "user_1" } });
 
-<tailor.AppView app={app} />;
+<AppView viewport="panel" app={app} />;
 
-<tailor.AppView
-  app={app}
-  screen="/home"
-  context={{ page: { title: "Home" }, user: { id: "user_1" } }}
-/>;
+<AppView viewport="panel" app={app} scope="/home" context={{ page: { title: "Home" } }} />;
 
-<tailor.AppView app={app} screen="/user" status="loading" />;
+<AppView viewport="panel" app={app} scope="/user" status="loading" />;
 
-<tailor.AppView app={app} screen="/user" status="error" />;
+<AppView viewport="panel" app={app} scope="/user" status="error" />;
 
 // @ts-expect-error invalid screen name
-<tailor.AppView app={app} screen="missing" context={{}} />;
+<AppView viewport="panel" app={app} scope="missing" context={{}} />;
 
 // @ts-expect-error invalid context shape for selected screen
-<tailor.AppView app={app} screen="/user" context={{ page: { title: "Home" } }} />;
+<AppView viewport="panel" app={app} scope="/user" context={{ page: { title: "Home" } }} />;
 
 // @ts-expect-error ready app views require context when screen is provided
-<tailor.AppView app={app} screen="/home" />;
+<AppView viewport="panel" app={app} scope="/home" />;
 
 // @ts-expect-error loading app views cannot expose context
-<tailor.AppView app={app} screen="/user" status="loading" context={{ userId: "user_1" }} />;
+<AppView
+  viewport="panel"
+  app={app}
+  scope="/user"
+  status="loading"
+  context={{ userId: "user_1" }}
+/>;
+
+declare module "../tailor-kit" {
+  interface Register {
+    client: typeof tailor;
+  }
+}
+
+// @ts-expect-error Unknown host viewport.
+<AppView app={app} viewport="missing" />;

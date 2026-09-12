@@ -20,6 +20,7 @@ export interface IframeUiHost extends RemoteUiStore {
   dispatch(payload: HostToIframePayloadType): void;
   iframe: HTMLIFrameElement;
   mount(): void;
+  setProps(props: Record<string, unknown> | undefined): void;
 }
 
 export interface IframeUiHostOptions {
@@ -48,6 +49,8 @@ export function createIframeUiHost(
   let destroyed = false;
   let iframeReady = false;
   let mounted = false;
+  let currentProps = options.props;
+  let initRevision = 0;
 
   configureIframe(iframe, channel);
 
@@ -63,15 +66,16 @@ export function createIframeUiHost(
     if (!mounted || !iframeReady || destroyed) {
       return;
     }
+    const revision = ++initRevision;
     const appSource = await appSourcePromise;
-    if (destroyed || appSource === null) {
+    if (destroyed || appSource === null || revision !== initRevision) {
       return;
     }
     postToIframe({
       data: {
         appSource,
         appUrl: resolvedAppUrl.toString(),
-        props: options.props,
+        props: currentProps,
       },
       type: "init",
     });
@@ -127,6 +131,13 @@ export function createIframeUiHost(
       postToIframe(payload);
     },
     iframe,
+    setProps(props) {
+      if (currentProps === props || destroyed) {
+        return;
+      }
+      currentProps = props;
+      void sendInit().catch(reportError);
+    },
     mount() {
       if (mounted || destroyed) {
         return;
@@ -260,17 +271,14 @@ function createIframeDocument(channel: string): string {
           return hierarchy;
         };
         const renderClient = (client, props) => {
-          const screens = client && client.screens;
-          if (!screens) throw new Error("TailorKit app client is missing screens.");
-          const requested = props && typeof props.screen === "object" && props.screen !== null
-            ? props.screen
-            : null;
-          const hierarchy = requested && typeof requested.path === "string"
-            ? createScreenHierarchy(requested.path)
-            : [];
-          const selected = hierarchy.find((path) => screens[path] !== undefined);
-          if (!selected) {
-            throw new Error("TailorKit app client does not define the current screen or one of its parents.");
+          const viewport = client && client.viewports && client.viewports[props.viewport];
+          const screens = viewport && viewport.screens;
+          const hierarchy = typeof props.scope === "string" ? createScreenHierarchy(props.scope) : [];
+          const selected = screens && hierarchy.find((path) => Object.hasOwn(screens, path));
+          // Unsupported viewports/scopes and explicit opt-outs clear any previous view.
+          if (!selected || screens[selected] === false) {
+            if (client.$runtime) client.$runtime.render(null, root);
+            return;
           }
           const screen = screens[selected];
           if (typeof screen.component !== "function") {
@@ -280,13 +288,27 @@ function createIframeDocument(channel: string): string {
               typeof client.$runtime.render !== "function") {
             throw new TypeError("TailorKit app client is missing its bundled Preact runtime.");
           }
-          const selectedProps = {
-            context: requested && requested.context,
-            screen: selected,
-            status: requested && (requested.status === "error" || requested.status === "loading")
-              ? requested.status
-              : "ready"
-          };
+          const ancestors = createScreenHierarchy(selected).reverse();
+          const layers = Array.isArray(props.layers) ? props.layers : [];
+          const required = props.declaredScopes || [];
+          let status = "ready";
+          const context = {};
+          for (const path of ancestors) {
+            const layer = layers.find((entry) => entry.path === path);
+            if (!layer) {
+              if (required.includes(path) || path === selected) status = "error";
+              continue;
+            }
+            if (layer.status === "error") status = "error";
+            else if (layer.status === "loading" && status !== "error") status = "loading";
+            if (layer.status === "ready" && layer.context) {
+              for (const key of Object.keys(layer.context)) {
+                if (Object.hasOwn(context, key)) throw new Error('Duplicate scope context field "' + key + '".');
+                context[key] = layer.context[key];
+              }
+            }
+          }
+          const selectedProps = { context: status === "ready" ? context : undefined, screen: selected, status };
           client.$runtime.render(client.$runtime.h(screen.component, selectedProps), root);
         };
         const loadApp = async ({ appSource, appUrl, props = {} }) => {
@@ -309,12 +331,13 @@ function createIframeDocument(channel: string): string {
           sendSnapshot();
         };
 
+        let pendingLoad = Promise.resolve();
         addEventListener("message", (event) => {
           if (event.source !== parent || event.data?.channel !== channel ||
               event.data.type !== messageType) return;
           const payload = event.data.payload;
           if (payload?.type === "init" && payload.data) {
-            loadApp(payload.data).catch(sendError);
+            pendingLoad = pendingLoad.then(() => loadApp(payload.data)).catch(sendError);
             return;
           }
           if (payload?.type === "dispatchCallback" && payload.data) {

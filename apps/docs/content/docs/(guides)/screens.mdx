@@ -1,221 +1,188 @@
 ---
-title: Screens
-description: Publish typed route context to TailorKit apps.
+title: Scopes, screens, and viewports
+description: Publish layered host context and render one app screen per viewport.
 ---
 
-A screen connects a place in your host product to an app view. The basic flow
-has three parts: define the screen, publish its context, and render the app.
+A **scope** describes the host situation, such as `/users/detail`. Its **context**
+is the data the host supplies. A **viewport** is a place the host renders an app.
+A **screen** is the app implementation selected for that viewport and scope.
 
-TailorKit does not own your router or inspect the browser URL. Your route tells
-TailorKit which screen is current.
+TailorKit does not inspect the browser URL. Paths describe a hierarchy that the
+host publishes explicitly.
 
-## Define a screen
+## Define the host contract
 
-Add a stable path and its context to the server contract:
-
-```ts title="src/lib/tailorkit.ts"
-import { createTailorKit } from "tailorkit";
-import { z } from "zod";
-
+```ts
 export const tailorKit = createTailorKit({
   components: {},
-  screens: {
-    "/customers": {
-      context: z.object({
-        customers: z.array(
-          z.object({
-            id: z.string(),
-            name: z.string(),
-          }),
-        ),
-      }),
+  viewports: { navbar: {}, panel: {} },
+  scopes: {
+    "/": { context: z.object({ workspaceId: z.string() }) },
+    "/users": { context: z.object({ canManageUsers: z.boolean() }) },
+    "/users/detail": { context: z.object({ user: userSchema }) },
+  },
+});
+```
+
+Each scope declares only its own fields. Ancestor fields are composed into the
+context received by app screens. A field must have one owning scope: duplicate
+field names across ancestors are rejected by the type checker and runtime.
+
+## Configure React once
+
+```tsx
+import { createTailorKitClient } from "tailorkit/react";
+import type { tailorKit } from "./tailorkit";
+
+export const client = createTailorKitClient<typeof tailorKit>({
+  baseUrl: "https://example.com/api/tailorkit/",
+});
+
+declare module "tailorkit/react" {
+  interface Register {
+    client: typeof client;
+  }
+}
+```
+
+The registration types the standalone host hooks. Pass the stable client
+configuration to `Root`; all rendering and hooks below it use React context.
+Each root owns an independent registry, even when roots share a client.
+
+```tsx
+import { Root, AppView } from "tailorkit/react";
+
+function Host({ app, children }) {
+  return (
+    <Root client={client}>
+      <nav>
+        <AppView app={app} viewport="navbar" />
+      </nav>
+      <main>{children}</main>
+      <aside>
+        <AppView app={app} viewport="panel" />
+      </aside>
+    </Root>
+  );
+}
+```
+
+Use `useApps()` below `Root` to load installed apps. The client configuration
+no longer exposes bound React hooks or components.
+
+## Publish each layer
+
+Call `useScope` in the layout or page that owns the data:
+
+```tsx
+import { useScope } from "tailorkit/react";
+
+function WorkspaceLayout({ workspaceId }) {
+  useScope({ scope: "/", context: { workspaceId } });
+  return <Outlet />;
+}
+
+function UsersLayout({ canManageUsers }) {
+  useScope({ scope: "/users", context: { canManageUsers } });
+  return <Outlet />;
+}
+
+function UserDetail({ user }) {
+  useScope({ scope: "/users/detail", context: { user } });
+  return <UserDetails user={user} />;
+}
+```
+
+The deepest mounted scope is current. Only its ancestors contribute context.
+Unmounting detail returns to the parent scope. Register one active route branch
+per root; unrelated simultaneous branches are ambiguous.
+
+Every declared ancestor must be mounted to render a descendant screen. A missing
+ancestor produces the selected screen's error state rather than partial context.
+Undeclared intermediate path segments do not require registrations.
+
+## Implement screens per viewport
+
+```tsx
+const detail = createScreen("/users/detail", { component: UserTools });
+
+function UserTools() {
+  const { workspaceId, canManageUsers, user } = detail.useContext();
+  return <UserActions user={user} canManageUsers={canManageUsers} />;
+}
+
+export default defineClient({
+  viewports: {
+    navbar: { screens: { "/": navigation } },
+    panel: {
+      screens: {
+        "/users": generalUserTools,
+        "/users/detail": detail,
+      },
     },
   },
 });
 ```
 
-## Publish the current screen
+On `/users/detail`, the navbar renders `navigation` and the panel renders
+`detail`. The panel does not also render `generalUserTools`. Parent contexts
+compose; parent components do not.
 
-Call the hook in the client route that owns the data:
-
-```tsx
-function CustomersPage({ customers }) {
-  tailor.useCurrentScreen({
-    screen: "/customers",
-    context: { customers },
-  });
-
-  return <CustomerList customers={customers} />;
-}
-```
-
-The hook must be rendered below `tailor.Root`. Supplying `context` means the
-screen is ready; no status is needed.
-
-## Render an app
-
-`AppView` uses the current screen automatically:
+Each viewport searches the active path, then its ancestors, ending at `/`.
+Fallback never crosses viewport boundaries. An unsupported viewport or unmatched
+scope renders nothing. Set a screen entry to `false` to explicitly stop fallback:
 
 ```tsx
-<tailor.AppView app={app} />
+panel: { screens: { "/": generalTools, "/users/detail": false } }
 ```
 
-That is the complete ready-state setup. The sections below cover unresolved
-data, nested routes, and less common integrations.
+## Loading and errors
 
-## Loading and error states
-
-Publish a status when the complete context is not available:
+Keep the scope registered while its context is unresolved:
 
 ```tsx
-function CustomersPage() {
-  const query = useQuery({
-    queryKey: ["customers"],
-    queryFn: getCustomers,
-  });
-
-  tailor.useCurrentScreen(
-    query.isPending
-      ? { screen: "/customers", status: "loading" }
-      : query.isError
-        ? { screen: "/customers", status: "error" }
-        : { screen: "/customers", context: { customers: query.data } },
-  );
-
-  return query.data ? <CustomerList customers={query.data} /> : null;
-}
+useScope(
+  query.isPending
+    ? { scope: "/users/detail", status: "loading" }
+    : query.isError
+      ? { scope: "/users/detail", status: "error" }
+      : { scope: "/users/detail", context: { user: query.data } },
+);
 ```
 
-Loading and error states do not need context and cannot receive it. This keeps
-stale or incomplete route data out of the app. An app may define matching
-loading and error UI; otherwise it renders nothing until the context is ready.
+Loading/error publications cannot contain context. Resolve the screen first,
+then combine readiness for that screen and its ancestors. Errors take priority
+over loading. Descendant loading does not block a parent screen in another
+viewport. Loading never triggers fallback to a different implementation.
 
-## Nested screens
+Apps can provide `loading` and `error` components to `createScreen`; omitted
+handlers render nothing. `useContext()` is available only to the ready component.
 
-Screen paths form a hierarchy. If the current path is
-`/pages/customers/detail`, TailorKit tries these paths for each app:
+Call the hook before early returns. When using Suspense or router loaders,
+publish the loading/error scope from a boundary that actually mounts in that
+state. A suspended component cannot publish a registration before it commits.
+For Server Components, pass serializable data to a small Client Component that
+calls `useScope`.
 
-1. `/pages/customers/detail`
-2. `/pages/customers`
-3. `/pages`
-4. `/`
+## Explicit mounts
 
-The first path implemented by the app is used. The complete context from the
-current nested screen is passed to it.
-
-Every nested context must therefore include the context of its closest defined
-parent. Extend the parent schema to make this clear:
-
-```ts
-const pagesContext = z.object({ user });
-const customersContext = pagesContext.extend({
-  customers: z.array(customer),
-});
-const detailContext = customersContext.extend({
-  customer,
-});
-
-const screens = {
-  "/pages": { context: pagesContext },
-  "/pages/customers": { context: customersContext },
-  "/pages/customers/detail": { context: detailContext },
-};
-```
-
-TailorKit checks this relationship when the server contract is defined. A
-nested route publishes only its own path and complete context; TailorKit derives
-the parent paths. The rule is transitive, so a deeply nested context also
-contains the context defined at `/` when a root screen exists.
-
-## Layouts and nested routes
-
-A parent layout can remain registered while a nested route is mounted:
+A widget or dedicated page can choose its own scope independently of the current
+route:
 
 ```tsx
-function PagesLayout({ user }) {
-  tailor.useCurrentScreen({
-    screen: "/pages",
-    context: { user },
-  });
-
-  return <Outlet />;
-}
-
-function CustomerRoute({ customer, customers, user }) {
-  tailor.useCurrentScreen({
-    screen: "/pages/customers/detail",
-    context: { user, customers, customer },
-  });
-
-  return <CustomerDetails customer={customer} />;
-}
+<AppView app={app} viewport="panel" scope="/users/detail" context={{ user }} />
 ```
 
-TailorKit chooses the deepest mounted path. When the nested route unmounts, the
-layout becomes current again. Avoid mounting unrelated screens at the same
-depth; the result is ambiguous and produces a development warning.
+The override supplies that scope's own context; matching mounted ancestors still
+supply inherited fields. It does not change other mounts or the current scope.
+Explicit mounts use the same viewport-local ancestor fallback rules.
 
-## Server Components
+## Migrating
 
-Hooks cannot run in a React Server Component. Load the data on the server and
-pass its serializable context to a small Client Component:
-
-```tsx title="customer-screen.tsx"
-"use client";
-
-export function CustomerScreen({ customers }) {
-  tailor.useCurrentScreen({
-    screen: "/customers",
-    context: { customers },
-  });
-
-  return null;
-}
-```
-
-Render this bridge from the Server Component. Client-routed applications can
-call the hook directly in their route component.
-
-## Override the current screen
-
-Most views should use the current route registration. A view that is independent
-of the route can provide its screen directly:
-
-```tsx
-<tailor.AppView app={app} screen="/customers" context={{ customers }} />
-```
-
-Explicit loading and error states use the same shape as the hook:
-
-```tsx
-<tailor.AppView app={app} screen="/customers" status="loading" />
-```
-
-## Load installed apps
-
-Use `useApps()` to load the apps available to the current authenticated scope:
-
-```tsx
-const { data: apps, error, status } = tailor.useApps();
-```
-
-`getApps()` and `getApp(id)` return the current cached snapshot outside React.
-
-`AppView` normally resolves the client from the app registry. A local or custom
-app can provide its client path directly:
-
-```tsx
-<tailor.AppView
-  app={{
-    id: "todo",
-    clientPath: "/tailorkit/todo/client.js",
-  }}
-/>
-```
-
-## Responsibility boundary
-
-The host owns routing, data fetching, permissions, and the context exposed to
-apps. TailorKit tracks mounted registrations, selects the deepest current path,
-finds the closest screen each app implements, and passes it the complete
-context.
+- Host `screens` becomes `scopes`; app `createScreen` retains its name.
+- Declare host `viewports` and move app registrations into `viewports[name].screens`.
+- Replace `tailor.Root` with `Root client={client}` and import `AppView`, `useApps`,
+  and `useScope` directly from `tailorkit/react`.
+- Replace `useCurrentScreen({ screen, ... })` with `useScope({ scope, ... })`.
+- Publish only each scope's own context. Keep declared ancestor layouts mounted.
+- Add a `viewport` to every `AppView` and regenerate app bindings.

@@ -1,3 +1,4 @@
+import { AppView, Root } from "tailorkit/react";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowUpRight,
@@ -17,8 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { ComponentType } from "react";
-import type { TailorKitApp } from "tailorkit/react";
+
 import { defaultData, loadCrmData, saveCrmData } from "#lib/crm-store";
 import type { Contact, CrmData } from "#lib/crm-store";
 import { marketplaceApps, tailor } from "#lib/tailorkit-client";
@@ -603,7 +603,6 @@ function MarketplaceApp({ appId, onClose }: { appId: string; onClose: () => void
   if (!app) {
     return null;
   }
-  const AppView = tailor.AppView as unknown as ComponentType<{ app: TailorKitApp; screen: string }>;
 
   return (
     <aside className="app-panel" data-app-id={app.id}>
@@ -624,11 +623,11 @@ function MarketplaceApp({ appId, onClose }: { appId: string; onClose: () => void
         </button>
       </div>
       <p className="app-description">{app.description}</p>
-      <tailor.Root apps={marketplaceApps}>
+      <Root client={tailor} apps={marketplaceApps}>
         <div className="tailorkit-app-view">
-          <AppView app={app} screen="/" />
+          <AppView viewport="panel" app={app} scope="/" context={{}} />
         </div>
-      </tailor.Root>
+      </Root>
       <p className="panel-note">Built and rendered by TailorKit’s app runtime.</p>
     </aside>
   );

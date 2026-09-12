@@ -17,9 +17,10 @@ const actionRecord: z.ZodType<ActionRecord> = z.lazy(() =>
 
 export const TailorKitSchemaSpec = z.object({
   version: z.literal(1),
+  viewports: z.record(z.string().min(1), z.object({})).default({}),
   actions: actionRecord.default({}),
   components: componentRecord,
-  screens: screenRecord.default({}),
+  scopes: screenRecord.default({}),
 });
 
 export type TailorKitSchemaSpec = z.infer<typeof TailorKitSchemaSpec>;

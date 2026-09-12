@@ -1,8 +1,8 @@
 import { expectTypeOf } from "vitest";
 import type { z } from "zod";
-import type { ScreenDefinition, ScreenDefinitions } from "./screens";
+import type { ScopeDefinition, ScopeDefinitions } from "./scopes";
 
-type CustomerScreen = ScreenDefinition<z.ZodObject<{ customerId: z.ZodString }>>;
+type CustomerScreen = ScopeDefinition<z.ZodObject<{ customerId: z.ZodString }>>;
 
 expectTypeOf<CustomerScreen>().toMatchTypeOf<{
   context?: z.ZodObject<{ customerId: z.ZodString }>;
@@ -10,4 +10,4 @@ expectTypeOf<CustomerScreen>().toMatchTypeOf<{
 
 expectTypeOf<{
   "/customers/:customerId": CustomerScreen;
-}>().toMatchTypeOf<ScreenDefinitions>();
+}>().toMatchTypeOf<ScopeDefinitions>();

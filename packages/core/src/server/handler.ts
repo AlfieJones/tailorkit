@@ -5,7 +5,7 @@ import type {
   NoComponentFieldCallbackConflicts,
   NoMixedActionContexts,
   ResolveActionTreeContext,
-  ScreenContextHierarchy,
+  ScopeContextHierarchy,
 } from "../schema/index";
 import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
@@ -16,7 +16,7 @@ import { tailorkitRouter } from "./router";
 import type {
   InferTailorKitServerActions,
   InferTailorKitServerComponents,
-  InferTailorKitServerScreens,
+  InferTailorKitServerScopes,
   TailorKitHandlerOptions,
   TailorKitServer,
   TailorKitServerInputOptions,
@@ -31,26 +31,29 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
       NoMixedActionContexts<InferTailorKitServerActions<TOptions>>;
     components: InferTailorKitServerComponents<TOptions> &
       NoComponentFieldCallbackConflicts<InferTailorKitServerComponents<TOptions>>;
-    screens?: InferTailorKitServerScreens<TOptions> &
-      ScreenContextHierarchy<InferTailorKitServerScreens<TOptions>>;
+    scopes?: InferTailorKitServerScopes<TOptions> &
+      ScopeContextHierarchy<InferTailorKitServerScopes<TOptions>>;
   },
 ): TailorKitServer<
   InferTailorKitServerComponents<TOptions>,
-  InferTailorKitServerScreens<TOptions>,
+  InferTailorKitServerScopes<TOptions>,
   InferTailorKitServerActions<TOptions>
-> {
+> & {
+  readonly $viewportNames?: TOptions extends { viewports: infer V } ? keyof V & string : never;
+} {
   const basePath = normalizeBasePath(options.basePath ?? "/api/tailorkit");
   const schema = createTailorKitSchema<
     InferTailorKitServerComponents<TOptions>,
-    InferTailorKitServerScreens<TOptions>,
+    InferTailorKitServerScopes<TOptions>,
     InferTailorKitServerActions<TOptions>
   >({
     actions: options.actions as
       | (InferTailorKitServerActions<TOptions> &
           NoMixedActionContexts<InferTailorKitServerActions<TOptions>>)
       | undefined,
+    viewports: options.viewports,
     components: options.components,
-    screens: options.screens,
+    scopes: options.scopes,
   });
   const platformBaseUrl = options.$internal?.platformBaseUrl ?? defaultPlatformBaseUrl;
   const assetsBaseUrl = options.assetsBaseUrl;

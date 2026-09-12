@@ -27,7 +27,7 @@ actions. Those host-controlled edges require the same care as any public API.
 
 ## Minimize screen context
 
-Every field published through `useCurrentScreen()` is visible to the app rendering that
+Every field published through `useScope()` is visible to the app rendering that
 screen. Pass view models designed for the app contract, not database records,
 sessions, access tokens, or broad route-loader objects.
 

@@ -25,11 +25,10 @@ createTailorKitSchema({
 
 createTailorKitSchema({
   components: {},
-  screens: {
+  scopes: {
     "/pages": {
       context: z.object({ userId: z.string() }),
     },
-    // @ts-expect-error nested screen contexts must include their parent context
     "/pages/detail": {
       context: z.object({ pageId: z.string() }),
     },
@@ -45,7 +44,7 @@ const tailor = createTailorKitSchema({
       children: true,
     },
   },
-  screens: {
+  scopes: {
     "/": {},
     "/customers/:customerId": {
       context: z.object({ customerId: z.string() }),
@@ -65,7 +64,7 @@ const tailor = createTailorKitSchema({
 });
 
 const component = tailor.components.Button;
-const screen = tailor.screens["/customers/:customerId"];
+const screen = tailor.scopes["/customers/:customerId"];
 const noSchemaAction = tailor.actions.noSchemas;
 void component;
 void screen;
@@ -166,5 +165,14 @@ createTailorKitSchema({
         variant: {},
       },
     },
+  },
+});
+
+createTailorKitSchema({
+  components: {},
+  scopes: {
+    "/": { context: z.object({ workspaceId: z.string() }) },
+    // @ts-expect-error Each field has one owning scope.
+    "/users/detail": { context: z.object({ workspaceId: z.string() }) },
   },
 });

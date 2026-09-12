@@ -1,3 +1,4 @@
+import { AppView, Root, useApps, useScope } from "tailorkit/react";
 import type { DemoUser } from "@examples/shared";
 import { Button } from "@tailorkit/ui/components/button";
 import { SidebarInset, SidebarProvider } from "@tailorkit/ui/components/sidebar";
@@ -8,9 +9,9 @@ import type { TailorKitApp } from "tailorkit/react";
 import { AppSidebar } from "#components/app-sidebar";
 import tailor from "#lib/tailorkit-client";
 
-type Apps = NonNullable<ReturnType<typeof tailor.useApps>["data"]>;
+type Apps = NonNullable<ReturnType<typeof useApps>["data"]>;
 
-export function TailorKitShell({
+function TailorKitShellWithApps({
   children,
   user,
   signOut,
@@ -19,21 +20,19 @@ export function TailorKitShell({
   signOut: () => Promise<void>;
   user: DemoUser;
 }) {
-  const { data: apps } = tailor.useApps();
+  const { data: apps } = useApps();
   const [currentApp, setCurrentApp] = useState<TailorKitApp | null>(null);
 
   return (
-    <tailor.Root apps={apps}>
-      <TailorKitShellContent
-        apps={apps ?? []}
-        currentApp={currentApp}
-        onSelectApp={setCurrentApp}
-        signOut={signOut}
-        user={user}
-      >
-        {children}
-      </TailorKitShellContent>
-    </tailor.Root>
+    <TailorKitShellContent
+      apps={apps ?? []}
+      currentApp={currentApp}
+      onSelectApp={setCurrentApp}
+      signOut={signOut}
+      user={user}
+    >
+      {children}
+    </TailorKitShellContent>
   );
 }
 
@@ -52,7 +51,7 @@ function TailorKitShellContent({
   signOut: () => Promise<void>;
   user: DemoUser;
 }) {
-  tailor.useCurrentScreen({ context: { user }, screen: "/" });
+  useScope({ context: { user }, scope: "/" });
 
   return (
     <SidebarProvider>
@@ -125,8 +124,16 @@ function TailorKitAppScreen({ app, onClose }: { app: TailorKitApp | null; onClos
         </Button>
       </header>
       <main className="min-h-0 flex-1 overflow-auto p-4">
-        <tailor.AppView app={app} />
+        <AppView viewport="panel" app={app} />
       </main>
     </aside>
+  );
+}
+
+export function TailorKitShell(props: Parameters<typeof TailorKitShellWithApps>[0]) {
+  return (
+    <Root client={tailor}>
+      <TailorKitShellWithApps {...props} />
+    </Root>
   );
 }

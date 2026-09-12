@@ -44,7 +44,8 @@ interface SerializedAction {
 interface TailorKitSchemaFile {
   actions?: SerializedActions;
   components?: Record<string, SerializedComponent>;
-  screens?: Record<string, SerializedScreen>;
+  scopes?: Record<string, SerializedScreen>;
+  viewports?: Record<string, unknown>;
 }
 
 export interface GenerateTypesOptions {
@@ -328,8 +329,19 @@ const renderTypeAliases = (
 const renderScreenProps = (screens: Record<string, SerializedScreen>): string => {
   const lines = ["export interface ScreenPropsByPath {"];
 
-  for (const [screenPath, screen] of Object.entries(screens)) {
-    const context = toTypeScriptType(screen.context, 4);
+  for (const screenPath of Object.keys(screens)) {
+    const contexts = Object.entries(screens)
+      .filter(
+        ([parent]) =>
+          parent === screenPath || parent === "/" || screenPath.startsWith(`${parent}/`),
+      )
+      .filter(([, layer]) => layer.context !== undefined)
+      .map(([, layer]) => toTypeScriptType(layer.context, 4))
+      .filter((context) => context !== "Record<string, never>");
+    const context =
+      contexts.length > 1
+        ? contexts.map((context) => `(${context})`).join(" & ")
+        : (contexts[0] ?? "Record<string, never>");
     const contextLines = context.split("\n");
     lines.push(`  ${quote(screenPath)}: {`);
     lines.push(`    context: ${contextLines[0]}`);
@@ -450,9 +462,12 @@ export const renderGeneratedTypes = (schema: TailorKitSchemaFile): string => {
   const fieldAliases = collectFieldTypeAliases(components);
   const chunks = [
     generatedHeader,
-    renderScreenProps(schema.screens ?? {}),
+    renderScreenProps(schema.scopes ?? {}),
     `declare module "tailorkit/app" {
   interface TailorKitScreens extends ScreenPropsByPath {}
+  interface TailorKitViewports { ${Object.keys(schema.viewports ?? {})
+    .map((name) => `${quote(name)}: unknown;`)
+    .join(" ")} }
 }
 
 export type ScreenPath = keyof ScreenPropsByPath & string;

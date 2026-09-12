@@ -17,6 +17,7 @@ export interface ScreenPropsByPath {
 
 declare module "@tailorkit/app" {
   interface TailorKitScreens extends ScreenPropsByPath {}
+  interface TailorKitViewports { panel: unknown; navbar: unknown }
 }
 
 export type ScreenPath = keyof ScreenPropsByPath & string;

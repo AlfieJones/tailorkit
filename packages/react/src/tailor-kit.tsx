@@ -7,15 +7,13 @@ import type {
   ComponentDefinition,
   ComponentProps,
   Schema,
-  ScreenDefinition,
+  ScopeDefinition,
   TailorKitSchema,
 } from "@tailorkit/core/schema";
 import type { primitives } from "./primitives";
-import { Root } from "./components";
-import { createUseApps } from "./hooks/use-apps";
-import type { UseAppsResult } from "./hooks/use-apps";
-import { createUseCurrentScreen } from "./hooks/use-current-screen";
-import type { CurrentScreenOptions, ScreenName } from "./hooks/use-current-screen";
+import { useTailorRootContext } from "./components/context";
+
+import type { ScopeOptions, ScreenName } from "./hooks/use-scope";
 import { buildThemeCss, PrimitiveThemeContext } from "./primitives";
 import { RemoteViewHost } from "./remote-view";
 
@@ -78,27 +76,28 @@ interface AppViewBaseProps {
   app: TailorKitApp;
   createIframe?: () => HTMLIFrameElement;
   fallback?: ReactNode;
+  viewport: RegisteredViewports;
 }
 
 type AppViewScreenProps<
-  TScreens extends Record<string, ScreenDefinition>,
+  TScreens extends Record<string, ScopeDefinition>,
   TScreen extends ScreenName<TScreens> = ScreenName<TScreens>,
 > = [ScreenName<TScreens>] extends [never]
   ? {
       context?: never;
-      screen?: never;
+      scope?: never;
       status?: never;
     }
   :
       | {
           context?: never;
-          screen?: never;
+          scope?: never;
           status?: never;
         }
-      | CurrentScreenOptions<TScreens, TScreen>;
+      | ScopeOptions<TScreens, TScreen>;
 
 export type AppViewProps<
-  TScreens extends Record<string, ScreenDefinition>,
+  TScreens extends Record<string, ScopeDefinition> = RegisteredScopes,
   TScreen extends ScreenName<TScreens> = ScreenName<TScreens>,
 > = AppViewBaseProps & AppViewScreenProps<TScreens, TScreen>;
 
@@ -110,17 +109,24 @@ const toComponentTagName = (name: string): string =>
     .replaceAll(/[\s_]+/gu, "-")
     .toLowerCase()}`;
 
+// Augment Register once in the host to type the context-based hooks.
+// oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
+export interface Register {}
+export type RegisteredScopes = Register extends { client: TailorKitInstance<infer S> }
+  ? S
+  : Record<`/${string}`, ScopeDefinition>;
+export type RegisteredViewports = Register extends { client: { readonly $viewportNames?: infer V } }
+  ? Extract<V, string>
+  : string;
 export interface TailorKitInstance<
-  TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+  TScopes extends Record<string, ScopeDefinition> = Record<string, ScopeDefinition>,
+  TViewports extends string = string,
 > {
-  AppView: (props: AppViewProps<TScreens>) => ReactNode;
-  Root: (props: Omit<Parameters<typeof Root>[0], "tailor">) => ReactNode;
-  getApp: (id: string) => TailorKitApp | undefined;
-  getApps: () => TailorKitApp[];
-  useApps: () => UseAppsResult;
-  useCurrentScreen: <TScreen extends ScreenName<TScreens>>(
-    options: CurrentScreenOptions<TScreens, TScreen>,
-  ) => void;
+  readonly $viewportNames?: TViewports;
+  readonly $scopes?: TScopes;
+  readonly baseUrl: string | URL;
+  readonly components: Record<string, unknown>;
+  readonly theme: TailorKitTheme;
 }
 
 type PrimitiveRenderers = typeof primitives;
@@ -131,7 +137,7 @@ type CustomComponentRenderers<TComponents extends Record<string, AnyComponentDef
 };
 
 export function components<TComponents extends Record<string, AnyComponentDefinition>>(
-  _schema: TailorKitSchema<TComponents, Record<string, ScreenDefinition>>,
+  _schema: TailorKitSchema<TComponents, Record<string, ScopeDefinition>>,
   customComponents: CustomComponentRenderers<TComponents>,
 ): ComponentRenderers<TComponents> {
   return customComponents as ComponentRenderers<TComponents>;
@@ -141,7 +147,7 @@ interface TailorKitServerShape {
   $internal: {
     schema: {
       components: Record<string, unknown>;
-      screens: Record<string, unknown>;
+      scopes: Record<string, unknown>;
     };
   };
 }
@@ -158,12 +164,10 @@ type ServerComponents<TTailor extends TailorKitServerShape> = {
 };
 
 type ServerScreenMap<TTailor extends TailorKitServerShape> =
-  TTailor["$internal"]["schema"]["screens"];
+  TTailor["$internal"]["schema"]["scopes"];
 
 type ServerScreens<TTailor extends TailorKitServerShape> = {
-  [
-    TName in keyof ServerScreenMap<TTailor>
-  ]: ServerScreenMap<TTailor>[TName] extends ScreenDefinition
+  [TName in keyof ServerScreenMap<TTailor>]: ServerScreenMap<TTailor>[TName] extends ScopeDefinition
     ? ServerScreenMap<TTailor>[TName]
     : never;
 };
@@ -172,20 +176,28 @@ export function createTailorKitClient<TTailor extends TailorKitServerShape>(opti
   baseUrl: string | URL;
   components?: CompleteComponentRenderers<ServerComponents<TTailor>>;
   theme?: TailorKitTheme;
-}): TailorKitInstance<ServerScreens<TTailor>> {
-  return createReactTailorKitClient<ServerComponents<TTailor>, ServerScreens<TTailor>>(options);
+}): TailorKitInstance<
+  ServerScreens<TTailor>,
+  TTailor extends { readonly $viewportNames?: infer V } ? Extract<V, string> : string
+> {
+  return createReactTailorKitClient<
+    ServerComponents<TTailor>,
+    ServerScreens<TTailor>,
+    TTailor extends { readonly $viewportNames?: infer V } ? Extract<V, string> : string
+  >(options);
 }
 
 function createReactTailorKitClient<
   TComponents extends Record<string, AnyComponentDefinition>,
-  TScreens extends Record<string, ScreenDefinition> = Record<string, never>,
+  TScreens extends Record<string, ScopeDefinition> = Record<string, never>,
+  TViewports extends string = string,
 >(options: {
   baseUrl: string | URL;
   components?: ComponentRenderers<TComponents>;
   theme?: TailorKitTheme;
-}): TailorKitInstance<TScreens> {
+}): TailorKitInstance<TScreens, TViewports> {
   const wrappedComponents: Record<string, unknown> = {};
-  const store = createTailorKitStore(options.baseUrl);
+
   const theme = options.theme ?? {};
 
   for (const [name, renderer] of Object.entries(options.components ?? {})) {
@@ -204,100 +216,92 @@ function createReactTailorKitClient<
     }
   }
 
-  const useApps = createUseApps(store);
-  const useCurrentScreen = createUseCurrentScreen<TScreens>(store);
+  return { baseUrl: options.baseUrl, components: wrappedComponents, theme };
+}
 
-  const AppView = ({
-    app,
-    createIframe,
-    fallback = null,
-    ...screenProps
-  }: AppViewProps<TScreens>): ReactNode => {
-    const reactId = useId();
-    const currentScreen = useSyncExternalStore(
-      store.subscribe,
-      store.getCurrentScreen,
-      store.getCurrentScreen,
-    );
-    const screen = (screenProps as { screen?: string }).screen;
-    const context = (screenProps as { context?: unknown }).context;
-    const status = (screenProps as { status?: "error" | "loading" | "ready" }).status ?? "ready";
-    const props = useMemo(() => {
-      if (screen !== undefined) {
-        return {
-          screen: {
-            context,
-            path: screen,
-            status,
-          },
-        };
-      }
-
-      return currentScreen === null
+export const AppView = ({
+  app,
+  viewport,
+  createIframe,
+  fallback = null,
+  ...screenProps
+}: AppViewProps): ReactNode => {
+  const { store, client } = useTailorRootContext("AppView");
+  const { theme, components: wrappedComponents } = client;
+  const reactId = useId();
+  const currentScreen = useSyncExternalStore(
+    store.subscribe,
+    store.getCurrentScreen,
+    store.getCurrentScreen,
+  );
+  const scope = (screenProps as { scope?: string }).scope;
+  const context = (screenProps as { context?: unknown }).context;
+  const status = (screenProps as { status?: "error" | "loading" | "ready" }).status ?? "ready";
+  const props = useMemo(() => {
+    if (scope !== undefined) {
+      return {
+        viewport,
+        scope,
+        layers: [
+          ...(currentScreen?.layers ?? []).filter(
+            (layer) =>
+              layer.path !== scope && (layer.path === "/" || scope.startsWith(`${layer.path}/`)),
+          ),
+          { path: scope, context, status },
+        ],
+      };
+    }
+    return currentScreen === null ? undefined : { viewport, ...currentScreen };
+  }, [context, currentScreen, scope, status, viewport]);
+  const meta = useSyncExternalStore(store.subscribe, store.getMetaSnapshot, store.getMetaSnapshot);
+  const runtimeProps = useMemo(
+    () =>
+      props === undefined
         ? undefined
         : {
-            screen: {
-              context: currentScreen.context,
-              path: currentScreen.screen,
-              status: currentScreen.status,
-            },
-          };
-    }, [context, currentScreen, screen, status]);
-    const meta = useSyncExternalStore(
-      store.subscribe,
-      store.getMetaSnapshot,
-      store.getMetaSnapshot,
-    );
-    const assetsBaseUrl = app.clientPath ? null : meta.assetsBaseUrl;
-    const appUrl = useMemo(
-      () => resolveAppUrl(app, store.baseUrl, assetsBaseUrl),
-      [app, assetsBaseUrl],
-    );
+            ...props,
+            declaredScopes: Object.keys(meta.schema?.scopes ?? {}),
+          },
+    [props, meta.schema],
+  );
+  const assetsBaseUrl = app.clientPath ? null : meta.assetsBaseUrl;
+  const appUrl = useMemo(
+    () => resolveAppUrl(app, store.baseUrl, assetsBaseUrl),
+    [app, assetsBaseUrl, store.baseUrl],
+  );
 
-    useEffect(() => {
-      void store.fetchMeta();
-    }, []);
+  useEffect(() => {
+    void store.fetchMeta();
+  }, [store]);
 
-    if (props === undefined || appUrl === null) {
-      return fallback;
-    }
+  if (
+    props === undefined ||
+    appUrl === null ||
+    (meta.schema === null && !(app.clientPath && scope === "/"))
+  ) {
+    return fallback;
+  }
 
-    const screenId = `tailorkit-screen-${reactId.replaceAll(":", "")}`;
+  const screenId = `tailorkit-screen-${reactId.replaceAll(":", "")}`;
 
-    return (
-      <PrimitiveThemeContext.Provider value={{ screenId, theme }}>
-        <div data-tailorkit-screen={screenId}>
-          <style data-tailorkit-theme-style={screenId}>{buildThemeCss(screenId, theme)}</style>
-          <RemoteViewHost
-            appUrl={appUrl}
-            components={wrappedComponents}
-            createIframe={createIframe}
-            props={props}
-          />
-        </div>
-      </PrimitiveThemeContext.Provider>
-    );
-  };
-
-  const client = {
-    AppView,
-    Root: (props: Omit<Parameters<typeof Root>[0], "tailor">) => (
-      <Root {...props} tailor={client} />
-    ),
-    getApp: store.getApp,
-    getApps: store.getApps,
-    useApps,
-    useCurrentScreen,
-  };
-
-  return {
-    ...client,
-  } as TailorKitInstance<TScreens>;
-}
+  return (
+    <PrimitiveThemeContext.Provider value={{ screenId, theme }}>
+      <div data-tailorkit-screen={screenId}>
+        <style data-tailorkit-theme-style={screenId}>{buildThemeCss(screenId, theme)}</style>
+        <RemoteViewHost
+          appUrl={appUrl.toString()}
+          components={wrappedComponents}
+          createIframe={createIframe}
+          props={runtimeProps}
+        />
+      </div>
+    </PrimitiveThemeContext.Provider>
+  );
+};
 
 export type TailorKitStore = ReturnType<typeof createTailorKitStore>;
 
-function createTailorKitStore(baseUrlInput: string | URL) {
+export function createTailorKitStore(baseUrlInput: string | URL) {
   const baseUrl = toBaseUrl(baseUrlInput);
   const listeners = new Set<() => void>();
   const screens = new Map<symbol, CurrentScreenEntry>();
@@ -312,7 +316,11 @@ function createTailorKitStore(baseUrlInput: string | URL) {
     schema: null,
     status: "idle",
   };
-  let currentScreen: CurrentScreenEntry | null = null;
+  let currentScreen: {
+    scope: string;
+    layers: { path: string; context: unknown; status: "ready" | "loading" | "error" }[];
+  } | null = null;
+  let scheduled = false;
   let fetchAppsPromise: Promise<void> | null = null;
   let fetchMetaPromise: Promise<void> | null = null;
   let fetchAppsRequestId = 0;
@@ -350,11 +358,42 @@ function createTailorKitStore(baseUrlInput: string | URL) {
     if (typeof console !== "undefined" && selected !== null && deepestScreens.length > 1) {
       const screenNames = deepestScreens.map((screen) => `"${screen.screen}"`).join(", ");
       console.warn(
-        `TailorKit found multiple active screens at the same hierarchy depth: ${screenNames}. TailorKit selected "${selected.screen}" by mount order. Only one route at a hierarchy depth should call useCurrentScreen.`,
+        `TailorKit found multiple active scopes at the same hierarchy depth: ${screenNames}. TailorKit selected "${selected.screen}" by mount order. Only one route at a hierarchy depth should call useScope.`,
       );
     }
 
-    currentScreen = selected;
+    currentScreen =
+      selected === null
+        ? null
+        : {
+            scope: selected.screen,
+            layers: [...screens.values()]
+              .filter(
+                (entry) =>
+                  entry.screen === "/" ||
+                  entry.screen === selected.screen ||
+                  selected.screen.startsWith(`${entry.screen}/`),
+              )
+              .toSorted((a, b) => getScreenDepth(a.screen) - getScreenDepth(b.screen))
+              .map((entry) => ({
+                path: entry.screen,
+                context: entry.context,
+                status: entry.status,
+              })),
+          };
+  };
+
+  // Publish once after the commit's registration effects and cleanups settle.
+  const scheduleScopes = () => {
+    if (scheduled) {
+      return;
+    }
+    scheduled = true;
+    queueMicrotask(() => {
+      scheduled = false;
+      selectCurrentScreen();
+      emit();
+    });
   };
 
   return {
@@ -439,7 +478,7 @@ function createTailorKitStore(baseUrlInput: string | URL) {
       appsSnapshot.apps.find((app) => app.id === id),
     getApps: (): TailorKitApp[] => appsSnapshot.apps,
     getAppsSnapshot: (): TailorKitAppsSnapshot => appsSnapshot,
-    getCurrentScreen: (): CurrentScreenEntry | null => currentScreen,
+    getCurrentScreen: () => currentScreen,
     getMetaSnapshot: (): TailorKitMetaSnapshot => metaSnapshot,
     registerScreen: (entry: Omit<CurrentScreenEntry, "order">): void => {
       const existing = screens.get(entry.id);
@@ -450,8 +489,7 @@ function createTailorKitStore(baseUrlInput: string | URL) {
       if (!existing) {
         nextOrder += 1;
       }
-      selectCurrentScreen();
-      emit();
+      scheduleScopes();
     },
     subscribe: (listener: () => void): (() => void) => {
       listeners.add(listener);
@@ -461,8 +499,7 @@ function createTailorKitStore(baseUrlInput: string | URL) {
     },
     unregisterScreen: (id: symbol): void => {
       screens.delete(id);
-      selectCurrentScreen();
-      emit();
+      scheduleScopes();
     },
   };
 }
@@ -471,7 +508,7 @@ function getScreenDepth(screen: string): number {
   return screen === "/" ? 0 : screen.split("/").filter(Boolean).length;
 }
 
-export type { CurrentScreenOptions } from "./hooks/use-current-screen";
+export type { ScopeOptions } from "./hooks/use-scope";
 
 function resolveAppUrl(app: TailorKitApp, baseUrl: URL, assetsBaseUrl: string | null): URL | null {
   if (app.clientPath) {

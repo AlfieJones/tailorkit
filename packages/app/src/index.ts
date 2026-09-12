@@ -9,6 +9,10 @@ const preactVersion = __PREACT_VERSION__;
 // oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
 export interface TailorKitScreens {}
 
+// oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
+export interface TailorKitViewports {}
+export type ViewportName = keyof TailorKitViewports & string;
+
 export type ScreenPath = Extract<keyof TailorKitScreens & string, `/${string}`>;
 export type AppScreenPath = ScreenPath;
 
@@ -52,23 +56,25 @@ type RegisteredScreens = {
   [TPath in AppScreenPath]: ScreenDefinition<TPath>;
 };
 
-type ScreenDefinitions = Partial<RegisteredScreens>;
+type ScreenDefinitions = Partial<{ [P in AppScreenPath]: RegisteredScreens[P] | false }>;
 
-type InvalidScreenPath<TScreens> = Exclude<keyof TScreens & string, `/${string}`>;
+type InvalidScreenPath<TScreens> = Exclude<keyof TScreens & string, AppScreenPath>;
 
 type RequireScreenPaths<TScreens> =
   InvalidScreenPath<TScreens> extends never
     ? unknown
     : {
-        readonly __tailorkit_error__: `Screen paths must start with "/". Invalid screen: ${InvalidScreenPath<TScreens>}`;
+        readonly __tailorkit_error__: `Screen paths must be declared by the host. Invalid screen: ${InvalidScreenPath<TScreens>}`;
       };
 
 type ScreenKeyPathMismatch<TScreens> = {
-  [TPath in keyof TScreens & string]: TScreens[TPath] extends ScreenDefinition<infer TScreenPath>
-    ? TScreenPath extends TPath
-      ? never
-      : TPath
-    : TPath;
+  [TPath in keyof TScreens & string]: TScreens[TPath] extends false
+    ? never
+    : TScreens[TPath] extends ScreenDefinition<infer TScreenPath>
+      ? TScreenPath extends TPath
+        ? never
+        : TPath
+      : TPath;
 }[keyof TScreens & string];
 
 type RequireMatchingScreenKeys<TScreens> =
@@ -78,8 +84,9 @@ type RequireMatchingScreenKeys<TScreens> =
         readonly __tailorkit_error__: `Screen key must match createScreen path. Invalid screen: ${ScreenKeyPathMismatch<TScreens>}`;
       };
 
-export interface TailorKitClient<TScreens extends ScreenDefinitions = ScreenDefinitions> {
-  screens: TScreens;
+type ViewportDefinitions = Partial<Record<ViewportName, { screens: ScreenDefinitions }>>;
+export interface TailorKitClient<TViewports extends ViewportDefinitions = ViewportDefinitions> {
+  viewports: TViewports;
 }
 
 export interface TailorKitClientMeta {
@@ -88,10 +95,10 @@ export interface TailorKitClientMeta {
 
 export interface TailorKitClientRuntime {
   h: typeof h;
-  render: (vnode: VNode, parent: Element | Document | ShadowRoot | DocumentFragment) => void;
+  render: (vnode: VNode | null, parent: Element | Document | ShadowRoot | DocumentFragment) => void;
 }
 
-export type TailorKitClientWithMeta<TScreens extends ScreenDefinitions = ScreenDefinitions> =
+export type TailorKitClientWithMeta<TScreens extends ViewportDefinitions = ViewportDefinitions> =
   TailorKitClient<TScreens> & {
     $meta: TailorKitClientMeta;
     $runtime: TailorKitClientRuntime;
@@ -138,19 +145,20 @@ export const createScreen = <const TPath extends AppScreenPath>(
   };
 };
 
-export const defineClient = <const TScreens extends ScreenDefinitions>(
-  client: TailorKitClient<TScreens> &
-    RequireScreenPaths<TScreens> &
-    RequireMatchingScreenKeys<TScreens>,
-): TailorKitClientWithMeta<TScreens> => ({
+export const defineClient = <const TViewports extends ViewportDefinitions>(
+  client: TailorKitClient<TViewports> & {
+    viewports: {
+      [V in keyof TViewports]: TViewports[V] extends { screens: infer S }
+        ? { screens: S & RequireScreenPaths<S> & RequireMatchingScreenKeys<S> }
+        : never;
+    };
+  } & (Exclude<keyof TViewports, ViewportName> extends never
+      ? unknown
+      : { __tailorkit_error__: "Unknown viewport" }),
+): TailorKitClientWithMeta<TViewports> => ({
   ...client,
-  $meta: {
-    preactVersion,
-  },
-  $runtime: {
-    h,
-    render,
-  },
+  $meta: { preactVersion },
+  $runtime: { h, render },
 });
 
 const componentTagPrefix = "tailorkit-";
