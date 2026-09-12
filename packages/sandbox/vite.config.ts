@@ -1,7 +1,9 @@
+import { iframeRuntimePlugin } from "./iframe-plugin.ts";
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  plugins: [iframeRuntimePlugin()],
   build: {
     lib: {
       formats: ["es"],

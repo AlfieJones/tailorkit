@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { isViewAncestor } from "@tailorkit/core/views";
 
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
 import { SerializedComponent as SerializedComponentSchema } from "@tailorkit/core/spec";
@@ -331,9 +332,7 @@ const renderViewProps = (views: Record<string, SerializedView>): string => {
 
   for (const viewPath of Object.keys(views)) {
     const contexts = Object.entries(views)
-      .filter(
-        ([parent]) => parent === viewPath || parent === "/" || viewPath.startsWith(`${parent}/`),
-      )
+      .filter(([parent]) => isViewAncestor(parent, viewPath))
       .filter(([, layer]) => layer.context !== undefined)
       .map(([, layer]) => toTypeScriptType(layer.context, 4))
       .filter((context) => context !== "Record<string, never>");
