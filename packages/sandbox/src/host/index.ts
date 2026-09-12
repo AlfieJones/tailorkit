@@ -301,7 +301,11 @@ function createIframeDocument(channel: string): string {
             }
             if (layer.status === "error") status = "error";
             else if (layer.status === "loading" && status !== "error") status = "loading";
-            if (layer.status === "ready" && layer.context) {
+            if (layer.status === "ready" && layer.context !== undefined) {
+              if (layer.context === null || typeof layer.context !== "object" || Array.isArray(layer.context)) {
+                status = "error";
+                continue;
+              }
               for (const key of Object.keys(layer.context)) {
                 if (Object.hasOwn(context, key)) throw new Error('Duplicate view context field "' + key + '".');
                 context[key] = layer.context[key];

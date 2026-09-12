@@ -10,12 +10,11 @@ export interface ResolvedViewMetadata {
   context?: Schema;
 }
 
-type OwnContext<T> =
-  T extends ViewDefinition<infer S>
-    ? S extends Schema
-      ? InferSchema<S>
-      : Record<never, never>
-    : Record<never, never>;
+type OwnContext<T> = T extends { context?: infer S }
+  ? S extends Schema
+    ? InferSchema<S>
+    : Record<never, never>
+  : Record<never, never>;
 type Ancestors<T, P extends string> = {
   [K in keyof T & string]: K extends P
     ? never
@@ -30,10 +29,14 @@ type AncestorKeys<T, P extends string> = {
 }[Ancestors<T, P>];
 export type ViewContextHierarchy<T> = {
   [P in keyof T]: P extends string
-    ? Extract<keyof OwnContext<T[P]>, AncestorKeys<T, P>> extends never
-      ? unknown
+    ? Exclude<OwnContext<T[P]>, undefined> extends Record<string, unknown>
+      ? Extract<keyof OwnContext<T[P]>, AncestorKeys<T, P>> extends never
+        ? unknown
+        : {
+            readonly __tailorkit_error__: `View "${P}" redeclares an ancestor context field.`;
+          }
       : {
-          readonly __tailorkit_error__: `View "${P}" redeclares an ancestor context field.`;
+          readonly __tailorkit_error__: `View "${P}" context must be an object with named fields.`;
         }
     : unknown;
 };

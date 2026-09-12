@@ -84,10 +84,7 @@ function EmbedPanel() {
   return (
     <Root client={tailorClient} apps={demoApps}>
       <CurrentDemoView />
-      <nav aria-label="App navigation">
-        {activeApp ? <AppView slot="navbar" app={activeApp} /> : null}
-      </nav>
-      <main className="h-view flex flex-col" style={cssVars}>
+      <main className="h-screen flex flex-col" style={cssVars}>
         {/* Panel header */}
         <div
           className="flex items-center gap-3 px-4 py-3 flex-shrink-0 border-b"

@@ -365,3 +365,45 @@ it.each([null, undefined])(
     expect(() => viewResolver()(client, resolveProps("panel"))).not.toThrow();
   },
 );
+
+it.each([42, 0, "user", "", true, false, null, ["u1"]])(
+  "rejects non-object context %j without exposing partial ancestor data",
+  (context) => {
+    const resolve = viewResolver();
+    const { client, render } = viewClient();
+    resolve(client, {
+      ...resolveProps("panel"),
+      layers: viewLayers.map((layer) =>
+        layer.path === "/users/detail" ? { ...layer, context } : layer,
+      ),
+    });
+    expect(render.mock.calls.at(-1)?.[0].props).toEqual({
+      view: "/users/detail",
+      status: "error",
+      context: undefined,
+    });
+    resolve(client, resolveProps("panel"));
+    expect(render.mock.calls.at(-1)?.[0].props).toMatchObject({
+      status: "ready",
+      context: { workspaceId: "w1", canManageUsers: true, userId: "u1" },
+    });
+  },
+);
+
+it("composes named array fields and omitted optional object contexts", () => {
+  const resolve = viewResolver();
+  const { client, render } = viewClient();
+  resolve(client, {
+    ...resolveProps("panel"),
+    layers: [
+      { path: "/", status: "ready", context: undefined },
+      { path: "/users", status: "ready", context: { userIds: ["u1", "u2"] } },
+      viewLayers[2],
+    ],
+  });
+  expect(render.mock.calls.at(-1)?.[0].props).toEqual({
+    view: "/users/detail",
+    status: "ready",
+    context: { userIds: ["u1", "u2"], userId: "u1" },
+  });
+});

@@ -25,6 +25,8 @@ export const tailorKit = createTailorKit({
 });
 ```
 
+Context schemas must describe objects with named fields, not scalar values or
+arrays. An optional object context may be omitted; it contributes no fields.
 Each view declares only its own fields. Ancestor fields are composed into the
 context received by app views. A field must have one owning view: duplicate
 field names across ancestors are rejected by the type checker and runtime.

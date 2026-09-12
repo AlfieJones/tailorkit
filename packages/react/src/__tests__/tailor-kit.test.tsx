@@ -2,6 +2,7 @@ import { Root, AppView, useApps, useView } from "../index";
 import { act, cleanup, render, screen as testingView, waitFor } from "@testing-library/react";
 import { createElement, StrictMode } from "react";
 import type { ReactNode } from "react";
+import type { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTailorKitServer } from "@tailorkit/core/server";
 import type { IframeUiHost } from "@tailorkit/sandbox/host";
@@ -49,13 +50,14 @@ vi.mock("@tailorkit/sandbox/host", () => ({
   },
 }));
 
-const emptySchema = {
+const emptySchema: StandardSchemaV1<unknown, Record<never, never>> &
+  StandardJSONSchemaV1<unknown, Record<never, never>> = {
   "~standard": {
     jsonSchema: {
       input: () => ({}),
       output: () => ({}),
     },
-    validate: (value: unknown) => ({ value }),
+    validate: (value: unknown) => ({ value: value as Record<never, never> }),
     vendor: "test",
     version: 1,
   },
