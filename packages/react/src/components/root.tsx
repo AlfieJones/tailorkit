@@ -1,14 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { createTailorKitStore, toBaseUrl } from "../tailor-kit";
+import { createTailorKitStore, toBaseUrl } from "../store";
 import type { TailorKitApp, TailorKitInstance } from "../tailor-kit";
-import { useAppsStore } from "../hooks/use-apps";
 import type { ComponentProps } from "./render";
 import { mergeProps, useRender } from "./render";
 import { TailorRootContext } from "./context";
 import type { TailorRootContextValue } from "./context";
-
-const EMPTY_APPS: TailorKitApp[] = [];
 
 export interface RootProps extends ComponentProps<"div"> {
   apps?: TailorKitApp[];
@@ -18,22 +15,22 @@ export interface RootProps extends ComponentProps<"div"> {
 
 export function Root({ apps: appsProp, children, render, client, ...props }: RootProps): ReactNode {
   const baseUrl = toBaseUrl(client.baseUrl).toString();
-  const [previousStore, setStore] = useState(() => createTailorKitStore(baseUrl));
+  const [previousStore, setStore] = useState(() => createTailorKitStore(baseUrl, appsProp));
   let store = previousStore;
   if (previousStore.baseUrl.toString() !== baseUrl) {
-    store = createTailorKitStore(baseUrl);
+    store = createTailorKitStore(baseUrl, appsProp);
     setStore(store);
   }
-  const appsResult = useAppsStore(store);
-  const apps = appsProp ?? appsResult.data ?? EMPTY_APPS;
+  useEffect(() => {
+    store.setProvidedApps(appsProp);
+  }, [store, appsProp]);
 
   const context = useMemo<TailorRootContextValue>(
     () => ({
-      apps,
       store,
       client,
     }),
-    [apps, store, client],
+    [store, client],
   );
 
   const element = render

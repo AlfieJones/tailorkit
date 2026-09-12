@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useStableContext } from "./use-stable-context";
+import { useEffect, useMemo } from "react";
 import type { StandardJSONSchemaV1 } from "@standard-schema/spec";
 import type { ViewDefinition } from "@tailorkit/core/schema";
 import type { RegisteredViews } from "../tailor-kit";
@@ -58,22 +59,17 @@ export function useView<TView extends ViewName<RegisteredViews>>(
   const id = useMemo(() => Symbol("tailorkit-current-view"), []);
   const status = options.status ?? "ready";
   const context = "context" in options ? options.context : undefined;
-  const contextKey = JSON.stringify(context);
-  const contextRef = useRef({ key: contextKey, value: context });
-  if (contextRef.current.key !== contextKey) {
-    contextRef.current = { key: contextKey, value: context };
-  }
-  const contextSnapshot = contextRef.current.value;
+  const contextSnapshot = useStableContext(context);
 
   useEffect(
     () => () => {
-      store.unregisterView(id);
+      store.views.unregister(id);
     },
     [id, store],
   );
 
   useEffect(() => {
-    store.registerView({
+    store.views.register({
       context: contextSnapshot,
       id,
       view,

@@ -1,4 +1,5 @@
-export { components, createTailorKitClient, AppView } from "./tailor-kit";
+export { AppView } from "./components/app-view";
+export { components, createTailorKitClient } from "./tailor-kit";
 export type { AppViewProps, TailorKitApp, TailorKitInstance, Register } from "./tailor-kit";
 export { Root } from "./components/root";
 export { useApps } from "./hooks/use-apps";

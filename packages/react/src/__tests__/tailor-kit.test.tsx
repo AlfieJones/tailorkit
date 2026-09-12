@@ -607,3 +607,80 @@ it("retains equivalent explicit context identity and publishes changed values", 
   );
   view.unmount();
 });
+
+describe("supplied app discovery", () => {
+  beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+  function Apps() {
+    const { data, status, refetch } = useApps();
+    return (
+      <button onClick={() => void refetch()}>
+        {status}:{data?.map((app) => app.id).join(",")}
+      </button>
+    );
+  }
+  const client = createTailorKitClient({ baseUrl: "https://apps.test/api/" });
+
+  it("uses supplied apps for discovery, including updates and empty lists, without fetching", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch");
+    const view = render(
+      <Root client={client} apps={[{ id: "first" }]}>
+        <Apps />
+      </Root>,
+    );
+    expect(testingView.getByText("ready:first")).toBeTruthy();
+    await act(() => testingView.getByRole("button").click());
+    view.rerender(
+      <Root client={client} apps={[{ id: "second" }]}>
+        <Apps />
+      </Root>,
+    );
+    await waitFor(() => expect(testingView.getByText("ready:second")).toBeTruthy());
+    view.rerender(
+      <Root client={client} apps={[]}>
+        <Apps />
+      </Root>,
+    );
+    await waitFor(() => expect(testingView.getByText("ready:")).toBeTruthy());
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("ignores an in-flight fetch when apps are supplied and resumes fetching when removed", async () => {
+    let resolveRequest!: (response: Response) => void;
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRequest = resolve;
+          }),
+      )
+      .mockResolvedValue(Response.json([{ id: "fresh" }]));
+    const view = render(
+      <Root client={client}>
+        <Apps />
+      </Root>,
+    );
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    view.rerender(
+      <Root client={client} apps={[{ id: "provided" }]}>
+        <Apps />
+      </Root>,
+    );
+    await waitFor(() => expect(testingView.getByText("ready:provided")).toBeTruthy());
+    await act(() => {
+      resolveRequest(Response.json([{ id: "stale" }]));
+    });
+    expect(testingView.getByText("ready:provided")).toBeTruthy();
+    view.rerender(
+      <Root client={client}>
+        <Apps />
+      </Root>,
+    );
+    await waitFor(() => expect(testingView.getByText("ready:fresh")).toBeTruthy());
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+});
