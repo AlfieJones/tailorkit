@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useId, useMemo, useRef, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import type { TailorKitSchemaSpecType } from "@tailorkit/core/spec";
 import type {
@@ -250,7 +250,13 @@ export const AppView = ({
     store.getCurrentScreen,
   );
   const scope = (screenProps as { scope?: string }).scope;
-  const context = (screenProps as { context?: unknown }).context;
+  const suppliedContext = (screenProps as { context?: unknown }).context;
+  const contextKey = JSON.stringify(suppliedContext);
+  const contextRef = useRef({ key: contextKey, value: suppliedContext });
+  if (contextRef.current.key !== contextKey) {
+    contextRef.current = { key: contextKey, value: suppliedContext };
+  }
+  const context = contextRef.current.value;
   const status = (screenProps as { status?: "error" | "loading" | "ready" }).status ?? "ready";
   const props = useMemo(() => {
     if (scope !== undefined) {
@@ -541,7 +547,7 @@ function resolveAppUrl(app: TailorKitApp, baseUrl: URL, assetsBaseUrl: string | 
   );
 }
 
-function toBaseUrl(value: string | URL): URL {
+export function toBaseUrl(value: string | URL): URL {
   const url = value instanceof URL ? new URL(value) : new URL(value);
   if (!url.pathname.endsWith("/")) {
     url.pathname = `${url.pathname}/`;

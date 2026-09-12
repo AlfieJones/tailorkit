@@ -358,3 +358,10 @@ it("limits matching to supported scopes while retaining ancestor data", () => {
   resolve(client, { ...resolveProps("panel"), supportedScopes: [] });
   expect(render.mock.calls.at(-1)?.[0]).toBeNull();
 });
+
+it.each([null, undefined])(
+  "handles a missing app client (%s) without accessing its runtime",
+  (client) => {
+    expect(() => screenResolver()(client, resolveProps("panel"))).not.toThrow();
+  },
+);

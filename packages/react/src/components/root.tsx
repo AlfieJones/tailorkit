@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { createTailorKitStore } from "../tailor-kit";
+import { createTailorKitStore, toBaseUrl } from "../tailor-kit";
 import type { TailorKitApp, TailorKitInstance } from "../tailor-kit";
 import { useAppsStore } from "../hooks/use-apps";
 import type { ComponentProps } from "./render";
@@ -17,7 +17,13 @@ export interface RootProps extends ComponentProps<"div"> {
 }
 
 export function Root({ apps: appsProp, children, render, client, ...props }: RootProps): ReactNode {
-  const [store] = useState(() => createTailorKitStore(client.baseUrl));
+  const baseUrl = toBaseUrl(client.baseUrl).toString();
+  const [previousStore, setStore] = useState(() => createTailorKitStore(baseUrl));
+  let store = previousStore;
+  if (previousStore.baseUrl.toString() !== baseUrl) {
+    store = createTailorKitStore(baseUrl);
+    setStore(store);
+  }
   const appsResult = useAppsStore(store);
   const apps = appsProp ?? appsResult.data ?? EMPTY_APPS;
 

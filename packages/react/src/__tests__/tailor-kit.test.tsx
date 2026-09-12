@@ -531,3 +531,80 @@ describe("scope registries", () => {
     );
   });
 });
+
+it("replaces the root store only when the normalized endpoint changes", async () => {
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = new URL(input.toString());
+    return Promise.resolve(
+      Response.json(
+        url.pathname.endsWith("/apps") ? [{ id: url.hostname }] : { schema: schema.serialize() },
+      ),
+    );
+  });
+  function Contents() {
+    const { data } = useApps();
+    useScope({ scope: "/user", context: { userId: "u1" } });
+    return (
+      <>
+        <span>{data?.[0]?.id}</span>
+        <AppView viewport="panel" app={{ id: "test", clientPath: "client.js" }} />
+      </>
+    );
+  }
+  const client = (baseUrl: string | URL) =>
+    createTailorKitClient<typeof server>({ baseUrl, components });
+  const view = render(
+    <Root client={client("http://first.test/api")}>
+      <Contents />
+    </Root>,
+  );
+  await waitFor(() => expect(testingScreen.getByText("first.test")).toBeTruthy());
+  const count = fetchMock.mock.calls.length;
+  view.rerender(
+    <Root client={client(new URL("http://first.test/api/"))}>
+      <Contents />
+    </Root>,
+  );
+  expect(fetchMock.mock.calls).toHaveLength(count);
+  view.rerender(
+    <Root client={client("http://second.test/api")}>
+      <Contents />
+    </Root>,
+  );
+  await waitFor(() => expect(testingScreen.getByText("second.test")).toBeTruthy());
+  await waitFor(() => expect(hostRecords.at(-1)?.appUrl).toBe("http://second.test/api/client.js"));
+  expect(hostRecords.at(-1)?.props?.scope).toBe("/user");
+  view.unmount();
+});
+
+it("retains equivalent explicit context identity and publishes changed values", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+    Promise.resolve(Response.json({ schema: schema.serialize() })),
+  );
+  const client = createTailorKitClient<typeof server>({
+    baseUrl: "http://runtime.test",
+    components,
+  });
+  const content = (userId: string) => (
+    <Root client={client}>
+      <AppView
+        viewport="panel"
+        scope="/user"
+        context={{ userId }}
+        app={{ id: "test", clientPath: "/client.js" }}
+      />
+    </Root>
+  );
+  const view = render(content("u1"));
+  await waitFor(() => expect(hostRecords.at(-1)?.props?.scope).toBe("/user"));
+  const initialProps = hostRecords.at(-1)?.props;
+  view.rerender(content("u1"));
+  expect(hostRecords.at(-1)?.props).toBe(initialProps);
+  view.rerender(content("u2"));
+  await waitFor(() =>
+    expect(hostRecords.at(-1)?.props?.layers).toEqual([
+      { path: "/user", context: { userId: "u2" }, status: "ready" },
+    ]),
+  );
+  view.unmount();
+});

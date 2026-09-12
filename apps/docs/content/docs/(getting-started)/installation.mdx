@@ -29,8 +29,9 @@ Create `tailorkit.ts` in a server-safe module such as `src/lib/`. Do not import
 this module into a browser bundle: actions and project credentials belong on
 the server.
 
-This file defines the screens, components, theme tokens, and actions TailorKit
-apps can use. Primitives provide basic layout and styling abilities. See
+This file defines the scopes, viewports, components, theme tokens, and actions
+TailorKit apps can use. Scopes are host context layers; screens are app
+implementations selected per viewport. Primitives provide basic layout and styling abilities. See
 [Layouts and Styles](/docs/layouts-and-styles) for the full set.
 
 ```ts title="./src/lib/tailorkit.ts" tab="Zod"
@@ -74,7 +75,7 @@ export const tailorKit = createTailorKit({
 
   viewports: { panel: { scopes: ["/"] } },
   scopes: {
-    // Define each screen TailorKit apps can be installed on.
+    // Define the host context layers available to app screens.
     "/": {
       context: z.object({}),
     },
@@ -92,8 +93,8 @@ export const tailorKit = createTailorKit({
 ```
 
 <Callout title="Treat Your TailorKit Config As Public API" type="warn">
-  TailorKit apps are built against the screens, components, actions, children, and tokens you define
-  here. Removing or renaming them can break existing apps.
+  TailorKit apps are built against the scopes, viewports, components, actions, children, and tokens
+  you define here. Removing or renaming them can break existing apps.
 </Callout>
 
 </Step>
