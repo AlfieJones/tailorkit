@@ -1,6 +1,0 @@
-.output/
-.vercel/
-dist/
-node_modules/
-
-/public/tailorkit-clients/
