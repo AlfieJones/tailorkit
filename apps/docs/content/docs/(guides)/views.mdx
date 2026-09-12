@@ -70,7 +70,9 @@ function Host({ app, children }) {
 }
 ```
 
-Use `useApps()` below `Root` to load installed apps. The client configuration
+Use `useApps()` below `Root` to load installed apps. For a supplied app list,
+pass `apps` to `Root`; the hook returns that list without fetching. Updates to
+the list are reflected in the hook, and removing the prop resumes discovery. The client configuration
 no longer exposes bound React hooks or components.
 
 ## Publish each layer

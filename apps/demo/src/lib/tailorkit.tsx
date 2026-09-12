@@ -163,13 +163,13 @@ export const createDemoSchema = (theme: TailorKitTheme = defaultTheme) => {
 
 export const demoApps = [
   {
-    clientPath: "/demo-clients/todo.js?v=20260512-v13",
+    clientPath: "/tailorkit-clients/todo.js",
     description: "A compact task workspace for customer onboarding demos.",
     id: "todo",
     name: "My Tasks",
   },
   {
-    clientPath: "/demo-clients/messages.js?v=20260512-v11",
+    clientPath: "/tailorkit-clients/messages.js",
     description: "A compact team inbox for messaging demos.",
     id: "messages",
     name: "Team Inbox",

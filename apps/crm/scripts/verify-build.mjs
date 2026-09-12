@@ -6,7 +6,7 @@ const config = JSON.parse(await readFile(new URL("config.json", output), "utf-8"
 assert.equal(config.version, 3, "CRM must emit Vercel Build Output API v3.");
 await access(new URL("functions/__server.func/.vc-config.json", output));
 for (const app of ["stripe-revenue", "renewal-coach"]) {
-  await access(new URL(`static/apps/${app}.js`, output));
+  await access(new URL(`static/tailorkit-clients/${app}.js`, output));
 }
 
 const assets = await readdir(new URL("static/assets/", output));

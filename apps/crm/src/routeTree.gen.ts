@@ -14,6 +14,7 @@ import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as FollowUpsRouteImport } from './routes/follow-ups'
 import { Route as MyWeekRouteImport } from './routes/my-week'
 import { Route as PipelineRouteImport } from './routes/pipeline'
+import { Route as ApiTailorkitSplatRouteImport } from './routes/api/tailorkit.$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const PipelineRoute = PipelineRouteImport.update({
   path: '/pipeline',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTailorkitSplatRoute = ApiTailorkitSplatRouteImport.update({
+  id: '/api/tailorkit/$',
+  path: '/api/tailorkit/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/follow-ups': typeof FollowUpsRoute
   '/my-week': typeof MyWeekRoute
   '/pipeline': typeof PipelineRoute
+  '/api/tailorkit/$': typeof ApiTailorkitSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/follow-ups': typeof FollowUpsRoute
   '/my-week': typeof MyWeekRoute
   '/pipeline': typeof PipelineRoute
+  '/api/tailorkit/$': typeof ApiTailorkitSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,33 @@ export interface FileRoutesById {
   '/follow-ups': typeof FollowUpsRoute
   '/my-week': typeof MyWeekRoute
   '/pipeline': typeof PipelineRoute
+  '/api/tailorkit/$': typeof ApiTailorkitSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/customers' | '/follow-ups' | '/my-week' | '/pipeline'
+  fullPaths:
+    | '/'
+    | '/customers'
+    | '/follow-ups'
+    | '/my-week'
+    | '/pipeline'
+    | '/api/tailorkit/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/customers' | '/follow-ups' | '/my-week' | '/pipeline'
-  id: '__root__' | '/' | '/customers' | '/follow-ups' | '/my-week' | '/pipeline'
+  to:
+    | '/'
+    | '/customers'
+    | '/follow-ups'
+    | '/my-week'
+    | '/pipeline'
+    | '/api/tailorkit/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/customers'
+    | '/follow-ups'
+    | '/my-week'
+    | '/pipeline'
+    | '/api/tailorkit/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +105,7 @@ export interface RootRouteChildren {
   FollowUpsRoute: typeof FollowUpsRoute
   MyWeekRoute: typeof MyWeekRoute
   PipelineRoute: typeof PipelineRoute
+  ApiTailorkitSplatRoute: typeof ApiTailorkitSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PipelineRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tailorkit/$': {
+      id: '/api/tailorkit/$'
+      path: '/api/tailorkit/$'
+      fullPath: '/api/tailorkit/$'
+      preLoaderRoute: typeof ApiTailorkitSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   FollowUpsRoute: FollowUpsRoute,
   MyWeekRoute: MyWeekRoute,
   PipelineRoute: PipelineRoute,
+  ApiTailorkitSplatRoute: ApiTailorkitSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

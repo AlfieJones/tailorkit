@@ -1,23 +1,24 @@
+import type { tailorKit } from "./tailorkit";
 import { createTailorKitClient, primitives } from "tailorkit/react";
 import type { ReactNode } from "react";
 import type { TailorKitApp } from "tailorkit/react";
 
 export const marketplaceApps: TailorKitApp[] = [
   {
-    clientPath: "/apps/stripe-revenue.js",
+    clientPath: "/tailorkit-clients/stripe-revenue.js",
     description: "Payment and subscription signals for your customer relationships.",
     id: "stripe-revenue",
     name: "Stripe Revenue",
   },
   {
-    clientPath: "/apps/renewal-coach.js",
+    clientPath: "/tailorkit-clients/renewal-coach.js",
     description: "A focused account health workspace for renewals.",
     id: "renewal-coach",
     name: "Renewal Coach",
   },
 ];
 
-export const tailor = createTailorKitClient({
+export const tailor = createTailorKitClient<typeof tailorKit>({
   baseUrl:
     typeof window === "undefined"
       ? "http://localhost/api/tailorkit/"
@@ -30,4 +31,10 @@ export const tailor = createTailorKitClient({
       </button>
     ),
   },
-} as never);
+});
+
+declare module "tailorkit/react" {
+  interface Register {
+    client: typeof tailor;
+  }
+}
