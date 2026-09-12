@@ -12,6 +12,7 @@ type ViewKey = z.infer<typeof ViewKey>;
 const SerializedView = z
   .object({
     context: JsonSchema.optional(),
+    contextOptional: z.boolean().optional(),
   })
   .strict();
 

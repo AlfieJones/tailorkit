@@ -14,7 +14,7 @@ import type {
   SlotDefinitions,
 } from "./views";
 import { jsonSchemaSerializer, serializeSchema } from "./shared";
-import type { SchemaSerializer } from "./shared";
+import type { Schema, SchemaSerializer } from "./shared";
 
 type EmptyActionMap = Record<never, never>;
 
@@ -110,6 +110,9 @@ export const createTailorKitSchema = <
     for (const [name, metadata] of Object.entries(views)) {
       serializedViews[name] = {
         context: serializeSchema(metadata.context, schemaSerializer),
+        ...(metadata.context && contextMayBeOmitted(metadata.context)
+          ? { contextOptional: true }
+          : {}),
       };
     }
 
@@ -187,3 +190,16 @@ export {
 } from "./views";
 export { jsonSchemaSerializer, type Schema, type SchemaSerializer } from "./shared";
 export type { TailorKitSchema as TailorKit };
+
+// JSON Schema cannot represent undefined at its root. Preserve that information
+// separately before sending the schema to app type generation.
+function contextMayBeOmitted(schema: Schema): boolean {
+  // oxlint-disable-next-line unicorn/no-useless-undefined -- Probe whether the schema accepts an omitted context.
+  const result = schema["~standard"].validate(undefined);
+  if (result instanceof Promise) {
+    // Serialization is synchronous; conservatively allow omission for async schemas.
+    void result.catch(() => {});
+    return true;
+  }
+  return !result.issues;
+}

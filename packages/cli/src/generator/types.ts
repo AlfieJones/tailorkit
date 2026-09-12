@@ -30,6 +30,7 @@ interface SerializedComponent {
 }
 
 interface SerializedView {
+  contextOptional?: boolean;
   context?: JsonSchema;
 }
 
@@ -334,7 +335,10 @@ const renderViewProps = (views: Record<string, SerializedView>): string => {
     const contexts = Object.entries(views)
       .filter(([parent]) => isViewAncestor(parent, viewPath))
       .filter(([, layer]) => layer.context !== undefined)
-      .map(([, layer]) => toTypeScriptType(layer.context, 4))
+      .map(([, layer]) => {
+        const context = toTypeScriptType(layer.context, 4);
+        return layer.contextOptional ? `Partial<${context}>` : context;
+      })
       .filter((context) => context !== "Record<string, never>");
     const context =
       contexts.length > 1

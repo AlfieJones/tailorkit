@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { z } from "zod";
+import { createTailorKitSchema } from "@tailorkit/core/schema";
+import { TailorKitSchemaSpec } from "@tailorkit/core/spec";
+
 import { renderGeneratedTypes } from "./types";
 
 describe("renderGeneratedTypes", () => {
@@ -330,4 +334,22 @@ it("composes independent ancestor contexts and generates slot names", () => {
   expect(detail).toContain("canManage");
   expect(detail).toContain("userId");
   expect(detail).toContain(" & ");
+});
+
+it("preserves optional ancestor fields through schema serialization and generation", () => {
+  const schema = createTailorKitSchema({
+    components: {},
+    views: {
+      "/": { context: z.object({ workspaceId: z.string() }).optional() },
+      "/detail": { context: z.object({ id: z.string() }) },
+    },
+    slots: { panel: { views: ["/detail"] } },
+  }).serialize();
+  const parsed = TailorKitSchemaSpec.parse(schema);
+  expect(parsed.views["/"]?.contextOptional).toBe(true);
+  expect(parsed.views["/detail"]?.contextOptional).toBeUndefined();
+  const output = renderGeneratedTypes(parsed);
+  expect(output).toContain(
+    "context: (Partial<{\n      workspaceId: string;\n    }>) & ({\n      id: string;\n    });",
+  );
 });
