@@ -10,7 +10,7 @@ describe("children-only components", () => {
         Input: { callbacks: {}, children: false },
         Image: { callbacks: {}, children: false },
       },
-      scopes: {},
+      views: {},
     });
     expect(output).toContain('createRemoteComponent<CardProps, true>("Card", {\n  children: true,');
     expect(output).toContain(
@@ -27,7 +27,7 @@ describe("children-only components", () => {
         components: {
           Input: { callbacks: {} },
         },
-        scopes: {},
+        views: {},
       }),
     ).toThrow();
   });

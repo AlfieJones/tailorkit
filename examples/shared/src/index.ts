@@ -1,5 +1,5 @@
 import { createActions } from "tailorkit";
-import type { Component, Scopes } from "tailorkit";
+import type { Component, Views } from "tailorkit";
 import { primitives } from "tailorkit/zod";
 import { z } from "zod";
 
@@ -109,7 +109,7 @@ const customer = z.object({
   name: z.string(),
 });
 
-export const scopes = {
+export const views = {
   "/": {
     context: z.object({
       user,
@@ -125,7 +125,7 @@ export const scopes = {
       customer,
     }),
   },
-} satisfies Scopes;
+} satisfies Views;
 
 const action = createActions().context<{ user: DemoUser }>();
 

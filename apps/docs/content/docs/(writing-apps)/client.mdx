@@ -1,34 +1,34 @@
 ---
 title: App client reference
-description: Register viewport-specific screens and read composed host context.
+description: Register slot-specific views and read composed host context.
 ---
 
 ## `defineClient`
 
-Register one screen map for each host viewport your app supports:
+Register one view map for each host slot your app supports:
 
 ```tsx
 import { defineClient } from "@tailorkit/app";
 
 export default defineClient({
-  viewports: {
-    navbar: { screens: { "/": navigation } },
-    panel: { screens: { "/users": generalTools, "/users/detail": detail } },
+  slots: {
+    navbar: { "/": navigation },
+    panel: { "/users": generalTools, "/users/detail": detail },
   },
 });
 ```
 
-Viewport names and their supported scope paths come from generated host bindings.
-A globally declared scope can only be registered under viewports that list it. Screen keys
-must match the path passed to `createScreen`. An omitted viewport is unsupported.
-A `false` screen entry explicitly disables that scope and stops ancestor fallback.
+Slot names and their supported view paths come from generated host bindings.
+A globally declared view can only be registered under slots that list it. View keys
+must match the path passed to `createView`. An omitted slot is unsupported.
+A `false` view entry explicitly disables that view and stops ancestor fallback.
 
-## `createScreen`
+## `createView`
 
 ```tsx
-import { createScreen } from "@tailorkit/app";
+import { createView } from "@tailorkit/app";
 
-const detail = createScreen("/users/detail", {
+const detail = createView("/users/detail", {
   component: UserTools,
   loading: LoadingTools,
   error: ContextError,
@@ -40,19 +40,19 @@ function UserTools() {
 }
 ```
 
-The hook returns the composed, typed context from the selected scope and its
+The hook returns the composed, typed context from the selected view and its
 ancestors. It is available only while the ready component renders. `loading`
 and `error` are optional; omitted handlers render nothing.
 
-Each viewport selects exactly one screen, searching the active scope followed
-by ancestors. A detail screen replaces the general screen in the same viewport.
-Other viewports resolve independently. Only the selected screen and its ancestors
-contribute readiness; descendant failures cannot block a general screen.
+Each slot selects exactly one view, searching the active view followed
+by ancestors. A detail view replaces the general view in the same slot.
+Other slots resolve independently. Only the selected view and its ancestors
+contribute readiness; descendant failures cannot block a general view.
 
 Missing matches render nothing. Missing declared ancestor context produces an
-error state. Neither loading nor error triggers fallback to another screen.
+error state. Neither loading nor error triggers fallback to another view.
 
-`path`, `component`, and `useContext` are members of the returned screen definition.
+`path`, `component`, and `useContext` are members of the returned view definition.
 The client's `$meta` and `$runtime` properties are internal sandbox details.
 
-See [Scopes, screens, and viewports](/docs/screens) for host integration.
+See [Views, views, and slots](/docs/views) for host integration.

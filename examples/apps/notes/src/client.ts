@@ -1,8 +1,8 @@
 import { defineClient } from "@tailorkit/app";
-import defaultScreen from "./screens/default";
+import defaultView from "./views/default";
 
 const client = defineClient({
-  viewports: { panel: { screens: { "/": defaultScreen } } },
+  slots: { panel: { "/": defaultView } },
 });
 
 export default client;

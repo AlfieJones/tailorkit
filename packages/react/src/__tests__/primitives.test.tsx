@@ -31,9 +31,9 @@ const theme = {
 };
 
 describe("react primitives", () => {
-  it("builds screen-scoped theme variables", () => {
+  it("builds view-scoped theme variables", () => {
     const css = buildThemeCss("screen-1", theme);
-    expect(css).toContain('[data-tailorkit-screen="screen-1"]');
+    expect(css).toContain('[data-tailorkit-view="screen-1"]');
     expect(css).toContain("--tailorkit-border-solid: solid;");
     expect(css).toContain("--tailorkit-space-md: 8px;");
     expect(css).toContain("--tailorkit-background-surface: var(--background);");
@@ -42,7 +42,7 @@ describe("react primitives", () => {
 
   it("renders a scoped primitive style with responsive rules", () => {
     render(
-      <PrimitiveThemeContext.Provider value={{ screenId: "screen-1", theme }}>
+      <PrimitiveThemeContext.Provider value={{ viewId: "screen-1", theme }}>
         {primitives.Flex({
           props: {
             direction: { base: "column", lg: "row" },
@@ -72,7 +72,7 @@ describe("react primitives", () => {
 
   it("renders inline as a span", () => {
     render(
-      <PrimitiveThemeContext.Provider value={{ screenId: "screen-2", theme }}>
+      <PrimitiveThemeContext.Provider value={{ viewId: "screen-2", theme }}>
         {primitives.Inline({
           props: { padding: "md" },
           children: "Label",

@@ -1,4 +1,4 @@
-import { useScope } from "tailorkit/react";
+import { useView } from "tailorkit/react";
 import { Badge } from "@tailorkit/ui/badge";
 import { Button } from "@tailorkit/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
@@ -26,7 +26,7 @@ function CustomerDetailPage() {
   const { customer } = Route.useLoaderData();
   const session = useAuthSession();
 
-  useScope(
+  useView(
     "/customers/detail",
     session.data
       ? {

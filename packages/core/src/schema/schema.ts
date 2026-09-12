@@ -8,11 +8,11 @@ import type {
 } from "./components";
 import { resolveComponentMetadata } from "./components";
 import type {
-  ResolvedScopeMetadata,
-  ScopeContextHierarchy,
-  ScopeDefinitions,
-  ViewportDefinitions,
-} from "./scopes";
+  ResolvedViewMetadata,
+  ViewContextHierarchy,
+  ViewDefinitions,
+  SlotDefinitions,
+} from "./views";
 import { jsonSchemaSerializer, serializeSchema } from "./shared";
 import type { SchemaSerializer } from "./shared";
 
@@ -20,7 +20,7 @@ type EmptyActionMap = Record<never, never>;
 
 export interface TailorKitSchema<
   TComponents extends Record<string, unknown> = ComponentDefinitions,
-  TScreens extends Record<string, unknown> = ScopeDefinitions,
+  TViews extends Record<string, unknown> = ViewDefinitions,
   TActions extends ActionTree = EmptyActionMap,
 > {
   /**
@@ -38,54 +38,54 @@ export interface TailorKitSchema<
     components: {
       [TName in keyof TComponents]: ResolvedComponentMetadata;
     };
-    scopes: {
-      [TName in keyof TScreens]: ResolvedScopeMetadata;
+    views: {
+      [TName in keyof TViews]: ResolvedViewMetadata;
     };
   };
-  viewports: ViewportDefinitions;
+  slots: SlotDefinitions;
   actions: TActions;
   components: TComponents;
-  scopes: TScreens;
+  views: TViews;
   serialize(schemaSerializer?: SchemaSerializer): TailorKitSchemaSpec;
 }
 
 export const createTailorKitSchema = <
   const TComponents extends Record<string, unknown>,
-  const TScreens extends Record<string, unknown> = Record<string, never>,
+  const TViews extends Record<string, unknown> = Record<string, never>,
   const TActions extends ActionTree = EmptyActionMap,
 >(schema: {
-  viewports?: ViewportDefinitions<keyof NoInfer<TScreens> & string>;
+  slots?: SlotDefinitions<keyof NoInfer<TViews> & string>;
   actions?: TActions & NoMixedActionContexts<NoInfer<TActions>>;
   components: TComponents & NoComponentFieldCallbackConflicts<NoInfer<TComponents>>;
-  scopes?: TScreens & ScopeContextHierarchy<NoInfer<TScreens>>;
-}): TailorKitSchema<TComponents, TScreens, TActions> => {
-  for (const [name, viewport] of Object.entries(schema.viewports ?? {})) {
-    for (const scope of viewport.scopes) {
-      if (!Object.hasOwn(schema.scopes ?? {}, scope)) {
-        throw new Error(`Viewport "${name}" references undeclared scope "${scope}".`);
+  views?: TViews & ViewContextHierarchy<NoInfer<TViews>>;
+}): TailorKitSchema<TComponents, TViews, TActions> => {
+  for (const [name, slot] of Object.entries(schema.slots ?? {})) {
+    for (const view of slot.views) {
+      if (!Object.hasOwn(schema.views ?? {}, view)) {
+        throw new Error(`Slot "${name}" references undeclared view "${view}".`);
       }
     }
   }
   const components = {} as TailorKitSchema<
     TComponents,
-    TScreens,
+    TViews,
     TActions
   >["$internal"]["components"];
-  const scopes = {} as TailorKitSchema<TComponents, TScreens, TActions>["$internal"]["scopes"];
+  const views = {} as TailorKitSchema<TComponents, TViews, TActions>["$internal"]["views"];
 
   for (const [name, definition] of Object.entries(schema.components as ComponentDefinitions)) {
     components[name as keyof TComponents] = resolveComponentMetadata(name, definition);
   }
 
-  for (const [name, definition] of Object.entries((schema.scopes ?? {}) as ScopeDefinitions)) {
-    scopes[name as keyof TScreens] = { context: definition.context };
+  for (const [name, definition] of Object.entries((schema.views ?? {}) as ViewDefinitions)) {
+    views[name as keyof TViews] = { context: definition.context };
   }
 
   const serialize = (
     schemaSerializer: SchemaSerializer = jsonSchemaSerializer,
   ): TailorKitSchemaSpec => {
     const serializedComponents: TailorKitSchemaSpec["components"] = {};
-    const serializedScreens: TailorKitSchemaSpec["scopes"] = {};
+    const serializedViews: TailorKitSchemaSpec["views"] = {};
 
     for (const [name, metadata] of Object.entries(components)) {
       const callbacks: TailorKitSchemaSpec["components"][string]["callbacks"] = {};
@@ -107,8 +107,8 @@ export const createTailorKitSchema = <
       };
     }
 
-    for (const [name, metadata] of Object.entries(scopes)) {
-      serializedScreens[name] = {
+    for (const [name, metadata] of Object.entries(views)) {
+      serializedViews[name] = {
         context: serializeSchema(metadata.context, schemaSerializer),
       };
     }
@@ -116,11 +116,11 @@ export const createTailorKitSchema = <
     return {
       actions: serializeActions(schema.actions ?? {}, schemaSerializer),
       components: serializedComponents,
-      scopes: serializedScreens,
-      viewports: Object.fromEntries(
-        Object.entries(schema.viewports ?? {}).map(([name, viewport]) => [
+      views: serializedViews,
+      slots: Object.fromEntries(
+        Object.entries(schema.slots ?? {}).map(([name, slot]) => [
           name,
-          { scopes: [...viewport.scopes] },
+          { views: [...slot.views] },
         ]),
       ),
       version: 1,
@@ -128,15 +128,15 @@ export const createTailorKitSchema = <
   };
 
   return {
-    viewports: schema.viewports ?? {},
+    slots: schema.slots ?? {},
     actions: (schema.actions ?? {}) as TActions,
     components: schema.components,
-    scopes: (schema.scopes ?? {}) as TScreens,
+    views: (schema.views ?? {}) as TViews,
     serialize,
     $internal: {
       actions: (schema.actions ?? {}) as TActions,
       components,
-      scopes,
+      views,
     },
   };
 };
@@ -177,13 +177,13 @@ export {
   type ResolvedComponentMetadata,
 } from "./components";
 export {
-  type ResolvedScopeMetadata,
-  type Scope,
-  type ScopeContextHierarchy,
-  type ScopeDefinition,
-  type ScopeDefinitions,
-  type Scopes,
-  type ViewportDefinitions,
-} from "./scopes";
+  type ResolvedViewMetadata,
+  type View,
+  type ViewContextHierarchy,
+  type ViewDefinition,
+  type ViewDefinitions,
+  type Views,
+  type SlotDefinitions,
+} from "./views";
 export { jsonSchemaSerializer, type Schema, type SchemaSerializer } from "./shared";
 export type { TailorKitSchema as TailorKit };

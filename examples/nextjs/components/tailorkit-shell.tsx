@@ -1,6 +1,6 @@
 "use client";
 
-import { AppView, Root, useApps, useScope } from "tailorkit/react";
+import { AppView, Root, useApps, useView } from "tailorkit/react";
 
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -57,7 +57,7 @@ function TailorKitShellContent({
   signOut: () => Promise<void>;
   user: DemoUser;
 }) {
-  useScope("/", { context: { user } });
+  useView("/", { context: { user } });
 
   return (
     <SidebarProvider className="isolate">
@@ -69,7 +69,7 @@ function TailorKitShellContent({
         </header>
         <main className="mx-auto w-full max-w-6xl p-6">{children}</main>
       </SidebarInset>
-      <TailorKitAppScreen app={currentApp} onClose={() => onSelectApp(null)} />
+      <TailorKitAppView app={currentApp} onClose={() => onSelectApp(null)} />
       <TailorKitAppList
         apps={apps}
         currentApp={currentApp}
@@ -127,7 +127,7 @@ function TailorKitAppList({
   );
 }
 
-function TailorKitAppScreen({ app, onClose }: { app: TailorKitApp | null; onClose: () => void }) {
+function TailorKitAppView({ app, onClose }: { app: TailorKitApp | null; onClose: () => void }) {
   if (!app) {
     return null;
   }
@@ -151,7 +151,7 @@ function TailorKitAppScreen({ app, onClose }: { app: TailorKitApp | null; onClos
       </header>
       <main className="min-h-0 flex-1 overflow-auto p-4">
         <AppView
-          viewport="panel"
+          slot="panel"
           app={app}
           fallback={<p className="text-muted-foreground text-sm">Loading app…</p>}
         />

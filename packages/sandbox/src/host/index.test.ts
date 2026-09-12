@@ -161,10 +161,10 @@ describe("createIframeUiHost", () => {
 
 // Execute the actual resolver embedded in srcdoc, without relying on an iframe
 // implementation to support dynamic module imports in the test environment.
-function screenResolver() {
+function viewResolver() {
   const host = createIframeUiHost("https://assets.test/app.js", { fetch: createFetch() });
   const source = host.iframe.srcdoc;
-  const start = source.indexOf("const createScreenHierarchy =");
+  const start = source.indexOf("const createViewHierarchy =");
   const end = source.indexOf("const loadApp =", start);
   // oxlint-disable-next-line no-new-func -- Execute the actual sandbox program in this resolver test.
   const resolve = new Function("root", `${source.slice(start, end)}; return renderClient;`)(
@@ -174,7 +174,7 @@ function screenResolver() {
   return resolve;
 }
 
-function screenClient() {
+function viewClient() {
   const render = vi.fn();
   const navigation = { component: vi.fn() };
   const general = { component: vi.fn() };
@@ -185,40 +185,40 @@ function screenClient() {
     detail,
     render,
     client: {
-      viewports: {
-        navbar: { screens: { "/": navigation } },
-        panel: { screens: { "/users": general, "/users/detail": detail } },
+      slots: {
+        navbar: { "/": navigation },
+        panel: { "/users": general, "/users/detail": detail },
       },
       $runtime: { h: (component: unknown, props: unknown) => ({ component, props }), render },
     },
   };
 }
 
-const scopeLayers = [
+const viewLayers = [
   { path: "/", context: { workspaceId: "w1" }, status: "ready" },
   { path: "/users", context: { canManageUsers: true }, status: "ready" },
   { path: "/users/detail", context: { userId: "u1" }, status: "ready" },
 ];
 
-function resolveProps(viewport: string, layers = scopeLayers) {
+function resolveProps(slot: string, layers = viewLayers) {
   return {
-    viewport,
-    scope: "/users/detail",
+    slot,
+    view: "/users/detail",
     layers,
-    declaredScopes: scopeLayers.map((layer) => layer.path),
-    supportedScopes: viewport === "navbar" ? ["/"] : ["/", "/users", "/users/detail"],
+    declaredViews: viewLayers.map((layer) => layer.path),
+    supportedViews: slot === "navbar" ? ["/"] : ["/", "/users", "/users/detail"],
   };
 }
 
-describe("viewport screen resolution", () => {
-  it("selects one screen per viewport and composes only its ancestors", () => {
-    const resolve = screenResolver();
-    const { client, navigation, detail, general, render } = screenClient();
+describe("slot view resolution", () => {
+  it("selects one view per slot and composes only its ancestors", () => {
+    const resolve = viewResolver();
+    const { client, navigation, detail, general, render } = viewClient();
     resolve(client, resolveProps("navbar"));
     expect(render.mock.calls[0]?.[0]).toEqual({
       component: navigation.component,
       props: {
-        screen: "/",
+        view: "/",
         status: "ready",
         context: { workspaceId: "w1" },
       },
@@ -227,7 +227,7 @@ describe("viewport screen resolution", () => {
     expect(render.mock.calls[1]?.[0]).toEqual({
       component: detail.component,
       props: {
-        screen: "/users/detail",
+        view: "/users/detail",
         status: "ready",
         context: { workspaceId: "w1", canManageUsers: true, userId: "u1" },
       },
@@ -236,30 +236,30 @@ describe("viewport screen resolution", () => {
   });
 
   it.each(["loading", "error"])("keeps navbar ready when detail is %s", (status) => {
-    const resolve = screenResolver();
-    const { client, render } = screenClient();
-    const layers = scopeLayers.map((layer) =>
+    const resolve = viewResolver();
+    const { client, render } = viewClient();
+    const layers = viewLayers.map((layer) =>
       layer.path === "/users/detail" ? { ...layer, status } : layer,
     );
     resolve(client, resolveProps("navbar", layers));
     expect(render.mock.calls[0]?.[0].props.status).toBe("ready");
     resolve(client, resolveProps("panel", layers));
     expect(render.mock.calls[1]?.[0].props).toMatchObject({
-      screen: "/users/detail",
+      view: "/users/detail",
       status,
       context: undefined,
     });
   });
 
-  it("falls back within a viewport using the parent's own readiness", () => {
-    const resolve = screenResolver();
-    const { client, general, render } = screenClient();
-    const fallbackClient = { ...client, viewports: { panel: { screens: { "/users": general } } } };
+  it("falls back within a slot using the parent's own readiness", () => {
+    const resolve = viewResolver();
+    const { client, general, render } = viewClient();
+    const fallbackClient = { ...client, slots: { panel: { "/users": general } } };
     resolve(
       fallbackClient,
       resolveProps(
         "panel",
-        scopeLayers.map((layer) => ({
+        viewLayers.map((layer) => ({
           ...layer,
           status: layer.path === "/users/detail" ? "error" : "ready",
         })),
@@ -268,24 +268,24 @@ describe("viewport screen resolution", () => {
     expect(render.mock.calls[0]?.[0]).toEqual({
       component: general.component,
       props: {
-        screen: "/users",
+        view: "/users",
         status: "ready",
         context: { workspaceId: "w1", canManageUsers: true },
       },
     });
   });
 
-  it("clears an existing view for unsupported viewports and blocked fallback", () => {
-    const resolve = screenResolver();
-    const { client, render } = screenClient();
+  it("clears an existing view for unsupported slots and blocked fallback", () => {
+    const resolve = viewResolver();
+    const { client, render } = viewClient();
     resolve(client, resolveProps("panel"));
     resolve(client, resolveProps("missing"));
     expect(render.mock.calls.at(-1)?.[0]).toBeNull();
     resolve(
       {
         ...client,
-        viewports: {
-          panel: { screens: { "/": client.viewports.navbar.screens["/"], "/users": false } },
+        slots: {
+          panel: { "/": client.slots.navbar["/"], "/users": false },
         },
       },
       resolveProps("panel"),
@@ -294,9 +294,9 @@ describe("viewport screen resolution", () => {
   });
 
   it("does not expose partial context when an ancestor is missing or unavailable", () => {
-    const resolve = screenResolver();
-    const { client, render } = screenClient();
-    resolve(client, resolveProps("panel", scopeLayers.slice(1)));
+    const resolve = viewResolver();
+    const { client, render } = viewClient();
+    resolve(client, resolveProps("panel", viewLayers.slice(1)));
     expect(render.mock.calls.at(-1)?.[0].props).toMatchObject({
       status: "error",
       context: undefined,
@@ -305,7 +305,7 @@ describe("viewport screen resolution", () => {
       client,
       resolveProps(
         "panel",
-        scopeLayers.map((layer) => ({
+        viewLayers.map((layer) => ({
           ...layer,
           status: layer.path === "/" ? "loading" : "ready",
         })),
@@ -318,23 +318,23 @@ describe("viewport screen resolution", () => {
   });
 });
 
-it("updates a mounted viewport without fetching its app bundle again", async () => {
+it("updates a mounted slot without fetching its app bundle again", async () => {
   const fetch = createFetch();
   const host = createIframeUiHost("https://assets.test/app.js", {
     fetch,
-    props: { viewport: "navbar", scope: "/users" },
+    props: { slot: "navbar", view: "/users" },
   });
   host.mount();
   const postMessage = vi.spyOn(getContentWindow(host.iframe), "postMessage");
   const channel = getChannel(host.iframe);
   emitFromIframe(host.iframe, { channel, type: iframeReadyType });
   await vi.waitFor(() => expect(postMessage).toHaveBeenCalledTimes(1));
-  host.setProps({ viewport: "navbar", scope: "/users/detail" });
+  host.setProps({ slot: "navbar", view: "/users/detail" });
   await vi.waitFor(() => expect(postMessage).toHaveBeenCalledTimes(2));
   expect(postMessage.mock.calls[1]?.[0]).toMatchObject({
     payload: {
       data: {
-        props: { viewport: "navbar", scope: "/users/detail" },
+        props: { slot: "navbar", view: "/users/detail" },
       },
     },
   });
@@ -343,25 +343,25 @@ it("updates a mounted viewport without fetching its app bundle again", async () 
   host.destroy();
 });
 
-it("limits matching to supported scopes while retaining ancestor data", () => {
-  const resolve = screenResolver();
-  const { client, general, render } = screenClient();
-  resolve(client, { ...resolveProps("panel"), supportedScopes: ["/users"] });
+it("limits matching to supported views while retaining ancestor data", () => {
+  const resolve = viewResolver();
+  const { client, general, render } = viewClient();
+  resolve(client, { ...resolveProps("panel"), supportedViews: ["/users"] });
   expect(render.mock.calls.at(-1)?.[0]).toEqual({
     component: general.component,
     props: {
-      screen: "/users",
+      view: "/users",
       status: "ready",
       context: { workspaceId: "w1", canManageUsers: true },
     },
   });
-  resolve(client, { ...resolveProps("panel"), supportedScopes: [] });
+  resolve(client, { ...resolveProps("panel"), supportedViews: [] });
   expect(render.mock.calls.at(-1)?.[0]).toBeNull();
 });
 
 it.each([null, undefined])(
   "handles a missing app client (%s) without accessing its runtime",
   (client) => {
-    expect(() => screenResolver()(client, resolveProps("panel"))).not.toThrow();
+    expect(() => viewResolver()(client, resolveProps("panel"))).not.toThrow();
   },
 );

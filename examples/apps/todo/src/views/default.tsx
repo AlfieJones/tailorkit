@@ -1,4 +1,4 @@
-import { createScreen } from "@tailorkit/app";
+import { createView } from "@tailorkit/app";
 import { useState } from "preact/hooks";
 import { Box, Button, Flex, Input } from "#tailorkit";
 
@@ -13,11 +13,11 @@ const starterTodos: Todo[] = [
   { id: "todo-plan-next", text: "Pick the next task", done: true },
 ];
 
-const screen = createScreen("/", {
-  component: ScreenComponent,
+const view = createView("/", {
+  component: ViewComponent,
 });
 
-function ScreenComponent() {
+function ViewComponent() {
   const [todos, setTodos] = useState<Todo[]>(starterTodos);
   const openCount = todos.filter((todo) => !todo.done).length;
 
@@ -109,4 +109,4 @@ function createId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export default screen;
+export default view;

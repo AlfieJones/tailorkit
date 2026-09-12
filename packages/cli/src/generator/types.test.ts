@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { renderGeneratedTypes } from "./types";
 
 describe("renderGeneratedTypes", () => {
-  it("generates screen props from schema screens", () => {
+  it("generates view props from schema views", () => {
     const output = renderGeneratedTypes({
       components: {},
-      scopes: {
+      views: {
         "/test": {
           context: {
             additionalProperties: false,
@@ -56,7 +56,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      scopes: {},
+      views: {},
     });
 
     expect(output).not.toContain("export type Disabled = boolean;");
@@ -79,7 +79,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      scopes: {},
+      views: {},
     });
 
     expect(output).not.toContain("export type Variant = unknown;");
@@ -103,7 +103,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      scopes: {},
+      views: {},
     });
 
     expect(output).toContain("export interface BoxProps");
@@ -147,7 +147,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      scopes: {},
+      views: {},
     });
 
     expect(output).toContain(
@@ -199,7 +199,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      scopes: {},
+      views: {},
     });
 
     expect(output).toContain('export type Grow = Responsive<"0" | "1">;');
@@ -247,7 +247,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      scopes: {},
+      views: {},
     });
 
     expect(output).toContain("export type Background = never;");
@@ -278,7 +278,7 @@ describe("renderGeneratedTypes", () => {
         },
       },
       components: {},
-      scopes: {},
+      views: {},
     });
 
     expect(output).toContain("export type TailorKitActions = {");
@@ -291,11 +291,11 @@ describe("renderGeneratedTypes", () => {
   });
 });
 
-it("composes independent ancestor contexts and generates viewport names", () => {
+it("composes independent ancestor contexts and generates slot names", () => {
   const generated = renderGeneratedTypes({
     components: {},
-    viewports: { panel: { scopes: ["/", "/users", "/users/detail"] }, navbar: { scopes: ["/"] } },
-    scopes: {
+    slots: { panel: { views: ["/", "/users", "/users/detail"] }, navbar: { views: ["/"] } },
+    views: {
       "/": {
         context: {
           type: "object",
@@ -320,7 +320,7 @@ it("composes independent ancestor contexts and generates viewport names", () => 
     },
   });
   expect(generated).toContain(
-    'interface TailorKitViewports { "panel": "/" | "/users" | "/users/detail"; "navbar": "/"; }',
+    'interface TailorKitSlots { "panel": "/" | "/users" | "/users/detail"; "navbar": "/"; }',
   );
   const detail = generated.slice(
     generated.indexOf('"/users/detail":'),

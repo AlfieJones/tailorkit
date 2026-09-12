@@ -1,4 +1,4 @@
-import { AppView, useScope } from "../index";
+import { AppView, useView } from "../index";
 import { createTailorKitServer } from "@tailorkit/core/server";
 import type { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import type { ReactNode } from "react";
@@ -19,14 +19,14 @@ const typedSchema = <TValue,>(): StandardSchemaV1<unknown, TValue> &
   }) as const satisfies StandardSchemaV1<unknown, TValue> & StandardJSONSchemaV1<unknown, TValue>;
 
 const server = createTailorKitServer({
-  viewports: {
-    panel: { scopes: ["/", "/home", "/home/detail", "/user"] },
-    navbar: { scopes: ["/"] },
+  slots: {
+    panel: { views: ["/", "/home", "/home/detail", "/user"] },
+    navbar: { views: ["/"] },
   },
   components: {
     Button: {},
   },
-  scopes: {
+  views: {
     "/": { context: typedSchema<{ user: { id: string } }>() },
     "/home": { context: typedSchema<{ page: { title: string } }>() },
     "/home/detail": {
@@ -108,51 +108,45 @@ components(callbackServer.$internal.schema, {
   },
 });
 
-useScope("/home", {
+useView("/home", {
   context: { page: { title: "Home" } },
 });
 
-useScope("/user", { status: "loading" });
+useView("/user", { status: "loading" });
 
-useScope("/user", { status: "error" });
+useView("/user", { status: "error" });
 
-// @ts-expect-error invalid screen name
-useScope("missing", { context: {} });
+// @ts-expect-error invalid view name
+useView("missing", { context: {} });
 
-// @ts-expect-error invalid context shape for selected screen
-useScope("/user", { context: { page: { title: "Home" } } });
+// @ts-expect-error invalid context shape for selected view
+useView("/user", { context: { page: { title: "Home" } } });
 
 // @ts-expect-error ready matches require context
-useScope("/home", {});
+useView("/home", {});
 
-// @ts-expect-error loading screens cannot expose partial context
-useScope("/user", { status: "loading", context: { userId: "user_1" } });
+// @ts-expect-error loading views cannot expose partial context
+useView("/user", { status: "loading", context: { userId: "user_1" } });
 
-<AppView viewport="panel" app={app} />;
+<AppView slot="panel" app={app} />;
 
-<AppView viewport="panel" app={app} scope="/home" context={{ page: { title: "Home" } }} />;
+<AppView slot="panel" app={app} view="/home" context={{ page: { title: "Home" } }} />;
 
-<AppView viewport="panel" app={app} scope="/user" status="loading" />;
+<AppView slot="panel" app={app} view="/user" status="loading" />;
 
-<AppView viewport="panel" app={app} scope="/user" status="error" />;
+<AppView slot="panel" app={app} view="/user" status="error" />;
 
-// @ts-expect-error invalid screen name
-<AppView viewport="panel" app={app} scope="missing" context={{}} />;
+// @ts-expect-error invalid view name
+<AppView slot="panel" app={app} view="missing" context={{}} />;
 
-// @ts-expect-error invalid context shape for selected screen
-<AppView viewport="panel" app={app} scope="/user" context={{ page: { title: "Home" } }} />;
+// @ts-expect-error invalid context shape for selected view
+<AppView slot="panel" app={app} view="/user" context={{ page: { title: "Home" } }} />;
 
-// @ts-expect-error ready app views require context when screen is provided
-<AppView viewport="panel" app={app} scope="/home" />;
+// @ts-expect-error ready app views require context when view is provided
+<AppView slot="panel" app={app} view="/home" />;
 
 // @ts-expect-error loading app views cannot expose context
-<AppView
-  viewport="panel"
-  app={app}
-  scope="/user"
-  status="loading"
-  context={{ userId: "user_1" }}
-/>;
+<AppView slot="panel" app={app} view="/user" status="loading" context={{ userId: "user_1" }} />;
 
 declare module "../tailor-kit" {
   interface Register {
@@ -160,12 +154,12 @@ declare module "../tailor-kit" {
   }
 }
 
-// @ts-expect-error Unknown host viewport.
-<AppView app={app} viewport="missing" />;
+// @ts-expect-error Unknown host slot.
+<AppView app={app} slot="missing" />;
 
 // @ts-expect-error The navbar supports root only, despite /user being globally declared.
-<AppView app={app} viewport="navbar" scope="/user" context={{ userId: "u1" }} />;
-<AppView app={app} viewport="navbar" scope="/" context={{ user: { id: "u1" } }} />;
+<AppView app={app} slot="navbar" view="/user" context={{ userId: "u1" }} />;
+<AppView app={app} slot="navbar" view="/" context={{ user: { id: "u1" } }} />;
 
 // @ts-expect-error The former object-only hook signature is not supported.
-useScope({ scope: "/user", context: { userId: "u1" } });
+useView({ view: "/user", context: { userId: "u1" } });

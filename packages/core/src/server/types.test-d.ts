@@ -39,12 +39,12 @@ void invalidContextlessHandlerContext;
 
 createTailorKitServer({
   components: {},
-  scopes: { "/": {}, "/users": {} },
-  viewports: { navbar: { scopes: ["/"] }, panel: { scopes: ["/users"] } },
+  views: { "/": {}, "/users": {} },
+  slots: { navbar: { views: ["/"] }, panel: { views: ["/users"] } },
 });
 createTailorKitServer({
   components: {},
-  scopes: { "/": {} },
-  // @ts-expect-error A viewport cannot reference an undeclared global scope.
-  viewports: { panel: { scopes: ["/missing"] } },
+  views: { "/": {} },
+  // @ts-expect-error A slot cannot reference an undeclared global view.
+  slots: { panel: { views: ["/missing"] } },
 });

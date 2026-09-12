@@ -260,9 +260,9 @@ function createIframeDocument(channel: string): string {
         });
         observer.observe(root, { attributes: true, characterData: true, childList: true, subtree: true });
 
-        const createScreenHierarchy = (screen) => {
-          const hierarchy = [screen];
-          let current = screen;
+        const createViewHierarchy = (view) => {
+          const hierarchy = [view];
+          let current = view;
           while (current !== "/") {
             const separator = current.lastIndexOf("/");
             current = separator <= 0 ? "/" : current.slice(0, separator);
@@ -271,26 +271,26 @@ function createIframeDocument(channel: string): string {
           return hierarchy;
         };
         const renderClient = (client, props) => {
-          const viewport = client && client.viewports && client.viewports[props.viewport];
-          const screens = viewport && viewport.screens;
-          const hierarchy = typeof props.scope === "string" ? createScreenHierarchy(props.scope) : [];
-          const selected = screens && hierarchy.find((path) => (props.supportedScopes || []).includes(path) && Object.hasOwn(screens, path));
-          // Unsupported viewports/scopes and explicit opt-outs clear any previous view.
-          if (!selected || screens[selected] === false) {
+          const slot = client && client.slots && client.slots[props.slot];
+          const views = slot;
+          const hierarchy = typeof props.view === "string" ? createViewHierarchy(props.view) : [];
+          const selected = views && hierarchy.find((path) => (props.supportedViews || []).includes(path) && Object.hasOwn(views, path));
+          // Unsupported slots/views and explicit opt-outs clear any previous view.
+          if (!selected || views[selected] === false) {
             if (client?.$runtime) client.$runtime.render(null, root);
             return;
           }
-          const screen = screens[selected];
-          if (typeof screen.component !== "function") {
-            throw new TypeError('TailorKit app client screen "' + selected + '" is missing a component.');
+          const view = views[selected];
+          if (typeof view.component !== "function") {
+            throw new TypeError('TailorKit app client view "' + selected + '" is missing a component.');
           }
           if (!client.$runtime || typeof client.$runtime.h !== "function" ||
               typeof client.$runtime.render !== "function") {
             throw new TypeError("TailorKit app client is missing its bundled Preact runtime.");
           }
-          const ancestors = createScreenHierarchy(selected).reverse();
+          const ancestors = createViewHierarchy(selected).reverse();
           const layers = Array.isArray(props.layers) ? props.layers : [];
-          const required = props.declaredScopes || [];
+          const required = props.declaredViews || [];
           let status = "ready";
           const context = {};
           for (const path of ancestors) {
@@ -303,13 +303,13 @@ function createIframeDocument(channel: string): string {
             else if (layer.status === "loading" && status !== "error") status = "loading";
             if (layer.status === "ready" && layer.context) {
               for (const key of Object.keys(layer.context)) {
-                if (Object.hasOwn(context, key)) throw new Error('Duplicate scope context field "' + key + '".');
+                if (Object.hasOwn(context, key)) throw new Error('Duplicate view context field "' + key + '".');
                 context[key] = layer.context[key];
               }
             }
           }
-          const selectedProps = { context: status === "ready" ? context : undefined, screen: selected, status };
-          client.$runtime.render(client.$runtime.h(screen.component, selectedProps), root);
+          const selectedProps = { context: status === "ready" ? context : undefined, view: selected, status };
+          client.$runtime.render(client.$runtime.h(view.component, selectedProps), root);
         };
         const loadApp = async ({ appSource, appUrl, props = {} }) => {
           if (loadedAppUrl !== appUrl) {

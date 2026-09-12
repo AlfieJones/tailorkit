@@ -5,10 +5,10 @@ import type {
   NoMixedActionContexts,
   NoComponentFieldCallbackConflicts,
   ResolveActionTreeContext,
-  ScopeContextHierarchy,
-  ScopeDefinition,
-  ScopeDefinitions,
-  ViewportDefinitions,
+  ViewContextHierarchy,
+  ViewDefinition,
+  ViewDefinitions,
+  SlotDefinitions,
   TailorKitSchema,
 } from "../schema/index";
 import type { ClientOptions as PlatformClientOptions } from "@tailorkit/client-platform/client/types.gen";
@@ -29,7 +29,7 @@ export interface TailorKitServerBaseOptions {
    * @default process.env.TAILORKIT_PROJECT_KEY
    */
   projectKey?: string;
-  /** Optional custom asset origin. Hosted apps receive a tenant-scoped clientPath from TailorKit automatically. */
+  /** Optional custom asset origin. Hosted apps receive a tenant-viewd clientPath from TailorKit automatically. */
   assetsBaseUrl?: string;
   basePath?: string;
   /**
@@ -64,39 +64,37 @@ export interface TailorKitServerBaseOptions {
 
 export interface TailorKitServerSchemaOptions<
   TComponents extends ComponentDefinitions,
-  TScreens extends Record<string, ScopeDefinition>,
+  TViews extends Record<string, ViewDefinition>,
   TActions extends ActionTree = Record<never, never>,
 > {
   actions?: TActions & ActionDefinitions & NoMixedActionContexts<TActions>;
   components: TComponents & NoComponentFieldCallbackConflicts<TComponents>;
-  scopes?: TScreens & ScopeContextHierarchy<TScreens>;
-  viewports?: ViewportDefinitions<keyof TScreens & string>;
+  views?: TViews & ViewContextHierarchy<TViews>;
+  slots?: SlotDefinitions<keyof TViews & string>;
 }
 
 export interface TailorKitServerInputOptions extends TailorKitServerBaseOptions {
-  viewports?: ViewportDefinitions;
+  slots?: SlotDefinitions;
   actions?: ActionDefinitions;
   components: ComponentDefinitions;
-  scopes?: ScopeDefinitions;
+  views?: ViewDefinitions;
 }
 
 export type InferTailorKitServerComponents<TOptions extends TailorKitServerInputOptions> =
   TOptions["components"];
 
-export type InferTailorKitServerScopes<TOptions extends TailorKitServerInputOptions> =
-  TOptions extends { scopes: infer TScreens } ? TScreens : Record<never, never>;
+export type InferTailorKitServerViews<TOptions extends TailorKitServerInputOptions> =
+  TOptions extends { views: infer TViews } ? TViews : Record<never, never>;
 
 export type InferTailorKitServerActions<TOptions extends TailorKitServerInputOptions> =
   TOptions extends { actions: infer TActions } ? TActions : Record<never, never>;
 
 export interface TailorKitServerOptions<
   TComponents extends ComponentDefinitions,
-  TScreens extends Record<string, ScopeDefinition>,
+  TViews extends Record<string, ViewDefinition>,
   TActions extends ActionTree = Record<never, never>,
 >
-  extends
-    TailorKitServerBaseOptions,
-    TailorKitServerSchemaOptions<TComponents, TScreens, TActions> {}
+  extends TailorKitServerBaseOptions, TailorKitServerSchemaOptions<TComponents, TViews, TActions> {}
 
 export type TailorKitHostContext<TActionContext = never> = {
   scopeId: string;
@@ -117,7 +115,7 @@ export type TailorKitHandlerContext<TActionContext = never> = TailorKitHostConte
 
 export interface TailorKitServer<
   TComponents extends ComponentDefinitions,
-  TScreens extends Record<string, ScopeDefinition>,
+  TViews extends Record<string, ViewDefinition>,
   TActions extends ActionTree = Record<never, never>,
   TActionContext = ResolveActionTreeContext<TActions>,
 > {
@@ -139,6 +137,6 @@ export interface TailorKitServer<
     assetsBaseUrl?: string;
     platformBaseUrl: string;
     router: TailorKitRouter;
-    schema: TailorKitSchema<TComponents, TScreens, TActions>;
+    schema: TailorKitSchema<TComponents, TViews, TActions>;
   };
 }

@@ -1,5 +1,5 @@
-import { Root, AppView, useApps, useScope } from "../index";
-import { act, cleanup, render, screen as testingScreen, waitFor } from "@testing-library/react";
+import { Root, AppView, useApps, useView } from "../index";
+import { act, cleanup, render, screen as testingView, waitFor } from "@testing-library/react";
 import { createElement, StrictMode } from "react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -62,14 +62,14 @@ const emptySchema = {
 } as const;
 
 const server = createTailorKitServer({
-  viewports: {
-    panel: { scopes: ["/", "/home", "/home/detail", "/user"] },
-    navbar: { scopes: ["/"] },
+  slots: {
+    panel: { views: ["/", "/home", "/home/detail", "/user"] },
+    navbar: { views: ["/"] },
   },
   components: {
     Button: { children: true },
   },
-  scopes: {
+  views: {
     "/": { context: emptySchema },
     "/home": { context: emptySchema },
     "/home/detail": { context: emptySchema },
@@ -83,13 +83,13 @@ const components = {
 
 const schema = server.$internal.schema;
 
-function CurrentScreenRoute({
+function CurrentViewRoute({
   nested,
 }: {
   nested: boolean;
   tailor: ReturnType<typeof createTailorKitClient<typeof server>>;
 }) {
-  useScope(
+  useView(
     nested ? "/home/detail" : "/home",
     nested
       ? {
@@ -100,10 +100,10 @@ function CurrentScreenRoute({
         },
   );
 
-  return <AppView viewport="panel" app={{ clientPath: "/apps/todo.js", id: "todo" }} />;
+  return <AppView slot="panel" app={{ clientPath: "/apps/todo.js", id: "todo" }} />;
 }
 
-function CurrentScreenHost({
+function CurrentViewHost({
   nested,
   tailor,
 }: {
@@ -112,7 +112,7 @@ function CurrentScreenHost({
 }) {
   return (
     <Root client={tailor} apps={[{ clientPath: "/apps/todo.js", id: "todo" }]}>
-      <CurrentScreenRoute nested={nested} tailor={tailor} />
+      <CurrentViewRoute nested={nested} tailor={tailor} />
     </Root>
   );
 }
@@ -123,8 +123,8 @@ function HomeAppView({
   app: TailorKitApp;
   tailor: ReturnType<typeof createTailorKitClient<typeof server>>;
 }) {
-  useScope("/home", { context: { page: { title: "home" } } });
-  return <AppView viewport="panel" app={app} />;
+  useView("/home", { context: { page: { title: "home" } } });
+  return <AppView slot="panel" app={app} />;
 }
 
 describe("tailorKitClient React adapter", () => {
@@ -163,7 +163,7 @@ describe("tailorKitClient React adapter", () => {
     );
 
     await waitFor(() => {
-      expect(testingScreen.getAllByText("ready:todo")).toHaveLength(2);
+      expect(testingView.getAllByText("ready:todo")).toHaveLength(2);
     });
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     expect(globalThis.fetch).toHaveBeenCalledWith(
@@ -171,13 +171,13 @@ describe("tailorKitClient React adapter", () => {
     );
   });
 
-  it("derives the hierarchy from the current screen and reuses its extended context", async () => {
+  it("derives the hierarchy from the current view and reuses its extended context", async () => {
     const tailor = createTailorKitClient<typeof server>({
       baseUrl: "http://runtime.test",
       components,
     });
 
-    const view = render(<CurrentScreenHost nested tailor={tailor} />);
+    const view = render(<CurrentViewHost nested tailor={tailor} />);
 
     await waitFor(() => {
       expect(hostRecords.at(-1)?.props).toMatchObject({
@@ -192,7 +192,7 @@ describe("tailorKitClient React adapter", () => {
     });
 
     await act(() => {
-      view.rerender(<CurrentScreenHost nested={false} tailor={tailor} />);
+      view.rerender(<CurrentViewHost nested={false} tailor={tailor} />);
     });
 
     await waitFor(() => {
@@ -215,8 +215,8 @@ describe("tailorKitClient React adapter", () => {
     });
 
     function Route({ status }: { status: "error" | "loading" }) {
-      useScope("/home/detail", { status });
-      return <AppView viewport="panel" app={{ clientPath: "/apps/todo.js", id: "todo" }} />;
+      useView("/home/detail", { status });
+      return <AppView slot="panel" app={{ clientPath: "/apps/todo.js", id: "todo" }} />;
     }
 
     const view = render(
@@ -252,12 +252,12 @@ describe("tailorKitClient React adapter", () => {
     });
 
     function Route() {
-      useScope("/home", { context: { page: { title: "home" } } });
+      useView("/home", { context: { page: { title: "home" } } });
       return (
         <>
-          <AppView viewport="panel" app={{ clientPath: "/apps/b.js", id: "b" }} />
+          <AppView slot="panel" app={{ clientPath: "/apps/b.js", id: "b" }} />
           <AppView
-            viewport="panel"
+            slot="panel"
             app={{
               currentDeployment: { id: "deployment_1" },
               id: "a",
@@ -297,7 +297,7 @@ describe("tailorKitClient React adapter", () => {
     ]);
   });
 
-  it("renders an explicit screen override without a registered current screen", async () => {
+  it("renders an explicit view override without a registered current view", async () => {
     const tailor = createTailorKitClient<typeof server>({
       baseUrl: "http://runtime.test",
       components,
@@ -306,10 +306,10 @@ describe("tailorKitClient React adapter", () => {
     render(
       <Root client={tailor}>
         <AppView
-          viewport="panel"
+          slot="panel"
           app={{ clientPath: "/apps/todo.js", id: "todo" }}
           context={{ userId: "user_1" }}
-          scope="/user"
+          view="/user"
         />
       </Root>,
     );
@@ -327,7 +327,7 @@ describe("tailorKitClient React adapter", () => {
     });
   });
 
-  it("warns when multiple hooks register screens at the same hierarchy depth", async () => {
+  it("warns when multiple hooks register views at the same hierarchy depth", async () => {
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const tailor = createTailorKitClient<typeof server>({
       baseUrl: "http://runtime.test",
@@ -335,13 +335,13 @@ describe("tailorKitClient React adapter", () => {
     });
 
     function HomeRoute() {
-      useScope("/home", { context: { page: { title: "home" } } });
+      useView("/home", { context: { page: { title: "home" } } });
       return null;
     }
 
     function UserRoute() {
-      useScope("/user", { context: { userId: "user_1" } });
-      return <AppView viewport="panel" app={{ clientPath: "/apps/todo.js", id: "todo" }} />;
+      useView("/user", { context: { userId: "user_1" } });
+      return <AppView slot="panel" app={{ clientPath: "/apps/todo.js", id: "todo" }} />;
     }
 
     render(
@@ -356,7 +356,7 @@ describe("tailorKitClient React adapter", () => {
     });
   });
 
-  it("passes primitive theme tokens into mounted screens", async () => {
+  it("passes primitive theme tokens into mounted views", async () => {
     const tailor = createTailorKitClient<typeof server>({
       baseUrl: "http://runtime.test",
       components,
@@ -396,9 +396,7 @@ describe("tailorKitClient React adapter", () => {
     );
 
     await waitFor(() => {
-      expect(
-        testingScreen.getByText('TailorKit component "Button" is not registered.'),
-      ).toBeTruthy();
+      expect(testingView.getByText('TailorKit component "Button" is not registered.')).toBeTruthy();
     });
     expect(consoleError).toHaveBeenCalled();
   });
@@ -421,7 +419,7 @@ describe("tailorKitClient React adapter", () => {
 
     await waitFor(() => {
       expect(
-        testingScreen.getByText('TailorKit component "MissingComponent" is not registered.'),
+        testingView.getByText('TailorKit component "MissingComponent" is not registered.'),
       ).toBeTruthy();
     });
 
@@ -435,14 +433,14 @@ describe("tailorKitClient React adapter", () => {
 
     await waitFor(() => {
       expect(
-        testingScreen.queryByText('TailorKit component "MissingComponent" is not registered.'),
+        testingView.queryByText('TailorKit component "MissingComponent" is not registered.'),
       ).toBeNull();
-      expect(testingScreen.getByRole("button").textContent).toContain("/apps/email.js");
+      expect(testingView.getByRole("button").textContent).toContain("/apps/email.js");
     });
   });
 });
 
-describe("scope registries", () => {
+describe("view registries", () => {
   beforeEach(() => {
     hostRecords.length = 0;
     vi.spyOn(globalThis, "fetch").mockImplementation(() =>
@@ -452,22 +450,22 @@ describe("scope registries", () => {
   afterEach(cleanup);
 
   function Layers({ detail = true }: { detail?: boolean }) {
-    useScope("/", { context: { user: { id: "u1" } } });
-    useScope("/home", { context: { page: { title: "Home" } } });
+    useView("/", { context: { user: { id: "u1" } } });
+    useView("/home", { context: { page: { title: "Home" } } });
     return (
       <>
         {detail ? <Detail /> : null}
-        <AppView viewport="navbar" app={{ id: "nav", clientPath: "/nav.js" }} />
-        <AppView viewport="panel" app={{ id: "panel", clientPath: "/panel.js" }} />
+        <AppView slot="navbar" app={{ id: "nav", clientPath: "/nav.js" }} />
+        <AppView slot="panel" app={{ id: "panel", clientPath: "/panel.js" }} />
       </>
     );
   }
   function Detail() {
-    useScope("/home/detail", { status: "loading" });
+    useView("/home/detail", { status: "loading" });
     return null;
   }
 
-  it("publishes the same active chain to simultaneous viewports and removes unmounted layers", async () => {
+  it("publishes the same active chain to simultaneous slots and removes unmounted layers", async () => {
     const client = createTailorKitClient<typeof server>({
       baseUrl: "http://runtime.test",
       components,
@@ -478,9 +476,9 @@ describe("scope registries", () => {
       </Root>,
     );
     await waitFor(() => expect(hostRecords).toHaveLength(2));
-    expect(hostRecords.map((record) => record.props?.viewport)).toEqual(["navbar", "panel"]);
+    expect(hostRecords.map((record) => record.props?.slot)).toEqual(["navbar", "panel"]);
     expect(hostRecords[0]?.props).toMatchObject({
-      scope: "/home/detail",
+      view: "/home/detail",
       layers: [
         { path: "/", context: { user: { id: "u1" } }, status: "ready" },
         { path: "/home", context: { page: { title: "Home" } }, status: "ready" },
@@ -492,9 +490,9 @@ describe("scope registries", () => {
         <Layers detail={false} />
       </Root>,
     );
-    await waitFor(() => expect(hostRecords.at(-1)?.props?.scope).toBe("/home"));
+    await waitFor(() => expect(hostRecords.at(-1)?.props?.view).toBe("/home"));
     expect(hostRecords.at(-1)?.props?.layers).toHaveLength(2);
-    expect(hostRecords).toHaveLength(2); // Context changes must not remount either viewport.
+    expect(hostRecords).toHaveLength(2); // Context changes must not remount either slot.
   });
 
   it("isolates roots sharing a client and survives Strict Mode effect replay", async () => {
@@ -503,8 +501,8 @@ describe("scope registries", () => {
       components,
     });
     function OtherRoute() {
-      useScope("/user", { context: { userId: "other" } });
-      return <AppView viewport="panel" app={{ id: "other", clientPath: "/other.js" }} />;
+      useView("/user", { context: { userId: "other" } });
+      return <AppView slot="panel" app={{ id: "other", clientPath: "/other.js" }} />;
     }
     render(
       <StrictMode>
@@ -521,11 +519,11 @@ describe("scope registries", () => {
     );
     const other = hostRecords.find((record) => record.appUrl.endsWith("other.js"));
     expect(other?.props).toMatchObject({
-      scope: "/user",
+      view: "/user",
       layers: [{ path: "/user", context: { userId: "other" } }],
     });
     expect(other?.props?.layers).toHaveLength(1);
-    expect(hostRecords.find((record) => record.appUrl.endsWith("panel.js"))?.props?.scope).toBe(
+    expect(hostRecords.find((record) => record.appUrl.endsWith("panel.js"))?.props?.view).toBe(
       "/home/detail",
     );
   });
@@ -542,11 +540,11 @@ it("replaces the root store only when the normalized endpoint changes", async ()
   });
   function Contents() {
     const { data } = useApps();
-    useScope("/user", { context: { userId: "u1" } });
+    useView("/user", { context: { userId: "u1" } });
     return (
       <>
         <span>{data?.[0]?.id}</span>
-        <AppView viewport="panel" app={{ id: "test", clientPath: "client.js" }} />
+        <AppView slot="panel" app={{ id: "test", clientPath: "client.js" }} />
       </>
     );
   }
@@ -557,7 +555,7 @@ it("replaces the root store only when the normalized endpoint changes", async ()
       <Contents />
     </Root>,
   );
-  await waitFor(() => expect(testingScreen.getByText("first.test")).toBeTruthy());
+  await waitFor(() => expect(testingView.getByText("first.test")).toBeTruthy());
   const count = fetchMock.mock.calls.length;
   view.rerender(
     <Root client={client(new URL("http://first.test/api/"))}>
@@ -570,9 +568,9 @@ it("replaces the root store only when the normalized endpoint changes", async ()
       <Contents />
     </Root>,
   );
-  await waitFor(() => expect(testingScreen.getByText("second.test")).toBeTruthy());
+  await waitFor(() => expect(testingView.getByText("second.test")).toBeTruthy());
   await waitFor(() => expect(hostRecords.at(-1)?.appUrl).toBe("http://second.test/api/client.js"));
-  expect(hostRecords.at(-1)?.props?.scope).toBe("/user");
+  expect(hostRecords.at(-1)?.props?.view).toBe("/user");
   view.unmount();
 });
 
@@ -587,15 +585,15 @@ it("retains equivalent explicit context identity and publishes changed values", 
   const content = (userId: string) => (
     <Root client={client}>
       <AppView
-        viewport="panel"
-        scope="/user"
+        slot="panel"
+        view="/user"
         context={{ userId }}
         app={{ id: "test", clientPath: "/client.js" }}
       />
     </Root>
   );
   const view = render(content("u1"));
-  await waitFor(() => expect(hostRecords.at(-1)?.props?.scope).toBe("/user"));
+  await waitFor(() => expect(hostRecords.at(-1)?.props?.view).toBe("/user"));
   const initialProps = hostRecords.at(-1)?.props;
   view.rerender(content("u1"));
   expect(hostRecords.at(-1)?.props).toBe(initialProps);

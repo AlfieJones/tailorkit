@@ -1,6 +1,6 @@
 # Next.js TailorKit Example
 
-This example shows a CRM host product that exposes TailorKit screens, components,
+This example shows a CRM host product that exposes TailorKit views, components,
 theme tokens, and actions from a Next.js App Router application.
 
 ## Run the example
@@ -39,7 +39,7 @@ Open `http://localhost:5020`. The TailorKit API is mounted at
 - `app/api/tailorkit/[[...path]]/route.ts` mounts the catch-all API handler.
 - `lib/tailorkit-client.tsx` maps contract components to React renderers.
 - `components/tailorkit-shell.tsx` loads installed apps and renders `AppView`.
-- `app/customers/layout.tsx` publishes route context with `useScope`.
+- `app/customers/layout.tsx` publishes route context with `useView`.
 
 The example defaults to the platform at `http://localhost:3000` and the
 SeaweedFS service started by the root development command. Override

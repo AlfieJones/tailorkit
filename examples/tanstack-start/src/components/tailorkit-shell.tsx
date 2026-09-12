@@ -1,4 +1,4 @@
-import { AppView, Root, useApps, useScope } from "tailorkit/react";
+import { AppView, Root, useApps, useView } from "tailorkit/react";
 import type { DemoUser } from "@examples/shared";
 import { Button } from "@tailorkit/ui/components/button";
 import { SidebarInset, SidebarProvider } from "@tailorkit/ui/components/sidebar";
@@ -51,7 +51,7 @@ function TailorKitShellContent({
   signOut: () => Promise<void>;
   user: DemoUser;
 }) {
-  useScope("/", { context: { user } });
+  useView("/", { context: { user } });
 
   return (
     <SidebarProvider>
@@ -59,7 +59,7 @@ function TailorKitShellContent({
       <SidebarInset className="me-12">
         <main className="mx-auto w-full max-w-6xl p-6">{children}</main>
       </SidebarInset>
-      <TailorKitAppScreen app={currentApp} onClose={() => onSelectApp(null)} />
+      <TailorKitAppView app={currentApp} onClose={() => onSelectApp(null)} />
       <TailorKitAppList apps={apps} currentApp={currentApp} onSelect={onSelectApp} />
     </SidebarProvider>
   );
@@ -101,7 +101,7 @@ function TailorKitAppList({
   );
 }
 
-function TailorKitAppScreen({ app, onClose }: { app: TailorKitApp | null; onClose: () => void }) {
+function TailorKitAppView({ app, onClose }: { app: TailorKitApp | null; onClose: () => void }) {
   if (!app) {
     return null;
   }
@@ -124,7 +124,7 @@ function TailorKitAppScreen({ app, onClose }: { app: TailorKitApp | null; onClos
         </Button>
       </header>
       <main className="min-h-0 flex-1 overflow-auto p-4">
-        <AppView viewport="panel" app={app} />
+        <AppView slot="panel" app={app} />
       </main>
     </aside>
   );

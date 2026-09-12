@@ -16,11 +16,11 @@ const ExplicitLeaf = createRemoteComponent<object, false>("Leaf", { children: fa
 ExplicitLeaf({ children: ["not allowed"] });
 
 declare module "./index" {
-  interface TailorKitScreens {
+  interface TailorKitViews {
     "/": { context: { workspaceId: string } };
     "/users": { context: { workspaceId: string; userId: string } };
   }
-  interface TailorKitViewports {
+  interface TailorKitSlots {
     panel: "/" | "/users";
     navbar: "/";
   }

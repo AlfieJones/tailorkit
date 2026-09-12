@@ -25,7 +25,7 @@ createTailorKitSchema({
 
 createTailorKitSchema({
   components: {},
-  scopes: {
+  views: {
     "/pages": {
       context: z.object({ userId: z.string() }),
     },
@@ -44,7 +44,7 @@ const tailor = createTailorKitSchema({
       children: true,
     },
   },
-  scopes: {
+  views: {
     "/": {},
     "/customers/:customerId": {
       context: z.object({ customerId: z.string() }),
@@ -64,10 +64,10 @@ const tailor = createTailorKitSchema({
 });
 
 const component = tailor.components.Button;
-const screen = tailor.scopes["/customers/:customerId"];
+const view = tailor.views["/customers/:customerId"];
 const noSchemaAction = tailor.actions.noSchemas;
 void component;
-void screen;
+void view;
 void noSchemaAction;
 
 const buttonProps: ComponentProps<typeof tailor.components.Button> = { variant: "default" };
@@ -77,7 +77,7 @@ expectTypeOf<ComponentProps<typeof tailor.components.Button>>().toMatchTypeOf<{
   variant: "default" | "secondary";
 }>();
 expectTypeOf<typeof tailor.components.Button.children>().toEqualTypeOf<true>();
-expectTypeOf<typeof screen.context>().toEqualTypeOf<z.ZodObject<{ customerId: z.ZodString }>>();
+expectTypeOf<typeof view.context>().toEqualTypeOf<z.ZodObject<{ customerId: z.ZodString }>>();
 expectTypeOf<InferActionInput<typeof tailor.actions.withInput>>().toEqualTypeOf<{ id: string }>();
 expectTypeOf<InferActionOutput<typeof tailor.actions.withOutput>>().toEqualTypeOf<{ ok: true }>();
 expectTypeOf<InferActionOutput<typeof noSchemaAction>>().toEqualTypeOf<{ ok: boolean }>();
@@ -170,21 +170,21 @@ createTailorKitSchema({
 
 createTailorKitSchema({
   components: {},
-  scopes: {
+  views: {
     "/": { context: z.object({ workspaceId: z.string() }) },
-    // @ts-expect-error Each field has one owning scope.
+    // @ts-expect-error Each field has one owning view.
     "/users/detail": { context: z.object({ workspaceId: z.string() }) },
   },
 });
 
 createTailorKitSchema({
   components: {},
-  scopes: { "/": {}, "/users": {} },
-  viewports: { navbar: { scopes: ["/"] }, panel: { scopes: ["/users"] } },
+  views: { "/": {}, "/users": {} },
+  slots: { navbar: { views: ["/"] }, panel: { views: ["/users"] } },
 });
 createTailorKitSchema({
   components: {},
-  scopes: { "/": {} },
-  // @ts-expect-error Viewport lists can only reference declared scopes.
-  viewports: { panel: { scopes: ["/missing"] } },
+  views: { "/": {} },
+  // @ts-expect-error Slot lists can only reference declared views.
+  slots: { panel: { views: ["/missing"] } },
 });

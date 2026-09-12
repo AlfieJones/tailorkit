@@ -46,7 +46,7 @@ describe("generateApp", () => {
       "tailorkit.config.ts",
       ".gitignore",
       path.join("src", "client.ts"),
-      path.join("src", "screens", "default.tsx"),
+      path.join("src", "views", "default.tsx"),
       path.join("src", "tailorkit.gen.ts"),
     ];
 
@@ -194,37 +194,37 @@ describe("generateApp", () => {
     expect(content).not.toContain("defineTailorKitConfig");
   });
 
-  it("generates a default screen for the default schema", async () => {
+  it("generates a default view for the default schema", async () => {
     const targetDirectory = await createTempDir();
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(
-      path.join(targetDirectory, "src", "screens", "default.tsx"),
+      path.join(targetDirectory, "src", "views", "default.tsx"),
       "utf-8",
     );
-    expect(content).toContain('createScreen("/", {');
+    expect(content).toContain('createView("/", {');
     expect(content).toContain("context.user.name");
   });
 
-  it("generates a client entry with the default screen", async () => {
+  it("generates a client entry with the default view", async () => {
     const targetDirectory = await createTempDir();
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(path.join(targetDirectory, "src", "client.ts"), "utf-8");
     expect(content).toContain('import { defineClient } from "tailorkit/app"');
-    expect(content).toContain('import defaultScreen from "./screens/default"');
+    expect(content).toContain('import defaultView from "./views/default"');
     expect(content).toContain("defineClient");
-    expect(content).toContain('"/": defaultScreen');
-    expect(content).not.toContain("fallbackScreen");
+    expect(content).toContain('"/": defaultView');
+    expect(content).not.toContain("fallbackView");
   });
 
-  it("does not generate fallback screen props for the default schema", async () => {
+  it("does not generate fallback view props for the default schema", async () => {
     const targetDirectory = await createTempDir();
     await generateApp({ ...defaultOptions, targetDirectory });
 
     const content = await readFile(path.join(targetDirectory, "src", "tailorkit.gen.ts"), "utf-8");
-    expect(content).not.toContain("FallbackScreenProps");
-    expect(content).not.toContain("DefaultScreenProps");
+    expect(content).not.toContain("FallbackViewProps");
+    expect(content).not.toContain("DefaultViewProps");
   });
 
   it("generates a valid generated types file", async () => {

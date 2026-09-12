@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { componentRecord } from "./component";
-import { screenRecord } from "./screen";
+import { viewRecord } from "./view";
 
 const actionLeaf = z.object({
   input: z.record(z.string(), z.unknown()).optional(),
@@ -18,21 +18,21 @@ const actionRecord: z.ZodType<ActionRecord> = z.lazy(() =>
 export const TailorKitSchemaSpec = z
   .object({
     version: z.literal(1),
-    viewports: z
-      .record(z.string().min(1), z.object({ scopes: z.array(z.string().startsWith("/")) }))
+    slots: z
+      .record(z.string().min(1), z.object({ views: z.array(z.string().startsWith("/")) }))
       .default({}),
     actions: actionRecord.default({}),
     components: componentRecord,
-    scopes: screenRecord.default({}),
+    views: viewRecord.default({}),
   })
   .superRefine((schema, ctx) => {
-    for (const [name, viewport] of Object.entries(schema.viewports)) {
-      viewport.scopes.forEach((scope, index) => {
-        if (!Object.hasOwn(schema.scopes, scope)) {
+    for (const [name, slot] of Object.entries(schema.slots)) {
+      slot.views.forEach((view, index) => {
+        if (!Object.hasOwn(schema.views, view)) {
           ctx.addIssue({
             code: "custom",
-            path: ["viewports", name, "scopes", index],
-            message: `Unknown scope "${scope}".`,
+            path: ["slots", name, "views", index],
+            message: `Unknown view "${view}".`,
           });
         }
       });

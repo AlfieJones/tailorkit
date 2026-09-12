@@ -1,11 +1,11 @@
 import { defineClient } from "@tailorkit/app";
-import navigation from "./screens/navigation";
-import defaultScreen from "./screens/default";
+import navigation from "./views/navigation";
+import defaultView from "./views/default";
 
 const client = defineClient({
-  viewports: {
-    panel: { screens: { "/": defaultScreen } },
-    navbar: { screens: { "/": navigation } },
+  slots: {
+    panel: { "/": defaultView },
+    navbar: { "/": navigation },
   },
 });
 

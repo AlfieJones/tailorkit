@@ -1,4 +1,4 @@
-import { actions, components, scopes } from "@examples/shared";
+import { actions, components, views } from "@examples/shared";
 import { createTailorKit } from "tailorkit";
 
 export const tailorKit = createTailorKit({
@@ -10,9 +10,9 @@ export const tailorKit = createTailorKit({
   },
   actions,
   components,
-  scopes,
-  viewports: {
-    panel: { scopes: ["/", "/customers", "/customers/detail"] },
-    navbar: { scopes: ["/"] },
+  views,
+  slots: {
+    panel: { views: ["/", "/customers", "/customers/detail"] },
+    navbar: { views: ["/"] },
   },
 });

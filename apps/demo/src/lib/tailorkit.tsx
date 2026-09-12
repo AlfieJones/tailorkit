@@ -152,8 +152,8 @@ export const createDemoSchema = (theme: TailorKitTheme = defaultTheme) => {
       TabsTab: TabsTabComponent,
       TabsPanel: TabsPanelComponent,
     },
-    viewports: { panel: { scopes: ["/"] }, navbar: { scopes: ["/"] } },
-    scopes: {
+    slots: { panel: { views: ["/"] }, navbar: { views: ["/"] } },
+    views: {
       "/": {
         context: z.object({}).optional(),
       },

@@ -9,7 +9,7 @@
 import { createRemoteComponent } from "tailorkit/app";
 
 
-export interface ScreenPropsByPath {
+export interface ViewPropsByPath {
   "/": {
     context: {
       user: {
@@ -20,12 +20,12 @@ export interface ScreenPropsByPath {
 }
 
 declare module "tailorkit/app" {
-  interface TailorKitScreens extends ScreenPropsByPath {}
-  interface TailorKitViewports { panel: "/" }
+  interface TailorKitViews extends ViewPropsByPath {}
+  interface TailorKitSlots { panel: "/" }
 }
 
-export type ScreenPath = keyof ScreenPropsByPath & string;
-export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
+export type ViewPath = keyof ViewPropsByPath & string;
+export type ViewProps<TPath extends ViewPath> = ViewPropsByPath[TPath];
 
 export interface ButtonProps {
   disabled?: unknown;

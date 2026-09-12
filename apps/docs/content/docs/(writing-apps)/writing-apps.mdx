@@ -1,6 +1,6 @@
 ---
 title: Writing apps
-description: Build TailorKit runtime apps that target host screens and components.
+description: Build TailorKit runtime apps that target host views and components.
 ---
 
 A TailorKit app is the embedded side of the integration. It is built separately
@@ -16,35 +16,35 @@ A generated app contains:
 
 ```txt
 src/
-  client.ts              # Registers the app's screens
-  screens/default.tsx    # Implements one screen
+  client.ts              # Registers the app's views
+  views/default.tsx    # Implements one view
   tailorkit.gen.ts       # Generated host bindings; do not edit
 tailorkit.config.ts      # Host URL, app ID, entry, and build options
 package.json
 ```
 
-## Register screens
+## Register views
 
-TailorKit apps export a client with screens. Each screen corresponds to a scope
+TailorKit apps export a client with views. Each view corresponds to a view
 path from the host schema.
 
 ```ts
 import { defineClient } from "@tailorkit/app";
-import HomeScreen from "./screens/home";
+import HomeView from "./views/home";
 
 const client = defineClient({
-  viewports: {
-    panel: { screens: { "/home": HomeScreen } },
+  slots: {
+    panel: { "/home": HomeView },
   },
 });
 
 export default client;
 ```
 
-The host chooses which screen is active. The app only implements the screens it
+The host chooses which view is active. The app only implements the views it
 supports.
 
-Each value is created with `createScreen`; the registry key and screen path must
+Each value is created with `createView`; the registry key and view path must
 match.
 
 ## Generate bindings
@@ -57,20 +57,20 @@ pnpm generate
 
 The generator reads the host schema configured in `tailorkit.config.ts` and
 updates `src/tailorkit.gen.ts`. Regenerate after the host adds or changes a
-screen, component, action, callback, child content, or theme token.
+view, component, action, callback, child content, or theme token.
 
-Generated bindings expose host components and screen props to the app.
+Generated bindings expose host components and view props to the app.
 
 ```tsx
-import { createScreen } from "@tailorkit/app";
+import { createView } from "@tailorkit/app";
 import { Button } from "#tailorkit";
 
-const screen = createScreen("/home", {
-  component: HomeScreen,
+const view = createView("/home", {
+  component: HomeView,
 });
 
-function HomeScreen() {
-  const context = screen.useContext();
+function HomeView() {
+  const context = view.useContext();
 
   return (
     <Button onClick={() => {}} variant="default">
@@ -79,11 +79,11 @@ function HomeScreen() {
   );
 }
 
-export default screen;
+export default view;
 ```
 
-`createScreen("/home")` is typed from the host schema, so `useContext()` returns
-the composed context from the matching scope and its mounted ancestors.
+`createView("/home")` is typed from the host schema, so `useContext()` returns
+the composed context from the matching view and its mounted ancestors.
 
 ## Render host components
 
@@ -141,7 +141,7 @@ pnpm deploy
 ## Keep apps focused
 
 TailorKit apps should not own host routing or fetch host route data directly.
-Use the context supplied by the current host screen, then render UI using the
+Use the context supplied by the current host view, then render UI using the
 generated component bindings.
 
 Apps should also avoid depending on generated-file implementation details.

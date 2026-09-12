@@ -28,7 +28,7 @@ interface SerializedComponent {
   children?: boolean;
 }
 
-interface SerializedScreen {
+interface SerializedView {
   context?: JsonSchema;
 }
 
@@ -44,8 +44,8 @@ interface SerializedAction {
 interface TailorKitSchemaFile {
   actions?: SerializedActions;
   components?: Record<string, SerializedComponent>;
-  scopes?: Record<string, SerializedScreen>;
-  viewports?: Record<string, { scopes: readonly string[] }>;
+  views?: Record<string, SerializedView>;
+  slots?: Record<string, { views: readonly string[] }>;
 }
 
 export interface GenerateTypesOptions {
@@ -326,14 +326,13 @@ const renderTypeAliases = (
   return lines.join("\n");
 };
 
-const renderScreenProps = (screens: Record<string, SerializedScreen>): string => {
-  const lines = ["export interface ScreenPropsByPath {"];
+const renderViewProps = (views: Record<string, SerializedView>): string => {
+  const lines = ["export interface ViewPropsByPath {"];
 
-  for (const screenPath of Object.keys(screens)) {
-    const contexts = Object.entries(screens)
+  for (const viewPath of Object.keys(views)) {
+    const contexts = Object.entries(views)
       .filter(
-        ([parent]) =>
-          parent === screenPath || parent === "/" || screenPath.startsWith(`${parent}/`),
+        ([parent]) => parent === viewPath || parent === "/" || viewPath.startsWith(`${parent}/`),
       )
       .filter(([, layer]) => layer.context !== undefined)
       .map(([, layer]) => toTypeScriptType(layer.context, 4))
@@ -343,7 +342,7 @@ const renderScreenProps = (screens: Record<string, SerializedScreen>): string =>
         ? contexts.map((context) => `(${context})`).join(" & ")
         : (contexts[0] ?? "Record<string, never>");
     const contextLines = context.split("\n");
-    lines.push(`  ${quote(screenPath)}: {`);
+    lines.push(`  ${quote(viewPath)}: {`);
     lines.push(`    context: ${contextLines[0]}`);
     for (const line of contextLines.slice(1, -1)) {
       lines.push(line);
@@ -462,18 +461,16 @@ export const renderGeneratedTypes = (schema: TailorKitSchemaFile): string => {
   const fieldAliases = collectFieldTypeAliases(components);
   const chunks = [
     generatedHeader,
-    renderScreenProps(schema.scopes ?? {}),
+    renderViewProps(schema.views ?? {}),
     `declare module "tailorkit/app" {
-  interface TailorKitScreens extends ScreenPropsByPath {}
-  interface TailorKitViewports { ${Object.entries(schema.viewports ?? {})
-    .map(
-      ([name, viewport]) => `${quote(name)}: ${viewport.scopes.map(quote).join(" | ") || "never"};`,
-    )
+  interface TailorKitViews extends ViewPropsByPath {}
+  interface TailorKitSlots { ${Object.entries(schema.slots ?? {})
+    .map(([name, slot]) => `${quote(name)}: ${slot.views.map(quote).join(" | ") || "never"};`)
     .join(" ")} }
 }
 
-export type ScreenPath = keyof ScreenPropsByPath & string;
-export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
+export type ViewPath = keyof ViewPropsByPath & string;
+export type ViewProps<TPath extends ViewPath> = ViewPropsByPath[TPath];
 export type TailorKitActions = ${actionsType};
 export const actions = ${renderActionRuntime(schema.actions ?? {})} as TailorKitActions;`,
     renderTypeAliases(components, fieldAliases),

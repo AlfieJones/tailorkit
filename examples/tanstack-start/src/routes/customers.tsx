@@ -1,4 +1,4 @@
-import { useScope } from "tailorkit/react";
+import { useView } from "tailorkit/react";
 import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
 import { MetricCard, PageHeader } from "#components/crm-ui";
 import { CustomerTable } from "#components/customer-table";
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/customers")({ component: CustomersPage })
 function CustomersPage() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-  useScope("/customers", {
+  useView("/customers", {
     context: { customers },
   });
 

@@ -1,0 +1,186 @@
+---
+title: Views and slots
+description: Publish layered host context and render one app view per slot.
+---
+
+A host **view** describes the current situation, such as `/users/detail`, and
+its **context** is the data the host supplies. A **slot** is a place where the
+host renders an app. An app **view** is the implementation selected for that
+slot and host view.
+
+TailorKit does not inspect the browser URL. Paths describe a hierarchy that the
+host publishes explicitly.
+
+## Define the host contract
+
+```ts
+export const tailorKit = createTailorKit({
+  components: {},
+  slots: { navbar: { views: ["/"] }, panel: { views: ["/users", "/users/detail"] } },
+  views: {
+    "/": { context: z.object({ workspaceId: z.string() }) },
+    "/users": { context: z.object({ canManageUsers: z.boolean() }) },
+    "/users/detail": { context: z.object({ user: userSchema }) },
+  },
+});
+```
+
+Each view declares only its own fields. Ancestor fields are composed into the
+context received by app views. A field must have one owning view: duplicate
+field names across ancestors are rejected by the type checker and runtime.
+
+## Configure React once
+
+```tsx
+import { createTailorKitClient } from "tailorkit/react";
+import type { tailorKit } from "./tailorkit";
+
+export const client = createTailorKitClient<typeof tailorKit>({
+  baseUrl: "https://example.com/api/tailorkit/",
+});
+
+declare module "tailorkit/react" {
+  interface Register {
+    client: typeof client;
+  }
+}
+```
+
+The registration types the standalone host hooks. Pass the stable client
+configuration to `Root`; all rendering and hooks below it use React context.
+Each root owns an independent registry, even when roots share a client.
+
+```tsx
+import { Root, AppView } from "tailorkit/react";
+
+function Host({ app, children }) {
+  return (
+    <Root client={client}>
+      <nav>
+        <AppView app={app} slot="navbar" />
+      </nav>
+      <main>{children}</main>
+      <aside>
+        <AppView app={app} slot="panel" />
+      </aside>
+    </Root>
+  );
+}
+```
+
+Use `useApps()` below `Root` to load installed apps. The client configuration
+no longer exposes bound React hooks or components.
+
+## Publish each layer
+
+Call `useView` in the layout or page that owns the data:
+
+```tsx
+import { useView } from "tailorkit/react";
+
+function WorkspaceLayout({ workspaceId }) {
+  useView("/", { context: { workspaceId } });
+  return <Outlet />;
+}
+
+function UsersLayout({ canManageUsers }) {
+  useView("/users", { context: { canManageUsers } });
+  return <Outlet />;
+}
+
+function UserDetail({ user }) {
+  useView("/users/detail", { context: { user } });
+  return <UserDetails user={user} />;
+}
+```
+
+The deepest mounted view is current. Only its ancestors contribute context.
+Unmounting detail returns to the parent view. Register one active route branch
+per root; unrelated simultaneous branches are ambiguous.
+
+Every declared ancestor must be mounted to render a descendant view. A missing
+ancestor produces the selected view's error state rather than partial context.
+Undeclared intermediate path segments do not require registrations.
+
+## Implement views per slot
+
+```tsx
+const detail = createView("/users/detail", { component: UserTools });
+
+function UserTools() {
+  const { workspaceId, canManageUsers, user } = detail.useContext();
+  return <UserActions user={user} canManageUsers={canManageUsers} />;
+}
+
+export default defineClient({
+  slots: {
+    navbar: { "/": navigation },
+    panel: {
+      "/users": generalUserTools,
+      "/users/detail": detail,
+    },
+  },
+});
+```
+
+On `/users/detail`, the navbar renders `navigation` and the panel renders
+`detail`. The panel does not also render `generalUserTools`. Parent contexts
+compose; parent components do not.
+
+Each slot searches the active path, then its ancestors, considering only
+paths in its supported `views` list. A supported ancestor remains eligible when
+the current, more specific view is not supported.
+Fallback never crosses slot boundaries. An empty supported view list disables
+all views in that slot. View lists are typed against the global definitions;
+app bindings and explicit `AppView` views are restricted to the selected slot.
+
+Supported lists control view implementations, not context inheritance. For
+example, the panel's `/users` view still receives `workspaceId` from `/`, even
+though `/` is not a supported panel view. An unsupported slot or unmatched
+view renders nothing. Set a view entry to `false` to explicitly stop fallback:
+
+```tsx
+panel: { "/users": generalTools, "/users/detail": false }
+```
+
+## Loading and errors
+
+Keep the view registered while its context is unresolved:
+
+```tsx
+useView(
+  "/users/detail",
+  query.isPending
+    ? { status: "loading" }
+    : query.isError
+      ? { status: "error" }
+      : { context: { user: query.data } },
+);
+```
+
+Loading/error publications cannot contain context. Resolve the view first,
+then combine readiness for that view and its ancestors. Errors take priority
+over loading. Descendant loading does not block a parent view in another
+slot. Loading never triggers fallback to a different implementation.
+
+Apps can provide `loading` and `error` components to `createView`; omitted
+handlers render nothing. `useContext()` is available only to the ready component.
+
+Call the hook before early returns. When using Suspense or router loaders,
+publish the loading/error view from a boundary that actually mounts in that
+state. A suspended component cannot publish a registration before it commits.
+For Server Components, pass serializable data to a small Client Component that
+calls `useView`.
+
+## Explicit mounts
+
+A widget or dedicated page can choose its own view independently of the current
+route:
+
+```tsx
+<AppView app={app} slot="panel" view="/users/detail" context={{ user }} />
+```
+
+The override supplies that view's own context; matching mounted ancestors still
+supply inherited fields. It does not change other mounts or the current view.
+Explicit mounts use the same slot-local ancestor fallback rules.

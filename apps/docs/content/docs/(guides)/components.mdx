@@ -79,7 +79,7 @@ Fields are the serializable props an app can set. In the example above, apps can
 pass `variant` and `size` to `Button`, but they cannot pass arbitrary React
 props.
 
-Fields use the same schema model as screens and actions. The example uses Zod
+Fields use the same schema model as views and actions. The example uses Zod
 via `tailorkit/zod`, and TailorKit serializes the schema into JSON Schema for
 the runtime contract.
 
@@ -156,14 +156,14 @@ Pass the component map to `createTailorKit`. This makes the component contract
 available from the TailorKit API route.
 
 ```ts title="examples/tanstack-start/src/lib/tailorkit.ts"
-import { actions, components, screens } from "@examples/shared";
+import { actions, components, views } from "@examples/shared";
 import { createTailorKit } from "tailorkit";
 
 export const tailorKit = createTailorKit({
   assetsBaseUrl: process.env.TAILORKIT_ASSETS_BASE_URL ?? "http://localhost:8333/tailorkit",
   projectKey: process.env.TAILORKIT_PROJECT_KEY,
   components,
-  screens,
+  views,
   actions,
 });
 ```
@@ -258,8 +258,8 @@ TailorKit serializes components into a stable runtime shape:
       children: true,
     },
   },
-  viewports: { panel: { scopes: ["/"] } },
-  scopes: { "/": {} },
+  slots: { panel: { views: ["/"] } },
+  views: { "/": {} },
   actions: {},
 }
 ```

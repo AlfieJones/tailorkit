@@ -1,4 +1,4 @@
-import { createScreen } from "@tailorkit/app";
+import { createView } from "@tailorkit/app";
 import { useState } from "preact/hooks";
 import { Box, Button, Flex, Input, TextArea } from "#tailorkit";
 
@@ -21,11 +21,11 @@ const starterNotes: Note[] = [
   },
 ];
 
-const screen = createScreen("/", {
-  component: ScreenComponent,
+const view = createView("/", {
+  component: ViewComponent,
 });
 
-function ScreenComponent() {
+function ViewComponent() {
   const [notes, setNotes] = useState<Note[]>(starterNotes);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const selectedNote = notes.find((note) => note.id === selectedNoteId);
@@ -159,4 +159,4 @@ function createId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export default screen;
+export default view;
