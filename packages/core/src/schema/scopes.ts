@@ -37,3 +37,8 @@ export type ScopeContextHierarchy<T> = {
         }
     : unknown;
 };
+
+export type ViewportDefinitions<TPath extends string = string> = Record<
+  string,
+  { scopes: readonly TPath[] }
+>;

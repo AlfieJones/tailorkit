@@ -1,3 +1,4 @@
+import { createTailorKitServer } from "./handler";
 import { expectTypeOf } from "vitest";
 import type { TailorKitHandlerOptions, TailorKitHostContext } from "./types";
 
@@ -35,3 +36,15 @@ const invalidContextlessHandlerContext: TailorKitHostContext<never> = {
   scopeId: "user:user_1",
 };
 void invalidContextlessHandlerContext;
+
+createTailorKitServer({
+  components: {},
+  scopes: { "/": {}, "/users": {} },
+  viewports: { navbar: { scopes: ["/"] }, panel: { scopes: ["/users"] } },
+});
+createTailorKitServer({
+  components: {},
+  scopes: { "/": {} },
+  // @ts-expect-error A viewport cannot reference an undeclared global scope.
+  viewports: { panel: { scopes: ["/missing"] } },
+});

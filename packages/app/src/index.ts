@@ -84,7 +84,18 @@ type RequireMatchingScreenKeys<TScreens> =
         readonly __tailorkit_error__: `Screen key must match createScreen path. Invalid screen: ${ScreenKeyPathMismatch<TScreens>}`;
       };
 
-type ViewportDefinitions = Partial<Record<ViewportName, { screens: ScreenDefinitions }>>;
+export type ViewportScope<TViewport extends ViewportName> = Extract<
+  TailorKitViewports[TViewport],
+  AppScreenPath
+>;
+type ViewportDefinitions = {
+  [V in ViewportName]?: { screens: Pick<ScreenDefinitions, ViewportScope<V>> };
+};
+type RequireViewportScopes<V, S> = V extends ViewportName
+  ? Exclude<keyof S, ViewportScope<V>> extends never
+    ? unknown
+    : { readonly __tailorkit_error__: "Scope is not supported by this viewport" }
+  : never;
 export interface TailorKitClient<TViewports extends ViewportDefinitions = ViewportDefinitions> {
   viewports: TViewports;
 }
@@ -149,7 +160,12 @@ export const defineClient = <const TViewports extends ViewportDefinitions>(
   client: TailorKitClient<TViewports> & {
     viewports: {
       [V in keyof TViewports]: TViewports[V] extends { screens: infer S }
-        ? { screens: S & RequireScreenPaths<S> & RequireMatchingScreenKeys<S> }
+        ? {
+            screens: S &
+              RequireScreenPaths<S> &
+              RequireMatchingScreenKeys<S> &
+              RequireViewportScopes<V, S>;
+          }
         : never;
     };
   } & (Exclude<keyof TViewports, ViewportName> extends never

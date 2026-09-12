@@ -15,7 +15,7 @@ host publishes explicitly.
 ```ts
 export const tailorKit = createTailorKit({
   components: {},
-  viewports: { navbar: {}, panel: {} },
+  viewports: { navbar: { scopes: ["/"] }, panel: { scopes: ["/users", "/users/detail"] } },
   scopes: {
     "/": { context: z.object({ workspaceId: z.string() }) },
     "/users": { context: z.object({ canManageUsers: z.boolean() }) },
@@ -128,12 +128,20 @@ On `/users/detail`, the navbar renders `navigation` and the panel renders
 `detail`. The panel does not also render `generalUserTools`. Parent contexts
 compose; parent components do not.
 
-Each viewport searches the active path, then its ancestors, ending at `/`.
-Fallback never crosses viewport boundaries. An unsupported viewport or unmatched
+Each viewport searches the active path, then its ancestors, considering only
+paths in its supported `scopes` list. A supported ancestor remains eligible when
+the current, more specific scope is not supported.
+Fallback never crosses viewport boundaries. An empty supported scope list disables
+all screens in that viewport. Scope lists are typed against the global definitions;
+app bindings and explicit `AppView` scopes are restricted to the selected viewport.
+
+Supported lists control screen implementations, not context inheritance. For
+example, the panel's `/users` screen still receives `workspaceId` from `/`, even
+though `/` is not a supported panel screen. An unsupported viewport or unmatched
 scope renders nothing. Set a screen entry to `false` to explicitly stop fallback:
 
 ```tsx
-panel: { screens: { "/": generalTools, "/users/detail": false } }
+panel: { screens: { "/users": generalTools, "/users/detail": false } }
 ```
 
 ## Loading and errors

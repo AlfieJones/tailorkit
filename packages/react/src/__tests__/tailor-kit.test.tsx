@@ -62,7 +62,10 @@ const emptySchema = {
 } as const;
 
 const server = createTailorKitServer({
-  viewports: { panel: {}, navbar: {} },
+  viewports: {
+    panel: { scopes: ["/", "/home", "/home/detail", "/user"] },
+    navbar: { scopes: ["/"] },
+  },
   components: {
     Button: { children: true },
   },

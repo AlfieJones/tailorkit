@@ -8,6 +8,7 @@ import type {
   ScopeContextHierarchy,
   ScopeDefinition,
   ScopeDefinitions,
+  ViewportDefinitions,
   TailorKitSchema,
 } from "../schema/index";
 import type { ClientOptions as PlatformClientOptions } from "@tailorkit/client-platform/client/types.gen";
@@ -22,7 +23,6 @@ export interface TailorKitPlatformOptions {
 }
 
 export interface TailorKitServerBaseOptions {
-  viewports?: Record<string, Record<string, never>>;
   /**
    * TailorKit.dev project key
    *
@@ -70,9 +70,11 @@ export interface TailorKitServerSchemaOptions<
   actions?: TActions & ActionDefinitions & NoMixedActionContexts<TActions>;
   components: TComponents & NoComponentFieldCallbackConflicts<TComponents>;
   scopes?: TScreens & ScopeContextHierarchy<TScreens>;
+  viewports?: ViewportDefinitions<keyof TScreens & string>;
 }
 
 export interface TailorKitServerInputOptions extends TailorKitServerBaseOptions {
+  viewports?: ViewportDefinitions;
   actions?: ActionDefinitions;
   components: ComponentDefinitions;
   scopes?: ScopeDefinitions;

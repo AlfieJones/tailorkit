@@ -7,7 +7,12 @@ import type {
   ResolvedComponentMetadata,
 } from "./components";
 import { resolveComponentMetadata } from "./components";
-import type { ResolvedScopeMetadata, ScopeContextHierarchy, ScopeDefinitions } from "./scopes";
+import type {
+  ResolvedScopeMetadata,
+  ScopeContextHierarchy,
+  ScopeDefinitions,
+  ViewportDefinitions,
+} from "./scopes";
 import { jsonSchemaSerializer, serializeSchema } from "./shared";
 import type { SchemaSerializer } from "./shared";
 
@@ -37,7 +42,7 @@ export interface TailorKitSchema<
       [TName in keyof TScreens]: ResolvedScopeMetadata;
     };
   };
-  viewports: Record<string, Record<string, never>>;
+  viewports: ViewportDefinitions;
   actions: TActions;
   components: TComponents;
   scopes: TScreens;
@@ -49,11 +54,18 @@ export const createTailorKitSchema = <
   const TScreens extends Record<string, unknown> = Record<string, never>,
   const TActions extends ActionTree = EmptyActionMap,
 >(schema: {
-  viewports?: Record<string, Record<string, never>>;
+  viewports?: ViewportDefinitions<keyof NoInfer<TScreens> & string>;
   actions?: TActions & NoMixedActionContexts<NoInfer<TActions>>;
   components: TComponents & NoComponentFieldCallbackConflicts<NoInfer<TComponents>>;
   scopes?: TScreens & ScopeContextHierarchy<NoInfer<TScreens>>;
 }): TailorKitSchema<TComponents, TScreens, TActions> => {
+  for (const [name, viewport] of Object.entries(schema.viewports ?? {})) {
+    for (const scope of viewport.scopes) {
+      if (!Object.hasOwn(schema.scopes ?? {}, scope)) {
+        throw new Error(`Viewport "${name}" references undeclared scope "${scope}".`);
+      }
+    }
+  }
   const components = {} as TailorKitSchema<
     TComponents,
     TScreens,
@@ -105,7 +117,12 @@ export const createTailorKitSchema = <
       actions: serializeActions(schema.actions ?? {}, schemaSerializer),
       components: serializedComponents,
       scopes: serializedScreens,
-      viewports: schema.viewports ?? {},
+      viewports: Object.fromEntries(
+        Object.entries(schema.viewports ?? {}).map(([name, viewport]) => [
+          name,
+          { scopes: [...viewport.scopes] },
+        ]),
+      ),
       version: 1,
     };
   };
@@ -166,6 +183,7 @@ export {
   type ScopeDefinition,
   type ScopeDefinitions,
   type Scopes,
+  type ViewportDefinitions,
 } from "./scopes";
 export { jsonSchemaSerializer, type Schema, type SchemaSerializer } from "./shared";
 export type { TailorKitSchema as TailorKit };

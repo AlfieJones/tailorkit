@@ -19,7 +19,10 @@ const typedSchema = <TValue,>(): StandardSchemaV1<unknown, TValue> &
   }) as const satisfies StandardSchemaV1<unknown, TValue> & StandardJSONSchemaV1<unknown, TValue>;
 
 const server = createTailorKitServer({
-  viewports: { panel: {}, navbar: {} },
+  viewports: {
+    panel: { scopes: ["/", "/home", "/home/detail", "/user"] },
+    navbar: { scopes: ["/"] },
+  },
   components: {
     Button: {},
   },
@@ -160,3 +163,7 @@ declare module "../tailor-kit" {
 
 // @ts-expect-error Unknown host viewport.
 <AppView app={app} viewport="missing" />;
+
+// @ts-expect-error The navbar supports root only, despite /user being globally declared.
+<AppView app={app} viewport="navbar" scope="/user" context={{ userId: "u1" }} />;
+<AppView app={app} viewport="navbar" scope="/" context={{ user: { id: "u1" } }} />;

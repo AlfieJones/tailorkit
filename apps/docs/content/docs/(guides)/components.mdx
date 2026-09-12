@@ -258,8 +258,8 @@ TailorKit serializes components into a stable runtime shape:
       children: true,
     },
   },
-  viewports: { panel: {} },
-  scopes: {},
+  viewports: { panel: { scopes: ["/"] } },
+  scopes: { "/": {} },
   actions: {},
 }
 ```

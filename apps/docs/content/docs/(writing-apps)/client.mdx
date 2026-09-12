@@ -18,7 +18,8 @@ export default defineClient({
 });
 ```
 
-Viewport names and scope paths come from generated host bindings. Screen keys
+Viewport names and their supported scope paths come from generated host bindings.
+A globally declared scope can only be registered under viewports that list it. Screen keys
 must match the path passed to `createScreen`. An omitted viewport is unsupported.
 A `false` screen entry explicitly disables that scope and stops ancestor fallback.
 

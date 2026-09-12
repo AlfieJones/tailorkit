@@ -21,7 +21,7 @@ declare module "./index" {
     "/users": { context: { workspaceId: string; userId: string } };
   }
   interface TailorKitViewports {
-    panel: unknown;
-    navbar: unknown;
+    panel: "/" | "/users";
+    navbar: "/";
   }
 }

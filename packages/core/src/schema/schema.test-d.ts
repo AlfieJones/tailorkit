@@ -176,3 +176,15 @@ createTailorKitSchema({
     "/users/detail": { context: z.object({ workspaceId: z.string() }) },
   },
 });
+
+createTailorKitSchema({
+  components: {},
+  scopes: { "/": {}, "/users": {} },
+  viewports: { navbar: { scopes: ["/"] }, panel: { scopes: ["/users"] } },
+});
+createTailorKitSchema({
+  components: {},
+  scopes: { "/": {} },
+  // @ts-expect-error Viewport lists can only reference declared scopes.
+  viewports: { panel: { scopes: ["/missing"] } },
+});

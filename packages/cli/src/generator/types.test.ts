@@ -294,7 +294,7 @@ describe("renderGeneratedTypes", () => {
 it("composes independent ancestor contexts and generates viewport names", () => {
   const generated = renderGeneratedTypes({
     components: {},
-    viewports: { panel: {}, navbar: {} },
+    viewports: { panel: { scopes: ["/", "/users", "/users/detail"] }, navbar: { scopes: ["/"] } },
     scopes: {
       "/": {
         context: {
@@ -320,7 +320,7 @@ it("composes independent ancestor contexts and generates viewport names", () => 
     },
   });
   expect(generated).toContain(
-    'interface TailorKitViewports { "panel": unknown; "navbar": unknown; }',
+    'interface TailorKitViewports { "panel": "/" | "/users" | "/users/detail"; "navbar": "/"; }',
   );
   const detail = generated.slice(
     generated.indexOf('"/users/detail":'),

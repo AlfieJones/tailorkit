@@ -72,7 +72,7 @@ export const tailorKit = createTailorKit({
     Button,
   },
 
-  viewports: { panel: {} },
+  viewports: { panel: { scopes: ["/"] } },
   scopes: {
     // Define each screen TailorKit apps can be installed on.
     "/": {

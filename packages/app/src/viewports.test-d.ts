@@ -18,3 +18,8 @@ createScreen("/unknown", { component: () => null });
 
 // @ts-expect-error Opt-outs must also reference a declared scope.
 defineClient({ viewports: { panel: { screens: { "/unknown": false } } } });
+
+// @ts-expect-error Globally declared scopes are not automatically supported by every viewport.
+defineClient({ viewports: { navbar: { screens: { "/users": users } } } });
+// @ts-expect-error Opt-outs must reference a scope supported by this viewport too.
+defineClient({ viewports: { navbar: { screens: { "/users": false } } } });

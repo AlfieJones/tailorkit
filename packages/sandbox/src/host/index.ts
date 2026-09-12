@@ -274,7 +274,7 @@ function createIframeDocument(channel: string): string {
           const viewport = client && client.viewports && client.viewports[props.viewport];
           const screens = viewport && viewport.screens;
           const hierarchy = typeof props.scope === "string" ? createScreenHierarchy(props.scope) : [];
-          const selected = screens && hierarchy.find((path) => Object.hasOwn(screens, path));
+          const selected = screens && hierarchy.find((path) => (props.supportedScopes || []).includes(path) && Object.hasOwn(screens, path));
           // Unsupported viewports/scopes and explicit opt-outs clear any previous view.
           if (!selected || screens[selected] === false) {
             if (client.$runtime) client.$runtime.render(null, root);

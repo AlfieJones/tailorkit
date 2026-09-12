@@ -45,7 +45,7 @@ interface TailorKitSchemaFile {
   actions?: SerializedActions;
   components?: Record<string, SerializedComponent>;
   scopes?: Record<string, SerializedScreen>;
-  viewports?: Record<string, unknown>;
+  viewports?: Record<string, { scopes: readonly string[] }>;
 }
 
 export interface GenerateTypesOptions {
@@ -465,8 +465,10 @@ export const renderGeneratedTypes = (schema: TailorKitSchemaFile): string => {
     renderScreenProps(schema.scopes ?? {}),
     `declare module "tailorkit/app" {
   interface TailorKitScreens extends ScreenPropsByPath {}
-  interface TailorKitViewports { ${Object.keys(schema.viewports ?? {})
-    .map((name) => `${quote(name)}: unknown;`)
+  interface TailorKitViewports { ${Object.entries(schema.viewports ?? {})
+    .map(
+      ([name, viewport]) => `${quote(name)}: ${viewport.scopes.map(quote).join(" | ") || "never"};`,
+    )
     .join(" ")} }
 }
 

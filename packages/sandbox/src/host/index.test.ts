@@ -206,6 +206,7 @@ function resolveProps(viewport: string, layers = scopeLayers) {
     scope: "/users/detail",
     layers,
     declaredScopes: scopeLayers.map((layer) => layer.path),
+    supportedScopes: viewport === "navbar" ? ["/"] : ["/", "/users", "/users/detail"],
   };
 }
 
@@ -340,4 +341,20 @@ it("updates a mounted viewport without fetching its app bundle again", async () 
   expect(fetch).toHaveBeenCalledTimes(1);
   expect(host.iframe.isConnected).toBe(true);
   host.destroy();
+});
+
+it("limits matching to supported scopes while retaining ancestor data", () => {
+  const resolve = screenResolver();
+  const { client, general, render } = screenClient();
+  resolve(client, { ...resolveProps("panel"), supportedScopes: ["/users"] });
+  expect(render.mock.calls.at(-1)?.[0]).toEqual({
+    component: general.component,
+    props: {
+      screen: "/users",
+      status: "ready",
+      context: { workspaceId: "w1", canManageUsers: true },
+    },
+  });
+  resolve(client, { ...resolveProps("panel"), supportedScopes: [] });
+  expect(render.mock.calls.at(-1)?.[0]).toBeNull();
 });

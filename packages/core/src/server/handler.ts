@@ -6,6 +6,7 @@ import type {
   NoMixedActionContexts,
   ResolveActionTreeContext,
   ScopeContextHierarchy,
+  ViewportDefinitions,
 } from "../schema/index";
 import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
@@ -27,6 +28,7 @@ type AbsolutePath = `/${string}`;
 
 export function createTailorKitServer<const TOptions extends TailorKitServerInputOptions>(
   options: TOptions & {
+    viewports?: ViewportDefinitions<keyof InferTailorKitServerScopes<NoInfer<TOptions>> & string>;
     actions?: InferTailorKitServerActions<TOptions> &
       NoMixedActionContexts<InferTailorKitServerActions<TOptions>>;
     components: InferTailorKitServerComponents<TOptions> &
@@ -39,7 +41,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
   InferTailorKitServerScopes<TOptions>,
   InferTailorKitServerActions<TOptions>
 > & {
-  readonly $viewportNames?: TOptions extends { viewports: infer V } ? keyof V & string : never;
+  readonly $viewports?: TOptions extends { viewports: infer V } ? V : Record<never, never>;
 } {
   const basePath = normalizeBasePath(options.basePath ?? "/api/tailorkit");
   const schema = createTailorKitSchema<

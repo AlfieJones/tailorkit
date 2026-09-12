@@ -8,6 +8,7 @@ import type {
   ComponentProps,
   Schema,
   ScopeDefinition,
+  ViewportDefinitions,
   TailorKitSchema,
 } from "@tailorkit/core/schema";
 import type { primitives } from "./primitives";
@@ -76,7 +77,6 @@ interface AppViewBaseProps {
   app: TailorKitApp;
   createIframe?: () => HTMLIFrameElement;
   fallback?: ReactNode;
-  viewport: RegisteredViewports;
 }
 
 type AppViewScreenProps<
@@ -99,7 +99,12 @@ type AppViewScreenProps<
 export type AppViewProps<
   TScreens extends Record<string, ScopeDefinition> = RegisteredScopes,
   TScreen extends ScreenName<TScreens> = ScreenName<TScreens>,
-> = AppViewBaseProps & AppViewScreenProps<TScreens, TScreen>;
+> = {
+  [V in RegisteredViewports]: AppViewBaseProps & { viewport: V } & AppViewScreenProps<
+      TScreens,
+      Extract<TScreen, ViewportScope<V>>
+    >;
+}[RegisteredViewports];
 
 const componentTagPrefix = "tailorkit-";
 
@@ -115,14 +120,20 @@ export interface Register {}
 export type RegisteredScopes = Register extends { client: TailorKitInstance<infer S> }
   ? S
   : Record<`/${string}`, ScopeDefinition>;
-export type RegisteredViewports = Register extends { client: { readonly $viewportNames?: infer V } }
-  ? Extract<V, string>
-  : string;
+type RegisteredViewportMap = Register extends { client: { readonly $viewports?: infer V } }
+  ? V
+  : ViewportDefinitions;
+export type RegisteredViewports = keyof RegisteredViewportMap & string;
+type ViewportScope<V extends RegisteredViewports> = RegisteredViewportMap[V] extends {
+  scopes: readonly (infer P)[];
+}
+  ? Extract<P, string>
+  : never;
 export interface TailorKitInstance<
   TScopes extends Record<string, ScopeDefinition> = Record<string, ScopeDefinition>,
-  TViewports extends string = string,
+  TViewports extends ViewportDefinitions = ViewportDefinitions,
 > {
-  readonly $viewportNames?: TViewports;
+  readonly $viewports?: TViewports;
   readonly $scopes?: TScopes;
   readonly baseUrl: string | URL;
   readonly components: Record<string, unknown>;
@@ -178,19 +189,23 @@ export function createTailorKitClient<TTailor extends TailorKitServerShape>(opti
   theme?: TailorKitTheme;
 }): TailorKitInstance<
   ServerScreens<TTailor>,
-  TTailor extends { readonly $viewportNames?: infer V } ? Extract<V, string> : string
+  TTailor extends { readonly $viewports?: infer V extends ViewportDefinitions }
+    ? V
+    : ViewportDefinitions
 > {
   return createReactTailorKitClient<
     ServerComponents<TTailor>,
     ServerScreens<TTailor>,
-    TTailor extends { readonly $viewportNames?: infer V } ? Extract<V, string> : string
+    TTailor extends { readonly $viewports?: infer V extends ViewportDefinitions }
+      ? V
+      : ViewportDefinitions
   >(options);
 }
 
 function createReactTailorKitClient<
   TComponents extends Record<string, AnyComponentDefinition>,
   TScreens extends Record<string, ScopeDefinition> = Record<string, never>,
-  TViewports extends string = string,
+  TViewports extends ViewportDefinitions = ViewportDefinitions,
 >(options: {
   baseUrl: string | URL;
   components?: ComponentRenderers<TComponents>;
@@ -261,8 +276,9 @@ export const AppView = ({
         : {
             ...props,
             declaredScopes: Object.keys(meta.schema?.scopes ?? {}),
+            supportedScopes: meta.schema?.viewports[viewport]?.scopes ?? [],
           },
-    [props, meta.schema],
+    [props, meta.schema, viewport],
   );
   const assetsBaseUrl = app.clientPath ? null : meta.assetsBaseUrl;
   const appUrl = useMemo(

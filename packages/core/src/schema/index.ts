@@ -38,6 +38,7 @@ export {
   type ScopeDefinitions,
   type ScopeDefinition,
   type Scopes,
+  type ViewportDefinitions,
   type ResolvedScopeMetadata,
 } from "./scopes";
 export { type Schema, type SchemaSerializer, jsonSchemaSerializer } from "./shared";

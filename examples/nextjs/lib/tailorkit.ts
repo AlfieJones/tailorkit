@@ -11,5 +11,8 @@ export const tailorKit = createTailorKit({
   actions,
   components,
   scopes,
-  viewports: { panel: {}, navbar: {} },
+  viewports: {
+    panel: { scopes: ["/", "/customers", "/customers/detail"] },
+    navbar: { scopes: ["/"] },
+  },
 });
