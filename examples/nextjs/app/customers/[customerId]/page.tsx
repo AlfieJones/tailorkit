@@ -7,7 +7,7 @@ import { Badge } from "@tailorkit/ui/badge";
 import { Button } from "@tailorkit/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
 import { DetailCard } from "@/components/crm-ui";
-import { CustomerDetailScreen } from "@/components/customer-screen";
+import { CustomerDetailView } from "@/components/customer-screen";
 import { getCustomer } from "@/lib/crm-data";
 
 export default async function CustomerDetailPage({
@@ -26,7 +26,7 @@ export default async function CustomerDetailPage({
 
   return (
     <>
-      <CustomerDetailScreen context={{ customer }} />
+      <CustomerDetailView context={{ customer }} />
       <div className="flex flex-col gap-6">
         <Button render={<Link href="/customers" />} size="sm" variant="ghost">
           <ArrowLeft aria-hidden="true" />

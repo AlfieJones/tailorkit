@@ -625,7 +625,7 @@ function MarketplaceApp({ appId, onClose }: { appId: string; onClose: () => void
       <p className="app-description">{app.description}</p>
       <Root client={tailor} apps={marketplaceApps}>
         <div className="tailorkit-app-view">
-          <AppView viewport="panel" app={app} scope="/" context={{}} />
+          <AppView slot="panel" app={app} view="/" context={{}} />
         </div>
       </Root>
       <p className="panel-note">Built and rendered by TailorKit’s app runtime.</p>
