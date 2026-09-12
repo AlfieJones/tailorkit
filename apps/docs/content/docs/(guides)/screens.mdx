@@ -176,13 +176,3 @@ route:
 The override supplies that scope's own context; matching mounted ancestors still
 supply inherited fields. It does not change other mounts or the current scope.
 Explicit mounts use the same viewport-local ancestor fallback rules.
-
-## Migrating
-
-- Host `screens` becomes `scopes`; app `createScreen` retains its name.
-- Declare host `viewports` and move app registrations into `viewports[name].screens`.
-- Replace `tailor.Root` with `Root client={client}` and import `AppView`, `useApps`,
-  and `useScope` directly from `tailorkit/react`.
-- Replace `useCurrentScreen({ screen, ... })` with `useScope({ scope, ... })`.
-- Publish only each scope's own context. Keep declared ancestor layouts mounted.
-- Add a `viewport` to every `AppView` and regenerate app bindings.
