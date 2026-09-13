@@ -44,6 +44,8 @@ demonstration, and continuous integration. Production use requires a
 commercial agreement. The canonical license texts are maintained in
 `licenses/Apache-2.0.md` and `licenses/BUSL-1.1.md`.
 
-Published packages receive a copy of their applicable license automatically
-from the release license-preparation script. Do not edit generated package
-license files directly.
+Every workspace package has a committed `LICENSE.md` containing the exact
+license text selected by its `package.json` `license` field. This includes
+private packages and applications. Run `pnpm licenses:sync` after changing a
+package license or a canonical license text; run `pnpm licenses:check` to
+verify that all package license files are present and up to date.

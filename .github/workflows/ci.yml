@@ -46,6 +46,9 @@ jobs:
       - name: Install dependencies
         run: vp install --frozen-lockfile
 
+      - name: Check package licenses
+        run: vp run licenses:check
+
       - name: Lint
         run: vp run lint
 
