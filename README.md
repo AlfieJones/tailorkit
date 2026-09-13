@@ -153,16 +153,9 @@ published app URLs use the wildcard asset domain.
 
 ## License
 
-TailorKit uses a mixed-license monorepo:
+TailorKit uses per-package licensing. Generally, the hosted platform and
+server-side infrastructure use the Business Source License 1.1, while the
+SDKs, framework, client libraries, and developer tooling use Apache-2.0.
 
-- The hosted platform and its associated server infrastructure are licensed
-  under the Business Source License 1.1. Development, testing, staging,
-  evaluation, demonstrations, and CI are permitted; production use requires a
-  commercial agreement. See [LICENSE.md](./LICENSE.md).
-- The public SDKs, core runtime, app tooling, CLI, React integration, sandbox,
-  protocol packages, UI components, examples, and demos are licensed under the
-  Apache License 2.0. See [LICENSE.md](./LICENSE.md).
-
-The package metadata identifies the applicable license for each workspace
-package. The BUSL-licensed platform packages are not runtime dependencies of
-the Apache-licensed SDK packages.
+For the exact license that applies to a package, see its `package.json` and
+`LICENSE.md`. See [LICENSE.md](./LICENSE.md) for the repository overview.
