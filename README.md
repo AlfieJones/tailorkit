@@ -55,7 +55,7 @@ corepack enable
 pnpm install
 ```
 
-Run the platform app and its local services:
+Run the platform app:
 
 ```sh
 pnpm dev
@@ -91,65 +91,6 @@ pnpm services:stop
 
 Use `pnpm services:watch` to keep service logs attached, or
 `pnpm services:down` to stop and remove the local containers.
-
-### GitHub authentication
-
-The platform uses Better Auth's GitHub provider. It also uses Better Auth's OAuth proxy so one
-production callback can safely serve Vercel production and ephemeral preview deployments.
-
-1. In GitHub, open **Settings → Developer settings → GitHub Apps → New GitHub App**.
-2. Set the homepage to the production site, grant **Account permissions → Email addresses:
-   Read-only**, and set the authorization callback URL to:
-
-   ```text
-   https://YOUR_PRODUCTION_DOMAIN/api/auth/callback/github
-   ```
-
-   Repository and organization permissions are not required for authentication, and the webhook can
-   remain disabled until the app gains integration features.
-
-3. Generate a client secret on the GitHub App's General settings page, then add these server-only
-   variables to the Vercel project for both **Production** and **Preview**:
-
-   ```text
-   GITHUB_CLIENT_ID=...
-   GITHUB_CLIENT_SECRET=...
-   AUTH_PRODUCTION_URL=https://YOUR_PRODUCTION_DOMAIN
-   OAUTH_PROXY_SECRET=...
-   AUTH_TRUSTED_ORIGINS=https://YOUR_PROJECT-*.vercel.app
-   ```
-
-   `OAUTH_PROXY_SECRET` must be the same value in production and preview and contain at least 32
-   characters. Generate it with `openssl rand -base64 32`. Keep it separate from `AUTH_SECRET`.
-   Replace the trusted-origin pattern with the narrow Vercel preview hostname pattern for this
-   project; do not use a blanket `https://*.vercel.app` pattern.
-
-4. Redeploy production once, then deploy a preview. GitHub only needs the production callback URL;
-   the OAuth proxy returns users to the exact preview deployment where they started.
-
-For local development, add the same variables to `apps/web/.env.local`, set
-`AUTH_TRUSTED_ORIGINS=http://localhost:3000,https://YOUR_PROJECT-*.vercel.app`, and keep
-`AUTH_PRODUCTION_URL` pointed at the deployed production site. The production deployment must be
-running the OAuth proxy before local or preview GitHub sign-in can complete.
-
-### Asset delivery
-
-The Compose stack includes Postgres and an S3-compatible SeaweedFS service. With
-the local blob variables documented in `packages/storage/README.md`, CLI uploads
-and asset reads stay on the machine.
-
-In development, published app URLs use the platform's built-in
-`/api/assets/t/<team-id>/p/...` Node endpoint. This lets the web app, API,
-database, and asset delivery run as one Node project backed by any S3-compatible
-store. For a self-hosted production deployment, set `ASSET_BASE_URL` to the
-public endpoint, for example `https://tailorkit.example.com/api/assets`.
-
-Hosted production keeps the performance-critical path on the asset Worker: the
-Worker reads R2 directly and serves immutable responses from
-`https://<team-id>.<ASSET_DOMAIN>/p/...`. The Worker and Node endpoint share the
-same asset path parser, storage-key mapping, size limit, and response headers
-through `@tailorkit/asset-delivery`. If `ASSET_BASE_URL` is unset in production,
-published app URLs use the wildcard asset domain.
 
 ## License
 
