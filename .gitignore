@@ -8,6 +8,7 @@ dist
 build
 *.tsbuildinfo
 .fumadocs-typescript
+packages/*/LICENSE
 *.sqlite
 *.sqlite-*
 

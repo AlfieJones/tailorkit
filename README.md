@@ -158,10 +158,10 @@ TailorKit uses a mixed-license monorepo:
 - The hosted platform and its associated server infrastructure are licensed
   under the Business Source License 1.1. Development, testing, staging,
   evaluation, demonstrations, and CI are permitted; production use requires a
-  commercial agreement. See [LICENSE](./LICENSE).
+  commercial agreement. See [LICENSE.md](./LICENSE.md).
 - The public SDKs, core runtime, app tooling, CLI, React integration, sandbox,
   protocol packages, UI components, examples, and demos are licensed under the
-  Apache License 2.0. See [LICENSE-APACHE-2.0](./LICENSE-APACHE-2.0).
+  Apache License 2.0. See [LICENSE.md](./LICENSE.md).
 
 The package metadata identifies the applicable license for each workspace
 package. The BUSL-licensed platform packages are not runtime dependencies of
