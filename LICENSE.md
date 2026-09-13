@@ -42,7 +42,7 @@ The hosted platform and associated server infrastructure are BUSL-1.1:
 BUSL-licensed code may be used for development, testing, staging, evaluation,
 demonstration, and continuous integration. Production use requires a
 commercial agreement. The canonical license texts are maintained in
-`licenses/Apache-2.0.txt` and `licenses/BUSL-1.1.txt`.
+`licenses/Apache-2.0.md` and `licenses/BUSL-1.1.md`.
 
 Published packages receive a copy of their applicable license automatically
 from the release license-preparation script. Do not edit generated package

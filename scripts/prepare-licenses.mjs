@@ -20,7 +20,7 @@ for (const packageDir of packageDirs) {
     continue;
   }
 
-  const source = path.join(licensesDir, `${manifest.license}.txt`);
+  const source = path.join(licensesDir, `${manifest.license}.md`);
   if (!fs.existsSync(source)) {
     throw new Error(`Missing canonical license text for ${manifest.name}: ${source}`);
   }
