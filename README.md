@@ -1,25 +1,37 @@
-# TailorKit
+<div align="center">
+  <img alt="TailorKit" src="apps/web/public/brand/mark-auto.svg" height="96">
+  <h1>TailorKit</h1>
+  <p>Let users build the features they want with AI.</p>
+  <p>
+    <a href="https://tailorkit.dev/docs">Documentation</a> ·
+    <a href="https://tailorkit.dev">Website</a>
+  </p>
+</div>
 
-TailorKit is infrastructure for adding a secure app ecosystem to a SaaS
-product.
+TailorKit gives your SaaS an app ecosystem with hosting, sandboxing, and
+agentic builders. Customers, partners, and AI builders can extend your product
+using the design system, data, and actions you choose to expose.
 
-The host product owns the routes, data, permissions, actions, and design system.
-TailorKit apps run separately in a sandboxed iframe and render through the
-scopes, viewports, and components the host exposes. That lets
-customers, partners, or AI builders extend a product without getting direct
-access to the product internals.
+TailorKit is delivered as a hosted platform. The public repository contains
+the SDKs, framework packages, and source code for the platform; self-hosting is
+not a supported deployment model.
 
-## What This Repo Contains
+## Features
 
-- `tailorkit`: the public package entry point.
-- `@tailorkit/core`: schema, server handler, actions, and platform routing.
-- `@tailorkit/react`: React host runtime for rendering installed apps.
-- `@tailorkit/app`: app-side client, config loader, and build pipeline.
-- `@tailorkit/sandbox`: iframe sandbox and host protocol.
-- `@tailorkit/cli`: local app preview and deployment commands.
-- `apps/web`: the TailorKit platform app.
-- `apps/docs`: the docs site.
-- `examples/tanstack-start`: a host product example.
+- **Extend your app** — Let customers add the features and workflows they need
+  to the product they already use.
+- **Partner integrations** — Give third parties a supported way to build and
+  publish integrations for your platform.
+- **Build features with AI** — Turn a plain-language idea into a working
+  extension built from your product primitives.
+- **Native product UI** — Render extensions with your components so every new
+  feature looks and feels built in.
+- **Sandboxed runtime** — Run third-party and AI-generated code away from your
+  core application runtime.
+- **Managed infrastructure** — Deploy extensions through TailorKit’s global
+  CDN instead of maintaining hosting and asset infrastructure yourself.
+- **Framework agnostic** — Use a framework-neutral extension protocol, with an
+  official React adapter available today.
 
 ## How It Works
 
@@ -45,52 +57,11 @@ work.
 - [Writing apps](https://tailorkit.dev/docs/writing-apps) covers the app-side
   runtime and generated bindings.
 
-## Development
+## Contributing
 
-This repository is a pnpm workspace managed with Turborepo. Use the pnpm
-version declared in `package.json`.
-
-```sh
-corepack enable
-pnpm install
-```
-
-Run the platform app:
-
-```sh
-pnpm dev
-```
-
-Run only the documentation site:
-
-```sh
-pnpm dev:docs
-```
-
-### Validation
-
-```sh
-pnpm check-types
-pnpm test
-pnpm check
-pnpm build
-```
-
-`pnpm check` runs the repository lint and formatting checks. Run the narrower
-type or test command while iterating, then run all four commands before opening
-a pull request.
-
-### Local services
-
-Local services are managed through Docker Compose:
-
-```sh
-pnpm services:start
-pnpm services:stop
-```
-
-Use `pnpm services:watch` to keep service logs attached, or
-`pnpm services:down` to stop and remove the local containers.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup, development
+commands, testing, and pull request guidance. Security issues should be
+reported privately using the process in [SECURITY.md](./SECURITY.md).
 
 ## License
 
