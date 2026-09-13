@@ -73,6 +73,13 @@ export function RemoteViewHost({
     store.clear();
   }
 
+  const hostRef = useRef<ReturnType<typeof createIframeUiHost> | null>(null);
+  const propsRef = useRef(props);
+  useEffect(() => {
+    propsRef.current = props;
+    hostRef.current?.setProps(props);
+  }, [props]);
+
   const dispatchRef = useRef<((payload: HostToIframePayload) => void) | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [status, setStatus] = useState<"error" | "ready" | "starting">("starting");
@@ -108,8 +115,9 @@ export function RemoteViewHost({
         setError(error);
         setStatus("error");
       },
-      props,
+      props: propsRef.current,
     });
+    hostRef.current = host;
 
     dispatchRef.current = (payload) => host.dispatch(payload);
 
@@ -128,9 +136,10 @@ export function RemoteViewHost({
     return () => {
       unsubscribe();
       dispatchRef.current = null;
+      hostRef.current = null;
       host.destroy();
     };
-  }, [appUrl, createIframe, props, store]);
+  }, [appUrl, createIframe, store]);
 
   if (status === "error" && error) {
     return createElement("div", null, formatError(error));

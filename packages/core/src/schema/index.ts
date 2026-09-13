@@ -33,13 +33,14 @@ export {
   type ResolvedComponentMetadata,
 } from "./components";
 export {
-  type Screen,
-  type ScreenContextHierarchy,
-  type ScreenDefinitions,
-  type ScreenDefinition,
-  type Screens,
-  type ResolvedScreenMetadata,
-} from "./screens";
+  type View,
+  type ViewContextHierarchy,
+  type ViewDefinitions,
+  type ViewDefinition,
+  type Views,
+  type SlotDefinitions,
+  type ResolvedViewMetadata,
+} from "./views";
 export { type Schema, type SchemaSerializer, jsonSchemaSerializer } from "./shared";
 export { createTailorKitSchema, type TailorKit, type TailorKitSchema } from "./schema";
 export type { TailorKitTheme } from "../primitives/theme";

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { demoAuthCookieName, getDemoUser } from "@examples/shared";
-import { CustomerListScreen } from "@/components/customer-screen";
+import { CustomerListView } from "@/components/customer-screen";
 import { customers } from "@/lib/crm-data";
 
 export default async function CustomersLayout({ children }: { children: ReactNode }) {
@@ -14,7 +14,7 @@ export default async function CustomersLayout({ children }: { children: ReactNod
 
   return (
     <>
-      <CustomerListScreen context={{ customers, user }} />
+      <CustomerListView context={{ customers }} />
       {children}
     </>
   );

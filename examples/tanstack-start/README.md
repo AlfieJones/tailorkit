@@ -1,6 +1,6 @@
 # TanStack Start TailorKit Example
 
-This example shows a host product that exposes TailorKit screens, components,
+This example shows a host product that exposes TailorKit views, slots, components,
 theme tokens, and actions from a TanStack Start application.
 
 ## Run the example
@@ -40,7 +40,7 @@ at `http://localhost:5010/api/tailorkit`.
   context.
 - `src/lib/tailorkit-client.tsx` maps contract components to React renderers.
 - `src/components/tailorkit-shell.tsx` loads installed apps, publishes the root
-  screen with `useCurrentScreen`, and renders the selected app.
+  view context with `useView`, and renders the selected app in its slot.
 
 The example defaults to the platform at `http://localhost:3000` and the
 SeaweedFS service started by the root development command. Set

@@ -29,8 +29,9 @@ Create `tailorkit.ts` in a server-safe module such as `src/lib/`. Do not import
 this module into a browser bundle: actions and project credentials belong on
 the server.
 
-This file defines the screens, components, theme tokens, and actions TailorKit
-apps can use. Primitives provide basic layout and styling abilities. See
+This file defines the views, slots, components, theme tokens, and actions
+TailorKit apps can use. Host views are context layers; app views are
+implementations selected per slot. Primitives provide basic layout and styling abilities. See
 [Layouts and Styles](/docs/layouts-and-styles) for the full set.
 
 ```ts title="./src/lib/tailorkit.ts" tab="Zod"
@@ -72,8 +73,9 @@ export const tailorKit = createTailorKit({
     Button,
   },
 
-  screens: {
-    // Define each screen TailorKit apps can be installed on.
+  slots: { panel: { views: ["/"] } },
+  views: {
+    // Define the host context layers available to app views.
     "/": {
       context: z.object({}),
     },
@@ -91,8 +93,8 @@ export const tailorKit = createTailorKit({
 ```
 
 <Callout title="Treat Your TailorKit Config As Public API" type="warn">
-  TailorKit apps are built against the screens, components, actions, children, and tokens you define
-  here. Removing or renaming them can break existing apps.
+  TailorKit apps are built against the views, slots, components, actions, children, and tokens you
+  define here. Removing or renaming them can break existing apps.
 </Callout>
 
 </Step>
@@ -278,7 +280,7 @@ import { createTailorKitClient, primitives } from "tailorkit/react";
 export const tailorKitClient = createTailorKitClient<typeof tailorKit>({
   // Use your custom handler path here, for example:
   // "http://localhost:3000/custom-path/tailorkit"
-  baseUrl: "/api/tailorkit",
+  baseUrl: "https://example.com/api/tailorkit/",
   components: {
     ...primitives,
 
@@ -290,12 +292,19 @@ export const tailorKitClient = createTailorKitClient<typeof tailorKit>({
   },
 });
 
+declare module "tailorkit/react" {
+  interface Register {
+    client: typeof tailorKitClient;
+  }
+}
+
 export default tailorKitClient;
 ```
 
-Use an absolute URL during server rendering if your framework cannot resolve
-`/api/tailorkit` without an origin. In the browser, a same-origin relative URL
-is usually the simplest option.
+Use an absolute URL, or construct a URL from `window.location.origin` in a
+browser-only integration. Wrap the host in `<Root client={tailorKitClient}>`
+and import `AppView`, `useApps`, and `useView` from `tailorkit/react`.
+See [Views, views, and slots](/docs/views) for the complete React setup.
 
 </Step>
 <Step>

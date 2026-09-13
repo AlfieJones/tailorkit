@@ -1,3 +1,4 @@
+import { AppView, Root, useView } from "tailorkit/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import type { CSSProperties } from "react";
@@ -81,8 +82,8 @@ function EmbedPanel() {
   }
 
   return (
-    <tailorClient.Root apps={demoApps}>
-      <CurrentDemoScreen tailorClient={tailorClient} />
+    <Root client={tailorClient} apps={demoApps}>
+      <CurrentDemoView />
       <main className="h-screen flex flex-col" style={cssVars}>
         {/* Panel header */}
         <div
@@ -117,10 +118,10 @@ function EmbedPanel() {
           className="flex-1 min-h-0 overflow-hidden flex flex-col"
           style={{ background: "var(--background)" }}
         >
-          {/* Make the screen wrapper fill the panel height */}
-          <style>{`[data-tailorkit-screen] { display: flex; flex-direction: column; height: 100%; }`}</style>
+          {/* Make the view wrapper fill the panel height */}
+          <style>{`[data-tailorkit-view] { display: flex; flex-direction: column; height: 100%; }`}</style>
           {activeApp ? (
-            <tailorClient.AppView app={activeApp} />
+            <AppView slot="panel" app={activeApp} />
           ) : (
             <div className="p-5 text-sm" style={{ color: "var(--muted-foreground)" }}>
               No app selected
@@ -128,15 +129,11 @@ function EmbedPanel() {
           )}
         </div>
       </main>
-    </tailorClient.Root>
+    </Root>
   );
 }
 
-function CurrentDemoScreen({
-  tailorClient,
-}: {
-  tailorClient: ReturnType<typeof createDemoTailorClient>;
-}) {
-  tailorClient.useCurrentScreen({ context: {}, screen: "/" });
+function CurrentDemoView() {
+  useView("/", { context: {} });
   return null;
 }

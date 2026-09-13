@@ -31,18 +31,18 @@ flowchart LR
 
 ## What the host owns
 
-The host is the source of truth. It chooses the active screen, passes screen
+The host is the source of truth. It chooses the active view, passes view
 context, renders approved components, and handles sensitive work through host
 actions.
 
 For example, the host can say: "this part of the user route is the `/user`
-screen, and here is the current user context." Read [Screens](/docs/screens)
+view, and here is the current user context." Read [Views](/docs/views)
 for the full pattern.
 
 ## What apps own
 
 Apps are built separately from the host. They import generated bindings from the
-schema, implement one or more screens, and describe UI using host-approved
+schema, implement one or more views, and describe UI using host-approved
 components.
 
 Read [Writing apps](/docs/writing-apps) and [Components](/docs/components) for
@@ -50,7 +50,7 @@ the app-side and host-side details.
 
 ## Sandbox and security
 
-App code runs in a hidden, opaque-origin iframe sandbox. It receives screen
+App code runs in a hidden, opaque-origin iframe sandbox. It receives view
 context, renders approved declarative elements inside that iframe, and relays
 the validated UI description and events to the host. The host renders the real
 UI and keeps direct access to routing, data, secrets, and browser APIs.
@@ -58,7 +58,7 @@ UI and keeps direct access to routing, data, secrets, and browser APIs.
 ### Isolated runtime
 
 TailorKit treats app code as untrusted by default. Apps run directly inside a
-sandboxed opaque-origin iframe and can only render through the screens,
+sandboxed opaque-origin iframe and can only render through the views,
 components, props, callbacks, children, and tokens your host exposes. The host
 receives only the validated declarative UI protocol; app DOM never becomes part
 of the host document.

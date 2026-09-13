@@ -1,13 +1,11 @@
+import type { TailorKitStore } from "../store";
 import { createContext, useContext } from "react";
-import type { UseAppsResult } from "../hooks/use-apps";
-import type { TailorKitApp } from "../tailor-kit";
+
+import type { TailorKitInstance } from "../tailor-kit";
 
 export interface TailorRootContextValue {
-  apps: TailorKitApp[];
-}
-
-export interface RootTailor {
-  useApps: () => UseAppsResult;
+  store: TailorKitStore;
+  client: TailorKitInstance;
 }
 
 export const TailorRootContext = createContext<TailorRootContextValue | null>(null);
@@ -15,7 +13,7 @@ export const TailorRootContext = createContext<TailorRootContextValue | null>(nu
 export function useTailorRootContext(component: string): TailorRootContextValue {
   const context = useContext(TailorRootContext);
   if (!context) {
-    throw new Error(`${component} must be rendered inside tailor.Root.`);
+    throw new Error(`${component} must be rendered inside Root.`);
   }
   return context;
 }

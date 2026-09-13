@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 
+import { z } from "zod";
+import { createTailorKitSchema } from "@tailorkit/core/schema";
+import { TailorKitSchemaSpec } from "@tailorkit/core/spec";
+
 import { renderGeneratedTypes } from "./types";
 
 describe("renderGeneratedTypes", () => {
-  it("generates screen props from schema screens", () => {
+  it("generates view props from schema views", () => {
     const output = renderGeneratedTypes({
       components: {},
-      screens: {
+      views: {
         "/test": {
           context: {
             additionalProperties: false,
@@ -56,7 +60,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      screens: {},
+      views: {},
     });
 
     expect(output).not.toContain("export type Disabled = boolean;");
@@ -79,7 +83,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      screens: {},
+      views: {},
     });
 
     expect(output).not.toContain("export type Variant = unknown;");
@@ -103,7 +107,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      screens: {},
+      views: {},
     });
 
     expect(output).toContain("export interface BoxProps");
@@ -147,7 +151,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      screens: {},
+      views: {},
     });
 
     expect(output).toContain(
@@ -199,7 +203,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      screens: {},
+      views: {},
     });
 
     expect(output).toContain('export type Grow = Responsive<"0" | "1">;');
@@ -247,7 +251,7 @@ describe("renderGeneratedTypes", () => {
           children: true,
         },
       },
-      screens: {},
+      views: {},
     });
 
     expect(output).toContain("export type Background = never;");
@@ -278,7 +282,7 @@ describe("renderGeneratedTypes", () => {
         },
       },
       components: {},
-      screens: {},
+      views: {},
     });
 
     expect(output).toContain("export type TailorKitActions = {");
@@ -289,4 +293,63 @@ describe("renderGeneratedTypes", () => {
     expect(output).toContain("id: string;");
     expect(output).not.toContain("requestContext");
   });
+});
+
+it("composes independent ancestor contexts and generates slot names", () => {
+  const generated = renderGeneratedTypes({
+    components: {},
+    slots: { panel: { views: ["/", "/users", "/users/detail"] }, navbar: { views: ["/"] } },
+    views: {
+      "/": {
+        context: {
+          type: "object",
+          properties: { workspaceId: { type: "string" } },
+          required: ["workspaceId"],
+        },
+      },
+      "/users": {
+        context: {
+          type: "object",
+          properties: { canManage: { type: "boolean" } },
+          required: ["canManage"],
+        },
+      },
+      "/users/detail": {
+        context: {
+          type: "object",
+          properties: { userId: { type: "string" } },
+          required: ["userId"],
+        },
+      },
+    },
+  });
+  expect(generated).toContain(
+    'interface TailorKitSlots { "panel": "/" | "/users" | "/users/detail"; "navbar": "/"; }',
+  );
+  const detail = generated.slice(
+    generated.indexOf('"/users/detail":'),
+    generated.indexOf("declare module"),
+  );
+  expect(detail).toContain("workspaceId");
+  expect(detail).toContain("canManage");
+  expect(detail).toContain("userId");
+  expect(detail).toContain(" & ");
+});
+
+it("preserves optional ancestor fields through schema serialization and generation", () => {
+  const schema = createTailorKitSchema({
+    components: {},
+    views: {
+      "/": { context: z.object({ workspaceId: z.string() }).optional() },
+      "/detail": { context: z.object({ id: z.string() }) },
+    },
+    slots: { panel: { views: ["/detail"] } },
+  }).serialize();
+  const parsed = TailorKitSchemaSpec.parse(schema);
+  expect(parsed.views["/"]?.contextOptional).toBe(true);
+  expect(parsed.views["/detail"]?.contextOptional).toBeUndefined();
+  const output = renderGeneratedTypes(parsed);
+  expect(output).toContain(
+    "context: (Partial<{\n      workspaceId: string;\n    }>) & ({\n      id: string;\n    });",
+  );
 });

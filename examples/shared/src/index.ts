@@ -1,5 +1,5 @@
 import { createActions } from "tailorkit";
-import type { Component, Screens } from "tailorkit";
+import type { Component, Views } from "tailorkit";
 import { primitives } from "tailorkit/zod";
 import { z } from "zod";
 
@@ -109,7 +109,7 @@ const customer = z.object({
   name: z.string(),
 });
 
-export const screens = {
+export const views = {
   "/": {
     context: z.object({
       user,
@@ -117,18 +117,15 @@ export const screens = {
   },
   "/customers": {
     context: z.object({
-      user,
       customers: z.array(customer),
     }),
   },
   "/customers/detail": {
     context: z.object({
-      user,
-      customers: z.array(customer),
       customer,
     }),
   },
-} satisfies Screens;
+} satisfies Views;
 
 const action = createActions().context<{ user: DemoUser }>();
 

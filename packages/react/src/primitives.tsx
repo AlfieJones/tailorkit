@@ -8,7 +8,7 @@ type PrimitiveValue = number | string;
 type PrimitiveProps = Record<string, unknown>;
 
 interface PrimitiveThemeContextValue {
-  screenId: string;
+  viewId: string;
   theme: TailorKitTheme;
 }
 
@@ -143,16 +143,16 @@ const buildPrimitiveCss = ({
   display,
   nodeId,
   props,
-  screenId,
+  viewId,
   theme,
 }: {
   display: "block" | "flex" | "grid" | "inline";
   nodeId: string;
   props: PrimitiveProps;
-  screenId: string;
+  viewId: string;
   theme: TailorKitTheme;
 }): string => {
-  const selector = `[data-tailorkit-screen="${cssEscape(screenId)}"] [data-tailorkit-node="${cssEscape(
+  const selector = `[data-tailorkit-view="${cssEscape(viewId)}"] [data-tailorkit-node="${cssEscape(
     nodeId,
   )}"]`;
   const base = [`display: ${display};`];
@@ -184,8 +184,8 @@ const buildPrimitiveCss = ({
   return rules.join("\n");
 };
 
-export const buildThemeCss = (screenId: string, theme: TailorKitTheme): string => {
-  const selector = `[data-tailorkit-screen="${cssEscape(screenId)}"]`;
+export const buildThemeCss = (viewId: string, theme: TailorKitTheme): string => {
+  const selector = `[data-tailorkit-view="${cssEscape(viewId)}"]`;
   const declarations: string[] = [];
   const resolvedTheme = resolveTheme(theme);
 
@@ -222,7 +222,7 @@ const Primitive = ({
         display,
         nodeId,
         props,
-        screenId: context.screenId,
+        viewId: context.viewId,
         theme: context.theme,
       })
     : "";

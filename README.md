@@ -5,7 +5,7 @@ product.
 
 The host product owns the routes, data, permissions, actions, and design system.
 TailorKit apps run separately in a sandboxed iframe and render through the
-screens and components the host exposes. That lets
+scopes, viewports, and components the host exposes. That lets
 customers, partners, or AI builders extend a product without getting direct
 access to the product internals.
 
@@ -23,10 +23,10 @@ access to the product internals.
 
 ## How It Works
 
-1. A host defines a TailorKit schema: screens, components, theme tokens, and
+1. A host defines a TailorKit schema: scopes, components, theme tokens, and
    server actions.
 2. Apps are built against that schema.
-3. Host routes call `useCurrentScreen` to publish their typed context.
+3. Host routes call `useScope` to publish their typed context.
 4. The host renders installed apps with `AppView`.
 5. TailorKit loads app code inside an opaque-origin iframe sandbox and proxies
    declarative UI/events across the host boundary.

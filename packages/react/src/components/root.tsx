@@ -1,28 +1,36 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import type { TailorKitApp } from "../tailor-kit";
+import { createTailorKitStore, toBaseUrl } from "../store";
+import type { TailorKitApp, TailorKitInstance } from "../tailor-kit";
 import type { ComponentProps } from "./render";
 import { mergeProps, useRender } from "./render";
 import { TailorRootContext } from "./context";
-import type { RootTailor, TailorRootContextValue } from "./context";
-
-const EMPTY_APPS: TailorKitApp[] = [];
+import type { TailorRootContextValue } from "./context";
 
 export interface RootProps extends ComponentProps<"div"> {
   apps?: TailorKitApp[];
   children?: ReactNode;
-  tailor: RootTailor;
+  client: TailorKitInstance;
 }
 
-export function Root({ apps: appsProp, children, render, tailor, ...props }: RootProps): ReactNode {
-  const appsResult = tailor.useApps();
-  const apps = appsProp ?? appsResult.data ?? EMPTY_APPS;
+export function Root({ apps: appsProp, children, render, client, ...props }: RootProps): ReactNode {
+  const baseUrl = toBaseUrl(client.baseUrl).toString();
+  const [previousStore, setStore] = useState(() => createTailorKitStore(baseUrl, appsProp));
+  let store = previousStore;
+  if (previousStore.baseUrl.toString() !== baseUrl) {
+    store = createTailorKitStore(baseUrl, appsProp);
+    setStore(store);
+  }
+  useEffect(() => {
+    store.setProvidedApps(appsProp);
+  }, [store, appsProp]);
 
   const context = useMemo<TailorRootContextValue>(
     () => ({
-      apps,
+      store,
+      client,
     }),
-    [apps],
+    [store, client],
   );
 
   const element = render

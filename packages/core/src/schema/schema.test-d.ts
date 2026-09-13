@@ -25,11 +25,10 @@ createTailorKitSchema({
 
 createTailorKitSchema({
   components: {},
-  screens: {
+  views: {
     "/pages": {
       context: z.object({ userId: z.string() }),
     },
-    // @ts-expect-error nested screen contexts must include their parent context
     "/pages/detail": {
       context: z.object({ pageId: z.string() }),
     },
@@ -45,7 +44,7 @@ const tailor = createTailorKitSchema({
       children: true,
     },
   },
-  screens: {
+  views: {
     "/": {},
     "/customers/:customerId": {
       context: z.object({ customerId: z.string() }),
@@ -65,10 +64,10 @@ const tailor = createTailorKitSchema({
 });
 
 const component = tailor.components.Button;
-const screen = tailor.screens["/customers/:customerId"];
+const view = tailor.views["/customers/:customerId"];
 const noSchemaAction = tailor.actions.noSchemas;
 void component;
-void screen;
+void view;
 void noSchemaAction;
 
 const buttonProps: ComponentProps<typeof tailor.components.Button> = { variant: "default" };
@@ -78,7 +77,7 @@ expectTypeOf<ComponentProps<typeof tailor.components.Button>>().toMatchTypeOf<{
   variant: "default" | "secondary";
 }>();
 expectTypeOf<typeof tailor.components.Button.children>().toEqualTypeOf<true>();
-expectTypeOf<typeof screen.context>().toEqualTypeOf<z.ZodObject<{ customerId: z.ZodString }>>();
+expectTypeOf<typeof view.context>().toEqualTypeOf<z.ZodObject<{ customerId: z.ZodString }>>();
 expectTypeOf<InferActionInput<typeof tailor.actions.withInput>>().toEqualTypeOf<{ id: string }>();
 expectTypeOf<InferActionOutput<typeof tailor.actions.withOutput>>().toEqualTypeOf<{ ok: true }>();
 expectTypeOf<InferActionOutput<typeof noSchemaAction>>().toEqualTypeOf<{ ok: boolean }>();
@@ -166,5 +165,44 @@ createTailorKitSchema({
         variant: {},
       },
     },
+  },
+});
+
+createTailorKitSchema({
+  components: {},
+  views: {
+    "/": { context: z.object({ workspaceId: z.string() }) },
+    // @ts-expect-error Each field has one owning view.
+    "/users/detail": { context: z.object({ workspaceId: z.string() }) },
+  },
+});
+
+createTailorKitSchema({
+  components: {},
+  views: { "/": {}, "/users": {} },
+  slots: { navbar: { views: ["/"] }, panel: { views: ["/users"] } },
+});
+createTailorKitSchema({
+  components: {},
+  views: { "/": {} },
+  // @ts-expect-error Slot lists can only reference declared views.
+  slots: { panel: { views: ["/missing"] } },
+});
+
+createTailorKitSchema({
+  components: {},
+  views: {
+    // @ts-expect-error Context composition requires named fields.
+    "/number": { context: z.number() },
+    // @ts-expect-error Strings must be wrapped in an object field.
+    "/string": { context: z.string() },
+    // @ts-expect-error Arrays must be wrapped in an object field.
+    "/array": { context: z.array(z.string()) },
+    // @ts-expect-error Every member of a context union must be an object.
+    "/union": { context: z.union([z.object({ id: z.string() }), z.number()]) },
+    // @ts-expect-error Null is not an object context.
+    "/null": { context: z.object({ id: z.string() }).nullable() },
+    "/optional": { context: z.object({ id: z.string() }).optional() },
+    "/empty": {},
   },
 });

@@ -9,18 +9,19 @@
 import { createRemoteComponent } from "@tailorkit/app";
 
 
-export interface ScreenPropsByPath {
+export interface ViewPropsByPath {
   "/": {
     context: Record<string, never>;
   };
 }
 
 declare module "@tailorkit/app" {
-  interface TailorKitScreens extends ScreenPropsByPath {}
+  interface TailorKitViews extends ViewPropsByPath {}
+  interface TailorKitSlots { panel: "/"; navbar: "/" }
 }
 
-export type ScreenPath = keyof ScreenPropsByPath & string;
-export type ScreenProps<TPath extends ScreenPath> = ScreenPropsByPath[TPath];
+export type ViewPath = keyof ViewPropsByPath & string;
+export type ViewProps<TPath extends ViewPath> = ViewPropsByPath[TPath];
 export type TailorKitActions = {
   echo: (input: string) => Promise<string>;
 };

@@ -5,7 +5,8 @@ import type {
   NoComponentFieldCallbackConflicts,
   NoMixedActionContexts,
   ResolveActionTreeContext,
-  ScreenContextHierarchy,
+  ViewContextHierarchy,
+  SlotDefinitions,
 } from "../schema/index";
 import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
@@ -16,7 +17,7 @@ import { tailorkitRouter } from "./router";
 import type {
   InferTailorKitServerActions,
   InferTailorKitServerComponents,
-  InferTailorKitServerScreens,
+  InferTailorKitServerViews,
   TailorKitHandlerOptions,
   TailorKitServer,
   TailorKitServerInputOptions,
@@ -27,30 +28,34 @@ type AbsolutePath = `/${string}`;
 
 export function createTailorKitServer<const TOptions extends TailorKitServerInputOptions>(
   options: TOptions & {
+    slots?: SlotDefinitions<keyof InferTailorKitServerViews<NoInfer<TOptions>> & string>;
     actions?: InferTailorKitServerActions<TOptions> &
       NoMixedActionContexts<InferTailorKitServerActions<TOptions>>;
     components: InferTailorKitServerComponents<TOptions> &
       NoComponentFieldCallbackConflicts<InferTailorKitServerComponents<TOptions>>;
-    screens?: InferTailorKitServerScreens<TOptions> &
-      ScreenContextHierarchy<InferTailorKitServerScreens<TOptions>>;
+    views?: InferTailorKitServerViews<TOptions> &
+      ViewContextHierarchy<InferTailorKitServerViews<TOptions>>;
   },
 ): TailorKitServer<
   InferTailorKitServerComponents<TOptions>,
-  InferTailorKitServerScreens<TOptions>,
+  InferTailorKitServerViews<TOptions>,
   InferTailorKitServerActions<TOptions>
-> {
+> & {
+  readonly $slots?: TOptions extends { slots: infer V } ? V : Record<never, never>;
+} {
   const basePath = normalizeBasePath(options.basePath ?? "/api/tailorkit");
   const schema = createTailorKitSchema<
     InferTailorKitServerComponents<TOptions>,
-    InferTailorKitServerScreens<TOptions>,
+    InferTailorKitServerViews<TOptions>,
     InferTailorKitServerActions<TOptions>
   >({
     actions: options.actions as
       | (InferTailorKitServerActions<TOptions> &
           NoMixedActionContexts<InferTailorKitServerActions<TOptions>>)
       | undefined,
+    slots: options.slots,
     components: options.components,
-    screens: options.screens,
+    views: options.views,
   });
   const platformBaseUrl = options.$internal?.platformBaseUrl ?? defaultPlatformBaseUrl;
   const assetsBaseUrl = options.assetsBaseUrl;

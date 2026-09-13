@@ -5,7 +5,7 @@ import gitignoreTemplate from "./.gitignore.liquid";
 import oxlintConfigTemplate from "./oxlint.config.ts.liquid";
 import oxfmtConfigTemplate from "./oxfmt.config.ts.liquid";
 import clientTemplate from "./src/client.ts.liquid";
-import defaultScreenTemplate from "./src/screens/default.tsx.liquid";
+import defaultViewTemplate from "./src/views/default.tsx.liquid";
 import genTemplate from "./src/tailorkit.gen.ts.liquid";
 
 export {
@@ -16,6 +16,6 @@ export {
   oxlintConfigTemplate,
   oxfmtConfigTemplate,
   clientTemplate,
-  defaultScreenTemplate,
+  defaultViewTemplate,
   genTemplate,
 };

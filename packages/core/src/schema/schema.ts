@@ -7,15 +7,20 @@ import type {
   ResolvedComponentMetadata,
 } from "./components";
 import { resolveComponentMetadata } from "./components";
-import type { ResolvedScreenMetadata, ScreenContextHierarchy, ScreenDefinitions } from "./screens";
+import type {
+  ResolvedViewMetadata,
+  ViewContextHierarchy,
+  ViewDefinitions,
+  SlotDefinitions,
+} from "./views";
 import { jsonSchemaSerializer, serializeSchema } from "./shared";
-import type { SchemaSerializer } from "./shared";
+import type { Schema, SchemaSerializer } from "./shared";
 
 type EmptyActionMap = Record<never, never>;
 
 export interface TailorKitSchema<
   TComponents extends Record<string, unknown> = ComponentDefinitions,
-  TScreens extends Record<string, unknown> = ScreenDefinitions,
+  TViews extends Record<string, unknown> = ViewDefinitions,
   TActions extends ActionTree = EmptyActionMap,
 > {
   /**
@@ -33,45 +38,54 @@ export interface TailorKitSchema<
     components: {
       [TName in keyof TComponents]: ResolvedComponentMetadata;
     };
-    screens: {
-      [TName in keyof TScreens]: ResolvedScreenMetadata;
+    views: {
+      [TName in keyof TViews]: ResolvedViewMetadata;
     };
   };
+  slots: SlotDefinitions;
   actions: TActions;
   components: TComponents;
-  screens: TScreens;
+  views: TViews;
   serialize(schemaSerializer?: SchemaSerializer): TailorKitSchemaSpec;
 }
 
 export const createTailorKitSchema = <
   const TComponents extends Record<string, unknown>,
-  const TScreens extends Record<string, unknown> = Record<string, never>,
+  const TViews extends Record<string, unknown> = Record<string, never>,
   const TActions extends ActionTree = EmptyActionMap,
 >(schema: {
+  slots?: SlotDefinitions<keyof NoInfer<TViews> & string>;
   actions?: TActions & NoMixedActionContexts<NoInfer<TActions>>;
   components: TComponents & NoComponentFieldCallbackConflicts<NoInfer<TComponents>>;
-  screens?: TScreens & ScreenContextHierarchy<NoInfer<TScreens>>;
-}): TailorKitSchema<TComponents, TScreens, TActions> => {
+  views?: TViews & ViewContextHierarchy<NoInfer<TViews>>;
+}): TailorKitSchema<TComponents, TViews, TActions> => {
+  for (const [name, slot] of Object.entries(schema.slots ?? {})) {
+    for (const view of slot.views) {
+      if (!Object.hasOwn(schema.views ?? {}, view)) {
+        throw new Error(`Slot "${name}" references undeclared view "${view}".`);
+      }
+    }
+  }
   const components = {} as TailorKitSchema<
     TComponents,
-    TScreens,
+    TViews,
     TActions
   >["$internal"]["components"];
-  const screens = {} as TailorKitSchema<TComponents, TScreens, TActions>["$internal"]["screens"];
+  const views = {} as TailorKitSchema<TComponents, TViews, TActions>["$internal"]["views"];
 
   for (const [name, definition] of Object.entries(schema.components as ComponentDefinitions)) {
     components[name as keyof TComponents] = resolveComponentMetadata(name, definition);
   }
 
-  for (const [name, definition] of Object.entries((schema.screens ?? {}) as ScreenDefinitions)) {
-    screens[name as keyof TScreens] = { context: definition.context };
+  for (const [name, definition] of Object.entries((schema.views ?? {}) as ViewDefinitions)) {
+    views[name as keyof TViews] = { context: definition.context };
   }
 
   const serialize = (
     schemaSerializer: SchemaSerializer = jsonSchemaSerializer,
   ): TailorKitSchemaSpec => {
     const serializedComponents: TailorKitSchemaSpec["components"] = {};
-    const serializedScreens: TailorKitSchemaSpec["screens"] = {};
+    const serializedViews: TailorKitSchemaSpec["views"] = {};
 
     for (const [name, metadata] of Object.entries(components)) {
       const callbacks: TailorKitSchemaSpec["components"][string]["callbacks"] = {};
@@ -93,29 +107,39 @@ export const createTailorKitSchema = <
       };
     }
 
-    for (const [name, metadata] of Object.entries(screens)) {
-      serializedScreens[name] = {
+    for (const [name, metadata] of Object.entries(views)) {
+      serializedViews[name] = {
         context: serializeSchema(metadata.context, schemaSerializer),
+        ...(metadata.context && contextMayBeOmitted(metadata.context)
+          ? { contextOptional: true }
+          : {}),
       };
     }
 
     return {
       actions: serializeActions(schema.actions ?? {}, schemaSerializer),
       components: serializedComponents,
-      screens: serializedScreens,
+      views: serializedViews,
+      slots: Object.fromEntries(
+        Object.entries(schema.slots ?? {}).map(([name, slot]) => [
+          name,
+          { views: [...slot.views] },
+        ]),
+      ),
       version: 1,
     };
   };
 
   return {
+    slots: schema.slots ?? {},
     actions: (schema.actions ?? {}) as TActions,
     components: schema.components,
-    screens: (schema.screens ?? {}) as TScreens,
+    views: (schema.views ?? {}) as TViews,
     serialize,
     $internal: {
       actions: (schema.actions ?? {}) as TActions,
       components,
-      screens,
+      views,
     },
   };
 };
@@ -156,12 +180,26 @@ export {
   type ResolvedComponentMetadata,
 } from "./components";
 export {
-  type ResolvedScreenMetadata,
-  type Screen,
-  type ScreenContextHierarchy,
-  type ScreenDefinition,
-  type ScreenDefinitions,
-  type Screens,
-} from "./screens";
+  type ResolvedViewMetadata,
+  type View,
+  type ViewContextHierarchy,
+  type ViewDefinition,
+  type ViewDefinitions,
+  type Views,
+  type SlotDefinitions,
+} from "./views";
 export { jsonSchemaSerializer, type Schema, type SchemaSerializer } from "./shared";
 export type { TailorKitSchema as TailorKit };
+
+// JSON Schema cannot represent undefined at its root. Preserve that information
+// separately before sending the schema to app type generation.
+function contextMayBeOmitted(schema: Schema): boolean {
+  // oxlint-disable-next-line unicorn/no-useless-undefined -- Probe whether the schema accepts an omitted context.
+  const result = schema["~standard"].validate(undefined);
+  if (result instanceof Promise) {
+    // Serialization is synchronous; conservatively allow omission for async schemas.
+    void result.catch(() => {});
+    return true;
+  }
+  return !result.issues;
+}

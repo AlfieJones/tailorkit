@@ -3,11 +3,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createIframeUiHost } from "./index.js";
 
-const iframeReadyType = "tailorkit:iframe-ready";
-const sandboxMessageType = "tailorkit:worker-message";
+import { iframeReadyType, sandboxMessageType } from "../bridge";
 
 function getChannel(iframe: HTMLIFrameElement): string {
-  const match = /const channel = "([a-f0-9]+)"/u.exec(iframe.srcdoc);
+  const match = /data-tailorkit-channel="([a-f0-9]+)"/u.exec(iframe.srcdoc);
   if (!match?.[1]) {
     throw new Error("Unable to find iframe channel.");
   }
@@ -67,10 +66,6 @@ describe("createIframeUiHost", () => {
     expect(host.iframe.getAttribute("sandbox")).not.toContain("allow-same-origin");
     expect(host.iframe.srcdoc).toContain("connect-src 'none'");
     expect(host.iframe.srcdoc).toContain("worker-src 'none'");
-    expect(host.iframe.srcdoc).toContain("loadedModule = await import(moduleUrl)");
-    expect(host.iframe.srcdoc).toContain("new MutationObserver");
-    expect(host.iframe.srcdoc).toContain("nodes.set(id, new WeakRef(node))");
-    expect(host.iframe.srcdoc).toContain("const target = derefNode(payload.data.nodeId)");
     expect(host.iframe.srcdoc).not.toContain("new Worker");
     expect(fetch).toHaveBeenCalledWith(new URL("https://assets.test/app.js"), {
       credentials: "omit",
@@ -157,4 +152,29 @@ describe("createIframeUiHost", () => {
     host.destroy();
     expect(document.body.contains(host.iframe)).toBe(false);
   });
+});
+
+it("updates a mounted slot without fetching its app bundle again", async () => {
+  const fetch = createFetch();
+  const host = createIframeUiHost("https://assets.test/app.js", {
+    fetch,
+    props: { slot: "navbar", view: "/users" },
+  });
+  host.mount();
+  const postMessage = vi.spyOn(getContentWindow(host.iframe), "postMessage");
+  const channel = getChannel(host.iframe);
+  emitFromIframe(host.iframe, { channel, type: iframeReadyType });
+  await vi.waitFor(() => expect(postMessage).toHaveBeenCalledTimes(1));
+  host.setProps({ slot: "navbar", view: "/users/detail" });
+  await vi.waitFor(() => expect(postMessage).toHaveBeenCalledTimes(2));
+  expect(postMessage.mock.calls[1]?.[0]).toMatchObject({
+    payload: {
+      data: {
+        props: { slot: "navbar", view: "/users/detail" },
+      },
+    },
+  });
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(host.iframe.isConnected).toBe(true);
+  host.destroy();
 });

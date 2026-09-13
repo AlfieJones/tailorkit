@@ -5,8 +5,8 @@ export type {
   Actions,
   Component,
   Components,
-  Screen,
-  Screens,
+  View,
+  Views,
   TailorKit,
   TailorKitTheme,
 } from "@tailorkit/core/schema";

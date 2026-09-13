@@ -30,6 +30,7 @@
     "build": "vite build && tsc -p tsconfig.build.json"
   },
   "dependencies": {
+    "@tailorkit/core": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

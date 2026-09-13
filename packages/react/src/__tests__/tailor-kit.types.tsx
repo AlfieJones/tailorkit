@@ -1,3 +1,4 @@
+import { AppView, useView } from "../index";
 import { createTailorKitServer } from "@tailorkit/core/server";
 import type { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import type { ReactNode } from "react";
@@ -18,20 +19,22 @@ const typedSchema = <TValue,>(): StandardSchemaV1<unknown, TValue> &
   }) as const satisfies StandardSchemaV1<unknown, TValue> & StandardJSONSchemaV1<unknown, TValue>;
 
 const server = createTailorKitServer({
+  slots: {
+    panel: { views: ["/", "/home", "/home/detail", "/user"] },
+    navbar: { views: ["/"] },
+  },
   components: {
     Button: {},
   },
-  screens: {
+  views: {
     "/": { context: typedSchema<{ user: { id: string } }>() },
-    "/home": { context: typedSchema<{ page: { title: string }; user: { id: string } }>() },
+    "/home": { context: typedSchema<{ page: { title: string } }>() },
     "/home/detail": {
       context: typedSchema<{
         detail: { id: string };
-        page: { title: string };
-        user: { id: string };
       }>(),
     },
-    "/user": { context: typedSchema<{ user: { id: string }; userId: string }>() },
+    "/user": { context: typedSchema<{ userId: string }>() },
   },
 });
 
@@ -105,47 +108,58 @@ components(callbackServer.$internal.schema, {
   },
 });
 
-tailor.useCurrentScreen({
-  screen: "/home",
-  context: { page: { title: "Home" }, user: { id: "user_1" } },
+useView("/home", {
+  context: { page: { title: "Home" } },
 });
 
-tailor.useCurrentScreen({ screen: "/user", status: "loading" });
+useView("/user", { status: "loading" });
 
-tailor.useCurrentScreen({ screen: "/user", status: "error" });
+useView("/user", { status: "error" });
 
-// @ts-expect-error invalid screen name
-tailor.useCurrentScreen({ screen: "missing", context: {} });
+// @ts-expect-error invalid view name
+useView("missing", { context: {} });
 
-// @ts-expect-error invalid context shape for selected screen
-tailor.useCurrentScreen({ screen: "/user", context: { page: { title: "Home" } } });
+// @ts-expect-error invalid context shape for selected view
+useView("/user", { context: { page: { title: "Home" } } });
 
 // @ts-expect-error ready matches require context
-tailor.useCurrentScreen({ screen: "/home" });
+useView("/home", {});
 
-// @ts-expect-error loading screens cannot expose partial context
-tailor.useCurrentScreen({ screen: "/user", status: "loading", context: { userId: "user_1" } });
+// @ts-expect-error loading views cannot expose partial context
+useView("/user", { status: "loading", context: { userId: "user_1" } });
 
-<tailor.AppView app={app} />;
+<AppView slot="panel" app={app} />;
 
-<tailor.AppView
-  app={app}
-  screen="/home"
-  context={{ page: { title: "Home" }, user: { id: "user_1" } }}
-/>;
+<AppView slot="panel" app={app} view="/home" context={{ page: { title: "Home" } }} />;
 
-<tailor.AppView app={app} screen="/user" status="loading" />;
+<AppView slot="panel" app={app} view="/user" status="loading" />;
 
-<tailor.AppView app={app} screen="/user" status="error" />;
+<AppView slot="panel" app={app} view="/user" status="error" />;
 
-// @ts-expect-error invalid screen name
-<tailor.AppView app={app} screen="missing" context={{}} />;
+// @ts-expect-error invalid view name
+<AppView slot="panel" app={app} view="missing" context={{}} />;
 
-// @ts-expect-error invalid context shape for selected screen
-<tailor.AppView app={app} screen="/user" context={{ page: { title: "Home" } }} />;
+// @ts-expect-error invalid context shape for selected view
+<AppView slot="panel" app={app} view="/user" context={{ page: { title: "Home" } }} />;
 
-// @ts-expect-error ready app views require context when screen is provided
-<tailor.AppView app={app} screen="/home" />;
+// @ts-expect-error ready app views require context when view is provided
+<AppView slot="panel" app={app} view="/home" />;
 
 // @ts-expect-error loading app views cannot expose context
-<tailor.AppView app={app} screen="/user" status="loading" context={{ userId: "user_1" }} />;
+<AppView slot="panel" app={app} view="/user" status="loading" context={{ userId: "user_1" }} />;
+
+declare module "../tailor-kit" {
+  interface Register {
+    client: typeof tailor;
+  }
+}
+
+// @ts-expect-error Unknown host slot.
+<AppView app={app} slot="missing" />;
+
+// @ts-expect-error The navbar supports root only, despite /user being globally declared.
+<AppView app={app} slot="navbar" view="/user" context={{ userId: "u1" }} />;
+<AppView app={app} slot="navbar" view="/" context={{ user: { id: "u1" } }} />;
+
+// @ts-expect-error The former object-only hook signature is not supported.
+useView({ view: "/user", context: { userId: "u1" } });

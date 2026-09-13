@@ -25,10 +25,10 @@ connections. The host still fetches app code,
 passes context into the runtime, renders the returned UI, and executes approved
 actions. Those host-controlled edges require the same care as any public API.
 
-## Minimize screen context
+## Minimize view context
 
-Every field published through `useCurrentScreen()` is visible to the app rendering that
-screen. Pass view models designed for the app contract, not database records,
+Every field published through `useView()` is visible to the app rendering that
+view. Pass view models designed for the app contract, not database records,
 sessions, access tokens, or broad route-loader objects.
 
 Derive permissions on the server. Do not treat a hidden component or omitted
@@ -100,10 +100,10 @@ or auth flows.
 For trusted work, expose a host-owned [action](/docs/actions).
 
 Authorize every action using `context`, even if the UI only exposes it to a
-particular role. Validate action input and output, scope database queries to the
+particular role. Validate action input and output, view database queries to the
 authenticated tenant, and avoid returning secrets or internal metadata.
 
-## Scope app installation
+## View app installation
 
 Choose a stable `scopeId` that matches where apps are installed: a user, team,
 workspace, or customer. Derive it from the authenticated session rather than a
@@ -158,11 +158,11 @@ Before deploying:
   </label>
   <label className="flex items-start gap-3 rounded-md border bg-card p-3 text-sm leading-6">
     <input className="mt-1" type="checkbox" />
-    <span>Pass minimal screen context without secrets, sessions, or raw database records.</span>
+    <span>Pass minimal view context without secrets, sessions, or raw database records.</span>
   </label>
   <label className="flex items-start gap-3 rounded-md border bg-card p-3 text-sm leading-6">
     <input className="mt-1" type="checkbox" />
-    <span>Authorize every action from authenticated host context and tenant scope.</span>
+    <span>Authorize every action from authenticated host context and tenant view.</span>
   </label>
   <label className="flex items-start gap-3 rounded-md border bg-card p-3 text-sm leading-6">
     <input className="mt-1" type="checkbox" />

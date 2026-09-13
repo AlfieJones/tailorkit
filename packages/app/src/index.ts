@@ -7,79 +7,94 @@ declare const __PREACT_VERSION__: string;
 const preactVersion = __PREACT_VERSION__;
 
 // oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
-export interface TailorKitScreens {}
+export interface TailorKitViews {}
 
-export type ScreenPath = Extract<keyof TailorKitScreens & string, `/${string}`>;
-export type AppScreenPath = ScreenPath;
+// oxlint-disable-next-line typescript-eslint/no-empty-interface, typescript-eslint/no-empty-object-type
+export interface TailorKitSlots {}
+export type SlotName = keyof TailorKitSlots & string;
 
-export type ScreenProps<TPath extends ScreenPath> = TailorKitScreens[TPath] extends object
-  ? TailorKitScreens[TPath]
+export type ViewPath = Extract<keyof TailorKitViews & string, `/${string}`>;
+export type AppViewPath = ViewPath;
+
+export type ViewProps<TPath extends ViewPath> = TailorKitViews[TPath] extends object
+  ? TailorKitViews[TPath]
   : Record<string, never>;
 
-export type ScreenPropsForPath<TPath extends AppScreenPath> = TPath extends ScreenPath
-  ? ScreenProps<TPath>
+export type ViewPropsForPath<TPath extends AppViewPath> = TPath extends ViewPath
+  ? ViewProps<TPath>
   : never;
 
-export type ScreenContext<TPath extends AppScreenPath> =
-  ScreenPropsForPath<TPath> extends { context: infer TContext } ? TContext : Record<string, never>;
+export type ViewContext<TPath extends AppViewPath> =
+  ViewPropsForPath<TPath> extends { context: infer TContext } ? TContext : Record<string, never>;
 
 export type View<TProps extends object = Record<string, never>> = (props: TProps) => ComponentChild;
 
-export type ScreenRuntimeProps<TPath extends AppScreenPath> =
+export type ViewRuntimeProps<TPath extends AppViewPath> =
   | {
-      context: ScreenContext<TPath>;
-      screen: TPath;
+      context: ViewContext<TPath>;
+      view: TPath;
       status: "ready";
     }
   | {
       context?: never;
-      screen: TPath;
+      view: TPath;
       status: "loading";
     }
   | {
       context?: never;
-      screen: TPath;
+      view: TPath;
       status: "error";
     };
 
-export interface ScreenDefinition<TPath extends AppScreenPath = AppScreenPath> {
-  component: View<ScreenRuntimeProps<TPath>>;
+export interface ViewDefinition<TPath extends AppViewPath = AppViewPath> {
+  component: View<ViewRuntimeProps<TPath>>;
   path: TPath;
-  useContext: () => ScreenContext<TPath>;
+  useContext: () => ViewContext<TPath>;
 }
 
-type RegisteredScreens = {
-  [TPath in AppScreenPath]: ScreenDefinition<TPath>;
+type RegisteredViews = {
+  [TPath in AppViewPath]: ViewDefinition<TPath>;
 };
 
-type ScreenDefinitions = Partial<RegisteredScreens>;
+type ViewDefinitions = Partial<{ [P in AppViewPath]: RegisteredViews[P] | false }>;
 
-type InvalidScreenPath<TScreens> = Exclude<keyof TScreens & string, `/${string}`>;
+type InvalidViewPath<TViews> = Exclude<keyof TViews & string, AppViewPath>;
 
-type RequireScreenPaths<TScreens> =
-  InvalidScreenPath<TScreens> extends never
+type RequireViewPaths<TViews> =
+  InvalidViewPath<TViews> extends never
     ? unknown
     : {
-        readonly __tailorkit_error__: `Screen paths must start with "/". Invalid screen: ${InvalidScreenPath<TScreens>}`;
+        readonly __tailorkit_error__: `View paths must be declared by the host. Invalid view: ${InvalidViewPath<TViews>}`;
       };
 
-type ScreenKeyPathMismatch<TScreens> = {
-  [TPath in keyof TScreens & string]: TScreens[TPath] extends ScreenDefinition<infer TScreenPath>
-    ? TScreenPath extends TPath
-      ? never
-      : TPath
-    : TPath;
-}[keyof TScreens & string];
+type ViewKeyPathMismatch<TViews> = {
+  [TPath in keyof TViews & string]: TViews[TPath] extends false
+    ? never
+    : TViews[TPath] extends ViewDefinition<infer TViewPath>
+      ? TViewPath extends TPath
+        ? never
+        : TPath
+      : TPath;
+}[keyof TViews & string];
 
-type RequireMatchingScreenKeys<TScreens> =
-  ScreenKeyPathMismatch<TScreens> extends never
+type RequireMatchingViewKeys<TViews> =
+  ViewKeyPathMismatch<TViews> extends never
     ? unknown
     : {
-        readonly __tailorkit_error__: `Screen key must match createScreen path. Invalid screen: ${ScreenKeyPathMismatch<TScreens>}`;
+        readonly __tailorkit_error__: `View key must match createView path. Invalid view: ${ViewKeyPathMismatch<TViews>}`;
       };
 
-export interface TailorKitClient<TScreens extends ScreenDefinitions = ScreenDefinitions> {
-  screens: TScreens;
+export type SlotView<TSlot extends SlotName> = Extract<TailorKitSlots[TSlot], AppViewPath>;
+type SlotDefinitions = {
+  [V in SlotName]?: Pick<ViewDefinitions, SlotView<V>>;
+};
+type RequireSlotViews<V, S> = V extends SlotName
+  ? Exclude<keyof S, SlotView<V>> extends never
+    ? unknown
+    : { readonly __tailorkit_error__: "View is not supported by this slot" }
+  : never;
+export interface TailorKitClient<TSlots extends SlotDefinitions = SlotDefinitions> {
+  slots: TSlots;
 }
 
 export interface TailorKitClientMeta {
@@ -88,26 +103,26 @@ export interface TailorKitClientMeta {
 
 export interface TailorKitClientRuntime {
   h: typeof h;
-  render: (vnode: VNode, parent: Element | Document | ShadowRoot | DocumentFragment) => void;
+  render: (vnode: VNode | null, parent: Element | Document | ShadowRoot | DocumentFragment) => void;
 }
 
-export type TailorKitClientWithMeta<TScreens extends ScreenDefinitions = ScreenDefinitions> =
-  TailorKitClient<TScreens> & {
+export type TailorKitClientWithMeta<TViews extends SlotDefinitions = SlotDefinitions> =
+  TailorKitClient<TViews> & {
     $meta: TailorKitClientMeta;
     $runtime: TailorKitClientRuntime;
   };
 
-export const createScreen = <const TPath extends AppScreenPath>(
+export const createView = <const TPath extends AppViewPath>(
   path: TPath,
   options: {
     component: View<Record<string, never>>;
     error?: View<Record<string, never>>;
     loading?: View<Record<string, never>>;
   },
-): ScreenDefinition<TPath> => {
-  const Context = createContext<ScreenContext<TPath> | null>(null);
+): ViewDefinition<TPath> => {
+  const Context = createContext<ViewContext<TPath> | null>(null);
 
-  const Screen = (props: ScreenRuntimeProps<TPath>) => {
+  const View = (props: ViewRuntimeProps<TPath>) => {
     if (props.status === "loading") {
       return options.loading ? h(options.loading as ComponentType<object>, {}) : null;
     }
@@ -118,19 +133,19 @@ export const createScreen = <const TPath extends AppScreenPath>(
 
     return h(
       Context.Provider,
-      { value: props.context as ScreenContext<TPath> },
+      { value: props.context as ViewContext<TPath> },
       h(options.component as ComponentType<object>, {}),
     );
   };
 
   return {
-    component: Screen,
+    component: View,
     path,
     useContext: () => {
       const context = useContext(Context);
 
       if (context === null) {
-        throw new Error(`Screen context is only available while rendering "${path}".`);
+        throw new Error(`View context is only available while rendering "${path}".`);
       }
 
       return context;
@@ -138,19 +153,21 @@ export const createScreen = <const TPath extends AppScreenPath>(
   };
 };
 
-export const defineClient = <const TScreens extends ScreenDefinitions>(
-  client: TailorKitClient<TScreens> &
-    RequireScreenPaths<TScreens> &
-    RequireMatchingScreenKeys<TScreens>,
-): TailorKitClientWithMeta<TScreens> => ({
+export const defineClient = <const TSlots extends SlotDefinitions>(
+  client: TailorKitClient<TSlots> & {
+    slots: {
+      [V in keyof TSlots]: TSlots[V] &
+        RequireViewPaths<TSlots[V]> &
+        RequireMatchingViewKeys<TSlots[V]> &
+        RequireSlotViews<V, TSlots[V]>;
+    };
+  } & (Exclude<keyof TSlots, SlotName> extends never
+      ? unknown
+      : { __tailorkit_error__: "Unknown slot" }),
+): TailorKitClientWithMeta<TSlots> => ({
   ...client,
-  $meta: {
-    preactVersion,
-  },
-  $runtime: {
-    h,
-    render,
-  },
+  $meta: { preactVersion },
+  $runtime: { h, render },
 });
 
 const componentTagPrefix = "tailorkit-";

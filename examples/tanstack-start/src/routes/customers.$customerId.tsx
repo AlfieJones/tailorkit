@@ -1,12 +1,13 @@
+import { useView } from "tailorkit/react";
 import { Badge } from "@tailorkit/ui/badge";
 import { Button } from "@tailorkit/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tailorkit/ui/card";
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { DetailCard } from "#components/crm-ui";
-import { customers, getCustomer } from "#lib/crm-data";
+import { getCustomer } from "#lib/crm-data";
 import { useAuthSession } from "#lib/auth-client";
-import tailor from "#lib/tailorkit-client";
+import "#lib/tailorkit-client";
 
 export const Route = createFileRoute("/customers/$customerId")({
   component: CustomerDetailPage,
@@ -25,14 +26,13 @@ function CustomerDetailPage() {
   const { customer } = Route.useLoaderData();
   const session = useAuthSession();
 
-  tailor.useCurrentScreen(
+  useView(
+    "/customers/detail",
     session.data
       ? {
-          context: { customer, customers, user: session.data.user },
-          screen: "/customers/detail",
+          context: { customer },
         }
       : {
-          screen: "/customers/detail",
           status: "loading",
         },
   );

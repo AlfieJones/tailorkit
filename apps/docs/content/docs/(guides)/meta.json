@@ -1,4 +1,4 @@
 {
   "title": "Guides",
-  "pages": ["layouts-and-styles", "components", "screens", "actions", "deploying-to-production"]
+  "pages": ["layouts-and-styles", "components", "views", "actions", "deploying-to-production"]
 }
