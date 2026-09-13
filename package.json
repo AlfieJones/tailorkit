@@ -1,6 +1,6 @@
 {
   "private": true,
-  "license": "AGPL-3.0-only",
+  "license": "BUSL-1.1",
   "type": "module",
   "scripts": {
     "dev": "turbo run dev --filter=web",
@@ -23,6 +23,8 @@
     "lint:fix": "oxlint --fix .",
     "format": "oxfmt --check",
     "format:fix": "oxfmt .",
+    "licenses:sync": "node ./scripts/sync-licenses.mjs",
+    "licenses:check": "node ./scripts/sync-licenses.mjs --check",
     "changeset": "vp exec changeset",
     "release:status": "vp exec changeset status --verbose",
     "release:version": "vp exec changeset version",
