@@ -1,51 +1,11 @@
 # TailorKit licensing
 
-TailorKit uses a mixed-license monorepo.
+TailorKit uses per-package licensing. Each package’s `package.json` and
+`LICENSE.md` identify the license that applies to it.
 
-Unless a more specific package or directory license applies, repository
-content is licensed under Apache-2.0. The package metadata identifies the
-license that applies to each workspace package.
+Generally, TailorKit’s hosted platform and server-side infrastructure use
+BUSL-1.1, while its SDKs, framework, client libraries, and developer tooling
+use Apache-2.0.
 
-## Apache-2.0 packages
-
-The public SDKs, core runtime, app tooling, CLI, React integration, sandbox,
-protocol packages, UI components, examples, and demos are Apache-2.0:
-
-- `@tailorkit/core`
-- `@tailorkit/client-platform`
-- `@tailorkit/app`
-- `@tailorkit/cli`
-- `@tailorkit/react`
-- `@tailorkit/sandbox`
-- `tailorkit`
-- `@tailorkit/ui`
-
-## BUSL-1.1 packages
-
-The hosted platform and associated server infrastructure are BUSL-1.1:
-
-- `apps/web`
-- `apps/assets`
-- `@tailorkit/api`
-- `@tailorkit/api-platform`
-- `@tailorkit/api-utils`
-- `@tailorkit/asset-delivery`
-- `@tailorkit/auth`
-- `@tailorkit/config`
-- `@tailorkit/db`
-- `@tailorkit/email`
-- `@tailorkit/env`
-- `@tailorkit/kv`
-- `@tailorkit/observability`
-- `@tailorkit/storage`
-
-BUSL-licensed code may be used for development, testing, staging, evaluation,
-demonstration, and continuous integration. Production use requires a
-commercial agreement. The canonical license texts are maintained in
-`licenses/Apache-2.0.md` and `licenses/BUSL-1.1.md`.
-
-Every workspace package has a committed `LICENSE.md` containing the exact
-license text selected by its `package.json` `license` field. This includes
-private packages and applications. Run `pnpm licenses:sync` after changing a
-package license or a canonical license text; run `pnpm licenses:check` to
-verify that all package license files are present and up to date.
+Files outside a package are licensed under Apache-2.0 unless otherwise noted.
+Canonical license texts are maintained in `licenses/`.
