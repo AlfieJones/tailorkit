@@ -1,7 +1,7 @@
 {
   "name": "@tailorkit/cli",
   "version": "0.1.0-beta.9",
-  "license": "AGPL-3.0-only",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AlfieJones/tailorkit.git",

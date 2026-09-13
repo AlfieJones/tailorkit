@@ -2,7 +2,7 @@
   "name": "notes",
   "private": true,
   "description": "A TailorKit.dev app that embeds in a host app to extend what it can do.",
-  "license": "AGPL-3.0-only",
+  "license": "Apache-2.0",
   "type": "module",
   "imports": {
     "#tailorkit": "./src/tailorkit.gen.ts",

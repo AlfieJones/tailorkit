@@ -1,7 +1,7 @@
 {
   "name": "@tailorkit/assets",
   "private": true,
-  "license": "AGPL-3.0-only",
+  "license": "BUSL-1.1",
   "type": "module",
   "scripts": {
     "build": "wrangler deploy --dry-run --outdir dist",
