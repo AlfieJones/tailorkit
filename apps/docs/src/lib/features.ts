@@ -35,7 +35,7 @@ export const productFeatures: ProductFeature[] = [
   {
     title: "Open source",
     description:
-      "Adopt, inspect, and extend an AGPL-licensed framework without betting on a black box.",
+      "Adopt, inspect, and extend an Apache-licensed framework without betting on a black box.",
     icon: GitFork,
   },
   {
