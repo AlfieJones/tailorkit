@@ -2,7 +2,7 @@ import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import { render } from "@react-email/render";
 import { env, getBaseUrl } from "@tailorkit/env/server";
 import { withSpan } from "@tailorkit/observability";
-import nodemailer from "nodemailer";
+import { createTransport } from "nodemailer";
 import type Mail from "nodemailer/lib/mailer";
 import type SESTransport from "nodemailer/lib/ses-transport";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
@@ -39,7 +39,7 @@ const hasSesCredentials = () => Boolean(env.EMAIL_ACCESS_KEY_ID && env.EMAIL_SEC
 
 const resolveSesRegion = () => env.EMAIL_REGION ?? "us-east-1";
 
-const createSmtpTransport = (smtpUrl: string) => nodemailer.createTransport(smtpUrl);
+const createSmtpTransport = (smtpUrl: string) => createTransport(smtpUrl);
 
 const resolveSmtpUrl = () => {
   if (!env.EMAIL_SMTP_URL) {
@@ -72,7 +72,7 @@ const createSesTransport = () => {
     SES: { SendEmailCommand, sesClient },
   };
 
-  return nodemailer.createTransport(options);
+  return createTransport(options);
 };
 
 const getTransporter = () => {

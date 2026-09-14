@@ -33,14 +33,14 @@
     "tailorkit": "vp -C packages/cli build && node ./packages/cli/dist/index.js"
   },
   "devDependencies": {
-    "@changesets/cli": "3.0.1",
-    "lefthook": "2.1.10",
-    "oxfmt": "0.64.0",
-    "oxlint": "1.79.0",
+    "@changesets/cli": "3.0.2",
+    "lefthook": "2.1.12",
+    "oxfmt": "0.67.0",
+    "oxlint": "1.82.0",
     "sherif": "^1.13.0",
-    "turbo": "2.10.11",
-    "ultracite": "7.10.6",
-    "vite-plus": "0.2.9"
+    "turbo": "2.10.12",
+    "ultracite": "7.11.1",
+    "vite-plus": "0.3.1"
   },
   "packageManager": "pnpm@12.4.1"
 }

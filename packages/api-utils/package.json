@@ -46,7 +46,7 @@
     "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
     "@upstash/ratelimit": "^2.0.8",
-    "@vercel/functions": "^3.9.5"
+    "@vercel/functions": "^3.9.7"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
