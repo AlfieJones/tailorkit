@@ -7,5 +7,5 @@ export const docsContentRoute = "/llms.mdx/docs";
 export const gitConfig = {
   branch: "main",
   repo: "tailorkit",
-  user: "tailorkit-dev",
+  user: "tailorkit-labs",
 };
