@@ -164,7 +164,7 @@ cli
             deploySpinner.start("Creating app and deploying");
           }
 
-          return shouldCreate;
+          return shouldCreate === true;
         },
         onTypecheckFailed: async ({ command, output }) => {
           deploySpinner.stop("Type check failed.");
@@ -186,7 +186,7 @@ cli
             deploySpinner.start("Uploading app");
           }
 
-          return shouldUpload;
+          return shouldUpload === true;
         },
         outDir: options.outDir as string | undefined,
       });

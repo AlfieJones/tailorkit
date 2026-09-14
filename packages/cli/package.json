@@ -27,7 +27,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@clack/prompts": "^1.7.0",
+    "@clack/prompts": "^1.8.0",
     "@tailorkit/app": "workspace:*",
     "@tailorkit/core": "workspace:*",
     "cac": "^7.0.0",

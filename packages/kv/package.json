@@ -36,7 +36,7 @@
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",
-    "@upstash/redis": "^1.38.2",
+    "@upstash/redis": "^1.38.4",
     "ioredis": "^6.0.0",
     "tsdown": "catalog:",
     "typescript": "catalog:"

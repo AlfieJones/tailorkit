@@ -1,3 +1,5 @@
+/* oxlint-disable react(invariant) */
+
 import {
   Component,
   Fragment,
@@ -203,7 +205,7 @@ interface RemoteViewProps {
   nodeId: string;
 }
 
-export const RemoteView = memo(function RemoteView({ nodeId }: RemoteViewProps): ReactNode {
+function RemoteViewComponent({ nodeId }: RemoteViewProps): ReactNode {
   const ctx = useContext(RemoteUIContext);
   if (ctx === null) {
     return null;
@@ -235,4 +237,6 @@ export const RemoteView = memo(function RemoteView({ nodeId }: RemoteViewProps):
   }
 
   return <RemoteElementView node={node} ctx={ctx} />;
-});
+}
+
+export const RemoteView = memo(RemoteViewComponent);
