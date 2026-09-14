@@ -9,7 +9,7 @@ import { betterAuth } from "better-auth/minimal";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { waitUntil as vercelWaitUntil } from "@vercel/functions";
-import { haveIBeenPwned } from "better-auth/plugins";
+import { haveIBeenPwned, lastLoginMethod } from "better-auth/plugins";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { organization } from "better-auth/plugins/organization";
 import { oAuthProxy } from "better-auth/plugins/oauth-proxy";
@@ -91,6 +91,7 @@ export function createAuth() {
         : undefined,
     plugins: [
       haveIBeenPwned(),
+      lastLoginMethod(),
       emailOTP({
         expiresIn: 600,
         overrideDefaultEmailVerification: true,

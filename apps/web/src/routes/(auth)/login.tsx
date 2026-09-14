@@ -16,7 +16,7 @@ import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/
 import { useAppForm } from "@tailorkit/ui/form";
 import { ArrowLeftIcon } from "lucide-react";
 import { clsx } from "clsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 import { authClient } from "#lib/auth-client";
@@ -62,6 +62,21 @@ const GitHubIcon = () => (
 
 type Step = "email" | "password";
 
+function LastUsedMethod({ method }: { method: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <span className="absolute -top-2 -right-2 z-10 rounded-full bg-blue-600 px-3 py-1 font-medium text-sm text-white shadow-sm" />
+        }
+      >
+        Last used
+      </TooltipTrigger>
+      <TooltipPopup>Last signed in with {method}</TooltipPopup>
+    </Tooltip>
+  );
+}
+
 function RouteComponent() {
   const {
     email: emailFromSearch,
@@ -76,6 +91,11 @@ function RouteComponent() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [githubError, setGithubError] = useState<string | null>(null);
   const [githubPending, setGithubPending] = useState(false);
+  const [lastUsedLoginMethod, setLastUsedLoginMethod] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLastUsedLoginMethod(authClient.getLastUsedLoginMethod());
+  }, []);
 
   const transition = (nextStep: Step, nextEmail?: string) => {
     setVisible(false);
@@ -197,9 +217,12 @@ function RouteComponent() {
                       )}
                     </emailForm.AppField>
 
-                    <emailForm.AppForm>
-                      <emailForm.SubmitButton className="w-full">Continue</emailForm.SubmitButton>
-                    </emailForm.AppForm>
+                    <div className="relative">
+                      <emailForm.AppForm>
+                        <emailForm.SubmitButton className="w-full">Continue</emailForm.SubmitButton>
+                      </emailForm.AppForm>
+                      {lastUsedLoginMethod === "email" && <LastUsedMethod method="email" />}
+                    </div>
 
                     <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                       <span className="bg-card text-muted-foreground relative z-10 px-2 text-xs">
@@ -222,16 +245,19 @@ function RouteComponent() {
                         </TooltipTrigger>
                         <TooltipPopup>Coming soon</TooltipPopup>
                       </Tooltip>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        loading={githubPending}
-                        onClick={() => void signInWithGitHub()}
-                      >
-                        <GitHubIcon />
-                        Continue with GitHub
-                      </Button>
+                      <div className="relative">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          loading={githubPending}
+                          onClick={() => void signInWithGitHub()}
+                        >
+                          <GitHubIcon />
+                          Continue with GitHub
+                        </Button>
+                        {lastUsedLoginMethod === "github" && <LastUsedMethod method="GitHub" />}
+                      </div>
                     </div>
                   </CardPanel>
                 </form>

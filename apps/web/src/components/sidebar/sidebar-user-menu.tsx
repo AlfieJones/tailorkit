@@ -26,13 +26,16 @@ import { toastManager } from "@tailorkit/ui/components/toast";
 
 import { authClient } from "#lib/auth-client";
 import { fallbackTheme, getUserTheme, isAppTheme, useTheme } from "#lib/theme";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { orpc } from "#lib/orpc.ts";
+import { useState } from "react";
 
 export function SidebarUserMenu() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: session } = useQuery(orpc.user.getSession.queryOptions());
   const { setTheme, theme } = useTheme();
+  const [signOutPending, setSignOutPending] = useState(false);
 
   const name = session?.user?.name ?? "User";
   const email = session?.user?.email ?? "";
@@ -44,6 +47,38 @@ export function SidebarUserMenu() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  const signOut = async () => {
+    setSignOutPending(true);
+
+    try {
+      const result = await authClient.signOut();
+
+      if (result.error) {
+        toastManager.add({
+          description: result.error.message || "Failed to sign out",
+          title: "Sign out failed",
+          type: "error",
+        });
+        return;
+      }
+
+      queryClient.clear();
+      await navigate({
+        replace: true,
+        search: { email: undefined, return_to: undefined },
+        to: "/login",
+      });
+    } catch {
+      toastManager.add({
+        description: "Failed to sign out",
+        title: "Sign out failed",
+        type: "error",
+      });
+    } finally {
+      setSignOutPending(false);
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -148,9 +183,13 @@ export function SidebarUserMenu() {
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => navigate({ to: "/logout" })} variant="destructive">
+        <DropdownMenuItem
+          disabled={signOutPending}
+          onClick={() => void signOut()}
+          variant="destructive"
+        >
           <LogOutIcon />
-          Sign out
+          {signOutPending ? "Signing out..." : "Sign out"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
