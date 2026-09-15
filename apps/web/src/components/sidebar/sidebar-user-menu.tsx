@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@tailorkit/ui/components/dropdown-menu";
 import { ToggleGroup, ToggleGroupItem } from "@tailorkit/ui/components/toggle-group";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { toastManager } from "@tailorkit/ui/components/toast";
 
 import { authClient } from "#lib/auth-client";
@@ -30,7 +30,6 @@ import { useQuery } from "@tanstack/react-query";
 import { orpc } from "#lib/orpc.ts";
 
 export function SidebarUserMenu() {
-  const navigate = useNavigate();
   const { data: session } = useQuery(orpc.user.getSession.queryOptions());
   const { setTheme, theme } = useTheme();
 
@@ -148,7 +147,7 @@ export function SidebarUserMenu() {
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => navigate({ to: "/logout" })} variant="destructive">
+        <DropdownMenuItem render={<Link to="/logout" />} variant="destructive">
           <LogOutIcon />
           Sign out
         </DropdownMenuItem>
