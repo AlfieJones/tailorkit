@@ -110,13 +110,11 @@ export function TwoFactorSetupDialog({
     description =
       "Scan the QR code with your authenticator app, then continue to enter the six-digit code.";
     panelContent = (
-      <Frame>
-        <FramePanel className="flex justify-center rounded-b-none border-b-0 p-5 sm:p-6">
-          <div className="bg-white p-3">
-            <QRCodeSVG includeMargin size={192} value={totpURI} />
-          </div>
-        </FramePanel>
-        <FrameFooter className="flex items-center justify-center gap-2 py-3">
+      <div className="flex flex-col items-center gap-4">
+        <div className="bg-white p-3">
+          <QRCodeSVG includeMargin size={192} value={totpURI} />
+        </div>
+        <div className="flex w-full items-center justify-center gap-2 py-3">
           <code className="max-w-[calc(100%-2rem)] truncate font-mono text-muted-foreground text-sm tracking-[0.12em]">
             {totpSecret}
           </code>
@@ -136,8 +134,8 @@ export function TwoFactorSetupDialog({
             </TooltipTrigger>
             <TooltipPopup>Copy setup key</TooltipPopup>
           </Tooltip>
-        </FrameFooter>
-      </Frame>
+        </div>
+      </div>
     );
     action = (
       <>
