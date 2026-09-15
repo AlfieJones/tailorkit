@@ -2,8 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { createIsomorphicFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";
 import {
@@ -26,11 +24,8 @@ import { z } from "zod";
 import { AccountLayout } from "#components/account-layout";
 import { PageLayout } from "#components/page-layout";
 import { client, orpc } from "#lib/orpc";
+import { getPreferredLocale } from "#lib/preferred-locale";
 import { TwoFactorSettings } from "./-two-factor-settings";
-
-const getPreferredLocale = createIsomorphicFn()
-  .server(() => getRequest().headers.get("accept-language")?.split(",")[0]?.split(";")[0] ?? "en")
-  .client(() => navigator.language);
 
 export const Route = createFileRoute("/(app)/account/security/")({
   component: SecurityPage,
