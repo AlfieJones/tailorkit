@@ -287,6 +287,28 @@ describe("userRouter", () => {
     expect(testState.kv.set).toHaveBeenCalledTimes(1);
   });
 
+  it("does not cache a GitHub account without an access token", async () => {
+    const githubAccountId = "88888888-8888-4888-8888-888888888888";
+    vi.mocked(auth.api.listUserAccounts).mockResolvedValue([
+      {
+        accountId: "98765",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        id: githubAccountId,
+        providerId: "github",
+        scopes: [],
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        userId,
+      },
+    ]);
+    vi.mocked(auth.api.getAccessToken).mockRejectedValue(new Error("Token unavailable"));
+
+    const result = await call(userRouter.listAccounts, undefined, { context: createContext() });
+
+    expect(result[0]).toEqual(expect.objectContaining({ githubUsername: null }));
+    expect(testState.github.getAuthenticated).not.toHaveBeenCalled();
+    expect(testState.kv.set).not.toHaveBeenCalled();
+  });
+
   it("requires auth for protected procedures", async () => {
     await expect(
       call(userRouter.getOrgs, undefined, {

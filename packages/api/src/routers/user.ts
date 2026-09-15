@@ -12,9 +12,8 @@ import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
 const MANUAL_ORG_ONBOARDING_MESSAGE =
   "We're currently onboarding users manually. Contact us to create an organisation for your account.";
 
-const GITHUB_USERNAME_CACHE_PREFIX = "tailorkit:github-username:v1";
+const GITHUB_USERNAME_CACHE_PREFIX = "tailorkit:github-username:v2";
 const GITHUB_USERNAME_CACHE_TTL_SECONDS = 24 * 60 * 60;
-const GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS = 60;
 const GITHUB_USERNAME_CACHE_READ_TIMEOUT_MS = 1000;
 const GITHUB_USERNAME_REQUEST_TIMEOUT_MS = 5000;
 
@@ -22,16 +21,12 @@ async function getGitHubUsername(accountId: string, getAccessToken: () => Promis
   const key = `${GITHUB_USERNAME_CACHE_PREFIX}:${accountId}`;
   let kv: ReturnType<typeof getKV> = null;
   let cachedValue: string | null | undefined;
-  const cacheUsername = (username: string | null) => {
+  const cacheUsername = (username: string) => {
     if (!kv) {
       return;
     }
 
-    void kv
-      .set(key, username === null ? "missing" : `username:${username}`, {
-        ttl: username ? GITHUB_USERNAME_CACHE_TTL_SECONDS : GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS,
-      })
-      .catch(() => {});
+    void kv.set(key, username, { ttl: GITHUB_USERNAME_CACHE_TTL_SECONDS }).catch(() => {});
   };
 
   try {
@@ -43,16 +38,12 @@ async function getGitHubUsername(accountId: string, getAccessToken: () => Promis
     // A cache outage should not make account management unavailable.
   }
 
-  if (cachedValue === "missing") {
-    return null;
-  }
-  if (cachedValue?.startsWith("username:")) {
-    return cachedValue.slice("username:".length);
+  if (cachedValue) {
+    return cachedValue;
   }
 
   const accessToken = await getAccessToken();
   if (!accessToken) {
-    cacheUsername(null);
     return null;
   }
 
