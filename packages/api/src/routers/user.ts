@@ -12,20 +12,13 @@ import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
 const MANUAL_ORG_ONBOARDING_MESSAGE =
   "We're currently onboarding users manually. Contact us to create an organisation for your account.";
 
-const GITHUB_USERNAME_CACHE_PREFIX = "tailorkit:github-username:v2";
-const GITHUB_USERNAME_CACHE_TTL_SECONDS = 24 * 60 * 60;
-const GITHUB_USERNAME_CACHE_READ_TIMEOUT_MS = 1000;
-const GITHUB_USERNAME_REQUEST_TIMEOUT_MS = 5000;
-
 async function getGitHubUsername(accountId: string, getAccessToken: () => Promise<string | null>) {
-  const key = `${GITHUB_USERNAME_CACHE_PREFIX}:${accountId}`;
+  const key = `tailorkit:github-username:${accountId}`;
   let kv: ReturnType<typeof getKV> = null;
 
   try {
     kv = getKV();
-    const cachedUsername = kv
-      ? await kv.get(key, { timeout: GITHUB_USERNAME_CACHE_READ_TIMEOUT_MS })
-      : undefined;
+    const cachedUsername = kv ? await kv.get(key, { timeout: 1000 }) : undefined;
     if (cachedUsername) return cachedUsername;
   } catch {
     // A cache outage should not make account management unavailable.
@@ -39,10 +32,10 @@ async function getGitHubUsername(accountId: string, getAccessToken: () => Promis
   try {
     const octokit = new Octokit({
       auth: accessToken,
-      request: { signal: AbortSignal.timeout(GITHUB_USERNAME_REQUEST_TIMEOUT_MS) },
+      request: { signal: AbortSignal.timeout(5000) },
     });
     const { data: profile } = await octokit.rest.users.getAuthenticated();
-    void kv?.set(key, profile.login, { ttl: GITHUB_USERNAME_CACHE_TTL_SECONDS }).catch(() => {});
+    void kv?.set(key, profile.login, { ttl: 86_400 }).catch(() => {});
     return profile.login;
   } catch {
     // Account management should remain available if GitHub is temporarily unavailable.
