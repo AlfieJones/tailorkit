@@ -15,7 +15,8 @@ import {
 } from "@tailorkit/ui/components/card";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { useAppForm } from "@tailorkit/ui/form";
-import { LaptopIcon, Link2Icon, SmartphoneIcon } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
+import { LaptopIcon, Link2Icon, ShieldCheckIcon, SmartphoneIcon } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { z } from "zod";
@@ -33,6 +34,271 @@ export const Route = createFileRoute("/(app)/account/security")({
 });
 
 const activeSessionsQueryKey = ["auth", "active-sessions"] as const;
+
+function TwoFactorStatus({
+  isLoading,
+  sessionError,
+}: {
+  isLoading: boolean;
+  sessionError: Error | null;
+}) {
+  if (isLoading) {
+    return <p className="text-muted-foreground text-sm">Loading security settings…</p>;
+  }
+
+  if (sessionError) {
+    return (
+      <p className="text-destructive text-sm" role="alert">
+        Security settings could not be loaded. Please refresh and try again.
+      </p>
+    );
+  }
+
+  return null;
+}
+
+function TwoFactorAuthentication({
+  hasCredentialAccount,
+  isLoading,
+  sessionUser,
+  sessionError,
+}: {
+  hasCredentialAccount: boolean;
+  isLoading: boolean;
+  sessionUser: { email?: string | null; twoFactorEnabled?: boolean | null } | null | undefined;
+  sessionError: Error | null;
+}) {
+  const queryClient = useQueryClient();
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [totpURI, setTotpURI] = useState<string | null>(null);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [enabling, setEnabling] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [disabling, setDisabling] = useState(false);
+
+  const isEnabled = sessionUser?.twoFactorEnabled === true;
+  const isReady = !isLoading && !sessionError;
+
+  const enable = async () => {
+    setError(null);
+    setEnabling(true);
+    const result = await authClient.twoFactor.enable({ method: "totp", password });
+    setEnabling(false);
+
+    if (result.error || !result.data || result.data.method !== "totp") {
+      setError(result.error?.message || "Unable to start authenticator setup. Please try again.");
+      return;
+    }
+
+    setBackupCodes(result.data.backupCodes);
+    setTotpURI(result.data.totpURI);
+    setPassword("");
+  };
+
+  const verify = async () => {
+    setError(null);
+    setVerifying(true);
+    const result = await authClient.twoFactor.verifyTotp({ code });
+    setVerifying(false);
+
+    if (result.error) {
+      setError(
+        result.error.message || "That code is not valid. Try the current code from your app.",
+      );
+      return;
+    }
+
+    setCode("");
+    setTotpURI(null);
+    toastManager.add({
+      description: "Authenticator-app verification is now required whenever you sign in.",
+      title: "Two-factor authentication enabled",
+      type: "success",
+    });
+    await queryClient.invalidateQueries({ queryKey: ["auth", "current-user"] });
+  };
+
+  const disable = async () => {
+    setError(null);
+    setDisabling(true);
+    const result = await authClient.twoFactor.disable({ password });
+    setDisabling(false);
+
+    if (result.error) {
+      setError(result.error.message || "Unable to disable two-factor authentication.");
+      return;
+    }
+
+    setPassword("");
+    toastManager.add({
+      description: "Authenticator-app verification is no longer required.",
+      title: "Two-factor authentication disabled",
+      type: "success",
+    });
+    await queryClient.invalidateQueries({ queryKey: ["auth", "current-user"] });
+  };
+
+  return (
+    <CardFrame className="w-full">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheckIcon />
+            Two-factor authentication
+          </CardTitle>
+          <CardDescription>
+            {isEnabled
+              ? "Your account is protected with an authenticator app."
+              : "Use an authenticator app to add a second step whenever you sign in."}
+          </CardDescription>
+        </CardHeader>
+
+        <CardPanel className="flex max-w-lg flex-col gap-4">
+          <TwoFactorStatus isLoading={isLoading} sessionError={sessionError} />
+
+          {isReady && !hasCredentialAccount && (
+            <>
+              <p className="text-muted-foreground text-sm">
+                Create a password before enabling two-factor authentication. This ensures your
+                authenticator is an additional factor, not the only credential protecting this
+                account.
+              </p>
+              <Button
+                className="w-fit"
+                onClick={() => {
+                  window.location.assign(
+                    `/forgot-password?email=${encodeURIComponent(sessionUser?.email ?? "")}&return_to=/account/security`,
+                  );
+                }}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                Create a password
+              </Button>
+            </>
+          )}
+
+          {isReady && hasCredentialAccount && totpURI && (
+            <>
+              <p className="text-muted-foreground text-sm">
+                Scan this code with your authenticator app, then enter the six-digit code it shows.
+              </p>
+              <div className="w-fit rounded-xl border bg-white p-3">
+                <QRCodeSVG includeMargin value={totpURI} />
+              </div>
+              <label className="flex max-w-xs flex-col gap-1.5 font-medium text-sm">
+                Verification code
+                <input
+                  autoComplete="one-time-code"
+                  className="h-9 rounded-md border bg-background px-3 text-sm"
+                  inputMode="numeric"
+                  maxLength={6}
+                  onChange={(event) => setCode(event.target.value.replaceAll(/\D/gu, ""))}
+                  placeholder="123456"
+                  value={code}
+                />
+              </label>
+              <div>
+                <Button
+                  disabled={code.length !== 6}
+                  loading={verifying}
+                  onClick={() => void verify()}
+                  size="sm"
+                  type="button"
+                >
+                  Verify and enable
+                </Button>
+              </div>
+            </>
+          )}
+
+          {backupCodes.length ? (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+              <p className="font-medium text-sm">Save your backup codes</p>
+              <p className="mt-1 text-muted-foreground text-sm">
+                Each code works once. Store them somewhere safe; they will not be shown again.
+              </p>
+              <code className="mt-3 block whitespace-pre-wrap break-all text-sm">
+                {backupCodes.join("\n")}
+              </code>
+              <Button
+                className="mt-3"
+                onClick={() => setBackupCodes([])}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                I’ve saved these codes
+              </Button>
+            </div>
+          ) : null}
+
+          {isReady && hasCredentialAccount && !totpURI && isEnabled && (
+            <>
+              <label className="flex max-w-xs flex-col gap-1.5 font-medium text-sm">
+                Password to disable 2FA
+                <input
+                  autoComplete="current-password"
+                  className="h-9 rounded-md border bg-background px-3 text-sm"
+                  onChange={(event) => setPassword(event.target.value)}
+                  type="password"
+                  value={password}
+                />
+              </label>
+              <div>
+                <Button
+                  disabled={!password}
+                  loading={disabling}
+                  onClick={() => void disable()}
+                  size="sm"
+                  type="button"
+                  variant="destructive-outline"
+                >
+                  Disable two-factor authentication
+                </Button>
+              </div>
+            </>
+          )}
+
+          {isReady && hasCredentialAccount && !totpURI && !isEnabled && (
+            <>
+              <label className="flex max-w-xs flex-col gap-1.5 font-medium text-sm">
+                Password to continue
+                <input
+                  autoComplete="current-password"
+                  className="h-9 rounded-md border bg-background px-3 text-sm"
+                  onChange={(event) => setPassword(event.target.value)}
+                  type="password"
+                  value={password}
+                />
+              </label>
+              <div>
+                <Button
+                  disabled={!password}
+                  loading={enabling}
+                  onClick={() => void enable()}
+                  size="sm"
+                  type="button"
+                >
+                  Set up authenticator app
+                </Button>
+              </div>
+            </>
+          )}
+
+          {error ? (
+            <p className="text-destructive text-sm" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </CardPanel>
+      </Card>
+    </CardFrame>
+  );
+}
 
 function getDeviceDetails(userAgent?: string | null) {
   if (!userAgent) {
@@ -273,7 +539,20 @@ function SecurityPage() {
       return result.data;
     },
   });
+  const sessionQuery = useQuery({
+    queryKey: ["auth", "current-user"],
+    queryFn: async () => {
+      const result = await authClient.getSession();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to load account security settings");
+      }
+      return result.data?.user ?? null;
+    },
+  });
   const githubAccount = accountsQuery.data?.find((account) => account.providerId === "github");
+  const hasCredentialAccount = accountsQuery.data?.some(
+    (account) => account.providerId === "credential",
+  );
   const canUnlinkGitHub = Boolean(githubAccount && (accountsQuery.data?.length ?? 0) > 1);
 
   const linkGitHub = async () => {
@@ -363,6 +642,13 @@ function SecurityPage() {
     <AccountLayout>
       <PageLayout description="Update your password and keep your account secure." title="Security">
         <div className="flex flex-col gap-6">
+          <TwoFactorAuthentication
+            hasCredentialAccount={hasCredentialAccount === true}
+            isLoading={accountsQuery.isPending || sessionQuery.isPending}
+            sessionError={accountsQuery.error ?? sessionQuery.error ?? null}
+            sessionUser={sessionQuery.data}
+          />
+
           <CardFrame className="w-full">
             <Card>
               <CardHeader>

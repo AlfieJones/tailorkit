@@ -23,6 +23,7 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false),
   theme: text("theme").default("system"),
 });
 
@@ -96,16 +97,37 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+export const twoFactor = pgTable(
+  "two_factor",
+  {
+    id: uuid("id")
+      .default(sql`pg_catalog.gen_random_uuid()`)
+      .primaryKey(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    verified: boolean("verified").default(true),
+    failedVerificationCount: integer("failed_verification_count").default(0),
+    lockedUntil: timestamp("locked_until"),
+  },
+  (table) => [
+    index("twoFactor_secret_idx").on(table.secret),
+    index("twoFactor_userId_idx").on(table.userId),
+  ],
+);
+
 export const organization = pgTable("organization", {
   id: uuid("id")
     .default(sql`pg_catalog.gen_random_uuid()`)
     .primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
-  publicId: text("public_id").notNull().unique(),
   logo: text("logo"),
   createdAt: timestamp("created_at").notNull(),
   metadata: text("metadata"),
+  publicId: text("public_id").notNull().unique(),
 });
 
 export type Organization = typeof organization.$inferSelect;
