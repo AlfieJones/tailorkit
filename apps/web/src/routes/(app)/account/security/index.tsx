@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";
-import { Checkbox } from "@tailorkit/ui/components/checkbox";
 import {
   Card,
   CardDescription,
@@ -25,24 +24,24 @@ import {
   DialogTitle,
 } from "@tailorkit/ui/components/dialog";
 import { Field, FieldLabel } from "@tailorkit/ui/components/field";
-import { Frame, FrameFooter, FramePanel } from "@tailorkit/ui/components/frame";
 import { Input } from "@tailorkit/ui/components/input";
-import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/components/otp-field";
 import { Skeleton } from "@tailorkit/ui/components/skeleton";
 import { toastManager } from "@tailorkit/ui/components/toast";
-import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
 import { useAppForm } from "@tailorkit/ui/form";
-import { QRCodeSVG } from "qrcode.react";
-import { CopyIcon, DownloadIcon, LaptopIcon, SmartphoneIcon } from "lucide-react";
-import { Fragment, useState } from "react";
+import { LaptopIcon, SmartphoneIcon } from "lucide-react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
 import { AccountLayout } from "#components/account-layout";
 import { PageLayout } from "#components/page-layout";
-import { authClient } from "#lib/auth-client";
+import { client } from "#lib/orpc";
+import {
+  getTotpSecret,
+  TwoFactorSetupDialog as TwoFactorSetupDialogScreen,
+} from "./two-factor-dialog";
 
-export const Route = createFileRoute("/(app)/account/security")({
+export const Route = createFileRoute("/(app)/account/security/")({
   component: SecurityPage,
   validateSearch: z.object({
     error: z.string().optional(),
@@ -51,17 +50,6 @@ export const Route = createFileRoute("/(app)/account/security")({
 });
 
 const activeSessionsQueryKey = ["auth", "active-sessions"] as const;
-const OTP_LENGTH = 6;
-const OTP_SLOT_KEYS = Array.from({ length: OTP_LENGTH }, (_, index) => `slot-${index}`);
-
-function getTotpSecret(totpURI: string) {
-  try {
-    return new URL(totpURI).searchParams.get("secret") ?? totpURI;
-  } catch {
-    return totpURI;
-  }
-}
-
 function TwoFactorStatus({
   isLoading,
   sessionError,
@@ -104,6 +92,7 @@ function TwoFactorAuthentication({
   const [backupCodesSaved, setBackupCodesSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [setupOpen, setSetupOpen] = useState(false);
+  const [verificationStep, setVerificationStep] = useState(false);
   const [disableOpen, setDisableOpen] = useState(false);
   const [regenerateOpen, setRegenerateOpen] = useState(false);
   const [regeneratePassword, setRegeneratePassword] = useState("");
@@ -127,28 +116,39 @@ function TwoFactorAuthentication({
   const enable = async () => {
     setError(null);
     setEnabling(true);
-    const result = await authClient.twoFactor.enable({ method: "totp", password });
-    setEnabling(false);
+    try {
+      const result = await client.user.enableTwoFactor({ method: "totp", password });
+      setEnabling(false);
+      if (result.method !== "totp") {
+        setError("Unable to start authenticator setup. Please try again.");
+        return;
+      }
 
-    if (result.error || !result.data || result.data.method !== "totp") {
-      setError(result.error?.message || "Unable to start authenticator setup. Please try again.");
-      return;
+      setPendingBackupCodes(result.backupCodes ?? []);
+      setTotpURI(result.totpURI ?? null);
+      setPassword("");
+    } catch (requestError) {
+      setEnabling(false);
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to start authenticator setup. Please try again.",
+      );
     }
-
-    setPendingBackupCodes(result.data.backupCodes);
-    setTotpURI(result.data.totpURI);
-    setPassword("");
   };
 
   const verify = async () => {
     setError(null);
     setVerifying(true);
-    const result = await authClient.twoFactor.verifyTotp({ code });
-    setVerifying(false);
-
-    if (result.error) {
+    try {
+      await client.user.verifyTotp({ code });
+      setVerifying(false);
+    } catch (requestError) {
+      setVerifying(false);
       setError(
-        result.error.message || "That code is not valid. Try the current code from your app.",
+        requestError instanceof Error
+          ? requestError.message
+          : "That code is not valid. Try the current code from your app.",
       );
       return;
     }
@@ -157,6 +157,7 @@ function TwoFactorAuthentication({
     setTotpURI(null);
     setBackupCodes(pendingBackupCodes);
     setBackupCodesSaved(false);
+    setVerificationStep(false);
     setPendingBackupCodes([]);
     toastManager.add({
       description: "Authenticator-app verification is now required whenever you sign in.",
@@ -169,11 +170,16 @@ function TwoFactorAuthentication({
   const disable = async () => {
     setError(null);
     setDisabling(true);
-    const result = await authClient.twoFactor.disable({ password });
-    setDisabling(false);
-
-    if (result.error) {
-      setError(result.error.message || "Unable to disable two-factor authentication.");
+    try {
+      await client.user.disableTwoFactor({ password });
+      setDisabling(false);
+    } catch (requestError) {
+      setDisabling(false);
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to disable two-factor authentication.",
+      );
       return;
     }
 
@@ -261,15 +267,19 @@ function TwoFactorAuthentication({
   const regenerateBackupCodes = async () => {
     setRegenerateError(null);
     setRegenerating(true);
-    const result = await authClient.twoFactor.generateBackupCodes({ password: regeneratePassword });
-    setRegenerating(false);
-
-    if (result.error || !result.data) {
-      setRegenerateError(result.error?.message || "Unable to regenerate recovery codes.");
+    try {
+      const result = await client.user.generateBackupCodes({ password: regeneratePassword });
+      setRegenerating(false);
+      setBackupCodes(result.backupCodes);
+    } catch (requestError) {
+      setRegenerating(false);
+      setRegenerateError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to regenerate recovery codes.",
+      );
       return;
     }
-
-    setBackupCodes(result.data.backupCodes);
     setBackupCodesSaved(false);
     setRegenerateOpen(false);
     setSetupOpen(true);
@@ -351,13 +361,14 @@ function TwoFactorAuthentication({
         </CardFrameFooter>
       )}
 
-      <TwoFactorSetupDialog
+      <TwoFactorSetupDialogScreen
         backupCodes={backupCodes}
         backupCodesSaved={backupCodesSaved}
         code={code}
         enabling={enabling}
         error={error}
         onBackupCodesSavedChange={setBackupCodesSaved}
+        onBackToQr={() => setVerificationStep(false)}
         onCopyBackupCodes={copyBackupCodes}
         onCopyTotpSecret={copyTotpSecret}
         onDownloadBackupCodes={downloadBackupCodes}
@@ -368,6 +379,8 @@ function TwoFactorAuthentication({
         open={setupOpen}
         password={password}
         setCode={setCode}
+        showVerificationStep={verificationStep}
+        onContinueToVerification={() => setVerificationStep(true)}
         totpURI={totpURI}
         verifying={verifying}
       />
@@ -452,222 +465,6 @@ function RegenerateBackupCodesDialog({
             Regenerate codes
           </Button>
         </DialogFooter>
-      </DialogPopup>
-    </Dialog>
-  );
-}
-
-function TwoFactorSetupDialog({
-  backupCodes,
-  backupCodesSaved,
-  code,
-  enabling,
-  error,
-  onBackupCodesSavedChange,
-  onCopyBackupCodes,
-  onCopyTotpSecret,
-  onDownloadBackupCodes,
-  onEnable,
-  onOpenChange,
-  onPasswordChange,
-  onVerify,
-  open,
-  password,
-  setCode,
-  totpURI,
-  verifying,
-}: {
-  backupCodes: string[];
-  backupCodesSaved: boolean;
-  code: string;
-  enabling: boolean;
-  error: string | null;
-  onBackupCodesSavedChange: (saved: boolean) => void;
-  onCopyBackupCodes: () => Promise<void>;
-  onCopyTotpSecret: () => Promise<void>;
-  onDownloadBackupCodes: () => void;
-  onEnable: () => Promise<void>;
-  onOpenChange: (open: boolean) => void;
-  onPasswordChange: (password: string) => void;
-  onVerify: () => Promise<void>;
-  open: boolean;
-  password: string;
-  setCode: (code: string) => void;
-  totpURI: string | null;
-  verifying: boolean;
-}) {
-  let title = "Set up two-factor authentication";
-  let description = "Confirm your password to begin.";
-  let panelContent: ReactNode = (
-    <Field>
-      <FieldLabel>Password</FieldLabel>
-      <Input
-        autoComplete="current-password"
-        onChange={(event) => onPasswordChange(event.target.value)}
-        type="password"
-        value={password}
-      />
-    </Field>
-  );
-  let action: ReactNode = (
-    <>
-      <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
-        Cancel
-      </DialogClose>
-      <Button
-        disabled={!password}
-        loading={enabling}
-        onClick={() => void onEnable()}
-        size="sm"
-        type="button"
-      >
-        Continue
-      </Button>
-    </>
-  );
-
-  if (totpURI) {
-    const totpSecret = getTotpSecret(totpURI);
-    title = "Set Up Authenticator App";
-    description =
-      "Scan the QR code with your authenticator app. Enter the six-digit code to finish setup, or copy the secret if you can’t scan it.";
-    panelContent = (
-      <div className="flex flex-col gap-8">
-        <Frame>
-          <FramePanel className="flex justify-center rounded-b-none border-b-0 p-5 sm:p-6">
-            <div className="rounded-xl border bg-white p-3">
-              <QRCodeSVG includeMargin size={192} value={totpURI} />
-            </div>
-          </FramePanel>
-          <FrameFooter className="flex items-center justify-center gap-2 py-3">
-            <code className="max-w-[calc(100%-2rem)] truncate font-mono text-muted-foreground text-sm tracking-[0.12em]">
-              {totpSecret}
-            </code>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    aria-label="Copy setup key"
-                    onClick={() => void onCopyTotpSecret()}
-                    size="icon-xs"
-                    type="button"
-                    variant="ghost"
-                  />
-                }
-              >
-                <CopyIcon />
-              </TooltipTrigger>
-              <TooltipPopup>Copy setup key</TooltipPopup>
-            </Tooltip>
-          </FrameFooter>
-        </Frame>
-        <Field className="items-center gap-5 py-2">
-          <FieldLabel>Verification code</FieldLabel>
-          <OTPField
-            autoComplete="one-time-code"
-            className="gap-2.5"
-            length={OTP_LENGTH}
-            onValueChange={setCode}
-            size="lg"
-            value={code}
-          >
-            {OTP_SLOT_KEYS.map((key, index) => (
-              <Fragment key={key}>
-                <OTPFieldInput
-                  aria-label={`Digit ${index + 1} of ${OTP_LENGTH}`}
-                  className="size-16 text-3xl leading-16 sm:size-14 sm:text-2xl sm:leading-14"
-                />
-                {index === 2 ? <OTPFieldSeparator /> : null}
-              </Fragment>
-            ))}
-          </OTPField>
-        </Field>
-      </div>
-    );
-    action = (
-      <>
-        <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
-          Cancel
-        </DialogClose>
-        <Button
-          disabled={code.length !== 6}
-          loading={verifying}
-          onClick={() => void onVerify()}
-          size="sm"
-          type="button"
-        >
-          Set up authenticator app
-        </Button>
-      </>
-    );
-  }
-
-  if (backupCodes.length) {
-    title = "Save recovery codes";
-    description =
-      "These codes are your backup way into your account if you lose access to your authenticator app. Save them somewhere secure outside this browser.";
-    panelContent = (
-      <div className="flex flex-col gap-6">
-        <Frame>
-          <FramePanel className="grid grid-cols-1 gap-x-12 gap-y-5 rounded-b-none border-b-0 p-6 font-mono text-base sm:grid-cols-2 sm:p-8">
-            {backupCodes.map((backupCode) => (
-              <code key={backupCode}>{backupCode}</code>
-            ))}
-          </FramePanel>
-          <FrameFooter className="flex justify-end gap-1 py-2">
-            <Button
-              onClick={() => void onCopyBackupCodes()}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              <CopyIcon />
-              Copy
-            </Button>
-            <Button onClick={onDownloadBackupCodes} size="sm" type="button" variant="ghost">
-              <DownloadIcon />
-              Download
-            </Button>
-          </FrameFooter>
-        </Frame>
-        <Field className="flex-row items-start gap-3">
-          <Checkbox
-            checked={backupCodesSaved}
-            id="backup-codes-saved"
-            onCheckedChange={(checked) => onBackupCodesSavedChange(checked === true)}
-          />
-          <FieldLabel className="leading-5" htmlFor="backup-codes-saved">
-            I saved these recovery codes somewhere I can access if I lose my device.
-          </FieldLabel>
-        </Field>
-      </div>
-    );
-    action = (
-      <DialogClose render={<Button disabled={!backupCodesSaved} size="sm" type="button" />}>
-        I’ve saved these codes
-      </DialogClose>
-    );
-  }
-
-  return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogPopup
-        className={totpURI || backupCodes.length ? "max-w-2xl" : "max-w-md"}
-        showCloseButton={!backupCodes.length}
-      >
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <DialogPanel className="flex flex-col gap-6">
-          {panelContent}
-          {error ? (
-            <p className="text-destructive text-sm" role="alert">
-              {error}
-            </p>
-          ) : null}
-        </DialogPanel>
-        <DialogFooter>{action}</DialogFooter>
       </DialogPopup>
     </Dialog>
   );
@@ -782,11 +579,8 @@ function ActiveSessions() {
   const { data: currentSession } = useQuery({
     enabled: typeof window !== "undefined",
     queryFn: async () => {
-      const result = await authClient.getSession();
-      if (result.error) {
-        throw new Error(result.error.message || "Failed to load the current session");
-      }
-      return result.data?.session ?? null;
+      const result = await client.user.getSession();
+      return result.session ?? null;
     },
     queryKey: ["auth", "current-session"],
   });
@@ -796,23 +590,12 @@ function ActiveSessions() {
     isPending,
   } = useQuery({
     enabled: typeof window !== "undefined",
-    queryFn: async () => {
-      const result = await authClient.listSessions();
-      if (result.error) {
-        throw new Error(result.error.message || "Failed to load active sessions");
-      }
-      return result.data ?? [];
-    },
+    queryFn: () => client.user.listSessions(),
     queryKey: activeSessionsQueryKey,
   });
 
   const revokeMutation = useMutation({
-    mutationFn: async (token: string) => {
-      const result = await authClient.revokeSession({ token });
-      if (result.error) {
-        throw new Error(result.error.message || "Failed to sign out session");
-      }
-    },
+    mutationFn: (token: string) => client.user.revokeSession({ token }),
     onError: (mutationError) => {
       toastManager.add({
         description: mutationError.message,
@@ -831,12 +614,7 @@ function ActiveSessions() {
   });
 
   const revokeOtherMutation = useMutation({
-    mutationFn: async () => {
-      const result = await authClient.revokeOtherSessions();
-      if (result.error) {
-        throw new Error(result.error.message || "Failed to sign out other sessions");
-      }
-    },
+    mutationFn: () => client.user.revokeOtherSessions(),
     onError: (mutationError) => {
       toastManager.add({
         description: mutationError.message,
@@ -991,28 +769,19 @@ const GitHubIcon = () => (
 );
 
 function SecurityPage() {
-  const { error, error_description } = useSearch({ from: "/(app)/account/security" });
+  const { error, error_description } = useSearch({ from: "/(app)/account/security/" });
   const queryClient = useQueryClient();
   const [linkPending, setLinkPending] = useState(false);
   const [unlinkPending, setUnlinkPending] = useState(false);
   const accountsQuery = useQuery({
     queryKey: ["auth", "accounts"],
-    queryFn: async () => {
-      const result = await authClient.listAccounts();
-      if (result.error) {
-        throw new Error(result.error.message || "Failed to load linked accounts");
-      }
-      return result.data;
-    },
+    queryFn: () => client.user.listAccounts(),
   });
   const sessionQuery = useQuery({
     queryKey: ["auth", "current-user"],
     queryFn: async () => {
-      const result = await authClient.getSession();
-      if (result.error) {
-        throw new Error(result.error.message || "Failed to load account security settings");
-      }
-      return result.data?.user ?? null;
+      const result = await client.user.getSession();
+      return result.user ?? null;
     },
   });
   const githubAccount = accountsQuery.data?.find((account) => account.providerId === "github");
@@ -1023,16 +792,19 @@ function SecurityPage() {
 
   const linkGitHub = async () => {
     setLinkPending(true);
-    const result = await authClient.linkSocial({
-      callbackURL: "/account/security",
-      errorCallbackURL: "/account/security",
-      provider: "github",
-    });
-
-    if (result.error) {
+    try {
+      const result = await client.user.linkSocial({
+        callbackURL: "/account/security",
+        errorCallbackURL: "/account/security",
+        provider: "github",
+      });
+      if (result.url) {
+        window.location.assign(result.url);
+      }
+    } catch (requestError) {
       setLinkPending(false);
       toastManager.add({
-        description: result.error.message || "Failed to link GitHub",
+        description: requestError instanceof Error ? requestError.message : "Failed to link GitHub",
         title: "Error",
         type: "error",
       });
@@ -1045,12 +817,14 @@ function SecurityPage() {
     }
 
     setUnlinkPending(true);
-    const result = await authClient.unlinkAccount({ accountId: githubAccount.id });
-    setUnlinkPending(false);
-
-    if (result.error) {
+    try {
+      await client.user.unlinkAccount({ accountId: githubAccount.id });
+      setUnlinkPending(false);
+    } catch (requestError) {
+      setUnlinkPending(false);
       toastManager.add({
-        description: result.error.message || "Failed to unlink GitHub",
+        description:
+          requestError instanceof Error ? requestError.message : "Failed to unlink GitHub",
         title: "Error",
         type: "error",
       });
@@ -1068,15 +842,16 @@ function SecurityPage() {
   const form = useAppForm({
     defaultValues: { currentPassword: "", newPassword: "", newPasswordRepeat: "" },
     onSubmit: async ({ value }) => {
-      const result = await authClient.changePassword({
-        currentPassword: value.currentPassword,
-        newPassword: value.newPassword,
-        revokeOtherSessions: true,
-      });
-
-      if (result.error) {
+      try {
+        await client.user.changePassword({
+          currentPassword: value.currentPassword,
+          newPassword: value.newPassword,
+          revokeOtherSessions: true,
+        });
+      } catch (requestError) {
         toastManager.add({
-          description: result.error.message || "Failed to update password",
+          description:
+            requestError instanceof Error ? requestError.message : "Failed to update password",
           title: "Error",
           type: "error",
         });
