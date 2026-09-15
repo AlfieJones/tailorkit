@@ -147,7 +147,7 @@ export function SidebarUserMenu() {
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link to="/logout" />} variant="destructive">
+        <DropdownMenuItem render={<Link preload={false} to="/logout" />} variant="destructive">
           <LogOutIcon />
           Sign out
         </DropdownMenuItem>
