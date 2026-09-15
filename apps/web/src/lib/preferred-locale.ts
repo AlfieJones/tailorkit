@@ -4,3 +4,7 @@ import { getRequest } from "@tanstack/react-start/server";
 export const getPreferredLocale = createIsomorphicFn()
   .server(() => getRequest().headers.get("accept-language")?.split(",")[0]?.split(";")[0] ?? "en")
   .client(() => navigator.language);
+
+export const getPreferredTimeZone = createIsomorphicFn()
+  .server(() => getRequest().headers.get("x-vercel-ip-timezone") ?? "UTC")
+  .client(() => Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC");

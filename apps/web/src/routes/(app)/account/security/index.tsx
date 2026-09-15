@@ -24,7 +24,7 @@ import { z } from "zod";
 import { AccountLayout } from "#components/account-layout";
 import { PageLayout } from "#components/page-layout";
 import { client, orpc } from "#lib/orpc";
-import { getPreferredLocale } from "#lib/preferred-locale";
+import { getPreferredLocale, getPreferredTimeZone } from "#lib/preferred-locale";
 import { TwoFactorSettings } from "./-two-factor-settings";
 
 export const Route = createFileRoute("/(app)/account/security/")({
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/(app)/account/security/")({
       context.queryClient.ensureQueryData(context.orpc.user.listSessions.queryOptions()),
     ]);
 
-    return { locale: getPreferredLocale() };
+    return { locale: getPreferredLocale(), timeZone: getPreferredTimeZone() };
   },
   validateSearch: z.object({
     error: z.string().optional(),
@@ -78,14 +78,15 @@ function getDeviceDetails(userAgent?: string | null) {
   return { browser, isMobile, os };
 }
 
-function formatLastActive(value: Date | string, locale: string) {
+function formatLastActive(value: Date | string, locale: string, timeZone: string) {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone,
   }).format(new Date(value));
 }
 
-function ActiveSessions({ locale }: { locale: string }) {
+function ActiveSessions({ locale, timeZone }: { locale: string; timeZone: string }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: sessionData } = useQuery(orpc.user.getSession.queryOptions());
@@ -170,7 +171,7 @@ function ActiveSessions({ locale }: { locale: string }) {
                 {isCurrent ? <Badge variant="secondary">Current</Badge> : null}
               </div>
               <p className="mt-0.5 text-muted-foreground text-sm">
-                Last active {formatLastActive(session.updatedAt, locale)}
+                Last active {formatLastActive(session.updatedAt, locale, timeZone)}
               </p>
             </div>
           </div>
@@ -268,7 +269,7 @@ const GitHubIcon = () => (
 
 function SecurityPage() {
   const { error, error_description } = useSearch({ from: "/(app)/account/security/" });
-  const { locale } = Route.useLoaderData();
+  const { locale, timeZone } = Route.useLoaderData();
   const queryClient = useQueryClient();
   const [linkPending, setLinkPending] = useState(false);
   const [unlinkPending, setUnlinkPending] = useState(false);
@@ -486,7 +487,7 @@ function SecurityPage() {
             </Card>
           </CardFrame>
 
-          <ActiveSessions locale={locale} />
+          <ActiveSessions locale={locale} timeZone={timeZone} />
         </div>
       </PageLayout>
     </AccountLayout>
