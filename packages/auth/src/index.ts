@@ -8,11 +8,14 @@ import type { SecondaryStorage } from "better-auth";
 import { betterAuth } from "better-auth/minimal";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { createAuthMiddleware } from "better-auth/api";
+import { deleteSessionCookie } from "better-auth/cookies";
 import { waitUntil as vercelWaitUntil } from "@vercel/functions";
 import { haveIBeenPwned } from "better-auth/plugins";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { organization } from "better-auth/plugins/organization";
 import { oAuthProxy } from "better-auth/plugins/oauth-proxy";
+import { twoFactor } from "better-auth/plugins/two-factor";
 import { ac, roles } from "./lib/permissions";
 import { apiKey } from "@better-auth/api-key";
 import { dash } from "@better-auth/infra";
@@ -21,6 +24,55 @@ import { initializePublicTeamId, publicTeamIdField } from "./lib/public-team-id"
 void initializeObservability("tailorkit-web");
 
 const noopWaitUntil = (promise: Promise<unknown>) => void promise;
+
+// Better Auth only challenges credential sign-ins by default. Apply the same
+// TOTP challenge to a completed OAuth callback before its session is usable.
+const socialTwoFactor = {
+  hooks: {
+    after: [
+      {
+        matcher: (context: { path?: string }) => context.path?.startsWith("/callback/") ?? false,
+        handler: createAuthMiddleware(async (ctx) => {
+          const newSession = ctx.context.newSession;
+          const user = newSession?.user as { id: string; twoFactorEnabled?: boolean } | undefined;
+
+          if (!newSession || !user?.twoFactorEnabled) {
+            return;
+          }
+
+          deleteSessionCookie(ctx, true);
+          await ctx.context.internalAdapter.deleteSession(newSession.session.token);
+          ctx.context.setNewSession(null);
+
+          const maxAge = 600;
+          const twoFactorCookie = ctx.context.createAuthCookie("two_factor", { maxAge });
+          const identifier = `2fa-${crypto.randomUUID()}`;
+          const expiresAt = new Date(Date.now() + maxAge * 1000);
+
+          await ctx.context.internalAdapter.createVerificationValue({
+            expiresAt,
+            identifier,
+            value: user.id,
+          });
+          await ctx.context.internalAdapter.createVerificationValue({
+            expiresAt,
+            identifier: `2fa-attempts-${identifier}`,
+            value: "0",
+          });
+          await ctx.setSignedCookie(
+            twoFactorCookie.name,
+            identifier,
+            ctx.context.secret,
+            twoFactorCookie.attributes,
+          );
+
+          return ctx.redirect(new URL("/two-factor", getBaseUrl()).toString());
+        }),
+      },
+    ],
+  },
+  id: "social-two-factor",
+};
 
 const createSecondaryStorage = (): SecondaryStorage | undefined => {
   const kv = getKV();
@@ -96,6 +148,12 @@ export function createAuth() {
         : undefined,
     plugins: [
       haveIBeenPwned(),
+      twoFactor({
+        // OAuth-only accounts must create a password through the verified-email
+        // recovery flow before they can enroll a second factor.
+        allowPasswordless: false,
+        issuer: "TailorKit",
+      }),
       emailOTP({
         expiresIn: 600,
         overrideDefaultEmailVerification: true,
@@ -171,6 +229,7 @@ export function createAuth() {
             }),
           ]
         : []),
+      socialTwoFactor,
       tanstackStartCookies(),
     ],
     secret: env.AUTH_SECRET,

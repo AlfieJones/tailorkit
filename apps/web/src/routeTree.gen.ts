@@ -19,6 +19,7 @@ import { Route as appOnboardingRouteImport } from './routes/(app)/onboarding'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
+import { Route as authTwoFactorRouteImport } from './routes/(auth)/two-factor'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
 import { Route as AuthErrorRouteImport } from './routes/auth/error'
 import { Route as appOrgSlugIndexRouteImport } from './routes/(app)/$orgSlug/index'
@@ -92,6 +93,11 @@ const authLoginRoute = authLoginRouteImport.update({
 const authSignUpRoute = authSignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const authTwoFactorRoute = authTwoFactorRouteImport.update({
+  id: '/two-factor',
+  path: '/two-factor',
   getParentRoute: () => authRouteRoute,
 } as any)
 const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/sign-up': typeof authSignUpRoute
+  '/two-factor': typeof authTwoFactorRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/auth/error': typeof AuthErrorRoute
   '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/sign-up': typeof authSignUpRoute
+  '/two-factor': typeof authTwoFactorRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/auth/error': typeof AuthErrorRoute
   '/account/invites': typeof appAccountInvitesRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/sign-up': typeof authSignUpRoute
+  '/(auth)/two-factor': typeof authTwoFactorRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
   '/auth/error': typeof AuthErrorRoute
   '/(app)/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
@@ -355,6 +364,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/sign-up'
+    | '/two-factor'
     | '/verify-email'
     | '/auth/error'
     | '/$orgSlug/$projectSlug'
@@ -390,6 +400,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/sign-up'
+    | '/two-factor'
     | '/verify-email'
     | '/auth/error'
     | '/account/invites'
@@ -423,6 +434,7 @@ export interface FileRouteTypes {
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/sign-up'
+    | '/(auth)/two-factor'
     | '/(auth)/verify-email'
     | '/auth/error'
     | '/(app)/$orgSlug/$projectSlug'
@@ -533,6 +545,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof authSignUpRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/two-factor': {
+      id: '/(auth)/two-factor'
+      path: '/two-factor'
+      fullPath: '/two-factor'
+      preLoaderRoute: typeof authTwoFactorRouteImport
       parentRoute: typeof authRouteRoute
     }
     '/(auth)/verify-email': {
@@ -866,6 +885,7 @@ interface authRouteRouteChildren {
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authLoginRoute: typeof authLoginRoute
   authSignUpRoute: typeof authSignUpRoute
+  authTwoFactorRoute: typeof authTwoFactorRoute
   authVerifyEmailRoute: typeof authVerifyEmailRoute
 }
 
@@ -873,6 +893,7 @@ const authRouteRouteChildren: authRouteRouteChildren = {
   authForgotPasswordRoute: authForgotPasswordRoute,
   authLoginRoute: authLoginRoute,
   authSignUpRoute: authSignUpRoute,
+  authTwoFactorRoute: authTwoFactorRoute,
   authVerifyEmailRoute: authVerifyEmailRoute,
 }
 
