@@ -31,7 +31,7 @@
     "@openrouter/ai-sdk-provider": "^3.0.0",
     "@paper-design/shaders-react": "^0.0.80",
     "@radix-ui/react-presence": "^1.1.10",
-    "@rive-app/react-webgl2": "^4.34.1",
+    "@rive-app/react-webgl2": "^4.34.2",
     "@tailorkit/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-devtools": "catalog:",
