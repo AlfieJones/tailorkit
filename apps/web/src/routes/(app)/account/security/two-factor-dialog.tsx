@@ -91,9 +91,7 @@ export function TwoFactorSetupDialog({
   );
   let action: ReactNode = (
     <>
-      <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
-        Cancel
-      </DialogClose>
+      <DialogClose render={<Button size="sm" type="button" variant="ghost" />}>Cancel</DialogClose>
       <Button
         disabled={!password}
         loading={enabling}
@@ -143,7 +141,7 @@ export function TwoFactorSetupDialog({
     );
     action = (
       <>
-        <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
+        <DialogClose render={<Button size="sm" type="button" variant="ghost" />}>
           Cancel
         </DialogClose>
         <Button onClick={onContinueToVerification} size="sm" type="button">
