@@ -22,78 +22,51 @@ function getGitHubUsernameCacheKey(accountId: string) {
   return `${GITHUB_USERNAME_CACHE_PREFIX}:${accountId}`;
 }
 
-function cacheGitHubUsername(accountId: string, username: string | null) {
-  const ttl = username ? GITHUB_USERNAME_CACHE_TTL_SECONDS : GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS;
-  const key = getGitHubUsernameCacheKey(accountId);
-
-  try {
-    const kv = getKV();
-    if (kv) {
-      const encoded = username === null ? "missing" : `username:${username}`;
-      void kv.set(key, encoded, { ttl }).catch(() => {
-        // A cache outage should not make account management unavailable.
-      });
-    }
-  } catch {
-    // A cache outage should not make account management unavailable.
+function decodeGitHubUsername(value: string | null) {
+  if (value === "missing") {
+    return null;
   }
+
+  return value?.startsWith("username:") ? value.slice("username:".length) : undefined;
 }
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | undefined> {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<undefined>((resolve) => {
-        timeout = setTimeout(resolve as () => void, timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-  }
-}
-
-async function readCachedGitHubUsername(accountId: string): Promise<string | null | undefined> {
-  const key = getGitHubUsernameCacheKey(accountId);
-  let kv: ReturnType<typeof getKV>;
-  try {
-    kv = getKV();
-  } catch {
-    return undefined;
-  }
-
+function cacheGitHubUsername(
+  kv: NonNullable<ReturnType<typeof getKV>> | null,
+  key: string,
+  username: string | null,
+) {
   if (!kv) {
-    return undefined;
+    return;
   }
 
-  try {
-    const encoded = await withTimeout(kv.get(key), GITHUB_USERNAME_CACHE_READ_TIMEOUT_MS);
-    if (encoded === "missing") {
-      return null;
-    }
-
-    if (encoded?.startsWith("username:") && encoded.length > "username:".length) {
-      return encoded.slice("username:".length);
-    }
-  } catch {
+  const ttl = username ? GITHUB_USERNAME_CACHE_TTL_SECONDS : GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS;
+  const value = username === null ? "missing" : `username:${username}`;
+  void kv.set(key, value, { ttl }).catch(() => {
     // A cache outage should not make account management unavailable.
-  }
-
-  return undefined;
+  });
 }
 
 async function getGitHubUsername(accountId: string, getAccessToken: () => Promise<string | null>) {
-  const cachedUsername = await readCachedGitHubUsername(accountId);
+  const key = getGitHubUsernameCacheKey(accountId);
+  let kv: ReturnType<typeof getKV> = null;
+  let cachedUsername: string | null | undefined;
+
+  try {
+    kv = getKV();
+    cachedUsername = kv
+      ? decodeGitHubUsername(await kv.get(key, { timeout: GITHUB_USERNAME_CACHE_READ_TIMEOUT_MS }))
+      : undefined;
+  } catch {
+    // A cache outage should not make account management unavailable.
+  }
+
   if (cachedUsername !== undefined) {
     return cachedUsername;
   }
 
   const accessToken = await getAccessToken();
   if (!accessToken) {
-    cacheGitHubUsername(accountId, null);
+    cacheGitHubUsername(kv, key, null);
     return null;
   }
 
@@ -103,7 +76,7 @@ async function getGitHubUsername(accountId: string, getAccessToken: () => Promis
       request: { signal: AbortSignal.timeout(GITHUB_USERNAME_REQUEST_TIMEOUT_MS) },
     });
     const { data: profile } = await octokit.rest.users.getAuthenticated();
-    cacheGitHubUsername(accountId, profile.login);
+    cacheGitHubUsername(kv, key, profile.login);
     return profile.login;
   } catch {
     // Account management should remain available if GitHub is temporarily unavailable.
