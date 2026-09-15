@@ -2,6 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";
 import {
@@ -24,7 +26,11 @@ import { z } from "zod";
 import { AccountLayout } from "#components/account-layout";
 import { PageLayout } from "#components/page-layout";
 import { client, orpc } from "#lib/orpc";
-import { TwoFactorSettings } from "./two-factor-settings";
+import { TwoFactorSettings } from "./-two-factor-settings";
+
+const getPreferredLocale = createIsomorphicFn()
+  .server(() => getRequest().headers.get("accept-language")?.split(",")[0]?.split(";")[0] ?? "en")
+  .client(() => navigator.language);
 
 export const Route = createFileRoute("/(app)/account/security/")({
   component: SecurityPage,
@@ -34,6 +40,8 @@ export const Route = createFileRoute("/(app)/account/security/")({
       context.queryClient.ensureQueryData(context.orpc.user.listAccounts.queryOptions()),
       context.queryClient.ensureQueryData(context.orpc.user.listSessions.queryOptions()),
     ]);
+
+    return { locale: getPreferredLocale() };
   },
   validateSearch: z.object({
     error: z.string().optional(),
@@ -75,14 +83,14 @@ function getDeviceDetails(userAgent?: string | null) {
   return { browser, isMobile, os };
 }
 
-function formatLastActive(value: Date | string) {
-  return new Intl.DateTimeFormat(undefined, {
+function formatLastActive(value: Date | string, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
 }
 
-function ActiveSessions() {
+function ActiveSessions({ locale }: { locale: string }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: sessionData } = useQuery(orpc.user.getSession.queryOptions());
@@ -167,7 +175,7 @@ function ActiveSessions() {
                 {isCurrent ? <Badge variant="secondary">Current</Badge> : null}
               </div>
               <p className="mt-0.5 text-muted-foreground text-sm">
-                Last active {formatLastActive(session.updatedAt)}
+                Last active {formatLastActive(session.updatedAt, locale)}
               </p>
             </div>
           </div>
@@ -265,6 +273,7 @@ const GitHubIcon = () => (
 
 function SecurityPage() {
   const { error, error_description } = useSearch({ from: "/(app)/account/security/" });
+  const { locale } = Route.useLoaderData();
   const queryClient = useQueryClient();
   const [linkPending, setLinkPending] = useState(false);
   const [unlinkPending, setUnlinkPending] = useState(false);
@@ -482,7 +491,7 @@ function SecurityPage() {
             </Card>
           </CardFrame>
 
-          <ActiveSessions />
+          <ActiveSessions locale={locale} />
         </div>
       </PageLayout>
     </AccountLayout>
