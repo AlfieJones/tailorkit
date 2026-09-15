@@ -32,8 +32,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@better-auth/api-key": "1.7.1",
-    "@better-auth/drizzle-adapter": "1.7.1",
+    "@better-auth/api-key": "1.7.4",
+    "@better-auth/drizzle-adapter": "1.7.4",
     "@better-auth/infra": "^0.4.9",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/email": "workspace:*",
