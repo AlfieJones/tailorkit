@@ -110,6 +110,8 @@ function RouteComponent() {
       const returnPath = getSameOriginPath(return_to, window.location.origin);
       if (returnPath) {
         window.sessionStorage.setItem("tailorkit.two-factor-return-to", returnPath);
+      } else {
+        window.sessionStorage.removeItem("tailorkit.two-factor-return-to");
       }
       const callbackURL =
         getSameOriginUrl(return_to, window.location.origin) ?? window.location.origin;
@@ -136,6 +138,8 @@ function RouteComponent() {
       const returnPath = getSameOriginPath(return_to, window.location.origin);
       if (returnPath) {
         window.sessionStorage.setItem("tailorkit.two-factor-return-to", returnPath);
+      } else {
+        window.sessionStorage.removeItem("tailorkit.two-factor-return-to");
       }
       await authClient.signIn.email(
         { email, password: value.password },

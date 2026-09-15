@@ -35,18 +35,40 @@ export const Route = createFileRoute("/(app)/account/security")({
 
 const activeSessionsQueryKey = ["auth", "active-sessions"] as const;
 
-function TwoFactorAuthentication({ hasCredentialAccount }: { hasCredentialAccount: boolean }) {
+function TwoFactorStatus({
+  isLoading,
+  sessionError,
+}: {
+  isLoading: boolean;
+  sessionError: Error | null;
+}) {
+  if (isLoading) {
+    return <p className="text-muted-foreground text-sm">Loading security settings…</p>;
+  }
+
+  if (sessionError) {
+    return (
+      <p className="text-destructive text-sm" role="alert">
+        Security settings could not be loaded. Please refresh and try again.
+      </p>
+    );
+  }
+
+  return null;
+}
+
+function TwoFactorAuthentication({
+  hasCredentialAccount,
+  isLoading,
+  sessionUser,
+  sessionError,
+}: {
+  hasCredentialAccount: boolean;
+  isLoading: boolean;
+  sessionUser: { email?: string | null; twoFactorEnabled?: boolean | null } | null | undefined;
+  sessionError: Error | null;
+}) {
   const queryClient = useQueryClient();
-  const sessionQuery = useQuery({
-    queryKey: ["auth", "current-user"],
-    queryFn: async () => {
-      const result = await authClient.getSession();
-      if (result.error) {
-        throw new Error(result.error.message || "Failed to load account security settings");
-      }
-      return result.data?.user ?? null;
-    },
-  });
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [totpURI, setTotpURI] = useState<string | null>(null);
@@ -56,7 +78,8 @@ function TwoFactorAuthentication({ hasCredentialAccount }: { hasCredentialAccoun
   const [verifying, setVerifying] = useState(false);
   const [disabling, setDisabling] = useState(false);
 
-  const isEnabled = sessionQuery.data?.twoFactorEnabled === true;
+  const isEnabled = sessionUser?.twoFactorEnabled === true;
+  const isReady = !isLoading && !sessionError;
 
   const enable = async () => {
     setError(null);
@@ -133,13 +156,9 @@ function TwoFactorAuthentication({ hasCredentialAccount }: { hasCredentialAccoun
         </CardHeader>
 
         <CardPanel className="flex max-w-lg flex-col gap-4">
-          {sessionQuery.error ? (
-            <p className="text-destructive text-sm" role="alert">
-              Security settings could not be loaded. Please refresh and try again.
-            </p>
-          ) : null}
+          <TwoFactorStatus isLoading={isLoading} sessionError={sessionError} />
 
-          {!hasCredentialAccount && (
+          {isReady && !hasCredentialAccount && (
             <>
               <p className="text-muted-foreground text-sm">
                 Create a password before enabling two-factor authentication. This ensures your
@@ -150,7 +169,7 @@ function TwoFactorAuthentication({ hasCredentialAccount }: { hasCredentialAccoun
                 className="w-fit"
                 onClick={() => {
                   window.location.assign(
-                    `/forgot-password?email=${encodeURIComponent(sessionQuery.data?.email ?? "")}&return_to=/account/security`,
+                    `/forgot-password?email=${encodeURIComponent(sessionUser?.email ?? "")}&return_to=/account/security`,
                   );
                 }}
                 size="sm"
@@ -162,7 +181,7 @@ function TwoFactorAuthentication({ hasCredentialAccount }: { hasCredentialAccoun
             </>
           )}
 
-          {hasCredentialAccount && totpURI && (
+          {isReady && hasCredentialAccount && totpURI && (
             <>
               <p className="text-muted-foreground text-sm">
                 Scan this code with your authenticator app, then enter the six-digit code it shows.
@@ -193,21 +212,31 @@ function TwoFactorAuthentication({ hasCredentialAccount }: { hasCredentialAccoun
                   Verify and enable
                 </Button>
               </div>
-              {backupCodes.length ? (
-                <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
-                  <p className="font-medium text-sm">Save your backup codes</p>
-                  <p className="mt-1 text-muted-foreground text-sm">
-                    Each code works once. Store them somewhere safe; they will not be shown again.
-                  </p>
-                  <code className="mt-3 block whitespace-pre-wrap break-all text-sm">
-                    {backupCodes.join("\n")}
-                  </code>
-                </div>
-              ) : null}
             </>
           )}
 
-          {hasCredentialAccount && !totpURI && isEnabled && (
+          {backupCodes.length ? (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+              <p className="font-medium text-sm">Save your backup codes</p>
+              <p className="mt-1 text-muted-foreground text-sm">
+                Each code works once. Store them somewhere safe; they will not be shown again.
+              </p>
+              <code className="mt-3 block whitespace-pre-wrap break-all text-sm">
+                {backupCodes.join("\n")}
+              </code>
+              <Button
+                className="mt-3"
+                onClick={() => setBackupCodes([])}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                I’ve saved these codes
+              </Button>
+            </div>
+          ) : null}
+
+          {isReady && hasCredentialAccount && !totpURI && isEnabled && (
             <>
               <label className="flex max-w-xs flex-col gap-1.5 font-medium text-sm">
                 Password to disable 2FA
@@ -234,7 +263,7 @@ function TwoFactorAuthentication({ hasCredentialAccount }: { hasCredentialAccoun
             </>
           )}
 
-          {hasCredentialAccount && !totpURI && !isEnabled && (
+          {isReady && hasCredentialAccount && !totpURI && !isEnabled && (
             <>
               <label className="flex max-w-xs flex-col gap-1.5 font-medium text-sm">
                 Password to continue
@@ -510,6 +539,16 @@ function SecurityPage() {
       return result.data;
     },
   });
+  const sessionQuery = useQuery({
+    queryKey: ["auth", "current-user"],
+    queryFn: async () => {
+      const result = await authClient.getSession();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to load account security settings");
+      }
+      return result.data?.user ?? null;
+    },
+  });
   const githubAccount = accountsQuery.data?.find((account) => account.providerId === "github");
   const hasCredentialAccount = accountsQuery.data?.some(
     (account) => account.providerId === "credential",
@@ -603,7 +642,12 @@ function SecurityPage() {
     <AccountLayout>
       <PageLayout description="Update your password and keep your account secure." title="Security">
         <div className="flex flex-col gap-6">
-          <TwoFactorAuthentication hasCredentialAccount={hasCredentialAccount === true} />
+          <TwoFactorAuthentication
+            hasCredentialAccount={hasCredentialAccount === true}
+            isLoading={accountsQuery.isPending || sessionQuery.isPending}
+            sessionError={accountsQuery.error ?? sessionQuery.error ?? null}
+            sessionUser={sessionQuery.data}
+          />
 
           <CardFrame className="w-full">
             <Card>

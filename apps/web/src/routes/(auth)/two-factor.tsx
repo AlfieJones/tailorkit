@@ -29,27 +29,36 @@ function TwoFactorPage() {
   const verify = async () => {
     setError(null);
     setIsPending(true);
-    const result = useBackupCode
-      ? await authClient.twoFactor.verifyBackupCode({ code })
-      : await authClient.twoFactor.verifyTotp({ code });
-    setIsPending(false);
+    try {
+      const result = useBackupCode
+        ? await authClient.twoFactor.verifyBackupCode({ code })
+        : await authClient.twoFactor.verifyTotp({ code });
 
-    if (result.error) {
-      setError(
-        result.error.message ||
-          (useBackupCode
-            ? "That backup code is not valid."
-            : "That verification code is not valid."),
+      if (result.error) {
+        setError(
+          result.error.message ||
+            (useBackupCode
+              ? "That backup code is not valid."
+              : "That verification code is not valid."),
+        );
+        return;
+      }
+
+      const returnPath = getSameOriginPath(
+        window.sessionStorage.getItem("tailorkit.two-factor-return-to") ?? undefined,
+        window.location.origin,
       );
-      return;
+      window.sessionStorage.removeItem("tailorkit.two-factor-return-to");
+      window.location.assign(returnPath ?? "/");
+    } catch {
+      setError(
+        useBackupCode
+          ? "Unable to verify that backup code. Please try again."
+          : "Unable to verify that authentication code. Please try again.",
+      );
+    } finally {
+      setIsPending(false);
     }
-
-    const returnPath = getSameOriginPath(
-      window.sessionStorage.getItem("tailorkit.two-factor-return-to") ?? undefined,
-      window.location.origin,
-    );
-    window.sessionStorage.removeItem("tailorkit.two-factor-return-to");
-    window.location.assign(returnPath ?? "/");
   };
 
   return (
