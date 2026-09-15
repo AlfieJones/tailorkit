@@ -112,7 +112,18 @@ export function TwoFactorSetupDialog({
     panelContent = (
       <div className="flex flex-col items-center gap-4">
         <div className="bg-white p-3">
-          <QRCodeSVG includeMargin size={192} value={totpURI} />
+          <QRCodeSVG
+            imageSettings={{
+              excavate: true,
+              height: 32,
+              src: "/brand/mark-background-light.svg",
+              width: 32,
+            }}
+            includeMargin
+            level="H"
+            size={192}
+            value={totpURI}
+          />
         </div>
         <div className="flex w-full items-center justify-center gap-2 py-3">
           <code className="max-w-[calc(100%-2rem)] truncate font-mono text-muted-foreground text-sm tracking-[0.12em]">
