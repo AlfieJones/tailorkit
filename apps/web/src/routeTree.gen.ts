@@ -21,6 +21,7 @@ import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as authTwoFactorRouteImport } from './routes/(auth)/two-factor'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
+import { Route as AuthErrorRouteImport } from './routes/auth/error'
 import { Route as appOrgSlugIndexRouteImport } from './routes/(app)/$orgSlug/index'
 import { Route as appOrgSlugProjectSlugRouteRouteImport } from './routes/(app)/$orgSlug/$projectSlug/route'
 import { Route as appAccountInvitesRouteImport } from './routes/(app)/account/invites'
@@ -103,6 +104,11 @@ const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
   getParentRoute: () => authRouteRoute,
+} as any)
+const AuthErrorRoute = AuthErrorRouteImport.update({
+  id: '/auth/error',
+  path: '/auth/error',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const appOrgSlugIndexRoute = appOrgSlugIndexRouteImport.update({
   id: '/',
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof authSignUpRoute
   '/two-factor': typeof authTwoFactorRoute
   '/verify-email': typeof authVerifyEmailRoute
+  '/auth/error': typeof AuthErrorRoute
   '/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
   '/account/profile': typeof appAccountProfileRouteRouteWithChildren
   '/account/invites': typeof appAccountInvitesRoute
@@ -285,6 +292,7 @@ export interface FileRoutesByTo {
   '/sign-up': typeof authSignUpRoute
   '/two-factor': typeof authTwoFactorRoute
   '/verify-email': typeof authVerifyEmailRoute
+  '/auth/error': typeof AuthErrorRoute
   '/account/invites': typeof appAccountInvitesRoute
   '/account/organizations': typeof appAccountOrganizationsRoute
   '/account/request-organization': typeof appAccountRequestOrganizationRoute
@@ -319,6 +327,7 @@ export interface FileRoutesById {
   '/(auth)/sign-up': typeof authSignUpRoute
   '/(auth)/two-factor': typeof authTwoFactorRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
+  '/auth/error': typeof AuthErrorRoute
   '/(app)/$orgSlug/$projectSlug': typeof appOrgSlugProjectSlugRouteRouteWithChildren
   '/(app)/account/profile': typeof appAccountProfileRouteRouteWithChildren
   '/(app)/account/invites': typeof appAccountInvitesRoute
@@ -357,6 +366,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/two-factor'
     | '/verify-email'
+    | '/auth/error'
     | '/$orgSlug/$projectSlug'
     | '/account/profile'
     | '/account/invites'
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/two-factor'
     | '/verify-email'
+    | '/auth/error'
     | '/account/invites'
     | '/account/organizations'
     | '/account/request-organization'
@@ -425,6 +436,7 @@ export interface FileRouteTypes {
     | '/(auth)/sign-up'
     | '/(auth)/two-factor'
     | '/(auth)/verify-email'
+    | '/auth/error'
     | '/(app)/$orgSlug/$projectSlug'
     | '/(app)/account/profile'
     | '/(app)/account/invites'
@@ -456,6 +468,7 @@ export interface RootRouteChildren {
   appRouteRoute: typeof appRouteRouteWithChildren
   authRouteRoute: typeof authRouteRouteWithChildren
   LogoutRoute: typeof LogoutRoute
+  AuthErrorRoute: typeof AuthErrorRoute
   ApiAssetsSplatRoute: typeof ApiAssetsSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiPlatformSplatRoute: typeof ApiPlatformSplatRoute
@@ -547,6 +560,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/verify-email'
       preLoaderRoute: typeof authVerifyEmailRouteImport
       parentRoute: typeof authRouteRoute
+    }
+    '/auth/error': {
+      id: '/auth/error'
+      path: '/auth/error'
+      fullPath: '/auth/error'
+      preLoaderRoute: typeof AuthErrorRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(app)/$orgSlug/': {
       id: '/(app)/$orgSlug/'
@@ -886,6 +906,7 @@ const rootRouteChildren: RootRouteChildren = {
   appRouteRoute: appRouteRouteWithChildren,
   authRouteRoute: authRouteRouteWithChildren,
   LogoutRoute: LogoutRoute,
+  AuthErrorRoute: AuthErrorRoute,
   ApiAssetsSplatRoute: ApiAssetsSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiPlatformSplatRoute: ApiPlatformSplatRoute,
