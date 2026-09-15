@@ -13,6 +13,10 @@ const testState = vi.hoisted(() => ({
   github: {
     getAuthenticated: vi.fn(),
   },
+  kv: {
+    get: vi.fn(),
+    set: vi.fn(),
+  },
 }));
 
 vi.mock("@tailorkit/db", () => ({
@@ -46,6 +50,13 @@ vi.mock("octokit", () => ({
       };
     },
   ),
+}));
+
+vi.mock("@tailorkit/kv", () => ({
+  getKV: () => ({
+    get: testState.kv.get,
+    set: testState.kv.set,
+  }),
 }));
 
 vi.mock("@tailorkit/env/server", () => ({
@@ -105,6 +116,8 @@ describe("userRouter", () => {
     vi.mocked(auth.api.getAccessToken).mockReset();
     vi.mocked(auth.api.listUserAccounts).mockReset();
     testState.github.getAuthenticated.mockReset();
+    testState.kv.get.mockReset();
+    testState.kv.set.mockReset();
 
     await db.insert(user).values([
       {
@@ -195,6 +208,12 @@ describe("userRouter", () => {
 
   it("uses Better Auth's decrypted GitHub token and caches the username lookup", async () => {
     const githubAccountId = "66666666-6666-4666-8666-666666666666";
+    const cache = new Map<string, string>();
+    testState.kv.get.mockImplementation((key: string) => Promise.resolve(cache.get(key) ?? null));
+    testState.kv.set.mockImplementation((key: string, value: string) => {
+      cache.set(key, value);
+      return Promise.resolve();
+    });
     vi.mocked(auth.api.listUserAccounts).mockResolvedValue([
       {
         accountId: "12345",
@@ -226,6 +245,46 @@ describe("userRouter", () => {
       body: { accountId: githubAccountId },
       headers: context.headers,
     });
+  });
+
+  it("does not cache a transient GitHub lookup failure", async () => {
+    const githubAccountId = "77777777-7777-4777-8777-777777777777";
+    const cache = new Map<string, string>();
+    testState.kv.get.mockImplementation((key: string) => Promise.resolve(cache.get(key) ?? null));
+    testState.kv.set.mockImplementation((key: string, value: string) => {
+      cache.set(key, value);
+      return Promise.resolve();
+    });
+    vi.mocked(auth.api.listUserAccounts).mockResolvedValue([
+      {
+        accountId: "54321",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        id: githubAccountId,
+        providerId: "github",
+        scopes: [],
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        userId,
+      },
+    ]);
+    vi.mocked(auth.api.getAccessToken).mockResolvedValue({
+      accessToken: "decrypted-github-token",
+      accessTokenExpiresAt: undefined,
+      idToken: undefined,
+      scopes: [],
+    });
+    testState.github.getAuthenticated
+      .mockRejectedValueOnce(new Error("GitHub unavailable"))
+      .mockResolvedValueOnce({ data: { login: "octocat" } });
+
+    const context = createContext();
+    const firstResult = await call(userRouter.listAccounts, undefined, { context });
+    const secondResult = await call(userRouter.listAccounts, undefined, { context });
+
+    expect(firstResult[0]).toEqual(expect.objectContaining({ githubUsername: null }));
+    expect(secondResult[0]).toEqual(expect.objectContaining({ githubUsername: "octocat" }));
+    expect(auth.api.getAccessToken).toHaveBeenCalledTimes(2);
+    expect(testState.github.getAuthenticated).toHaveBeenCalledTimes(2);
+    expect(testState.kv.set).toHaveBeenCalledTimes(1);
   });
 
   it("requires auth for protected procedures", async () => {

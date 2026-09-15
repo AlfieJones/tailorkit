@@ -15,24 +15,16 @@ const MANUAL_ORG_ONBOARDING_MESSAGE =
 const GITHUB_USERNAME_CACHE_PREFIX = "tailorkit:github-username:v1";
 const GITHUB_USERNAME_CACHE_TTL_SECONDS = 24 * 60 * 60;
 const GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS = 60;
+const GITHUB_USERNAME_CACHE_READ_TIMEOUT_MS = 1000;
 const GITHUB_USERNAME_REQUEST_TIMEOUT_MS = 5000;
-
-interface GitHubUsernameCacheEntry {
-  expiresAt: number;
-  username: string | null;
-}
-
-const githubUsernameCache = new Map<string, GitHubUsernameCacheEntry>();
-const githubUsernameLookups = new Map<string, Promise<string | null>>();
 
 function getGitHubUsernameCacheKey(accountId: string) {
   return `${GITHUB_USERNAME_CACHE_PREFIX}:${accountId}`;
 }
 
-function rememberGitHubUsername(accountId: string, username: string | null) {
+function cacheGitHubUsername(accountId: string, username: string | null) {
   const ttl = username ? GITHUB_USERNAME_CACHE_TTL_SECONDS : GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS;
   const key = getGitHubUsernameCacheKey(accountId);
-  githubUsernameCache.set(key, { expiresAt: Date.now() + ttl * 1000, username });
 
   try {
     const kv = getKV();
@@ -47,16 +39,25 @@ function rememberGitHubUsername(accountId: string, username: string | null) {
   }
 }
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | undefined> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<undefined>((resolve) => {
+        timeout = setTimeout(resolve as () => void, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  }
+}
+
 async function readCachedGitHubUsername(accountId: string): Promise<string | null | undefined> {
   const key = getGitHubUsernameCacheKey(accountId);
-  const memoryEntry = githubUsernameCache.get(key);
-  if (memoryEntry) {
-    if (memoryEntry.expiresAt > Date.now()) {
-      return memoryEntry.username;
-    }
-    githubUsernameCache.delete(key);
-  }
-
   let kv: ReturnType<typeof getKV>;
   try {
     kv = getKV();
@@ -69,22 +70,13 @@ async function readCachedGitHubUsername(accountId: string): Promise<string | nul
   }
 
   try {
-    const encoded = await kv.get(key);
+    const encoded = await withTimeout(kv.get(key), GITHUB_USERNAME_CACHE_READ_TIMEOUT_MS);
     if (encoded === "missing") {
-      githubUsernameCache.set(key, {
-        expiresAt: Date.now() + GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS * 1000,
-        username: null,
-      });
       return null;
     }
 
     if (encoded?.startsWith("username:") && encoded.length > "username:".length) {
-      const username = encoded.slice("username:".length);
-      githubUsernameCache.set(key, {
-        expiresAt: Date.now() + GITHUB_USERNAME_CACHE_TTL_SECONDS * 1000,
-        username,
-      });
-      return username;
+      return encoded.slice("username:".length);
     }
   } catch {
     // A cache outage should not make account management unavailable.
@@ -94,44 +86,28 @@ async function readCachedGitHubUsername(accountId: string): Promise<string | nul
 }
 
 async function getGitHubUsername(accountId: string, getAccessToken: () => Promise<string | null>) {
-  const key = getGitHubUsernameCacheKey(accountId);
-  const existingLookup = githubUsernameLookups.get(key);
-  if (existingLookup) {
-    return existingLookup;
+  const cachedUsername = await readCachedGitHubUsername(accountId);
+  if (cachedUsername !== undefined) {
+    return cachedUsername;
   }
 
-  const lookup = (async () => {
-    const cachedUsername = await readCachedGitHubUsername(accountId);
-    if (cachedUsername !== undefined) {
-      return cachedUsername;
-    }
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    cacheGitHubUsername(accountId, null);
+    return null;
+  }
 
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
-      rememberGitHubUsername(accountId, null);
-      return null;
-    }
-
-    try {
-      const octokit = new Octokit({
-        auth: accessToken,
-        request: { signal: AbortSignal.timeout(GITHUB_USERNAME_REQUEST_TIMEOUT_MS) },
-      });
-      const { data: profile } = await octokit.rest.users.getAuthenticated();
-      rememberGitHubUsername(accountId, profile.login);
-      return profile.login;
-    } catch {
-      // Account management should remain available if GitHub is temporarily unavailable.
-      rememberGitHubUsername(accountId, null);
-      return null;
-    }
-  })();
-
-  githubUsernameLookups.set(key, lookup);
   try {
-    return await lookup;
-  } finally {
-    githubUsernameLookups.delete(key);
+    const octokit = new Octokit({
+      auth: accessToken,
+      request: { signal: AbortSignal.timeout(GITHUB_USERNAME_REQUEST_TIMEOUT_MS) },
+    });
+    const { data: profile } = await octokit.rest.users.getAuthenticated();
+    cacheGitHubUsername(accountId, profile.login);
+    return profile.login;
+  } catch {
+    // Account management should remain available if GitHub is temporarily unavailable.
+    return null;
   }
 }
 

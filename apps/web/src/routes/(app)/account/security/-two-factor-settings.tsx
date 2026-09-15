@@ -103,6 +103,7 @@ function TwoFactorSetupDialog({
   };
   const handleBackToQr = () => {
     setVerificationAutoSubmitted(false);
+    setCode("");
     onBackToQr();
   };
   const handleContinueToVerification = () => {
