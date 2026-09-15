@@ -14,6 +14,78 @@ export const userRouter = {
     user: context.user,
   })),
 
+  listAccounts: protectedProcedure.handler(({ context }) =>
+    auth.api.listUserAccounts({ headers: context.headers }),
+  ),
+
+  linkSocial: protectedProcedure
+    .input(
+      z.object({
+        callbackURL: z.string().optional(),
+        errorCallbackURL: z.string().optional(),
+        provider: z.literal("github"),
+      }),
+    )
+    .handler(({ input, context }) =>
+      auth.api.linkSocialAccount({ body: input, headers: context.headers }),
+    ),
+
+  unlinkAccount: protectedProcedure
+    .input(z.object({ accountId: z.string() }))
+    .handler(({ input, context }) =>
+      auth.api.unlinkAccount({ body: input, headers: context.headers }),
+    ),
+
+  changePassword: protectedProcedure
+    .input(
+      z.object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(1),
+        revokeOtherSessions: z.boolean().optional(),
+      }),
+    )
+    .handler(({ input, context }) =>
+      auth.api.changePassword({ body: input, headers: context.headers }),
+    ),
+
+  listSessions: protectedProcedure.handler(({ context }) =>
+    auth.api.listSessions({ headers: context.headers }),
+  ),
+
+  revokeSession: protectedProcedure
+    .input(z.object({ token: z.string() }))
+    .handler(({ input, context }) =>
+      auth.api.revokeSession({ body: input, headers: context.headers }),
+    ),
+
+  revokeOtherSessions: protectedProcedure.handler(({ context }) =>
+    auth.api.revokeOtherSessions({ headers: context.headers }),
+  ),
+
+  enableTwoFactor: protectedProcedure
+    .input(z.object({ method: z.literal("totp"), password: z.string() }))
+    .handler(({ input, context }) =>
+      auth.api.enableTwoFactor({ body: input, headers: context.headers }),
+    ),
+
+  verifyTotp: protectedProcedure
+    .input(z.object({ code: z.string().length(6) }))
+    .handler(({ input, context }) =>
+      auth.api.verifyTOTP({ body: input, headers: context.headers }),
+    ),
+
+  disableTwoFactor: protectedProcedure
+    .input(z.object({ password: z.string() }))
+    .handler(({ input, context }) =>
+      auth.api.disableTwoFactor({ body: input, headers: context.headers }),
+    ),
+
+  generateBackupCodes: protectedProcedure
+    .input(z.object({ password: z.string() }))
+    .handler(({ input, context }) =>
+      auth.api.generateBackupCodes({ body: input, headers: context.headers }),
+    ),
+
   getOrgs: protectedProcedure.handler(async ({ context }) => {
     const orgs = await db.query.organization.findMany({
       where: {
