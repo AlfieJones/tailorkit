@@ -274,13 +274,16 @@ function RouteComponent() {
                         className="w-full"
                         loading={passkeyPending}
                         onClick={() => void signInWithPasskey()}
+                        size="xl"
                       >
                         <KeyRoundIcon />
                         Continue with passkey
                       </Button>
                       <Tooltip>
                         <TooltipTrigger
-                          render={<Button variant="outline" className="w-full" disabled />}
+                          render={
+                            <Button size="xl" variant="outline" className="w-full" disabled />
+                          }
                         >
                           <GoogleIcon />
                           Continue with Google
@@ -293,6 +296,7 @@ function RouteComponent() {
                         className="w-full"
                         loading={githubPending}
                         onClick={() => void signInWithGitHub()}
+                        size="xl"
                       >
                         <GitHubIcon />
                         Continue with GitHub
@@ -315,7 +319,7 @@ function RouteComponent() {
 
                     <div className="order-4">
                       <emailForm.AppForm>
-                        <emailForm.SubmitButton className="w-full">
+                        <emailForm.SubmitButton className="w-full" size="xl">
                           Continue with email
                         </emailForm.SubmitButton>
                       </emailForm.AppForm>
@@ -366,7 +370,7 @@ function RouteComponent() {
 
                   <passwordForm.AppForm>
                     <CardFooter className="pt-4">
-                      <passwordForm.SubmitButton className="w-full">
+                      <passwordForm.SubmitButton className="w-full" size="xl">
                         Sign In
                       </passwordForm.SubmitButton>
                     </CardFooter>

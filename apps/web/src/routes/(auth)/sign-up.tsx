@@ -188,7 +188,9 @@ function RouteComponent() {
                       )}
                       <Tooltip>
                         <TooltipTrigger
-                          render={<Button variant="outline" className="w-full" disabled />}
+                          render={
+                            <Button size="xl" variant="outline" className="w-full" disabled />
+                          }
                         >
                           <GoogleIcon />
                           Continue with Google
@@ -201,6 +203,7 @@ function RouteComponent() {
                         className="w-full"
                         loading={githubPending}
                         onClick={() => void signUpWithGitHub()}
+                        size="xl"
                       >
                         <GitHubIcon />
                         Continue with GitHub
@@ -222,7 +225,7 @@ function RouteComponent() {
 
                     <div className="order-4">
                       <emailForm.AppForm>
-                        <emailForm.SubmitButton className="w-full">
+                        <emailForm.SubmitButton className="w-full" size="xl">
                           Continue with email
                         </emailForm.SubmitButton>
                       </emailForm.AppForm>
@@ -268,7 +271,7 @@ function RouteComponent() {
 
                   <detailsForm.AppForm>
                     <CardFooter className="pt-4">
-                      <detailsForm.SubmitButton className="w-full">
+                      <detailsForm.SubmitButton className="w-full" size="xl">
                         Create Account
                       </detailsForm.SubmitButton>
                     </CardFooter>
