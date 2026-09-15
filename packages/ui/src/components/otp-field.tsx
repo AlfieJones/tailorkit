@@ -47,13 +47,17 @@ export function OTPFieldSeparator({
   ...props
 }: React.ComponentProps<typeof Separator>): React.ReactElement {
   return (
-    <Separator
-      className={cn(
-        "rounded-full bg-input data-[orientation=horizontal]:h-0.5 data-[orientation=horizontal]:w-3",
-        className,
-      )}
-      orientation="horizontal"
-      {...props}
+    <OTPFieldPrimitive.Separator
+      render={
+        <Separator
+          className={cn(
+            "rounded-full bg-input data-[orientation=horizontal]:h-0.5 data-[orientation=horizontal]:w-3",
+            className,
+          )}
+          orientation="horizontal"
+          {...props}
+        />
+      }
     />
   );
 }

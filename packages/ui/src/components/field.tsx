@@ -52,12 +52,11 @@ export function FieldDescription({
 export function FieldError({
   className,
   ...props
-}: React.ComponentProps<"div">): React.ReactElement {
+}: FieldPrimitive.Error.Props): React.ReactElement {
   return (
-    <div
+    <FieldPrimitive.Error
       className={cn("text-destructive-foreground text-xs", className)}
       data-slot="field-error"
-      role="alert"
       {...props}
     />
   );
