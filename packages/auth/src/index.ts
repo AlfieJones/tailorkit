@@ -9,14 +9,21 @@ import { betterAuth } from "better-auth/minimal";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { waitUntil as vercelWaitUntil } from "@vercel/functions";
-import { haveIBeenPwned } from "better-auth/plugins";
+import { haveIBeenPwned, twoFactor } from "better-auth/plugins";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { organization } from "better-auth/plugins/organization";
 import { oAuthProxy } from "better-auth/plugins/oauth-proxy";
 import { ac, roles } from "./lib/permissions";
 import { apiKey } from "@better-auth/api-key";
 import { dash } from "@better-auth/infra";
+import { passkey } from "@better-auth/passkey";
 import { initializePublicTeamId, publicTeamIdField } from "./lib/public-team-id";
+
+export type {
+  AuthenticationResponseJSON,
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+} from "@simplewebauthn/server";
 
 void initializeObservability("tailorkit-web");
 
@@ -91,6 +98,17 @@ export function createAuth() {
         : undefined,
     plugins: [
       haveIBeenPwned(),
+      passkey({
+        rpName: "TailorKit",
+        authenticatorSelection: {
+          residentKey: "preferred",
+          userVerification: "required",
+        },
+      }),
+      twoFactor({
+        allowPasswordless: true,
+        issuer: "TailorKit",
+      }),
       emailOTP({
         expiresIn: 600,
         overrideDefaultEmailVerification: true,

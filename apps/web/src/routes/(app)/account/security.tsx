@@ -15,14 +15,23 @@ import {
 } from "@tailorkit/ui/components/card";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { useAppForm } from "@tailorkit/ui/form";
-import { LaptopIcon, Link2Icon, SmartphoneIcon } from "lucide-react";
-import { useState } from "react";
+import { LaptopIcon, KeyRoundIcon, Link2Icon, ShieldCheckIcon, SmartphoneIcon } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import QRCode from "qrcode";
 import { z } from "zod";
 
 import { AccountLayout } from "#components/account-layout";
 import { PageLayout } from "#components/page-layout";
 import { authClient } from "#lib/auth-client";
+import {
+  Dialog,
+  DialogFooter,
+  DialogHeader,
+  DialogPopup,
+  DialogTitle,
+} from "@tailorkit/ui/components/dialog";
+import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/components/otp-field";
 
 export const Route = createFileRoute("/(app)/account/security")({
   component: SecurityPage,
@@ -258,6 +267,336 @@ const GitHubIcon = () => (
   </svg>
 );
 
+const passkeysQueryKey = ["auth", "passkeys"] as const;
+
+function Passkeys() {
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const { data: passkeys, isPending } = useQuery({
+    queryKey: passkeysQueryKey,
+    queryFn: async () => {
+      const result = await authClient.passkey.listUserPasskeys();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to load passkeys");
+      }
+      return result.data ?? [];
+    },
+  });
+
+  const addPasskey = async () => {
+    setError(null);
+    setAdding(true);
+    const result = await authClient.passkey.addPasskey({ name: "Passkey" });
+    setAdding(false);
+    if (result.error) {
+      setError(result.error.message || "Your passkey could not be added.");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: passkeysQueryKey });
+    toastManager.add({
+      description: "You can now use it as a primary sign-in method or to verify your identity.",
+      title: "Passkey added",
+      type: "success",
+    });
+  };
+
+  const removePasskey = async (id: string) => {
+    setError(null);
+    const result = await authClient.passkey.deletePasskey({ id });
+    if (result.error) {
+      setError(result.error.message || "This passkey could not be removed.");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: passkeysQueryKey });
+  };
+
+  return (
+    <CardFrame className="w-full">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <KeyRoundIcon />
+            Passkeys
+          </CardTitle>
+          <CardDescription>
+            Sign in without a password using your device, password manager, or security key.
+          </CardDescription>
+        </CardHeader>
+        <CardPanel className="flex flex-col gap-3 pt-0">
+          {error ? <p className="text-destructive text-sm">{error}</p> : null}
+          {isPending ? <p className="text-muted-foreground text-sm">Loading passkeys...</p> : null}
+          {!isPending && passkeys?.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No passkeys have been added yet.</p>
+          ) : null}
+          {passkeys?.map((passkey) => (
+            <div className="flex items-center gap-3 rounded-xl border p-4" key={passkey.id}>
+              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-muted">
+                <KeyRoundIcon className="size-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm">{passkey.name || "Passkey"}</p>
+                <p className="text-muted-foreground text-sm">
+                  Added {formatLastActive(passkey.createdAt)}
+                </p>
+              </div>
+              <Button
+                onClick={() => void removePasskey(passkey.id)}
+                size="sm"
+                variant="destructive-outline"
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+        </CardPanel>
+      </Card>
+      <CardFrameFooter className="flex justify-end">
+        <Button
+          loading={adding}
+          onClick={() => void addPasskey()}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Add passkey
+        </Button>
+      </CardFrameFooter>
+    </CardFrame>
+  );
+}
+
+function TwoFactorAuthentication() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [totpURI, setTotpURI] = useState<string | null>(null);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const { data: session } = useQuery({
+    queryKey: ["auth", "current-session"],
+    queryFn: async () => {
+      const result = await authClient.getSession();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to load your security settings");
+      }
+      return result.data;
+    },
+  });
+  const enabled = Boolean(session?.user?.twoFactorEnabled);
+
+  useEffect(() => {
+    if (!totpURI) {
+      setQrCode(null);
+      return;
+    }
+    void QRCode.toDataURL(totpURI, { margin: 1, width: 240 }).then(setQrCode);
+  }, [totpURI]);
+
+  const resetSetup = () => {
+    setCode("");
+    setError(null);
+    setPassword("");
+    setTotpURI(null);
+    setBackupCodes([]);
+  };
+
+  const enable = async () => {
+    setError(null);
+    setPending(true);
+    const result = await authClient.twoFactor.enable({
+      method: "totp",
+      password: password || undefined,
+    });
+    setPending(false);
+    if (result.error) {
+      setError(result.error.message || "Two-factor authentication could not be started.");
+      return;
+    }
+    if (result.data.method !== "totp") {
+      setError("Authenticator-app setup could not be started.");
+      return;
+    }
+    setTotpURI(result.data.totpURI);
+    setBackupCodes(result.data.backupCodes);
+  };
+
+  const confirm = async () => {
+    setError(null);
+    setPending(true);
+    const result = await authClient.twoFactor.verifyTotp({ code });
+    setPending(false);
+    if (result.error) {
+      setError(result.error.message || "That authenticator code could not be verified.");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["auth", "current-session"] });
+  };
+
+  const disable = async () => {
+    setError(null);
+    setPending(true);
+    const result = await authClient.twoFactor.disable({ password: password || undefined });
+    setPending(false);
+    if (result.error) {
+      setError(result.error.message || "Two-factor authentication could not be disabled.");
+      return;
+    }
+    setOpen(false);
+    resetSetup();
+    await queryClient.invalidateQueries({ queryKey: ["auth", "current-session"] });
+  };
+
+  let dialogDescription =
+    "Enter your password to protect this security change. Passwordless accounts can leave it blank.";
+  if (enabled) {
+    dialogDescription = "Enter your password to turn off authenticator-app verification.";
+  } else if (totpURI) {
+    dialogDescription =
+      "Scan this code, then enter the six-digit code from your authenticator app.";
+  }
+
+  let dialogContent: ReactNode = (
+    <input
+      autoComplete="current-password"
+      className="h-10 w-full rounded-lg border bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/24"
+      onChange={(event) => setPassword(event.target.value)}
+      placeholder="Current password"
+      type="password"
+      value={password}
+    />
+  );
+  if (totpURI) {
+    dialogContent = (
+      <>
+        {qrCode ? (
+          <img
+            alt="Authenticator app setup QR code"
+            className="mx-auto size-52 rounded-lg border bg-white p-2"
+            src={qrCode}
+          />
+        ) : null}
+        <OTPField
+          aria-label="Authenticator code"
+          autoComplete="one-time-code"
+          length={6}
+          onValueChange={setCode}
+          value={code}
+        >
+          {Array.from({ length: 6 }, (_, index) => (
+            <Fragment key={`digit-${index}`}>
+              <OTPFieldInput aria-label={`Digit ${index + 1} of 6`} />
+              {index === 2 ? <OTPFieldSeparator /> : null}
+            </Fragment>
+          ))}
+        </OTPField>
+      </>
+    );
+  }
+  if (backupCodes.length > 0 && enabled) {
+    dialogContent = (
+      <>
+        <p className="font-medium text-sm">Save these recovery codes somewhere safe.</p>
+        <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/40 p-3 font-mono text-sm">
+          {backupCodes.map((backupCode) => (
+            <span key={backupCode}>{backupCode}</span>
+          ))}
+        </div>
+        <p className="text-muted-foreground text-xs">
+          Each code works once. You won’t see them again.
+        </p>
+      </>
+    );
+  }
+
+  let dialogAction: ReactNode = (
+    <Button loading={pending} onClick={() => void enable()}>
+      Continue
+    </Button>
+  );
+  if (enabled) {
+    dialogAction = (
+      <Button loading={pending} onClick={() => void disable()} variant="destructive">
+        Disable 2FA
+      </Button>
+    );
+  }
+  if (totpURI) {
+    dialogAction = (
+      <Button disabled={code.length !== 6} loading={pending} onClick={() => void confirm()}>
+        Verify and enable
+      </Button>
+    );
+  }
+  if (backupCodes.length > 0 && enabled) {
+    dialogAction = <Button onClick={() => setOpen(false)}>Done</Button>;
+  }
+
+  return (
+    <>
+      <CardFrame className="w-full">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheckIcon />
+              Authenticator app
+            </CardTitle>
+            <CardDescription>
+              {enabled
+                ? "Your account requires a second verification step when signing in with a password."
+                : "Add a time-based code from an authenticator app as an extra sign-in check."}
+            </CardDescription>
+          </CardHeader>
+          <CardPanel className="pt-0">
+            <p className="text-muted-foreground text-sm">
+              {enabled
+                ? "Passkeys and recovery codes can also be used from the verification screen."
+                : "You’ll scan a QR code and save recovery codes during setup."}
+            </p>
+          </CardPanel>
+        </Card>
+        <CardFrameFooter className="flex justify-end">
+          <Button
+            onClick={() => setOpen(true)}
+            size="sm"
+            type="button"
+            variant={enabled ? "outline" : "default"}
+          >
+            {enabled ? "Manage" : "Set up authenticator app"}
+          </Button>
+        </CardFrameFooter>
+      </CardFrame>
+
+      <Dialog
+        onOpenChange={(nextOpen) => {
+          setOpen(nextOpen);
+          if (!nextOpen) {
+            resetSetup();
+          }
+        }}
+        open={open}
+      >
+        <DialogPopup>
+          <DialogHeader>
+            <DialogTitle>
+              {enabled ? "Manage authenticator app" : "Set up authenticator app"}
+            </DialogTitle>
+            <p className="text-muted-foreground text-sm">{dialogDescription}</p>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 px-6 pb-6">
+            {error ? <p className="text-destructive text-sm">{error}</p> : null}
+            {dialogContent}
+          </div>
+          <DialogFooter>{dialogAction}</DialogFooter>
+        </DialogPopup>
+      </Dialog>
+    </>
+  );
+}
+
 function SecurityPage() {
   const { error, error_description } = useSearch({ from: "/(app)/account/security" });
   const queryClient = useQueryClient();
@@ -407,6 +746,10 @@ function SecurityPage() {
               </form.AppForm>
             </CardFrameFooter>
           </CardFrame>
+
+          <Passkeys />
+
+          <TwoFactorAuthentication />
 
           <CardFrame className="w-full">
             <Card>
