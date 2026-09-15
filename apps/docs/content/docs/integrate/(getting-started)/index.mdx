@@ -1,0 +1,46 @@
+---
+title: Introduction
+description: Add a secure, native-feeling app ecosystem to your product.
+---
+
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { BoxesIcon, RocketIcon, WrenchIcon } from "lucide-react";
+
+TailorKit lets your product host apps without giving them control of your
+routes, data, or design system. Your product defines the surfaces where apps
+can appear and the capabilities they can use. Apps supply the UI for those
+surfaces.
+
+This section is for the team adding TailorKit to a product. If you are building
+an app for a product that already has TailorKit, go to [Build Apps](/docs/apps).
+
+## What you will build
+
+Your integration has three parts:
+
+- A server configuration that defines the app contract: views, components,
+  theme tokens, and actions.
+- An API handler that serves that contract and loads the apps available to a
+  signed-in user, workspace, or customer.
+- A React client that renders approved app UI in the places your product owns.
+
+<Cards>
+  <Card href="/docs/integrate/installation" icon={<WrenchIcon />} title="Install TailorKit">
+    Connect the server and React client to your product.
+  </Card>
+  <Card href="/docs/integrate/how-apps-work" icon={<BoxesIcon />} title="Understand the model">
+    Learn what the host product owns and what an embedded app owns.
+  </Card>
+  <Card href="/docs/integrate/views" icon={<RocketIcon />} title="Add your first app surface">
+    Publish a view and slot where an app can appear.
+  </Card>
+</Cards>
+
+## Choose the right path
+
+Start with [Installation](/docs/integrate/installation) if TailorKit is not
+connected to your product yet. Once it is connected, use the implementation
+guides to add views, components, styling, and trusted actions.
+
+For a new app developer, the host needs to complete the installation first.
+After that, they can independently follow [Build Apps](/docs/apps).
