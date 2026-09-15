@@ -293,10 +293,6 @@ function RouteComponent() {
                         <KeyRoundIcon />
                         Continue with passkey
                       </Button>
-                      <p className="text-muted-foreground text-xs">
-                        New here? Sign in with email or GitHub first, then add a passkey from
-                        Security.
-                      </p>
                       <Tooltip>
                         <TooltipTrigger
                           render={
