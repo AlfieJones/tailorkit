@@ -710,6 +710,7 @@ function SecurityPage() {
                 </DialogDescription>
               </DialogHeader>
               <form
+                className="contents"
                 id="add-passkey-form"
                 onSubmit={(event) => {
                   event.preventDefault();
