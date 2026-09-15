@@ -67,6 +67,7 @@ function createContext(overrides: Partial<Context> = {}): Context {
       image: null,
       name: "Ada Lovelace",
       theme: "system",
+      twoFactorEnabled: false,
       updatedAt: new Date("2026-01-01T00:00:00.000Z"),
     },
     ...overrides,
