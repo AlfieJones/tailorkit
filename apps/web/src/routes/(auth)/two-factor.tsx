@@ -189,7 +189,7 @@ function TwoFactorPage() {
           </DialogHeader>
           <DialogPanel className="flex flex-col items-center">
             <Field className="items-center gap-3">
-              <FieldLabel>Backup code</FieldLabel>
+              <FieldLabel className="sr-only">Backup code</FieldLabel>
               <OTPField
                 autoComplete="off"
                 className="justify-center gap-1 max-sm:gap-0.5"
