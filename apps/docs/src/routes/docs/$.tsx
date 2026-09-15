@@ -89,6 +89,7 @@ function Page() {
       )}
       themeSwitch={{ enabled: true }}
       searchToggle={{ enabled: true }}
+      tabMode="navbar"
       tree={pageTree}
     >
       <Suspense>{clientLoader.useContent(path, { markdownUrl, path })}</Suspense>
