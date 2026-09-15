@@ -134,9 +134,23 @@ function RouteComponent() {
     setPasskeyNotice(null);
     setPasskeyPending(true);
 
-    const result = await authClient.signIn.passkey();
+    let result: Awaited<ReturnType<typeof authClient.signIn.passkey>>;
+    try {
+      result = await authClient.signIn.passkey();
+    } catch {
+      setPasskeyNotice(
+        "No passkey was selected. Sign in with email or GitHub, then add a passkey from Security.",
+      );
+      setPasskeyPending(false);
+      return;
+    }
+
     if (result.error) {
-      if ("code" in result.error && result.error.code === "AUTH_CANCELLED") {
+      const message = result.error.message || result.error.statusText || "";
+      if (
+        ("code" in result.error && result.error.code === "AUTH_CANCELLED") ||
+        /cancelled|canceled/iu.test(message)
+      ) {
         setPasskeyNotice(
           "No passkey was selected. Sign in with email or GitHub, then add a passkey from Security.",
         );
@@ -279,6 +293,10 @@ function RouteComponent() {
                         <KeyRoundIcon />
                         Continue with passkey
                       </Button>
+                      <p className="text-muted-foreground text-xs">
+                        New here? Sign in with email or GitHub first, then add a passkey from
+                        Security.
+                      </p>
                       <Tooltip>
                         <TooltipTrigger
                           render={
