@@ -319,7 +319,7 @@ function RouteComponent() {
 
                     <div className="order-4">
                       <emailForm.AppForm>
-                        <emailForm.SubmitButton className="w-full" size="lg">
+                        <emailForm.SubmitButton className="w-full">
                           Continue with email
                         </emailForm.SubmitButton>
                       </emailForm.AppForm>
