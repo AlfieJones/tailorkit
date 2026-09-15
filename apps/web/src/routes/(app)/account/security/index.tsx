@@ -14,6 +14,11 @@ import {
   CardTitle,
 } from "@tailorkit/ui/components/card";
 import {
+  Collapsible,
+  CollapsiblePanel,
+  CollapsibleTrigger,
+} from "@tailorkit/ui/components/collapsible";
+import {
   Dialog,
   DialogClose,
   DialogDescription,
@@ -24,11 +29,12 @@ import {
   DialogTitle,
 } from "@tailorkit/ui/components/dialog";
 import { Field, FieldLabel } from "@tailorkit/ui/components/field";
+import { Frame, FrameHeader, FramePanel } from "@tailorkit/ui/components/frame";
 import { Input } from "@tailorkit/ui/components/input";
 import { Skeleton } from "@tailorkit/ui/components/skeleton";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { useAppForm } from "@tailorkit/ui/form";
-import { KeyRoundIcon, LaptopIcon, SmartphoneIcon } from "lucide-react";
+import { ChevronDownIcon, KeyRoundIcon, LaptopIcon, SmartphoneIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { z } from "zod";
@@ -97,6 +103,14 @@ function formatLastActive(value: Date | string, locale: string, timeZone: string
     timeStyle: "short",
     timeZone,
   }).format(new Date(value));
+}
+
+function formatPasskeyCreated(value: Date | string | null | undefined, locale: string) {
+  if (!value) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value));
 }
 
 function ActiveSessions({ locale, timeZone }: { locale: string; timeZone: string }) {
@@ -316,6 +330,13 @@ function SecurityPage() {
   const passkeys = passkeysQuery.data ?? [];
   const signInMethodCount = (accountsQuery.data?.length ?? 0) + passkeys.length;
   const canUnlinkGitHub = Boolean(githubAccount && signInMethodCount > 1);
+  let githubStatus = "Sign in with GitHub";
+
+  if (githubAccount) {
+    githubStatus = githubAccount.githubUsername
+      ? `@${githubAccount.githubUsername}`
+      : "GitHub account linked";
+  }
 
   const linkGitHub = async () => {
     setLinkPending(true);
@@ -559,9 +580,7 @@ function SecurityPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm">GitHub</p>
-                        <p className="text-muted-foreground text-sm">
-                          {githubAccount ? "Connected" : "Sign in with GitHub"}
-                        </p>
+                        <p className="text-muted-foreground text-sm">{githubStatus}</p>
                       </div>
 
                       {githubAccount ? (
@@ -614,31 +633,79 @@ function SecurityPage() {
                       </Button>
                     </div>
 
-                    {passkeys.map((passkey) => (
-                      <div
-                        className="ml-5 flex items-center gap-3 rounded-xl border p-4 sm:ml-12"
-                        key={passkey.id}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm">{passkey.name || "Passkey"}</p>
-                          <p className="text-muted-foreground text-sm">Available for sign-in</p>
-                        </div>
-                        <Button
-                          disabled={signInMethodCount <= 1 || passkeyPending !== null}
-                          loading={passkeyPending === passkey.id}
-                          onClick={() => void deletePasskey(passkey.id)}
-                          size="sm"
-                          title={
-                            signInMethodCount > 1
-                              ? "Remove passkey"
-                              : "Add another sign-in method before removing this passkey"
-                          }
-                          variant="destructive-outline"
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
+                    {passkeys.map((passkey) => {
+                      const createdAt = formatPasskeyCreated(passkey.createdAt, locale);
+                      const transports = passkey.transports?.split(",").filter(Boolean).join(", ");
+
+                      return (
+                        <Frame className="ml-5 w-auto sm:ml-12" key={passkey.id}>
+                          <Collapsible>
+                            <FrameHeader className="flex-row items-center justify-between gap-2 px-2 py-2">
+                              <CollapsibleTrigger
+                                className="min-w-0 flex-1 justify-start data-panel-open:[&_svg]:rotate-180"
+                                render={<Button className="h-auto px-2 py-1.5" variant="ghost" />}
+                              >
+                                <ChevronDownIcon
+                                  aria-hidden="true"
+                                  className="size-4 shrink-0 transition-transform"
+                                />
+                                <span className="min-w-0 text-left">
+                                  <span className="block truncate font-medium text-sm">
+                                    {passkey.name || "Passkey"}
+                                  </span>
+                                  {createdAt ? (
+                                    <span className="block text-muted-foreground text-sm">
+                                      Created {createdAt}
+                                    </span>
+                                  ) : null}
+                                </span>
+                              </CollapsibleTrigger>
+                              <Button
+                                aria-label={`Remove ${passkey.name || "passkey"}`}
+                                disabled={signInMethodCount <= 1 || passkeyPending !== null}
+                                loading={passkeyPending === passkey.id}
+                                onClick={() => void deletePasskey(passkey.id)}
+                                size="icon-sm"
+                                title={
+                                  signInMethodCount > 1
+                                    ? "Remove passkey"
+                                    : "Add another sign-in method before removing this passkey"
+                                }
+                                variant="ghost"
+                              >
+                                <TrashIcon aria-hidden="true" />
+                              </Button>
+                            </FrameHeader>
+                            <CollapsiblePanel>
+                              <FramePanel className="p-4">
+                                <dl className="grid gap-3 text-sm sm:grid-cols-3">
+                                  <div>
+                                    <dt className="text-muted-foreground">Device type</dt>
+                                    <dd className="mt-0.5 font-medium capitalize">
+                                      {passkey.deviceType || "Unknown"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-muted-foreground">Backup</dt>
+                                    <dd className="mt-0.5 font-medium">
+                                      {passkey.backedUp ? "Backed up" : "Not backed up"}
+                                    </dd>
+                                  </div>
+                                  {transports ? (
+                                    <div>
+                                      <dt className="text-muted-foreground">Transports</dt>
+                                      <dd className="mt-0.5 font-medium capitalize">
+                                        {transports}
+                                      </dd>
+                                    </div>
+                                  ) : null}
+                                </dl>
+                              </FramePanel>
+                            </CollapsiblePanel>
+                          </Collapsible>
+                        </Frame>
+                      );
+                    })}
                   </div>
                 )}
               </CardPanel>

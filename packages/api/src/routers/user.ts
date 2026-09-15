@@ -3,6 +3,7 @@ import { db } from "@tailorkit/db";
 import { account } from "@tailorkit/db/schema/auth";
 import { env } from "@tailorkit/env/server";
 import { and, eq } from "drizzle-orm";
+import { Octokit } from "octokit";
 import { publicProcedure, protectedProcedure, requireOrg } from "../procedures";
 import z from "zod";
 import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
@@ -10,15 +11,49 @@ import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
 const MANUAL_ORG_ONBOARDING_MESSAGE =
   "We're currently onboarding users manually. Contact us to create an organisation for your account.";
 
+async function getGitHubUsername(accessToken: string | null) {
+  if (!accessToken) {
+    return null;
+  }
+
+  try {
+    const octokit = new Octokit({ auth: accessToken });
+    const { data: profile } = await octokit.rest.users.getAuthenticated();
+    return profile.login;
+  } catch {
+    // Account management should remain available if GitHub is temporarily unavailable.
+  }
+
+  return null;
+}
+
 export const userRouter = {
   getSession: publicProcedure.handler(({ context }) => ({
     session: context.session,
     user: context.user,
   })),
 
-  listAccounts: protectedProcedure.handler(({ context }) =>
-    auth.api.listUserAccounts({ headers: context.headers }),
-  ),
+  listAccounts: protectedProcedure.handler(async ({ context }) => {
+    const accounts = await auth.api.listUserAccounts({ headers: context.headers });
+    const githubAccount = accounts.find((account) => account.providerId === "github");
+    let githubAccessToken: string | null = null;
+
+    if (githubAccount) {
+      const githubCredentials = await db
+        .select({ accessToken: account.accessToken })
+        .from(account)
+        .where(and(eq(account.userId, context.user.id), eq(account.providerId, "github")))
+        .limit(1);
+      githubAccessToken = githubCredentials[0]?.accessToken ?? null;
+    }
+
+    const githubUsername = await getGitHubUsername(githubAccessToken);
+
+    return accounts.map((account) => ({
+      ...account,
+      githubUsername: account.id === githubAccount?.id ? githubUsername : null,
+    }));
+  }),
 
   linkSocial: protectedProcedure
     .input(

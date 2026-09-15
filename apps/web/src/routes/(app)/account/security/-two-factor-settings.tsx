@@ -85,7 +85,7 @@ function TwoFactorSetupDialog({
   onEnable: () => void;
   onOpenChange: (open: boolean) => void;
   onPasswordChange: (password: string) => void;
-  onVerify: () => void;
+  onVerify: (code: string) => void;
   onContinueToVerification: () => void;
   open: boolean;
   password: string;
@@ -94,6 +94,14 @@ function TwoFactorSetupDialog({
   totpURI: string | null;
   verifying: boolean;
 }) {
+  const [verificationAutoSubmitted, setVerificationAutoSubmitted] = useState(false);
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setVerificationAutoSubmitted(false);
+    }
+    onOpenChange(nextOpen);
+  };
+
   let title = "Set up two-factor authentication";
   let description = "Confirm your password to begin.";
   let panelContent: ReactNode = (
@@ -188,7 +196,13 @@ function TwoFactorSetupDialog({
           autoComplete="one-time-code"
           className="gap-2.5"
           length={OTP_LENGTH}
-          onValueChange={setCode}
+          onValueChange={(value) => {
+            setCode(value);
+            if (value.length === OTP_LENGTH && !verificationAutoSubmitted && !verifying) {
+              setVerificationAutoSubmitted(true);
+              onVerify(value);
+            }
+          }}
           size="lg"
           value={code}
         >
@@ -212,7 +226,7 @@ function TwoFactorSetupDialog({
         <Button
           disabled={code.length !== OTP_LENGTH}
           loading={verifying}
-          onClick={() => void onVerify()}
+          onClick={() => void onVerify(code)}
           size="sm"
           type="button"
         >
@@ -270,7 +284,7 @@ function TwoFactorSetupDialog({
   }
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
+    <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogPopup
         className={totpURI || backupCodes.length ? "max-w-2xl" : "max-w-md"}
         showCloseButton={!backupCodes.length}
@@ -373,7 +387,7 @@ export function TwoFactorSettings({
   });
 
   const verifyMutation = useMutation({
-    mutationFn: () => client.user.verifyTotp({ code }),
+    mutationFn: (verificationCode: string) => client.user.verifyTotp({ code: verificationCode }),
     onError: (requestError) => {
       setError(
         getErrorMessage(
@@ -593,7 +607,7 @@ export function TwoFactorSettings({
         onEnable={() => enableMutation.mutate()}
         onOpenChange={handleSetupOpenChange}
         onPasswordChange={setPassword}
-        onVerify={() => verifyMutation.mutate()}
+        onVerify={(verificationCode) => verifyMutation.mutate(verificationCode)}
         open={setupOpen}
         password={password}
         setCode={setCode}
