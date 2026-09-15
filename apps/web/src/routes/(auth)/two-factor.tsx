@@ -67,7 +67,11 @@ function TwoFactorPage() {
     setPasskeyPending(false);
 
     if (result.error) {
-      setError(result.error.message || "Passkey verification failed. Try another method.");
+      if ("code" in result.error && result.error.code === "AUTH_CANCELLED") {
+        setError("No passkey was selected. Enter your authenticator or recovery code instead.");
+      } else {
+        setError(result.error.message || "Passkey verification failed. Try another method.");
+      }
       return;
     }
 

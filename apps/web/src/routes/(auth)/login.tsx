@@ -77,6 +77,7 @@ function RouteComponent() {
   const [githubError, setGithubError] = useState<string | null>(null);
   const [githubPending, setGithubPending] = useState(false);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
+  const [passkeyNotice, setPasskeyNotice] = useState<string | null>(null);
   const [passkeyPending, setPasskeyPending] = useState(false);
 
   const transition = (nextStep: Step, nextEmail?: string) => {
@@ -130,11 +131,20 @@ function RouteComponent() {
 
   const signInWithPasskey = async () => {
     setPasskeyError(null);
+    setPasskeyNotice(null);
     setPasskeyPending(true);
 
     const result = await authClient.signIn.passkey();
     if (result.error) {
-      setPasskeyError(result.error.message || result.error.statusText || "Passkey sign in failed");
+      if ("code" in result.error && result.error.code === "AUTH_CANCELLED") {
+        setPasskeyNotice(
+          "No passkey was selected. Sign in with email or GitHub, then add a passkey from Security.",
+        );
+      } else {
+        setPasskeyError(
+          result.error.message || result.error.statusText || "Passkey sign in failed",
+        );
+      }
       setPasskeyPending(false);
       return;
     }
@@ -254,6 +264,9 @@ function RouteComponent() {
                         <p className="text-destructive text-sm" role="alert">
                           {passkeyError}
                         </p>
+                      )}
+                      {passkeyNotice && (
+                        <output className="text-muted-foreground text-sm">{passkeyNotice}</output>
                       )}
                       <Button
                         type="button"
