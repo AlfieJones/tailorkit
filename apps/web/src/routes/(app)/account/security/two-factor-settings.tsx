@@ -134,7 +134,7 @@ function TwoFactorSetupDialog({
             imageSettings={{
               excavate: true,
               height: 32,
-              src: "/brand/mark-background-light.svg",
+              src: "/brand/mark-qr.svg",
               width: 32,
             }}
             includeMargin
