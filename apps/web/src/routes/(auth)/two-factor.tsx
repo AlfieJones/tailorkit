@@ -4,6 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,
+  CardDescription,
   CardFrame,
   CardFrameFooter,
   CardHeader,
@@ -20,7 +21,7 @@ import {
   DialogPopup,
   DialogTitle,
 } from "@tailorkit/ui/components/dialog";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
+import { Field, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
 import { Logo } from "@tailorkit/ui/components/logo";
 import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/components/otp-field";
 import { Fragment, useState } from "react";
@@ -111,11 +112,12 @@ function TwoFactorPage() {
           <Card>
             <CardHeader>
               <CardTitle>Verify it’s you</CardTitle>
+              <CardDescription>Enter the current code from your authenticator app.</CardDescription>
             </CardHeader>
             <CardPanel className="flex flex-col gap-6">
               <div className="flex flex-col items-center gap-6">
                 <Field className="items-center gap-2">
-                  <FieldLabel>Authentication code</FieldLabel>
+                  <FieldLabel className="sr-only">Authentication code</FieldLabel>
                   <OTPField
                     autoComplete="one-time-code"
                     className="justify-center gap-2 max-sm:gap-1.5"
@@ -139,9 +141,6 @@ function TwoFactorPage() {
                       </Fragment>
                     ))}
                   </OTPField>
-                  <FieldDescription>
-                    Enter the current code from your authenticator app.
-                  </FieldDescription>
                   {error ? <FieldError>{error}</FieldError> : null}
                 </Field>
               </div>
@@ -215,7 +214,6 @@ function TwoFactorPage() {
                   </Fragment>
                 ))}
               </OTPField>
-              <FieldDescription>Enter the ten characters, excluding the hyphen.</FieldDescription>
               {backupCodeError ? <FieldError>{backupCodeError}</FieldError> : null}
             </Field>
           </DialogPanel>
