@@ -25,11 +25,11 @@ void initializeObservability("tailorkit-web");
 
 const noopWaitUntil = (promise: Promise<unknown>) => void promise;
 
-// Better Auth only challenges credential sign-ins by default. Intercept the
-// OAuth callback before its newly created session becomes usable and issue the
-// same short-lived challenge used by the two-factor plugin.
+// Better Auth only challenges credential sign-ins by default. Intercept direct
+// and OAuth-proxy callbacks before their newly created sessions become usable,
+// then issue the same short-lived challenge used by the two-factor plugin.
 const enforceTwoFactorAfterSocialSignIn = createAuthMiddleware(async (ctx) => {
-  if (ctx.path !== "/callback/:id") {
+  if (ctx.path !== "/callback/:id" && ctx.path !== "/oauth-proxy-callback") {
     return;
   }
 
