@@ -560,7 +560,7 @@ export function TwoFactorSettings({
                 type="button"
                 variant="outline"
               >
-                Regenerate recovery codes
+                Regenerate codes
               </Button>
               <Button
                 onClick={() => setDisableOpen(true)}
@@ -568,7 +568,7 @@ export function TwoFactorSettings({
                 type="button"
                 variant="destructive-outline"
               >
-                Disable two-factor authentication
+                Disable 2FA
               </Button>
             </>
           ) : (
