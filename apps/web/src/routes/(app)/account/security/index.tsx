@@ -281,7 +281,7 @@ function TwoFactorAuthentication({
       return;
     }
     setBackupCodesSaved(false);
-    setRegenerateOpen(false);
+    handleRegenerateOpenChange(false);
     setSetupOpen(true);
     toastManager.add({
       description: "Your previous recovery codes no longer work.",
