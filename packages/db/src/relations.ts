@@ -114,6 +114,12 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.user.id,
     }),
   },
+  twoFactor: {
+    user: r.one.user({
+      from: r.twoFactor.userId,
+      to: r.user.id,
+    }),
+  },
   user: {
     accounts: r.many.account({
       from: r.user.id,
@@ -130,6 +136,10 @@ export const relations = defineRelations(schema, (r) => ({
     sessions: r.many.session({
       from: r.user.id,
       to: r.session.userId,
+    }),
+    twoFactors: r.many.twoFactor({
+      from: r.user.id,
+      to: r.twoFactor.userId,
     }),
   },
 }));
