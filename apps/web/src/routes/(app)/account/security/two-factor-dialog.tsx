@@ -112,7 +112,7 @@ export function TwoFactorSetupDialog({
     panelContent = (
       <Frame>
         <FramePanel className="flex justify-center rounded-b-none border-b-0 p-5 sm:p-6">
-          <div className="rounded-xl border bg-white p-3">
+          <div className="bg-white p-3">
             <QRCodeSVG includeMargin size={192} value={totpURI} />
           </div>
         </FramePanel>
