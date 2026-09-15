@@ -19,6 +19,7 @@ import { twoFactor } from "better-auth/plugins/two-factor";
 import { ac, roles } from "./lib/permissions";
 import { apiKey } from "@better-auth/api-key";
 import { dash } from "@better-auth/infra";
+import { passkey } from "@better-auth/passkey";
 import { initializePublicTeamId, publicTeamIdField } from "./lib/public-team-id";
 
 void initializeObservability("tailorkit-web");
@@ -85,7 +86,7 @@ const createSecondaryStorage = (): SecondaryStorage | undefined => {
   };
 };
 
-export function createAuth() {
+function buildAuth() {
   const db = createDb();
 
   const backgroundTaskHandler = env.VERCEL ? vercelWaitUntil : noopWaitUntil;
@@ -146,6 +147,9 @@ export function createAuth() {
         : undefined,
     plugins: [
       haveIBeenPwned(),
+      passkey({
+        rpName: "TailorKit",
+      }),
       twoFactor({
         // OAuth-only accounts must create a password through the verified-email
         // recovery flow before they can enroll a second factor.
@@ -244,7 +248,11 @@ export function createAuth() {
   });
 }
 
-export const auth = createAuth();
+export function createAuth(): ReturnType<typeof buildAuth> {
+  return buildAuth();
+}
+
+export const auth: ReturnType<typeof buildAuth> = createAuth();
 
 export type Session = typeof auth.$Infer.Session.session;
 export type User = typeof auth.$Infer.Session.user;
