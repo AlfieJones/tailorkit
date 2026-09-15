@@ -174,28 +174,13 @@ function RouteComponent() {
                   }}
                 >
                   <CardPanel className="flex flex-col gap-4">
-                    <emailForm.AppField name="email">
-                      {(field) => (
-                        <field.TextField
-                          label="Email"
-                          type="email"
-                          placeholder="you@example.com"
-                          autoFocus
-                        />
-                      )}
-                    </emailForm.AppField>
-
-                    <emailForm.AppForm>
-                      <emailForm.SubmitButton className="w-full">Continue</emailForm.SubmitButton>
-                    </emailForm.AppForm>
-
-                    <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                    <div className="order-2 after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                       <span className="bg-card text-muted-foreground relative z-10 px-2 text-xs">
                         OR
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="order-1 flex flex-col gap-2">
                       {(githubError || error_description || error) && (
                         <p className="text-destructive text-sm" role="alert">
                           {githubError || error_description || error}
@@ -220,6 +205,27 @@ function RouteComponent() {
                         <GitHubIcon />
                         Continue with GitHub
                       </Button>
+                    </div>
+
+                    <div className="order-3">
+                      <emailForm.AppField name="email">
+                        {(field) => (
+                          <field.TextField
+                            label="Email"
+                            type="email"
+                            placeholder="you@example.com"
+                            autoFocus
+                          />
+                        )}
+                      </emailForm.AppField>
+                    </div>
+
+                    <div className="order-4">
+                      <emailForm.AppForm>
+                        <emailForm.SubmitButton className="w-full">
+                          Continue with email
+                        </emailForm.SubmitButton>
+                      </emailForm.AppForm>
                     </div>
                   </CardPanel>
                 </form>
