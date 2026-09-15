@@ -63,7 +63,10 @@ export function NumberField({ onBlur, onChange, ...props }: NumberFieldProps) {
         field.handleBlur();
         onBlur?.(event);
       }}
-      onChange={(value: number | null, eventDetails) => {
+      onChange={(
+        value: number | null,
+        eventDetails: Parameters<NonNullable<BaseNumberFieldProps["onChange"]>>[1],
+      ) => {
         field.handleChange(value);
         onChange?.(value, eventDetails);
       }}

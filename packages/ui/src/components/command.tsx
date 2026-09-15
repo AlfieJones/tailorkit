@@ -184,11 +184,7 @@ export function CommandGroupLabel({
   );
 }
 
-export function CommandCollection({
-  ...props
-}: React.ComponentProps<typeof AutocompleteCollection>): React.ReactElement {
-  return <AutocompleteCollection data-slot="command-collection" {...props} />;
-}
+export const CommandCollection = AutocompleteCollection;
 
 export function CommandItem({
   className,
