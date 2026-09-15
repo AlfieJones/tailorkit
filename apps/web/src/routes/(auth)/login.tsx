@@ -274,7 +274,7 @@ function RouteComponent() {
                         className="w-full"
                         loading={passkeyPending}
                         onClick={() => void signInWithPasskey()}
-                        size="xl"
+                        size="lg"
                       >
                         <KeyRoundIcon />
                         Continue with passkey
@@ -282,7 +282,7 @@ function RouteComponent() {
                       <Tooltip>
                         <TooltipTrigger
                           render={
-                            <Button size="xl" variant="outline" className="w-full" disabled />
+                            <Button size="lg" variant="outline" className="w-full" disabled />
                           }
                         >
                           <GoogleIcon />
@@ -296,7 +296,7 @@ function RouteComponent() {
                         className="w-full"
                         loading={githubPending}
                         onClick={() => void signInWithGitHub()}
-                        size="xl"
+                        size="lg"
                       >
                         <GitHubIcon />
                         Continue with GitHub
@@ -319,7 +319,7 @@ function RouteComponent() {
 
                     <div className="order-4">
                       <emailForm.AppForm>
-                        <emailForm.SubmitButton className="w-full" size="xl">
+                        <emailForm.SubmitButton className="w-full" size="lg">
                           Continue with email
                         </emailForm.SubmitButton>
                       </emailForm.AppForm>
@@ -370,7 +370,7 @@ function RouteComponent() {
 
                   <passwordForm.AppForm>
                     <CardFooter className="pt-4">
-                      <passwordForm.SubmitButton className="w-full" size="xl">
+                      <passwordForm.SubmitButton className="w-full" size="lg">
                         Sign In
                       </passwordForm.SubmitButton>
                     </CardFooter>
