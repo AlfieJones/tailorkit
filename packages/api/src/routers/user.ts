@@ -2,6 +2,7 @@ import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
 import { account } from "@tailorkit/db/schema/auth";
 import { env } from "@tailorkit/env/server";
+import { getKV } from "@tailorkit/kv";
 import { and, eq } from "drizzle-orm";
 import { Octokit } from "octokit";
 import { publicProcedure, protectedProcedure, requireOrg } from "../procedures";
@@ -11,20 +12,127 @@ import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
 const MANUAL_ORG_ONBOARDING_MESSAGE =
   "We're currently onboarding users manually. Contact us to create an organisation for your account.";
 
-async function getGitHubUsername(accessToken: string | null) {
-  if (!accessToken) {
-    return null;
+const GITHUB_USERNAME_CACHE_PREFIX = "tailorkit:github-username:v1";
+const GITHUB_USERNAME_CACHE_TTL_SECONDS = 24 * 60 * 60;
+const GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS = 60;
+const GITHUB_USERNAME_REQUEST_TIMEOUT_MS = 5000;
+
+interface GitHubUsernameCacheEntry {
+  expiresAt: number;
+  username: string | null;
+}
+
+const githubUsernameCache = new Map<string, GitHubUsernameCacheEntry>();
+const githubUsernameLookups = new Map<string, Promise<string | null>>();
+
+function getGitHubUsernameCacheKey(accountId: string) {
+  return `${GITHUB_USERNAME_CACHE_PREFIX}:${accountId}`;
+}
+
+function rememberGitHubUsername(accountId: string, username: string | null) {
+  const ttl = username ? GITHUB_USERNAME_CACHE_TTL_SECONDS : GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS;
+  const key = getGitHubUsernameCacheKey(accountId);
+  githubUsernameCache.set(key, { expiresAt: Date.now() + ttl * 1000, username });
+
+  try {
+    const kv = getKV();
+    if (kv) {
+      const encoded = username === null ? "missing" : `username:${username}`;
+      void kv.set(key, encoded, { ttl }).catch(() => {
+        // A cache outage should not make account management unavailable.
+      });
+    }
+  } catch {
+    // A cache outage should not make account management unavailable.
+  }
+}
+
+async function readCachedGitHubUsername(accountId: string): Promise<string | null | undefined> {
+  const key = getGitHubUsernameCacheKey(accountId);
+  const memoryEntry = githubUsernameCache.get(key);
+  if (memoryEntry) {
+    if (memoryEntry.expiresAt > Date.now()) {
+      return memoryEntry.username;
+    }
+    githubUsernameCache.delete(key);
+  }
+
+  let kv: ReturnType<typeof getKV>;
+  try {
+    kv = getKV();
+  } catch {
+    return undefined;
+  }
+
+  if (!kv) {
+    return undefined;
   }
 
   try {
-    const octokit = new Octokit({ auth: accessToken });
-    const { data: profile } = await octokit.rest.users.getAuthenticated();
-    return profile.login;
+    const encoded = await kv.get(key);
+    if (encoded === "missing") {
+      githubUsernameCache.set(key, {
+        expiresAt: Date.now() + GITHUB_USERNAME_MISS_CACHE_TTL_SECONDS * 1000,
+        username: null,
+      });
+      return null;
+    }
+
+    if (encoded?.startsWith("username:") && encoded.length > "username:".length) {
+      const username = encoded.slice("username:".length);
+      githubUsernameCache.set(key, {
+        expiresAt: Date.now() + GITHUB_USERNAME_CACHE_TTL_SECONDS * 1000,
+        username,
+      });
+      return username;
+    }
   } catch {
-    // Account management should remain available if GitHub is temporarily unavailable.
+    // A cache outage should not make account management unavailable.
   }
 
-  return null;
+  return undefined;
+}
+
+async function getGitHubUsername(accountId: string, getAccessToken: () => Promise<string | null>) {
+  const key = getGitHubUsernameCacheKey(accountId);
+  const existingLookup = githubUsernameLookups.get(key);
+  if (existingLookup) {
+    return existingLookup;
+  }
+
+  const lookup = (async () => {
+    const cachedUsername = await readCachedGitHubUsername(accountId);
+    if (cachedUsername !== undefined) {
+      return cachedUsername;
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      rememberGitHubUsername(accountId, null);
+      return null;
+    }
+
+    try {
+      const octokit = new Octokit({
+        auth: accessToken,
+        request: { signal: AbortSignal.timeout(GITHUB_USERNAME_REQUEST_TIMEOUT_MS) },
+      });
+      const { data: profile } = await octokit.rest.users.getAuthenticated();
+      rememberGitHubUsername(accountId, profile.login);
+      return profile.login;
+    } catch {
+      // Account management should remain available if GitHub is temporarily unavailable.
+      rememberGitHubUsername(accountId, null);
+      return null;
+    }
+  })();
+
+  githubUsernameLookups.set(key, lookup);
+  try {
+    return await lookup;
+  } finally {
+    githubUsernameLookups.delete(key);
+  }
 }
 
 export const userRouter = {
@@ -36,18 +144,19 @@ export const userRouter = {
   listAccounts: protectedProcedure.handler(async ({ context }) => {
     const accounts = await auth.api.listUserAccounts({ headers: context.headers });
     const githubAccount = accounts.find((account) => account.providerId === "github");
-    let githubAccessToken: string | null = null;
-
-    if (githubAccount) {
-      const githubCredentials = await db
-        .select({ accessToken: account.accessToken })
-        .from(account)
-        .where(and(eq(account.userId, context.user.id), eq(account.providerId, "github")))
-        .limit(1);
-      githubAccessToken = githubCredentials[0]?.accessToken ?? null;
-    }
-
-    const githubUsername = await getGitHubUsername(githubAccessToken);
+    const githubUsername = githubAccount
+      ? await getGitHubUsername(githubAccount.id, async () => {
+          try {
+            const tokens = await auth.api.getAccessToken({
+              body: { accountId: githubAccount.id },
+              headers: context.headers,
+            });
+            return tokens.accessToken;
+          } catch {
+            return null;
+          }
+        })
+      : null;
 
     return accounts.map((account) => ({
       ...account,

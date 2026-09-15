@@ -104,12 +104,16 @@ function formatLastActive(value: Date | string, locale: string, timeZone: string
   }).format(new Date(value));
 }
 
-function formatPasskeyCreated(value: Date | string | null | undefined, locale: string) {
+function formatPasskeyCreated(
+  value: Date | string | null | undefined,
+  locale: string,
+  timeZone: string,
+) {
   if (!value) {
     return null;
   }
 
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone }).format(new Date(value));
 }
 
 function ActiveSessions({ locale, timeZone }: { locale: string; timeZone: string }) {
@@ -646,7 +650,11 @@ function SecurityPage() {
                         <CollapsiblePanel>
                           <div className="border-t px-4 pl-16">
                             {passkeys.map((passkey) => {
-                              const createdAt = formatPasskeyCreated(passkey.createdAt, locale);
+                              const createdAt = formatPasskeyCreated(
+                                passkey.createdAt,
+                                locale,
+                                timeZone,
+                              );
 
                               return (
                                 <div

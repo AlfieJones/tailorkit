@@ -10,6 +10,9 @@ const testState = vi.hoisted(() => ({
   env: {
     VERCEL_ENV: undefined as "production" | "preview" | "development" | undefined,
   },
+  github: {
+    getAuthenticated: vi.fn(),
+  },
 }));
 
 vi.mock("@tailorkit/db", () => ({
@@ -25,10 +28,24 @@ vi.mock("@tailorkit/auth", () => ({
     api: {
       acceptInvitation: vi.fn(),
       createOrganization: vi.fn(),
+      getAccessToken: vi.fn(),
       hasPermission: vi.fn(),
+      listUserAccounts: vi.fn(),
       rejectInvitation: vi.fn(),
     },
   },
+}));
+
+vi.mock("octokit", () => ({
+  Octokit: vi.fn(
+    class OctokitMock {
+      rest = {
+        users: {
+          getAuthenticated: testState.github.getAuthenticated,
+        },
+      };
+    },
+  ),
 }));
 
 vi.mock("@tailorkit/env/server", () => ({
@@ -85,6 +102,9 @@ describe("userRouter", () => {
     testState.db = db;
     testState.env.VERCEL_ENV = undefined;
     vi.mocked(auth.api.createOrganization).mockReset();
+    vi.mocked(auth.api.getAccessToken).mockReset();
+    vi.mocked(auth.api.listUserAccounts).mockReset();
+    testState.github.getAuthenticated.mockReset();
 
     await db.insert(user).values([
       {
@@ -170,6 +190,41 @@ describe("userRouter", () => {
     await expect(call(userRouter.getSession, undefined, { context })).resolves.toEqual({
       session: context.session,
       user: context.user,
+    });
+  });
+
+  it("uses Better Auth's decrypted GitHub token and caches the username lookup", async () => {
+    const githubAccountId = "66666666-6666-4666-8666-666666666666";
+    vi.mocked(auth.api.listUserAccounts).mockResolvedValue([
+      {
+        accountId: "12345",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        id: githubAccountId,
+        providerId: "github",
+        scopes: [],
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        userId,
+      },
+    ]);
+    vi.mocked(auth.api.getAccessToken).mockResolvedValue({
+      accessToken: "decrypted-github-token",
+      accessTokenExpiresAt: undefined,
+      idToken: undefined,
+      scopes: [],
+    });
+    testState.github.getAuthenticated.mockResolvedValue({ data: { login: "octocat" } });
+
+    const context = createContext();
+    const firstResult = await call(userRouter.listAccounts, undefined, { context });
+    const secondResult = await call(userRouter.listAccounts, undefined, { context });
+
+    expect(firstResult[0]).toEqual(expect.objectContaining({ githubUsername: "octocat" }));
+    expect(secondResult[0]).toEqual(expect.objectContaining({ githubUsername: "octocat" }));
+    expect(auth.api.getAccessToken).toHaveBeenCalledTimes(1);
+    expect(testState.github.getAuthenticated).toHaveBeenCalledTimes(1);
+    expect(auth.api.getAccessToken).toHaveBeenCalledWith({
+      body: { accountId: githubAccountId },
+      headers: context.headers,
     });
   });
 

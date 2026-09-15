@@ -101,6 +101,14 @@ function TwoFactorSetupDialog({
     }
     onOpenChange(nextOpen);
   };
+  const handleBackToQr = () => {
+    setVerificationAutoSubmitted(false);
+    onBackToQr();
+  };
+  const handleContinueToVerification = () => {
+    setVerificationAutoSubmitted(false);
+    onContinueToVerification();
+  };
 
   let title = "Set up two-factor authentication";
   let description = "Confirm your password to begin.";
@@ -179,7 +187,7 @@ function TwoFactorSetupDialog({
         <DialogClose render={<Button size="sm" type="button" variant="ghost" />}>
           Cancel
         </DialogClose>
-        <Button onClick={onContinueToVerification} size="sm" type="button">
+        <Button onClick={handleContinueToVerification} size="sm" type="button">
           Continue
         </Button>
       </>
@@ -220,7 +228,7 @@ function TwoFactorSetupDialog({
     );
     action = (
       <>
-        <Button onClick={onBackToQr} size="sm" type="button" variant="outline">
+        <Button onClick={handleBackToQr} size="sm" type="button" variant="outline">
           Back
         </Button>
         <Button
