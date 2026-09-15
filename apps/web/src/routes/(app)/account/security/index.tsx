@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, createFileRoute, useSearch } from "@tanstack/react-router";
 import { Badge } from "@tailorkit/ui/components/badge";
 import { Button } from "@tailorkit/ui/components/button";
 import {
@@ -87,7 +87,6 @@ function formatLastActive(value: Date | string, locale: string, timeZone: string
 }
 
 function ActiveSessions({ locale, timeZone }: { locale: string; timeZone: string }) {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: sessionData } = useQuery(orpc.user.getSession.queryOptions());
   const currentSession = sessionData?.session ?? null;
@@ -176,22 +175,27 @@ function ActiveSessions({ locale, timeZone }: { locale: string; timeZone: string
             </div>
           </div>
 
-          <Button
-            className="self-start sm:self-center"
-            loading={revokeMutation.isPending && revokeMutation.variables === session.token}
-            onClick={() => {
-              if (isCurrent) {
-                navigate({ to: "/logout" });
-                return;
-              }
-              revokeMutation.mutate(session.token);
-            }}
-            size="sm"
-            type="button"
-            variant="destructive-outline"
-          >
-            Sign out
-          </Button>
+          {isCurrent ? (
+            <Button
+              className="self-start sm:self-center"
+              render={<Link to="/logout" />}
+              size="sm"
+              variant="destructive-outline"
+            >
+              Sign out
+            </Button>
+          ) : (
+            <Button
+              className="self-start sm:self-center"
+              loading={revokeMutation.isPending && revokeMutation.variables === session.token}
+              onClick={() => revokeMutation.mutate(session.token)}
+              size="sm"
+              type="button"
+              variant="destructive-outline"
+            >
+              Sign out
+            </Button>
+          )}
         </div>
       );
     });
