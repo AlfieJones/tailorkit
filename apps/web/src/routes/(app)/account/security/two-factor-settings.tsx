@@ -32,7 +32,7 @@ import { CopyIcon, DownloadIcon } from "lucide-react";
 import { Fragment, useState } from "react";
 import type { ReactNode } from "react";
 
-import { client } from "#lib/orpc";
+import { client, orpc } from "#lib/orpc";
 
 const OTP_LENGTH = 6;
 const OTP_SLOT_KEYS = Array.from({ length: OTP_LENGTH }, (_, index) => `slot-${index}`);
@@ -395,7 +395,7 @@ export function TwoFactorSettings({
         title: "Two-factor authentication enabled",
         type: "success",
       });
-      await queryClient.invalidateQueries({ queryKey: ["auth", "current-user"] });
+      await queryClient.invalidateQueries(orpc.user.getSession.queryOptions());
     },
   });
 
@@ -412,7 +412,7 @@ export function TwoFactorSettings({
         title: "Two-factor authentication disabled",
         type: "success",
       });
-      await queryClient.invalidateQueries({ queryKey: ["auth", "current-user"] });
+      await queryClient.invalidateQueries(orpc.user.getSession.queryOptions());
       setDisableOpen(false);
     },
   });

@@ -23,18 +23,24 @@ import { z } from "zod";
 
 import { AccountLayout } from "#components/account-layout";
 import { PageLayout } from "#components/page-layout";
-import { client } from "#lib/orpc";
+import { client, orpc } from "#lib/orpc";
 import { TwoFactorSettings } from "./two-factor-settings";
 
 export const Route = createFileRoute("/(app)/account/security/")({
   component: SecurityPage,
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(context.orpc.user.getSession.queryOptions()),
+      context.queryClient.ensureQueryData(context.orpc.user.listAccounts.queryOptions()),
+      context.queryClient.ensureQueryData(context.orpc.user.listSessions.queryOptions()),
+    ]);
+  },
   validateSearch: z.object({
     error: z.string().optional(),
     error_description: z.string().optional(),
   }),
 });
 
-const activeSessionsQueryKey = ["auth", "active-sessions"] as const;
 function getDeviceDetails(userAgent?: string | null) {
   if (!userAgent) {
     return { browser: "Unknown browser", isMobile: false, os: "Unknown device" };
@@ -79,23 +85,9 @@ function formatLastActive(value: Date | string) {
 function ActiveSessions() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: currentSession } = useQuery({
-    enabled: typeof window !== "undefined",
-    queryFn: async () => {
-      const result = await client.user.getSession();
-      return result.session ?? null;
-    },
-    queryKey: ["auth", "current-session"],
-  });
-  const {
-    data: sessions,
-    error,
-    isPending,
-  } = useQuery({
-    enabled: typeof window !== "undefined",
-    queryFn: () => client.user.listSessions(),
-    queryKey: activeSessionsQueryKey,
-  });
+  const { data: sessionData } = useQuery(orpc.user.getSession.queryOptions());
+  const currentSession = sessionData?.session ?? null;
+  const { data: sessions, error, isPending } = useQuery(orpc.user.listSessions.queryOptions());
 
   const revokeMutation = useMutation({
     mutationFn: (token: string) => client.user.revokeSession({ token }),
@@ -107,7 +99,7 @@ function ActiveSessions() {
       });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: activeSessionsQueryKey });
+      await queryClient.invalidateQueries(orpc.user.listSessions.queryOptions());
       toastManager.add({
         description: "The session has been signed out.",
         title: "Session ended",
@@ -126,7 +118,7 @@ function ActiveSessions() {
       });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: activeSessionsQueryKey });
+      await queryClient.invalidateQueries(orpc.user.listSessions.queryOptions());
       toastManager.add({
         description: "All other devices have been signed out.",
         title: "Other sessions ended",
@@ -276,17 +268,8 @@ function SecurityPage() {
   const queryClient = useQueryClient();
   const [linkPending, setLinkPending] = useState(false);
   const [unlinkPending, setUnlinkPending] = useState(false);
-  const accountsQuery = useQuery({
-    queryKey: ["auth", "accounts"],
-    queryFn: () => client.user.listAccounts(),
-  });
-  const sessionQuery = useQuery({
-    queryKey: ["auth", "current-user"],
-    queryFn: async () => {
-      const result = await client.user.getSession();
-      return result.user ?? null;
-    },
-  });
+  const accountsQuery = useQuery(orpc.user.listAccounts.queryOptions());
+  const sessionQuery = useQuery(orpc.user.getSession.queryOptions());
   const githubAccount = accountsQuery.data?.find((account) => account.providerId === "github");
   const hasCredentialAccount = accountsQuery.data?.some(
     (account) => account.providerId === "credential",
@@ -334,7 +317,7 @@ function SecurityPage() {
       return;
     }
 
-    await queryClient.invalidateQueries({ queryKey: ["auth", "accounts"] });
+    await queryClient.invalidateQueries(orpc.user.listAccounts.queryOptions());
     toastManager.add({
       description: "GitHub has been unlinked from your account.",
       title: "Account unlinked",
@@ -390,7 +373,7 @@ function SecurityPage() {
             hasCredentialAccount={hasCredentialAccount === true}
             isLoading={accountsQuery.isPending || sessionQuery.isPending}
             sessionError={accountsQuery.error ?? sessionQuery.error ?? null}
-            sessionUser={sessionQuery.data}
+            sessionUser={sessionQuery.data?.user}
           />
 
           <CardFrame className="w-full">
