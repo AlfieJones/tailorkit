@@ -1,7 +1,7 @@
 import { createDb } from "@tailorkit/db";
 import * as schema from "@tailorkit/db/schema/auth";
 import { sendBetterAuthOtpEmail, sendOrganizationInvitationEmail } from "@tailorkit/email";
-import { env, getBaseUrl, getProductionUrl, getTrustedOrigins } from "@tailorkit/env/server";
+import { env, getAuthBaseUrl, getProductionUrl, getTrustedOrigins } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
 import { initializeObservability } from "@tailorkit/observability";
 import type { SecondaryStorage } from "better-auth";
@@ -67,7 +67,7 @@ const enforceTwoFactorAfterSocialSignIn = createAuthMiddleware(async (ctx) => {
     twoFactorCookie.attributes,
   );
 
-  return ctx.redirect(new URL("/two-factor", getBaseUrl()).toString());
+  return ctx.redirect(new URL("/two-factor", ctx.context.baseURL).toString());
 });
 
 const createSecondaryStorage = (): SecondaryStorage | undefined => {
@@ -111,7 +111,7 @@ function buildAuth() {
         ipAddressHeaders: ["x-vercel-forwarded-for", "x-forwarded-for"],
       },
     },
-    baseURL: getBaseUrl(),
+    baseURL: getAuthBaseUrl(),
     database: drizzleAdapter(db, {
       provider: "pg",
       schema,
