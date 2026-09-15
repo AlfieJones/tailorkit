@@ -25,9 +25,7 @@ async function getGitHubUsername(accountId: string, getAccessToken: () => Promis
   }
 
   const accessToken = await getAccessToken();
-  if (!accessToken) {
-    return null;
-  }
+  if (!accessToken) return null;
 
   try {
     const octokit = new Octokit({
