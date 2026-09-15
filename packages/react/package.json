@@ -36,7 +36,7 @@
     "@testing-library/react": "^16.3.3",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
-    "happy-dom": "^20.14.3",
+    "happy-dom": "^20.14.5",
     "react": "catalog:",
     "react-dom": "catalog:",
     "tsup": "^8.5.1",

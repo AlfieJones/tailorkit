@@ -14,7 +14,7 @@ import {
 import { Logo } from "@tailorkit/ui/components/logo";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
 import { useAppForm } from "@tailorkit/ui/form";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, KeyRoundIcon } from "lucide-react";
 import { clsx } from "clsx";
 import { useState } from "react";
 import { z } from "zod";
@@ -76,6 +76,8 @@ function RouteComponent() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [githubError, setGithubError] = useState<string | null>(null);
   const [githubPending, setGithubPending] = useState(false);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+  const [passkeyPending, setPasskeyPending] = useState(false);
 
   const transition = (nextStep: Step, nextEmail?: string) => {
     setVisible(false);
@@ -104,9 +106,16 @@ function RouteComponent() {
 
   const signInWithGitHub = async () => {
     setGithubError(null);
+    setPasskeyError(null);
     setGithubPending(true);
 
     try {
+      const returnPath = getSameOriginPath(return_to, window.location.origin);
+      if (returnPath) {
+        window.sessionStorage.setItem("tailorkit.two-factor-return-to", returnPath);
+      } else {
+        window.sessionStorage.removeItem("tailorkit.two-factor-return-to");
+      }
       const callbackURL =
         getSameOriginUrl(return_to, window.location.origin) ?? window.location.origin;
       const result = await authClient.signIn.social({
@@ -125,10 +134,38 @@ function RouteComponent() {
     }
   };
 
+  const signInWithPasskey = async () => {
+    setPasskeyError(null);
+    setGithubError(null);
+    setPasskeyPending(true);
+
+    try {
+      const result = await authClient.signIn.passkey();
+      if (result.error) {
+        setPasskeyError(result.error.message || "Passkey sign in failed");
+        setPasskeyPending(false);
+        return;
+      }
+
+      await queryClient.invalidateQueries();
+      const returnPath = getSameOriginPath(return_to, window.location.origin);
+      window.location.href = returnPath ?? "/";
+    } catch {
+      setPasskeyError("Passkey sign in failed");
+      setPasskeyPending(false);
+    }
+  };
+
   const passwordForm = useAppForm({
     defaultValues: { password: "" },
     onSubmit: async ({ value }) => {
       setPasswordError(null);
+      const returnPath = getSameOriginPath(return_to, window.location.origin);
+      if (returnPath) {
+        window.sessionStorage.setItem("tailorkit.two-factor-return-to", returnPath);
+      } else {
+        window.sessionStorage.removeItem("tailorkit.two-factor-return-to");
+      }
       await authClient.signIn.email(
         { email, password: value.password },
         {
@@ -139,7 +176,12 @@ function RouteComponent() {
             }
             setPasswordError(error.error.message || error.error.statusText || "Sign in failed");
           },
-          onSuccess: async () => {
+          onSuccess: async (context) => {
+            if (context.data?.twoFactorRedirect) {
+              return;
+            }
+
+            window.sessionStorage.removeItem("tailorkit.two-factor-return-to");
             await queryClient.invalidateQueries();
             const returnPath = getSameOriginPath(return_to, window.location.origin);
             if (returnPath) {
@@ -208,11 +250,21 @@ function RouteComponent() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      {(githubError || error_description || error) && (
+                      {(passkeyError || githubError || error_description || error) && (
                         <p className="text-destructive text-sm" role="alert">
-                          {githubError || error_description || error}
+                          {passkeyError || githubError || error_description || error}
                         </p>
                       )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        loading={passkeyPending}
+                        onClick={() => void signInWithPasskey()}
+                      >
+                        <KeyRoundIcon aria-hidden="true" className="size-4 shrink-0" />
+                        Continue with a passkey
+                      </Button>
                       <Tooltip>
                         <TooltipTrigger
                           render={<Button variant="outline" className="w-full" disabled />}

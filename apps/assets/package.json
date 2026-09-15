@@ -17,6 +17,6 @@
   "devDependencies": {
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "wrangler": "4.131.0"
+    "wrangler": "4.131.1"
   }
 }

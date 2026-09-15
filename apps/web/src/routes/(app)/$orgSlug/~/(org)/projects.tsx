@@ -218,7 +218,7 @@ function CreateProjectDialog({
           </DialogPanel>
 
           <DialogFooter>
-            <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
+            <DialogClose render={<Button size="sm" type="button" variant="ghost" />}>
               Cancel
             </DialogClose>
             <form.AppForm>
