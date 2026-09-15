@@ -20,19 +20,15 @@ const GITHUB_USERNAME_REQUEST_TIMEOUT_MS = 5000;
 async function getGitHubUsername(accountId: string, getAccessToken: () => Promise<string | null>) {
   const key = `${GITHUB_USERNAME_CACHE_PREFIX}:${accountId}`;
   let kv: ReturnType<typeof getKV> = null;
-  let cachedValue: string | null | undefined;
 
   try {
     kv = getKV();
-    cachedValue = kv
+    const cachedUsername = kv
       ? await kv.get(key, { timeout: GITHUB_USERNAME_CACHE_READ_TIMEOUT_MS })
       : undefined;
+    if (cachedUsername) return cachedUsername;
   } catch {
     // A cache outage should not make account management unavailable.
-  }
-
-  if (cachedValue) {
-    return cachedValue;
   }
 
   const accessToken = await getAccessToken();
