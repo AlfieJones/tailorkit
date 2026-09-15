@@ -485,7 +485,7 @@ export function TwoFactorSettings({
     link.download = "recovery-codes.txt";
     link.href = downloadURL;
     link.click();
-    URL.revokeObjectURL(downloadURL);
+    setTimeout(() => URL.revokeObjectURL(downloadURL), 0);
     toastManager.add({ title: "Recovery codes downloaded", type: "success" });
   };
 
