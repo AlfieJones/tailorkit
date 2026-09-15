@@ -206,7 +206,7 @@ function ActiveSessions({ locale, timeZone }: { locale: string; timeZone: string
               type="button"
               variant="destructive-outline"
             >
-              Sign out all other sessions
+              Sign out others
             </Button>
           </CardTitle>
           <CardDescription>Manage the devices currently signed in to your account.</CardDescription>
