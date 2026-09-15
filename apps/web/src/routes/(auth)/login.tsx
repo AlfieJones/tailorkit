@@ -107,6 +107,10 @@ function RouteComponent() {
     setGithubPending(true);
 
     try {
+      const returnPath = getSameOriginPath(return_to, window.location.origin);
+      if (returnPath) {
+        window.sessionStorage.setItem("tailorkit.two-factor-return-to", returnPath);
+      }
       const callbackURL =
         getSameOriginUrl(return_to, window.location.origin) ?? window.location.origin;
       const result = await authClient.signIn.social({
@@ -129,6 +133,10 @@ function RouteComponent() {
     defaultValues: { password: "" },
     onSubmit: async ({ value }) => {
       setPasswordError(null);
+      const returnPath = getSameOriginPath(return_to, window.location.origin);
+      if (returnPath) {
+        window.sessionStorage.setItem("tailorkit.two-factor-return-to", returnPath);
+      }
       await authClient.signIn.email(
         { email, password: value.password },
         {
@@ -139,7 +147,12 @@ function RouteComponent() {
             }
             setPasswordError(error.error.message || error.error.statusText || "Sign in failed");
           },
-          onSuccess: async () => {
+          onSuccess: async (context) => {
+            if (context.data?.twoFactorRedirect) {
+              return;
+            }
+
+            window.sessionStorage.removeItem("tailorkit.two-factor-return-to");
             await queryClient.invalidateQueries();
             const returnPath = getSameOriginPath(return_to, window.location.origin);
             if (returnPath) {
