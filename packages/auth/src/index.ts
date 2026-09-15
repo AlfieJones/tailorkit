@@ -25,54 +25,49 @@ void initializeObservability("tailorkit-web");
 
 const noopWaitUntil = (promise: Promise<unknown>) => void promise;
 
-// Better Auth only challenges credential sign-ins by default. Apply the same
-// TOTP challenge to a completed OAuth callback before its session is usable.
-const socialTwoFactor = {
-  hooks: {
-    after: [
-      {
-        matcher: (context: { path?: string }) => context.path?.startsWith("/callback/") ?? false,
-        handler: createAuthMiddleware(async (ctx) => {
-          const newSession = ctx.context.newSession;
-          const user = newSession?.user as { id: string; twoFactorEnabled?: boolean } | undefined;
+// Better Auth only challenges credential sign-ins by default. Intercept direct
+// and OAuth-proxy callbacks before their newly created sessions become usable,
+// then issue the same short-lived challenge used by the two-factor plugin.
+const enforceTwoFactorAfterSocialSignIn = createAuthMiddleware(async (ctx) => {
+  if (ctx.path !== "/callback/:id" && ctx.path !== "/oauth-proxy-callback") {
+    return;
+  }
 
-          if (!newSession || !user?.twoFactorEnabled) {
-            return;
-          }
+  const newSession = ctx.context.newSession;
+  const user = newSession?.user as { id: string; twoFactorEnabled?: boolean } | undefined;
 
-          deleteSessionCookie(ctx, true);
-          await ctx.context.internalAdapter.deleteSession(newSession.session.token);
-          ctx.context.setNewSession(null);
+  if (!newSession || !user?.twoFactorEnabled) {
+    return;
+  }
 
-          const maxAge = 600;
-          const twoFactorCookie = ctx.context.createAuthCookie("two_factor", { maxAge });
-          const identifier = `2fa-${crypto.randomUUID()}`;
-          const expiresAt = new Date(Date.now() + maxAge * 1000);
+  deleteSessionCookie(ctx, true);
+  await ctx.context.internalAdapter.deleteSession(newSession.session.token);
+  ctx.context.setNewSession(null);
 
-          await ctx.context.internalAdapter.createVerificationValue({
-            expiresAt,
-            identifier,
-            value: user.id,
-          });
-          await ctx.context.internalAdapter.createVerificationValue({
-            expiresAt,
-            identifier: `2fa-attempts-${identifier}`,
-            value: "0",
-          });
-          await ctx.setSignedCookie(
-            twoFactorCookie.name,
-            identifier,
-            ctx.context.secret,
-            twoFactorCookie.attributes,
-          );
+  const maxAge = 600;
+  const twoFactorCookie = ctx.context.createAuthCookie("two_factor", { maxAge });
+  const identifier = `2fa-${crypto.randomUUID()}`;
+  const expiresAt = new Date(Date.now() + maxAge * 1000);
 
-          return ctx.redirect(new URL("/two-factor", getBaseUrl()).toString());
-        }),
-      },
-    ],
-  },
-  id: "social-two-factor",
-};
+  await ctx.context.internalAdapter.createVerificationValue({
+    expiresAt,
+    identifier,
+    value: user.id,
+  });
+  await ctx.context.internalAdapter.createVerificationValue({
+    expiresAt,
+    identifier: `2fa-attempts-${identifier}`,
+    value: "0",
+  });
+  await ctx.setSignedCookie(
+    twoFactorCookie.name,
+    identifier,
+    ctx.context.secret,
+    twoFactorCookie.attributes,
+  );
+
+  return ctx.redirect(new URL("/two-factor", getBaseUrl()).toString());
+});
 
 const createSecondaryStorage = (): SecondaryStorage | undefined => {
   const kv = getKV();
@@ -130,6 +125,14 @@ export function createAuth() {
     },
     emailVerification: {
       sendOnSignUp: false,
+    },
+    hooks: {
+      after: enforceTwoFactorAfterSocialSignIn,
+    },
+    onAPIError: {
+      // Keep OAuth failures in the application instead of Better Auth's
+      // development-oriented default error page.
+      errorURL: "/auth/error",
     },
     socialProviders:
       env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
@@ -224,7 +227,6 @@ export function createAuth() {
             }),
           ]
         : []),
-      socialTwoFactor,
       tanstackStartCookies(),
     ],
     secret: env.AUTH_SECRET,
