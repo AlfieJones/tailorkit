@@ -131,6 +131,11 @@ export function createAuth() {
     emailVerification: {
       sendOnSignUp: false,
     },
+    onAPIError: {
+      // Keep OAuth failures in the application instead of Better Auth's
+      // development-oriented default error page.
+      errorURL: "/auth/error",
+    },
     socialProviders:
       env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
         ? {
