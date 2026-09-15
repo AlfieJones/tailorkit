@@ -21,11 +21,6 @@ async function getGitHubUsername(accountId: string, getAccessToken: () => Promis
   const key = `${GITHUB_USERNAME_CACHE_PREFIX}:${accountId}`;
   let kv: ReturnType<typeof getKV> = null;
   let cachedValue: string | null | undefined;
-  const cacheUsername = (username: string) => {
-    if (!kv) return;
-
-    void kv.set(key, username, { ttl: GITHUB_USERNAME_CACHE_TTL_SECONDS }).catch(() => {});
-  };
 
   try {
     kv = getKV();
@@ -51,7 +46,7 @@ async function getGitHubUsername(accountId: string, getAccessToken: () => Promis
       request: { signal: AbortSignal.timeout(GITHUB_USERNAME_REQUEST_TIMEOUT_MS) },
     });
     const { data: profile } = await octokit.rest.users.getAuthenticated();
-    cacheUsername(profile.login);
+    void kv?.set(key, profile.login, { ttl: GITHUB_USERNAME_CACHE_TTL_SECONDS }).catch(() => {});
     return profile.login;
   } catch {
     // Account management should remain available if GitHub is temporarily unavailable.
