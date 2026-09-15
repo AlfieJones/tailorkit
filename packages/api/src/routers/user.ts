@@ -1,6 +1,8 @@
 import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
+import { account } from "@tailorkit/db/schema/auth";
 import { env } from "@tailorkit/env/server";
+import { and, eq } from "drizzle-orm";
 import { publicProcedure, protectedProcedure, requireOrg } from "../procedures";
 import z from "zod";
 import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
@@ -32,9 +34,28 @@ export const userRouter = {
 
   unlinkAccount: protectedProcedure
     .input(z.object({ accountId: z.string() }))
-    .handler(({ input, context }) =>
-      auth.api.unlinkAccount({ body: input, headers: context.headers }),
-    ),
+    .handler(async ({ input, context, errors }) => {
+      const accounts = await auth.api.listUserAccounts({ headers: context.headers });
+      const passkeys = await db.query.passkey.findMany({
+        columns: { id: true },
+        where: { userId: context.user.id },
+      });
+
+      if (accounts.length + passkeys.length <= 1) {
+        throw errors.BAD_REQUEST({ message: "You must keep at least one sign-in method." });
+      }
+
+      const [deletedAccount] = await db
+        .delete(account)
+        .where(and(eq(account.id, input.accountId), eq(account.userId, context.user.id)))
+        .returning({ id: account.id });
+
+      if (!deletedAccount) {
+        throw errors.BAD_REQUEST({ message: "Account not found." });
+      }
+
+      return { status: true };
+    }),
 
   changePassword: protectedProcedure
     .input(

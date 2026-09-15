@@ -13,16 +13,29 @@ import {
   CardPanel,
   CardTitle,
 } from "@tailorkit/ui/components/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from "@tailorkit/ui/components/dialog";
+import { Field, FieldLabel } from "@tailorkit/ui/components/field";
+import { Input } from "@tailorkit/ui/components/input";
 import { Skeleton } from "@tailorkit/ui/components/skeleton";
 import { toastManager } from "@tailorkit/ui/components/toast";
 import { useAppForm } from "@tailorkit/ui/form";
-import { LaptopIcon, SmartphoneIcon } from "lucide-react";
+import { KeyRoundIcon, LaptopIcon, SmartphoneIcon } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
 import { AccountLayout } from "#components/account-layout";
 import { PageLayout } from "#components/page-layout";
+import { authClient } from "#lib/auth-client";
 import { client, orpc } from "#lib/orpc";
 import { getPreferredLocale, getPreferredTimeZone } from "#lib/preferred-locale";
 import { TwoFactorSettings } from "./-two-factor-settings";
@@ -240,15 +253,27 @@ function ActiveSessionsSkeleton() {
 
 function LinkedAccountsSkeleton() {
   return (
-    <div className="flex items-center gap-3 rounded-xl border p-4">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
-        <GitHubIcon />
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3 rounded-xl border p-4">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
+          <GitHubIcon />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-sm">GitHub</p>
+          <Skeleton className="mt-1 h-4 w-28" />
+        </div>
+        <Skeleton className="h-7 w-12" />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="font-medium text-sm">GitHub</p>
-        <Skeleton className="mt-1 h-4 w-28" />
+      <div className="flex items-center gap-3 rounded-xl border p-4">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
+          <KeyRoundIcon aria-hidden="true" className="size-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-sm">Passkeys</p>
+          <Skeleton className="mt-1 h-4 w-28" />
+        </div>
+        <Skeleton className="h-7 w-12" />
       </div>
-      <Skeleton className="h-7 w-12" />
     </div>
   );
 }
@@ -262,19 +287,35 @@ const GitHubIcon = () => (
   </svg>
 );
 
+// eslint-disable-next-line complexity -- This page coordinates independent account-security controls.
 function SecurityPage() {
   const { error, error_description } = useSearch({ from: "/(app)/account/security/" });
   const { locale, timeZone } = Route.useLoaderData();
   const queryClient = useQueryClient();
   const [linkPending, setLinkPending] = useState(false);
   const [unlinkPending, setUnlinkPending] = useState(false);
+  const [passkeyDialogOpen, setPasskeyDialogOpen] = useState(false);
+  const [passkeyName, setPasskeyName] = useState("");
+  const [passkeyPending, setPasskeyPending] = useState<string | null>(null);
   const accountsQuery = useQuery(orpc.user.listAccounts.queryOptions());
+  const passkeysQuery = useQuery({
+    queryFn: async () => {
+      const result = await authClient.passkey.listUserPasskeys();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to load passkeys");
+      }
+      return result.data;
+    },
+    queryKey: ["passkeys"],
+  });
   const sessionQuery = useQuery(orpc.user.getSession.queryOptions());
   const githubAccount = accountsQuery.data?.find((account) => account.providerId === "github");
   const hasCredentialAccount = accountsQuery.data?.some(
     (account) => account.providerId === "credential",
   );
-  const canUnlinkGitHub = Boolean(githubAccount && (accountsQuery.data?.length ?? 0) > 1);
+  const passkeys = passkeysQuery.data ?? [];
+  const signInMethodCount = (accountsQuery.data?.length ?? 0) + passkeys.length;
+  const canUnlinkGitHub = Boolean(githubAccount && signInMethodCount > 1);
 
   const linkGitHub = async () => {
     setLinkPending(true);
@@ -323,6 +364,74 @@ function SecurityPage() {
       title: "Account unlinked",
       type: "success",
     });
+  };
+
+  const addPasskey = async () => {
+    const name = passkeyName.trim();
+    if (!name) {
+      return;
+    }
+
+    setPasskeyPending("add");
+    setPasskeyDialogOpen(false);
+    try {
+      const result = await authClient.passkey.addPasskey({ name });
+      if (result.error) {
+        toastManager.add({
+          description: result.error.message || "Failed to add passkey",
+          title: "Couldn't add passkey",
+          type: "error",
+        });
+        return;
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["passkeys"] });
+      setPasskeyName("");
+      toastManager.add({
+        description: "You can now sign in with this passkey.",
+        title: "Passkey added",
+        type: "success",
+      });
+    } catch (requestError) {
+      toastManager.add({
+        description: requestError instanceof Error ? requestError.message : "Failed to add passkey",
+        title: "Couldn't add passkey",
+        type: "error",
+      });
+    } finally {
+      setPasskeyPending(null);
+    }
+  };
+
+  const deletePasskey = async (id: string) => {
+    setPasskeyPending(id);
+    try {
+      const result = await authClient.passkey.deletePasskey({ id });
+      if (result.error) {
+        toastManager.add({
+          description: result.error.message || "Failed to remove passkey",
+          title: "Couldn't remove passkey",
+          type: "error",
+        });
+        return;
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["passkeys"] });
+      toastManager.add({
+        description: "The passkey has been removed from your account.",
+        title: "Passkey removed",
+        type: "success",
+      });
+    } catch (requestError) {
+      toastManager.add({
+        description:
+          requestError instanceof Error ? requestError.message : "Failed to remove passkey",
+        title: "Couldn't remove passkey",
+        type: "error",
+      });
+    } finally {
+      setPasskeyPending(null);
+    }
   };
 
   const form = useAppForm({
@@ -431,56 +540,165 @@ function SecurityPage() {
               </CardHeader>
 
               <CardPanel>
-                {(error_description || error || accountsQuery.error) && (
+                {(error_description || error || accountsQuery.error || passkeysQuery.error) && (
                   <p className="mb-4 text-destructive text-sm" role="alert">
-                    {error_description || error || accountsQuery.error?.message}
+                    {error_description ||
+                      error ||
+                      accountsQuery.error?.message ||
+                      passkeysQuery.error?.message}
                   </p>
                 )}
 
-                {accountsQuery.isPending ? (
+                {accountsQuery.isPending || passkeysQuery.isPending ? (
                   <LinkedAccountsSkeleton />
                 ) : (
-                  <div className="flex items-center gap-3 rounded-xl border p-4">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                      <GitHubIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm">GitHub</p>
-                      <p className="text-muted-foreground text-sm">
-                        {githubAccount ? "Connected" : "Sign in with GitHub"}
-                      </p>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-3 rounded-xl border p-4">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
+                        <GitHubIcon />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm">GitHub</p>
+                        <p className="text-muted-foreground text-sm">
+                          {githubAccount ? "Connected" : "Sign in with GitHub"}
+                        </p>
+                      </div>
+
+                      {githubAccount ? (
+                        <Button
+                          disabled={!canUnlinkGitHub}
+                          loading={unlinkPending}
+                          onClick={() => void unlinkGitHub()}
+                          size="sm"
+                          title={
+                            canUnlinkGitHub
+                              ? "Unlink GitHub"
+                              : "GitHub cannot be unlinked because it is your only sign-in method"
+                          }
+                          variant="destructive-outline"
+                        >
+                          Unlink
+                        </Button>
+                      ) : (
+                        <Button
+                          loading={linkPending}
+                          onClick={() => void linkGitHub()}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Link
+                        </Button>
+                      )}
                     </div>
 
-                    {githubAccount ? (
+                    <div className="flex items-center gap-3 rounded-xl border p-4">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
+                        <KeyRoundIcon aria-hidden="true" className="size-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm">Passkeys</p>
+                        <p className="text-muted-foreground text-sm">
+                          {passkeys.length
+                            ? `${passkeys.length} connected`
+                            : "Sign in with your device"}
+                        </p>
+                      </div>
                       <Button
-                        disabled={!canUnlinkGitHub}
-                        loading={unlinkPending}
-                        onClick={() => void unlinkGitHub()}
-                        size="sm"
-                        title={
-                          canUnlinkGitHub
-                            ? "Unlink GitHub"
-                            : "GitHub cannot be unlinked because it is your only sign-in method"
-                        }
-                        variant="destructive-outline"
-                      >
-                        Unlink
-                      </Button>
-                    ) : (
-                      <Button
-                        loading={linkPending}
-                        onClick={() => void linkGitHub()}
+                        disabled={passkeyPending !== null}
+                        loading={passkeyPending === "add"}
+                        onClick={() => setPasskeyDialogOpen(true)}
                         size="sm"
                         variant="outline"
                       >
-                        Link
+                        Add
                       </Button>
-                    )}
+                    </div>
+
+                    {passkeys.map((passkey) => (
+                      <div
+                        className="ml-5 flex items-center gap-3 rounded-xl border p-4 sm:ml-12"
+                        key={passkey.id}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm">{passkey.name || "Passkey"}</p>
+                          <p className="text-muted-foreground text-sm">Available for sign-in</p>
+                        </div>
+                        <Button
+                          disabled={signInMethodCount <= 1 || passkeyPending !== null}
+                          loading={passkeyPending === passkey.id}
+                          onClick={() => void deletePasskey(passkey.id)}
+                          size="sm"
+                          title={
+                            signInMethodCount > 1
+                              ? "Remove passkey"
+                              : "Add another sign-in method before removing this passkey"
+                          }
+                          variant="destructive-outline"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardPanel>
             </Card>
           </CardFrame>
+
+          <Dialog
+            onOpenChange={(open) => {
+              if (passkeyPending === null) {
+                setPasskeyDialogOpen(open);
+                if (!open) {
+                  setPasskeyName("");
+                }
+              }
+            }}
+            open={passkeyDialogOpen}
+          >
+            <DialogPopup className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add a passkey</DialogTitle>
+                <DialogDescription>
+                  Give this device a name so you can recognise it later.
+                </DialogDescription>
+              </DialogHeader>
+              <form
+                id="add-passkey-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void addPasskey();
+                }}
+              >
+                <DialogPanel>
+                  <Field>
+                    <FieldLabel htmlFor="passkey-name">Passkey name</FieldLabel>
+                    <Input
+                      autoFocus
+                      id="passkey-name"
+                      onChange={(event) => setPasskeyName(event.target.value)}
+                      placeholder="e.g. MacBook Pro"
+                      value={passkeyName}
+                    />
+                  </Field>
+                </DialogPanel>
+                <DialogFooter>
+                  <DialogClose render={<Button size="sm" type="button" variant="outline" />}>
+                    Cancel
+                  </DialogClose>
+                  <Button
+                    disabled={!passkeyName.trim() || passkeyPending !== null}
+                    form="add-passkey-form"
+                    loading={passkeyPending === "add"}
+                    size="sm"
+                    type="submit"
+                  >
+                    Add passkey
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogPopup>
+          </Dialog>
 
           <ActiveSessions locale={locale} timeZone={timeZone} />
         </div>
