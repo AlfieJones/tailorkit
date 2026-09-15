@@ -9,6 +9,7 @@ export default defineConfig({
     "ban-types": "warn",
     "button-has-type": "off",
     "callback-return": "off",
+    curly: ["error", "multi-line"],
     "display-name": "off",
     eqeqeq: "warn",
     "func-style": "off",

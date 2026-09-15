@@ -22,9 +22,7 @@ async function getGitHubUsername(accountId: string, getAccessToken: () => Promis
   let kv: ReturnType<typeof getKV> = null;
   let cachedValue: string | null | undefined;
   const cacheUsername = (username: string) => {
-    if (!kv) {
-      return;
-    }
+    if (!kv) return;
 
     void kv.set(key, username, { ttl: GITHUB_USERNAME_CACHE_TTL_SECONDS }).catch(() => {});
   };
