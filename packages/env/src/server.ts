@@ -188,6 +188,29 @@ export function getBaseUrl() {
   return `http://localhost:${env.PORT ?? 3000}`;
 }
 
+export function getAuthBaseUrl() {
+  if (env.VERCEL_ENV !== "preview") {
+    return getBaseUrl();
+  }
+
+  const allowedHosts = getTrustedOrigins().flatMap((origin) => {
+    try {
+      return [new URL(origin).host];
+    } catch {
+      return [];
+    }
+  });
+
+  if (!allowedHosts.length) {
+    return getBaseUrl();
+  }
+
+  return {
+    allowedHosts: [...new Set(allowedHosts)],
+    protocol: "https" as const,
+  };
+}
+
 export function getTrustedOrigins() {
   const origins = new Set([getBaseUrl()]);
 

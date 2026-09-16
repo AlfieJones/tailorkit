@@ -52,6 +52,8 @@ function TwoFactorPage() {
   const [error, setError] = useState<string | null>(null);
   const [backupCodeError, setBackupCodeError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [totpAutoSubmitted, setTotpAutoSubmitted] = useState(false);
+  const [backupCodeAutoSubmitted, setBackupCodeAutoSubmitted] = useState(false);
 
   const verify = async (verificationCode: string, useBackupCode = false) => {
     setError(null);
@@ -98,6 +100,7 @@ function TwoFactorPage() {
     if (!open) {
       setBackupCode("");
       setBackupCodeError(null);
+      setBackupCodeAutoSubmitted(false);
     }
   };
 
@@ -125,6 +128,10 @@ function TwoFactorPage() {
                     onValueChange={(value) => {
                       setCode(value);
                       setError(null);
+                      if (value.length === OTP_LENGTH && !totpAutoSubmitted && !isPending) {
+                        setTotpAutoSubmitted(true);
+                        void verify(value);
+                      }
                     }}
                     size="lg"
                     value={code}
@@ -197,6 +204,14 @@ function TwoFactorPage() {
                 onValueChange={(value) => {
                   setBackupCode(value);
                   setBackupCodeError(null);
+                  if (
+                    value.length === BACKUP_CODE_LENGTH &&
+                    !backupCodeAutoSubmitted &&
+                    !isPending
+                  ) {
+                    setBackupCodeAutoSubmitted(true);
+                    void verify(value, true);
+                  }
                 }}
                 size="lg"
                 validationType="alphanumeric"

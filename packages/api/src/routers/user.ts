@@ -2,7 +2,9 @@ import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
 import { account } from "@tailorkit/db/schema/auth";
 import { env } from "@tailorkit/env/server";
+import { getKV } from "@tailorkit/kv";
 import { and, eq } from "drizzle-orm";
+import { Octokit } from "octokit";
 import { publicProcedure, protectedProcedure, requireOrg } from "../procedures";
 import z from "zod";
 import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
@@ -10,15 +12,63 @@ import { validateOrgSlug } from "@tailorkit/db/validate-org-slug";
 const MANUAL_ORG_ONBOARDING_MESSAGE =
   "We're currently onboarding users manually. Contact us to create an organisation for your account.";
 
+async function getGitHubUsername(accountId: string, getAccessToken: () => Promise<string | null>) {
+  const key = `tailorkit:github-username:${accountId}`;
+  let kv: ReturnType<typeof getKV> = null;
+
+  try {
+    kv = getKV();
+    const cachedUsername = kv ? await kv.get(key, { timeout: 1000 }) : undefined;
+    if (cachedUsername) return cachedUsername;
+  } catch {
+    // A cache outage should not make account management unavailable.
+  }
+
+  const accessToken = await getAccessToken();
+  if (!accessToken) return null;
+
+  try {
+    const octokit = new Octokit({
+      auth: accessToken,
+      request: { signal: AbortSignal.timeout(5000) },
+    });
+    const { data: profile } = await octokit.rest.users.getAuthenticated();
+    void kv?.set(key, profile.login, { ttl: 86_400 }).catch(() => {});
+    return profile.login;
+  } catch {
+    // Account management should remain available if GitHub is temporarily unavailable.
+    return null;
+  }
+}
+
 export const userRouter = {
   getSession: publicProcedure.handler(({ context }) => ({
     session: context.session,
     user: context.user,
   })),
 
-  listAccounts: protectedProcedure.handler(({ context }) =>
-    auth.api.listUserAccounts({ headers: context.headers }),
-  ),
+  listAccounts: protectedProcedure.handler(async ({ context }) => {
+    const accounts = await auth.api.listUserAccounts({ headers: context.headers });
+    const githubAccount = accounts.find((account) => account.providerId === "github");
+    const githubUsername = githubAccount
+      ? await getGitHubUsername(githubAccount.id, async () => {
+          try {
+            const tokens = await auth.api.getAccessToken({
+              body: { accountId: githubAccount.id },
+              headers: context.headers,
+            });
+            return tokens.accessToken;
+          } catch {
+            return null;
+          }
+        })
+      : null;
+
+    return accounts.map((account) => ({
+      ...account,
+      githubUsername: account.id === githubAccount?.id ? githubUsername : null,
+    }));
+  }),
 
   linkSocial: protectedProcedure
     .input(
