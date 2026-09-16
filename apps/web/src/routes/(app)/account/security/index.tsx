@@ -613,7 +613,10 @@ function SecurityPage() {
                       )}
                     </div>
 
-                    <Collapsible className="rounded-xl border">
+                    <Collapsible
+                      className="rounded-xl border"
+                      key={passkeys.length === 0 ? "empty" : "non-empty"}
+                    >
                       <div className="flex items-center gap-3 p-4">
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
                           <KeyRoundIcon aria-hidden="true" className="size-5" />

@@ -16,6 +16,7 @@ const testState = vi.hoisted(() => ({
   kv: {
     get: vi.fn(),
     set: vi.fn(),
+    instance: true as boolean,
   },
 }));
 
@@ -53,10 +54,13 @@ vi.mock("octokit", () => ({
 }));
 
 vi.mock("@tailorkit/kv", () => ({
-  getKV: () => ({
-    get: testState.kv.get,
-    set: testState.kv.set,
-  }),
+  getKV: () =>
+    testState.kv.instance
+      ? {
+          get: testState.kv.get,
+          set: testState.kv.set,
+        }
+      : null,
 }));
 
 vi.mock("@tailorkit/env/server", () => ({
@@ -118,6 +122,7 @@ describe("userRouter", () => {
     testState.github.getAuthenticated.mockReset();
     testState.kv.get.mockReset();
     testState.kv.set.mockReset();
+    testState.kv.instance = true;
 
     await db.insert(user).values([
       {
@@ -307,6 +312,80 @@ describe("userRouter", () => {
     expect(result[0]).toEqual(expect.objectContaining({ githubUsername: null }));
     expect(testState.github.getAuthenticated).not.toHaveBeenCalled();
     expect(testState.kv.set).not.toHaveBeenCalled();
+  });
+
+  it("looks up the GitHub username without a cache when the KV instance is unavailable", async () => {
+    testState.kv.instance = false;
+    const githubAccountId = "99999999-9999-4999-8999-999999999999";
+    vi.mocked(auth.api.listUserAccounts).mockResolvedValue([
+      {
+        accountId: "13579",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        id: githubAccountId,
+        providerId: "github",
+        scopes: [],
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        userId,
+      },
+    ]);
+    vi.mocked(auth.api.getAccessToken).mockResolvedValue({
+      accessToken: "decrypted-github-token",
+      accessTokenExpiresAt: undefined,
+      idToken: undefined,
+      scopes: [],
+    });
+    testState.github.getAuthenticated.mockResolvedValue({ data: { login: "octocat" } });
+
+    const result = await call(userRouter.listAccounts, undefined, { context: createContext() });
+
+    expect(result[0]).toEqual(expect.objectContaining({ githubUsername: "octocat" }));
+    expect(testState.kv.get).not.toHaveBeenCalled();
+    expect(testState.kv.set).not.toHaveBeenCalled();
+    expect(testState.github.getAuthenticated).toHaveBeenCalledTimes(1);
+  });
+
+  it("only attaches the GitHub username to the GitHub account in a multi-account result", async () => {
+    const githubAccountId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const emailAccountId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    testState.kv.get.mockResolvedValue(null);
+    testState.kv.set.mockResolvedValue();
+    vi.mocked(auth.api.listUserAccounts).mockResolvedValue([
+      {
+        accountId: "24680",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        id: githubAccountId,
+        providerId: "github",
+        scopes: [],
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        userId,
+      },
+      {
+        accountId: "ada@example.com",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        id: emailAccountId,
+        providerId: "credential",
+        scopes: [],
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        userId,
+      },
+    ]);
+    vi.mocked(auth.api.getAccessToken).mockResolvedValue({
+      accessToken: "decrypted-github-token",
+      accessTokenExpiresAt: undefined,
+      idToken: undefined,
+      scopes: [],
+    });
+    testState.github.getAuthenticated.mockResolvedValue({ data: { login: "octocat" } });
+
+    const result = await call(userRouter.listAccounts, undefined, { context: createContext() });
+
+    expect(result).toHaveLength(2);
+    expect(result.find((account) => account.id === githubAccountId)).toEqual(
+      expect.objectContaining({ githubUsername: "octocat" }),
+    );
+    expect(result.find((account) => account.id === emailAccountId)).toEqual(
+      expect.objectContaining({ githubUsername: null }),
+    );
   });
 
   it("requires auth for protected procedures", async () => {
