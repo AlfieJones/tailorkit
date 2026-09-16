@@ -79,7 +79,7 @@ function RootComponent() {
         <div className="isolate">
           <LazyMotion features={domMax}>
             <QueryClientProvider client={queryClient}>
-              <RootProvider>
+              <RootProvider theme={{ disableTransitionOnChange: false }}>
                 <Outlet />
               </RootProvider>
             </QueryClientProvider>
