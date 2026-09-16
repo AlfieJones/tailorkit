@@ -348,7 +348,7 @@ describe("userRouter", () => {
     const githubAccountId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
     const emailAccountId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
     testState.kv.get.mockResolvedValue(null);
-    testState.kv.set.mockResolvedValue();
+    testState.kv.set.mockResolvedValue(undefined);
     vi.mocked(auth.api.listUserAccounts).mockResolvedValue([
       {
         accountId: "24680",
