@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@tailorkit/ui/components/button";
+import { Skeleton } from "@tailorkit/ui/skeleton";
 
 type DocsSession = {
   user?: {
@@ -16,48 +17,45 @@ const authLinks = {
   signUp: "/sign-up",
 };
 
-let cachedSession: DocsSession;
-let sessionRequest: Promise<DocsSession> | undefined;
+const sessionQueryKey = ["auth", "session"] as const;
 
-function getSession() {
-  sessionRequest ??= fetch("/api/auth/get-session", {
+async function getSession(): Promise<DocsSession> {
+  const response = await fetch("/api/auth/get-session", {
     credentials: "include",
     headers: {
       Accept: "application/json",
     },
-  })
-    .then(async (response) => {
-      if (!(response.ok && response.headers.get("content-type")?.includes("application/json"))) {
-        return null;
-      }
+  });
 
-      return (await response.json()) as DocsSession;
-    })
-    .catch(() => null)
-    .then((session) => {
-      cachedSession = session;
-      return session;
-    });
+  if (!(response.ok && response.headers.get("content-type")?.includes("application/json"))) {
+    return null;
+  }
 
-  return sessionRequest;
+  return (await response.json()) as DocsSession;
 }
 
 export function NavbarAuth() {
-  const [session, setSession] = useState<DocsSession>(cachedSession);
+  const { data: session, isPending } = useQuery({
+    enabled: typeof window !== "undefined",
+    queryFn: getSession,
+    queryKey: sessionQueryKey,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    void getSession().then((nextSession) => {
-      if (!cancelled) {
-        setSession(nextSession);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  if (isPending) {
+    return (
+      <div
+        aria-busy="true"
+        aria-label="Loading authentication"
+        className="flex items-center gap-2"
+        role="status"
+      >
+        <Skeleton className="h-8 w-13" />
+        <Skeleton className="h-8 w-16" />
+      </div>
+    );
+  }
 
   if (!session?.user) {
     return (

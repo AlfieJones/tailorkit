@@ -33,6 +33,7 @@
     "@radix-ui/react-presence": "^1.1.10",
     "@rive-app/react-webgl2": "^4.34.1",
     "@tailorkit/ui": "workspace:*",
+    "@tanstack/react-query": "^5.102.8",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-devtools": "catalog:",
     "@tanstack/react-start": "catalog:",
