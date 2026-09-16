@@ -16,52 +16,48 @@ const authLinks = {
   signUp: "/sign-up",
 };
 
+let cachedSession: DocsSession;
+let sessionRequest: Promise<DocsSession> | undefined;
+
+function getSession() {
+  sessionRequest ??= fetch("/api/auth/get-session", {
+    credentials: "include",
+    headers: {
+      Accept: "application/json",
+    },
+  })
+    .then(async (response) => {
+      if (!(response.ok && response.headers.get("content-type")?.includes("application/json"))) {
+        return null;
+      }
+
+      return (await response.json()) as DocsSession;
+    })
+    .catch(() => null)
+    .then((session) => {
+      cachedSession = session;
+      return session;
+    });
+
+  return sessionRequest;
+}
+
 export function NavbarAuth() {
-  const [session, setSession] = useState<DocsSession>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<DocsSession>(cachedSession);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadSession() {
-      try {
-        const response = await fetch("/api/auth/get-session", {
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
-        });
-
-        if (!(response.ok && response.headers.get("content-type")?.includes("application/json"))) {
-          return;
-        }
-
-        const nextSession = (await response.json()) as DocsSession;
-
-        if (!cancelled) {
-          setSession(nextSession);
-        }
-      } catch {
-        if (!cancelled) {
-          setSession(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+    void getSession().then((nextSession) => {
+      if (!cancelled) {
+        setSession(nextSession);
       }
-    }
-
-    void loadSession();
+    });
 
     return () => {
       cancelled = true;
     };
   }, []);
-
-  if (isLoading) {
-    return <div className="h-8 w-28" />;
-  }
 
   if (!session?.user) {
     return (

@@ -1,5 +1,5 @@
 {
-  "title": "Integrate TailorKit",
+  "title": "Embedding TailorKit",
   "description": "Set up TailorKit in the product that hosts apps.",
   "root": true,
   "pages": [

@@ -65,6 +65,7 @@
     "./skeleton": "./src/components/skeleton.tsx",
     "./slider": "./src/components/slider.tsx",
     "./spinner": "./src/components/spinner.tsx",
+    "./spin": "./src/components/spin.tsx",
     "./switch": "./src/components/switch.tsx",
     "./table": "./src/components/table.tsx",
     "./tabs": "./src/components/tabs.tsx",
