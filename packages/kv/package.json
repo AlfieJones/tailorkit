@@ -26,7 +26,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/kv.ts src/redis.ts src/upstash.ts src/types.ts --format esm --dts --clean",
+    "build": "tsdown src/index.ts src/kv.ts src/preview-tunnel.ts src/redis.ts src/upstash.ts src/types.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -39,7 +39,8 @@
     "@upstash/redis": "^1.38.4",
     "ioredis": "^6.0.0",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@upstash/redis": "^1.34.0",

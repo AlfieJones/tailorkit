@@ -16,7 +16,7 @@ export function getTailorKitScopeId(context: Context): string {
   return getTailorKitContext(context).scopeId;
 }
 
-function getBearerToken(request: Request): string {
+export function getCliDeployToken(request: Request): string {
   const [scheme, token] = request.headers.get("authorization")?.split(" ") ?? [];
 
   if (scheme !== "Bearer" || !token) {
@@ -29,7 +29,7 @@ function getBearerToken(request: Request): string {
 export const requireCliDeployToken = o.middleware(async ({ context, next }) => {
   const result = await cliAuthVerifyToken({
     body: {
-      deployToken: getBearerToken(context.request),
+      deployToken: getCliDeployToken(context.request),
     },
     client: context.platform,
     headers: context.platformHeaders,

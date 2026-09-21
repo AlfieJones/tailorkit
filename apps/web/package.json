@@ -33,6 +33,8 @@
     "@tailorkit/api-utils": "workspace:*",
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
+    "@tailorkit/env": "workspace:*",
+    "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
     "@tailorkit/storage": "workspace:*",
     "@tailorkit/ui": "workspace:*",

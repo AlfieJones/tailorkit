@@ -1,5 +1,5 @@
 import { RPCHandler } from "@orpc/server/fetch";
-import { appsList } from "@tailorkit/client-platform/client";
+import { appsList, previewResolve } from "@tailorkit/client-platform/client";
 import { createClient } from "@tailorkit/client-platform/client/client/index";
 import type {
   NoComponentFieldCallbackConflicts,
@@ -71,6 +71,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
     (options.projectKey ? { authorization: `Bearer ${options.projectKey}` } : undefined);
   const rpcHandler = new RPCHandler(tailorkitRouter);
 
+  // oxlint-disable-next-line complexity -- request dispatch is intentionally centralized here.
   const handler = async (
     request: Request,
     handlerOptions: TailorKitHandlerOptions<
@@ -116,7 +117,55 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
       const data = "data" in result ? result.data : result;
       const body = data && typeof data === "object" && "body" in data ? data.body : data;
 
-      return Response.json(body && typeof body === "object" && "items" in body ? body.items : []);
+      const previewSessionId = url.searchParams.get("previewSessionId");
+      if (!previewSessionId || !body || typeof body !== "object" || !("items" in body)) {
+        return Response.json(body && typeof body === "object" && "items" in body ? body.items : []);
+      }
+
+      const previewResult = await previewResolve({
+        client: context.platform,
+        headers: context.platformHeaders,
+        path: { sessionId: previewSessionId },
+        query: { scopeId: tailorkit.scopeId },
+      });
+      const previewData = "data" in previewResult ? previewResult.data : previewResult;
+      const preview =
+        previewData && typeof previewData === "object" && "body" in previewData
+          ? previewData.body
+          : previewData;
+
+      if (!preview || typeof preview !== "object") {
+        return Response.json((body as { items: unknown }).items);
+      }
+      const resolvedPreview = preview as {
+        appId?: unknown;
+        clientPath?: unknown;
+        sessionId?: unknown;
+        status?: unknown;
+      };
+      if (
+        typeof resolvedPreview.appId !== "string" ||
+        typeof resolvedPreview.clientPath !== "string" ||
+        typeof resolvedPreview.sessionId !== "string" ||
+        (resolvedPreview.status !== "connected" && resolvedPreview.status !== "offline")
+      ) {
+        return Response.json((body as { items: unknown }).items);
+      }
+
+      const items = (body as { items: Record<string, unknown>[] }).items.map((item) =>
+        item.publicId === resolvedPreview.appId
+          ? {
+              ...item,
+              clientPath: resolvedPreview.clientPath,
+              preview: {
+                sessionId: resolvedPreview.sessionId,
+                status: resolvedPreview.status,
+              },
+            }
+          : item,
+      );
+
+      return Response.json(items);
     }
 
     if (url.pathname === `${basePath}/cli-auth/approve`) {

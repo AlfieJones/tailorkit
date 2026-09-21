@@ -4,7 +4,9 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { log } from "@clack/prompts";
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
+import { createTailorKitClient } from "@tailorkit/core/server";
 import pc from "picocolors";
+import { getDeployToken, runWhoami } from "./auth";
 
 export interface PreviewOptions {
   configPath?: string;
@@ -14,6 +16,78 @@ export interface PreviewOptions {
   mode?: string;
   outDir?: string;
   port?: number;
+}
+
+function connectPreviewTunnel(tunnelUrl: string, localUrl: string): void {
+  let delay = 1000;
+  const connect = () => {
+    const socket = new WebSocket(tunnelUrl);
+    socket.addEventListener("open", () => {
+      delay = 1000;
+    });
+    socket.addEventListener("message", async (event) => {
+      const message = JSON.parse(String(event.data)) as {
+        id: string;
+        method: string;
+        path: string;
+        type: string;
+      };
+      if (message.type !== "request") {
+        return;
+      }
+      try {
+        const response = await fetch(new URL(message.path, localUrl), { method: message.method });
+        const body = Buffer.from(await response.arrayBuffer()).toString("base64");
+        socket.send(
+          JSON.stringify({
+            type: "response",
+            id: message.id,
+            status: response.status,
+            headers: {
+              "content-type": response.headers.get("content-type") ?? "application/octet-stream",
+            },
+            body,
+          }),
+        );
+      } catch {
+        socket.send(
+          JSON.stringify({ type: "response", id: message.id, status: 502, headers: {}, body: "" }),
+        );
+      }
+    });
+    socket.addEventListener("close", () => {
+      setTimeout(connect, delay);
+      delay = Math.min(delay * 2, 30_000);
+    });
+  };
+  connect();
+}
+
+export async function runPreview(options: PreviewOptions): Promise<void> {
+  const loaded = await loadTailorKitConfig(options.configPath, options.cwd);
+  if (!loaded.config.appId) {
+    throw new Error("Missing appId. Deploy once before starting a remote preview.");
+  }
+  const auth = await runWhoami(options);
+  const stored = await getDeployToken(auth.hostUrl);
+  if (!stored?.deployToken) {
+    throw new Error("Not logged in. Run tailorkit login first.");
+  }
+  const client = createTailorKitClient({
+    headers: { authorization: `Bearer ${stored.deployToken}` },
+    url: auth.hostUrl,
+  });
+  const result = await client.preview.start({ appId: loaded.config.appId });
+  if (!("data" in result) || !result.data) {
+    throw new Error("Unable to start preview session.");
+  }
+  const data = result.data;
+  connectPreviewTunnel(
+    data.tunnelUrl,
+    `http://${options.host ?? "127.0.0.1"}:${options.port ?? 4175}`,
+  );
+  await runExperimentalPreview(options);
+  log.info(pc.green(`Host preview session: ${data.sessionId}`));
 }
 
 const contentTypes: Record<string, string> = {
