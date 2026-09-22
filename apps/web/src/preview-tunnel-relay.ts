@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { maxAssetBytes } from "@tailorkit/asset-delivery";
 import { createPreviewTunnelPresence, getKV } from "@tailorkit/kv";
+import type { Unsubscribe } from "@tailorkit/kv";
 
 const requestTimeoutMs = 25_000;
 const maxInFlightRequestsPerSession = 8;
 const maxEncodedPreviewResponseBytes = 4 * Math.ceil(maxAssetBytes / 3);
-const responseChannelPattern = "preview-tunnel:responses:*";
 
 export interface PreviewAssetRequest {
   id: string;
@@ -29,21 +29,10 @@ export class PreviewTunnelOverloadedError extends Error {
   }
 }
 
-function getRedis() {
-  const kv = getKV();
-  if (!kv || kv.type !== "redis") {
-    throw new Error("Preview tunnels require KV_PROVIDER=redis.");
-  }
-  return kv.engine;
-}
-
 const requestChannel = (sessionId: string) => `preview-tunnel:requests:${sessionId}`;
 const responseChannel = (requestId: string) => `preview-tunnel:responses:${requestId}`;
 
-const pendingResponses = new Map<string, (response: PreviewAssetResponse) => void>();
 const inFlightRequests = new Map<string, number>();
-let responseSubscriber: ReturnType<typeof getRedis> | undefined;
-let responseSubscriberReady: Promise<void> | undefined;
 
 function isPreviewAssetResponse(value: unknown): value is PreviewAssetResponse {
   if (!value || typeof value !== "object") {
@@ -68,26 +57,6 @@ function isPreviewAssetResponse(value: unknown): value is PreviewAssetResponse {
   );
 }
 
-async function getResponseSubscriber() {
-  if (!responseSubscriber) {
-    const subscriber = getRedis().duplicate();
-    subscriber.on("pmessage", (_pattern: string, _channel: string, message: string) => {
-      try {
-        const response = JSON.parse(message) as unknown;
-        if (isPreviewAssetResponse(response)) {
-          pendingResponses.get(response.id)?.(response);
-        }
-      } catch {
-        // Ignore malformed transport messages.
-      }
-    });
-    responseSubscriber = subscriber;
-    responseSubscriberReady = subscriber.psubscribe(responseChannelPattern).then(() => {});
-  }
-  await responseSubscriberReady;
-  return responseSubscriber;
-}
-
 function acquireRequestSlot(sessionId: string): () => void {
   const count = inFlightRequests.get(sessionId) ?? 0;
   if (count >= maxInFlightRequestsPerSession) {
@@ -109,8 +78,8 @@ export async function requestPreviewAsset(
   method: "GET" | "HEAD",
 ): Promise<PreviewAssetResponse | null> {
   const kv = getKV();
-  if (!kv || kv.type !== "redis") {
-    throw new Error("Preview tunnels require KV_PROVIDER=redis.");
+  if (!kv) {
+    throw new Error("Preview tunnels require a configured KV provider.");
   }
   const connection = await createPreviewTunnelPresence(kv).get(sessionId);
   if (!connection) {
@@ -120,29 +89,44 @@ export async function requestPreviewAsset(
   const release = acquireRequestSlot(sessionId);
   const requestId = randomUUID();
   try {
-    await getResponseSubscriber();
-    const response = await new Promise<PreviewAssetResponse | null>((resolve) => {
-      const timeout = setTimeout(() => {
-        pendingResponses.delete(requestId);
-        resolve(null);
-      }, requestTimeoutMs);
-      pendingResponses.set(requestId, (value) => {
-        clearTimeout(timeout);
-        pendingResponses.delete(requestId);
-        resolve(value);
-      });
-      void getRedis().publish(
-        requestChannel(sessionId),
-        JSON.stringify({
-          connectionId: connection.connectionId,
-          id: requestId,
-          method,
-          path,
-          type: "request",
-        } satisfies PreviewAssetRequest & { connectionId: string }),
-      );
+    let resolveResponse: (value: PreviewAssetResponse | null) => void;
+    const response = new Promise<PreviewAssetResponse | null>((resolve) => {
+      resolveResponse = resolve;
     });
-    return response;
+    const unsubscribe = await kv.subscribe(responseChannel(requestId), (message) => {
+      try {
+        const value = JSON.parse(message) as unknown;
+        if (isPreviewAssetResponse(value) && value.id === requestId) {
+          resolveResponse(value);
+        }
+      } catch {
+        // Ignore malformed transport messages.
+      }
+    });
+    const timeout = setTimeout(() => resolveResponse(null), requestTimeoutMs);
+
+    try {
+      return await Promise.race([
+        response,
+        kv
+          .publish(
+            requestChannel(sessionId),
+            JSON.stringify({
+              connectionId: connection.connectionId,
+              id: requestId,
+              method,
+              path,
+              type: "request",
+            } satisfies PreviewAssetRequest & { connectionId: string }),
+          )
+          .then(() => response),
+      ]);
+    } finally {
+      clearTimeout(timeout);
+      void unsubscribe().catch(() => {
+        // A best-effort subscriber teardown must not change the preview result.
+      });
+    }
   } finally {
     release();
   }
@@ -152,10 +136,13 @@ export async function subscribePreviewTunnel(
   sessionId: string,
   connectionId: string,
   send: (request: PreviewAssetRequest) => void,
-): Promise<() => void> {
-  const subscriber = getRedis().duplicate();
+): Promise<Unsubscribe> {
+  const kv = getKV();
+  if (!kv) {
+    throw new Error("Preview tunnels require a configured KV provider.");
+  }
   const channel = requestChannel(sessionId);
-  subscriber.on("message", (_channel: string, message: string) => {
+  const unsubscribe = await kv.subscribe(channel, (message) => {
     try {
       const value = JSON.parse(message) as PreviewAssetRequest & { connectionId?: string };
       if (value.type === "request" && value.connectionId === connectionId) {
@@ -165,13 +152,16 @@ export async function subscribePreviewTunnel(
       // Ignore malformed transport messages.
     }
   });
-  await subscriber.subscribe(channel);
-  return () => subscriber.disconnect();
+  return unsubscribe;
 }
 
 export async function publishPreviewAssetResponse(response: PreviewAssetResponse): Promise<void> {
   if (!isPreviewAssetResponse(response)) {
     throw new TypeError("Invalid preview tunnel response.");
   }
-  await getRedis().publish(responseChannel(response.id), JSON.stringify(response));
+  const kv = getKV();
+  if (!kv) {
+    throw new Error("Preview tunnels require a configured KV provider.");
+  }
+  await kv.publish(responseChannel(response.id), JSON.stringify(response));
 }
