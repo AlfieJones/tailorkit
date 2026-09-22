@@ -1,4 +1,4 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { log } from "@clack/prompts";
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
@@ -28,94 +28,175 @@ const contentTypes: Record<string, string> = {
 const getContentType = (filepath: string): string =>
   contentTypes[path.extname(filepath)] ?? "application/octet-stream";
 
+class PreviewAssetError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "PreviewAssetError";
+    this.status = status;
+  }
+}
+
+interface PreviewAssetResponse {
+  body: string;
+  contentType: string;
+  status: number;
+}
+
+const isPathOutsideRoot = (root: string, filepath: string): boolean => {
+  const relativeToRoot = path.relative(root, filepath);
+  return (
+    relativeToRoot === ".." ||
+    relativeToRoot.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativeToRoot)
+  );
+};
+
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
+async function getPreviewAssetResponse(
+  message: { method: "GET" | "HEAD"; path: string },
+  root: string,
+): Promise<PreviewAssetResponse> {
+  try {
+    let pathname: string;
+    try {
+      pathname = decodeURIComponent(new URL(message.path, "http://localhost").pathname);
+    } catch {
+      throw new PreviewAssetError("Invalid preview asset path.", 400);
+    }
+    const filepath = path.resolve(root, pathname.slice(1));
+    if (isPathOutsideRoot(root, filepath)) {
+      throw new PreviewAssetError("Preview asset path is outside the build output.", 403);
+    }
+
+    const realFilepath = await realpath(filepath).catch((error: unknown) => {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new PreviewAssetError("Preview asset was not found.", 404);
+      }
+      throw error;
+    });
+    if (isPathOutsideRoot(root, realFilepath)) {
+      throw new PreviewAssetError("Preview asset path is outside the build output.", 403);
+    }
+
+    const fileStat = await stat(realFilepath);
+    if (!fileStat?.isFile()) {
+      throw new PreviewAssetError("Preview asset was not found.", 404);
+    }
+    if (fileStat.size > maxPreviewAssetBytes) {
+      throw new PreviewAssetError("Preview asset exceeds the maximum supported size.", 413);
+    }
+
+    const bytes = message.method === "HEAD" ? undefined : await readFile(realFilepath);
+    return {
+      status: 200,
+      body: bytes?.toString("base64") ?? "",
+      contentType: getContentType(realFilepath),
+    };
+  } catch (error) {
+    const response =
+      error instanceof PreviewAssetError
+        ? error
+        : new PreviewAssetError(`Unable to read preview asset: ${errorMessage(error)}`, 500);
+    log.error(response.message);
+    return {
+      status: response.status,
+      body: Buffer.from(response.message).toString("base64"),
+      contentType: "text/plain; charset=utf-8",
+    };
+  }
+}
+
 async function respondToPreviewAssetRequest(
   client: ReturnType<typeof createPreviewTunnelClient>,
   message: { id: string; method: "GET" | "HEAD"; path: string },
   root: string,
 ): Promise<void> {
-  try {
-    const pathname = decodeURIComponent(new URL(message.path, "http://localhost").pathname);
-    const filepath = path.resolve(root, pathname.slice(1));
-    const relativeToRoot = path.relative(root, filepath);
-    if (
-      relativeToRoot === ".." ||
-      relativeToRoot.startsWith(`..${path.sep}`) ||
-      path.isAbsolute(relativeToRoot)
-    ) {
-      throw new Error("Preview asset path is outside the build output.");
-    }
-
-    const fileStat = await stat(filepath).catch(() => null);
-    if (!fileStat?.isFile()) {
-      await client.respond({
-        type: "response",
-        id: message.id,
-        status: 404,
-        body: "",
-        contentType: "text/plain; charset=utf-8",
-      });
-      return;
-    }
-    if (fileStat.size > maxPreviewAssetBytes) {
-      throw new Error("Preview asset exceeds the maximum supported size.");
-    }
-
-    const bytes = message.method === "HEAD" ? undefined : await readFile(filepath);
-    await client.respond({
-      type: "response",
-      id: message.id,
-      status: 200,
-      body: bytes?.toString("base64") ?? "",
-      contentType: getContentType(filepath),
-    });
-  } catch {
-    await client.respond({
-      type: "response",
-      id: message.id,
-      status: 502,
-      contentType: "text/plain; charset=utf-8",
-      body: "",
-    });
-  }
+  const response = await getPreviewAssetResponse(message, root);
+  await client.respond({ type: "response", id: message.id, ...response });
 }
 
-function connectPreviewTunnel(tunnelUrl: string, tunnelToken: string, root: string): () => void {
+async function connectPreviewTunnel(
+  tunnelUrl: string,
+  tunnelToken: string,
+  root: string,
+): Promise<() => void> {
   let delay = 1000;
   let closed = false;
+  let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
   let socket: WebSocket | undefined;
-  const connect = () => {
-    if (closed) {
-      return;
-    }
-    const newSocket = new WebSocket(tunnelUrl, tunnelToken);
-    socket = newSocket;
-    const client = createPreviewTunnelClient(newSocket);
-    newSocket.addEventListener("open", () => {
-      delay = 1000;
-      void (async () => {
-        try {
-          const requests = await client.connect();
-          for await (const message of requests) {
-            void respondToPreviewAssetRequest(client, message, root);
-          }
-        } catch {
-          newSocket.close();
-        }
-      })();
-    });
-    newSocket.addEventListener("close", () => {
+  let hasConnected = false;
+
+  return await new Promise<() => void>((resolve, reject) => {
+    const close = (): void => {
+      closed = true;
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      socket?.close();
+    };
+    const failInitialConnection = (): void => {
+      if (!hasConnected && !closed) {
+        close();
+        reject(new Error("Unable to connect to the preview tunnel."));
+      }
+    };
+    const scheduleReconnect = (): void => {
+      reconnectTimeout = setTimeout(connect, delay);
+      delay = Math.min(delay * 2, 30_000);
+    };
+    const connect = (): void => {
       if (closed) {
         return;
       }
-      setTimeout(connect, delay);
-      delay = Math.min(delay * 2, 30_000);
-    });
-  };
-  connect();
-  return () => {
-    closed = true;
-    socket?.close();
-  };
+      let newSocket: WebSocket;
+      try {
+        newSocket = new WebSocket(tunnelUrl, tunnelToken);
+      } catch {
+        failInitialConnection();
+        return;
+      }
+      socket = newSocket;
+      const client = createPreviewTunnelClient(newSocket);
+      newSocket.addEventListener("open", () => {
+        delay = 1000;
+        if (!hasConnected) {
+          hasConnected = true;
+          resolve(close);
+        }
+        void (async () => {
+          try {
+            const requests = await client.connect();
+            for await (const message of requests) {
+              void respondToPreviewAssetRequest(client, message, root).catch((error: unknown) => {
+                log.error(`Unable to send preview asset response: ${errorMessage(error)}`);
+              });
+            }
+          } catch (error) {
+            log.error(`Preview tunnel request stream failed: ${errorMessage(error)}`);
+            newSocket.close();
+          }
+        })();
+      });
+      newSocket.addEventListener("error", () => {
+        failInitialConnection();
+      });
+      newSocket.addEventListener("close", () => {
+        if (closed) {
+          return;
+        }
+        if (!hasConnected) {
+          failInitialConnection();
+          return;
+        }
+        scheduleReconnect();
+      });
+    };
+    connect();
+  });
 }
 
 export const toPreviewOptions = (options: Record<string, unknown>): PreviewOptions => ({
@@ -170,7 +251,16 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     loaded.root,
     options.outDir ?? loaded.config.build?.outDir ?? ".tailorkit",
   );
-  const closeTunnel = connectPreviewTunnel(data.tunnelUrl, data.tunnelToken, outDir);
+  const root = await realpath(outDir).catch((error: unknown) => {
+    closeWatcher();
+    throw new Error(`Unable to resolve preview build output: ${errorMessage(error)}`);
+  });
+  const closeTunnel = await connectPreviewTunnel(data.tunnelUrl, data.tunnelToken, root).catch(
+    (error: unknown) => {
+      closeWatcher();
+      throw error;
+    },
+  );
   const closePreview = (): void => {
     closeWatcher();
     closeTunnel();
