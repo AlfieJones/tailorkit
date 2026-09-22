@@ -65,23 +65,6 @@ export const appsList = <ThrowOnError extends boolean = false>(
     ...options,
   });
 
-export const previewStart = <ThrowOnError extends boolean = false>(
-  options: Options<PreviewStartData, ThrowOnError>,
-): RequestResult<PreviewStartResponses, unknown, ThrowOnError> =>
-  (options.client ?? client).post<PreviewStartResponses, unknown, ThrowOnError>({
-    url: "/preview/start",
-    ...options,
-    headers: { "Content-Type": "application/json", ...options.headers },
-  });
-
-export const previewResolve = <ThrowOnError extends boolean = false>(
-  options: Options<PreviewResolveData, ThrowOnError>,
-): RequestResult<PreviewResolveResponses, unknown, ThrowOnError> =>
-  (options.client ?? client).get<PreviewResolveResponses, unknown, ThrowOnError>({
-    url: "/preview/{sessionId}",
-    ...options,
-  });
-
 export const appsCreate = <ThrowOnError extends boolean = false>(
   options: Options<AppsCreateData, ThrowOnError>,
 ): RequestResult<AppsCreateResponses, unknown, ThrowOnError> =>
@@ -232,4 +215,24 @@ export const deploymentsPublish = <ThrowOnError extends boolean = false>(
       "Content-Type": "application/json",
       ...options.headers,
     },
+  });
+
+export const previewStart = <ThrowOnError extends boolean = false>(
+  options: Options<PreviewStartData, ThrowOnError>,
+): RequestResult<PreviewStartResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).post<PreviewStartResponses, unknown, ThrowOnError>({
+    url: "/preview/start",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+export const previewResolve = <ThrowOnError extends boolean = false>(
+  options: Options<PreviewResolveData, ThrowOnError>,
+): RequestResult<PreviewResolveResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).get<PreviewResolveResponses, unknown, ThrowOnError>({
+    url: "/preview/{sessionId}",
+    ...options,
   });
