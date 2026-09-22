@@ -4,20 +4,29 @@ import type { KV } from "./types.js";
 
 function createKV(values = new Map<string, string>()): KV {
   return {
-    delete: vi.fn(),
+    delete: vi.fn((key: string) => {
+      values.delete(key);
+      return Promise.resolve();
+    }),
     engine: {} as never,
     get: vi.fn((key: string) => Promise.resolve(values.get(key) ?? null)),
-    getAndDelete: vi.fn(),
+    getAndDelete: vi.fn((key: string) => {
+      const value = values.get(key) ?? null;
+      values.delete(key);
+      return Promise.resolve(value);
+    }),
     increment: vi.fn(),
+    publish: vi.fn(),
     set: vi.fn((key: string, value: string) => {
       values.set(key, value);
       return Promise.resolve();
     }),
+    subscribe: vi.fn(),
     type: "redis",
   };
 }
 describe("preview tunnel presence", () => {
-  it("uses a renewing TTL lease", async () => {
+  it("uses a renewing TTL lease rather than a durable connection record", async () => {
     const kv = createKV();
     const presence = createPreviewTunnelPresence(kv);
     await presence.heartbeat("session_123", { connectionId: "connection_123", revision: 4 });
@@ -26,6 +35,14 @@ describe("preview tunnel presence", () => {
       JSON.stringify({ connectionId: "connection_123", revision: 4 }),
       { ttl: previewTunnelLeaseSeconds },
     );
+    expect(kv.publish).toHaveBeenCalledWith(
+      "preview-tunnel:connection-events:session_123",
+      JSON.stringify({ connectionId: "connection_123", revision: 4 }),
+    );
+    await expect(presence.get("session_123")).resolves.toEqual({
+      connectionId: "connection_123",
+      revision: 4,
+    });
   });
   it("treats an absent or malformed lease as offline", async () => {
     const presence = createPreviewTunnelPresence(
@@ -33,5 +50,52 @@ describe("preview tunnel presence", () => {
     );
     await expect(presence.get("missing")).resolves.toBeNull();
     await expect(presence.get("broken")).resolves.toBeNull();
+  });
+
+  it("keeps the authoritative lease when pub/sub notification fails", async () => {
+    const kv = createKV();
+    vi.mocked(kv.publish).mockRejectedValueOnce(new Error("Redis unavailable"));
+
+    await expect(
+      createPreviewTunnelPresence(kv).heartbeat("session_123", {
+        connectionId: "connection_123",
+        revision: 4,
+      }),
+    ).resolves.toBeUndefined();
+    await expect(createPreviewTunnelPresence(kv).get("session_123")).resolves.toEqual({
+      connectionId: "connection_123",
+      revision: 4,
+    });
+  });
+
+  it("rejects identifiers that could escape the Redis key namespace", async () => {
+    const presence = createPreviewTunnelPresence(createKV());
+
+    await expect(
+      presence.heartbeat("session:other", { connectionId: "connection_123", revision: 0 }),
+    ).rejects.toThrow("opaque identifier");
+  });
+
+  it("forwards only valid connection-change events to subscribers", async () => {
+    const kv = createKV();
+    const presence = createPreviewTunnelPresence(kv);
+    const handler = vi.fn();
+    let listener: ((message: string) => void) | undefined;
+    vi.mocked(kv.subscribe).mockImplementation((_channel, nextListener) => {
+      listener = nextListener;
+      return Promise.all([]).then(() => () => Promise.resolve());
+    });
+
+    await presence.subscribe("session_123", handler);
+    listener?.("not-json");
+    listener?.(JSON.stringify({ connectionId: 5, revision: 3 }));
+    listener?.(JSON.stringify({ connectionId: "connection_123", revision: 5 }));
+
+    expect(kv.subscribe).toHaveBeenCalledWith(
+      "preview-tunnel:connection-events:session_123",
+      expect.any(Function),
+    );
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(handler).toHaveBeenCalledWith({ connectionId: "connection_123", revision: 5 });
   });
 });

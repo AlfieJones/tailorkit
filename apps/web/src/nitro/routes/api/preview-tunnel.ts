@@ -3,10 +3,11 @@ import { hashSecret } from "@tailorkit/api-utils/hashing";
 import { db } from "@tailorkit/db";
 import { env } from "@tailorkit/env/server";
 import { createPreviewTunnelPresence, getKV } from "@tailorkit/kv";
+import type { Unsubscribe } from "@tailorkit/kv";
 import { defineWebSocketHandler } from "nitro/h3";
 import { publishPreviewAssetResponse, subscribePreviewTunnel } from "../../../preview-tunnel-relay";
 
-const cleanups = new WeakMap<object, () => void>();
+const cleanups = new WeakMap<object, Unsubscribe>();
 
 export default defineWebSocketHandler({
   upgrade(request) {
@@ -47,9 +48,9 @@ export default defineWebSocketHandler({
     const unsubscribe = await subscribePreviewTunnel(session.id, connectionId, (request) =>
       peer.send(JSON.stringify(request)),
     );
-    cleanups.set(peer, () => {
+    cleanups.set(peer, async () => {
       clearInterval(timer);
-      unsubscribe();
+      await unsubscribe();
     });
   },
   async message(_peer, message) {
@@ -65,7 +66,11 @@ export default defineWebSocketHandler({
     }
   },
   close(peer) {
-    cleanups.get(peer)?.();
+    void cleanups
+      .get(peer)?.()
+      .catch(() => {
+        // WebSocket close hooks cannot await cleanup, but must consume failures.
+      });
     cleanups.delete(peer);
   },
 });
