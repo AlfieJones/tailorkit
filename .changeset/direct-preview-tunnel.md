@@ -1,6 +1,5 @@
 ---
 "@tailorkit/cli": patch
-"@tailorkit/api-platform": patch
 "@tailorkit/client-platform": patch
 "@tailorkit/core": patch
 ---
