@@ -30,12 +30,12 @@
   },
   "scripts": {
     "build": "tsup 'src/**/*.ts' --format esm --target node20 --clean && tsc -p tsconfig.build.json",
-    "generate": "openapi-ts && node scripts/harden-generated-params.mjs",
+    "generate": "openapi-ts",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "0.0.0-next-20260824173136",
+    "@hey-api/openapi-ts": "0.99.0",
     "@tailorkit/api-platform": "workspace:*",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",

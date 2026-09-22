@@ -4,6 +4,30 @@ export type ClientOptions = {
   baseUrl: "https://tailorkit.dev/api/platform" | (string & {});
 };
 
+export type PreviewStartData = {
+  body: { appId: string; deployToken: string };
+  path?: never;
+  query?: never;
+  url: "/preview/start";
+};
+
+export type PreviewStartResponses = {
+  200: { expiresAt: string; sessionId: string; tunnelToken: string; tunnelUrl: string };
+};
+export type PreviewStartResponse = PreviewStartResponses[keyof PreviewStartResponses];
+
+export type PreviewResolveData = {
+  body?: never;
+  path: { sessionId: string };
+  query: { scopeId: string };
+  url: "/preview/{sessionId}";
+};
+
+export type PreviewResolveResponses = {
+  200: { appId: string; clientPath: string; sessionId: string; status: "connected" | "offline" };
+};
+export type PreviewResolveResponse = PreviewResolveResponses[keyof PreviewResolveResponses];
+
 export type AppsListData = {
   body?: never;
   path?: never;
@@ -610,52 +634,3 @@ export type DeploymentsPublishResponses = {
 
 export type DeploymentsPublishResponse =
   DeploymentsPublishResponses[keyof DeploymentsPublishResponses];
-
-export type PreviewStartData = {
-  body: {
-    appId: string;
-    deployToken: string;
-  };
-  path?: never;
-  query?: never;
-  url: "/preview/start";
-};
-
-export type PreviewStartResponses = {
-  /**
-   * OK
-   */
-  200: {
-    expiresAt: string;
-    sessionId: string;
-    tunnelToken: string;
-    tunnelUrl: string;
-  };
-};
-
-export type PreviewStartResponse = PreviewStartResponses[keyof PreviewStartResponses];
-
-export type PreviewResolveData = {
-  body?: never;
-  path: {
-    sessionId: string;
-  };
-  query: {
-    scopeId: string;
-  };
-  url: "/preview/{sessionId}";
-};
-
-export type PreviewResolveResponses = {
-  /**
-   * OK
-   */
-  200: {
-    appId: string;
-    clientPath: string;
-    sessionId: string;
-    status: "connected" | "offline";
-  };
-};
-
-export type PreviewResolveResponse = PreviewResolveResponses[keyof PreviewResolveResponses];

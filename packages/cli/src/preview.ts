@@ -8,6 +8,8 @@ import { createTailorKitClient } from "@tailorkit/core/server";
 import pc from "picocolors";
 import { getDeployToken, runWhoami } from "./auth";
 
+const maxPreviewAssetBytes = 1024 * 1024;
+
 export interface PreviewOptions {
   configPath?: string;
   cwd: string;
@@ -18,40 +20,56 @@ export interface PreviewOptions {
   port?: number;
 }
 
-function connectPreviewTunnel(tunnelUrl: string, localUrl: string): void {
+function connectPreviewTunnel(tunnelUrl: string, tunnelToken: string, localUrl: string): void {
   let delay = 1000;
   const connect = () => {
-    const socket = new WebSocket(tunnelUrl);
+    const socket = new WebSocket(tunnelUrl, tunnelToken);
     socket.addEventListener("open", () => {
       delay = 1000;
     });
     socket.addEventListener("message", async (event) => {
-      const message = JSON.parse(String(event.data)) as {
-        id: string;
-        method: string;
-        path: string;
-        type: string;
-      };
+      let message: { id: string; method: string; path: string; type: string };
+      try {
+        message = JSON.parse(String(event.data)) as {
+          id: string;
+          method: string;
+          path: string;
+          type: string;
+        };
+      } catch {
+        return;
+      }
       if (message.type !== "request") {
         return;
       }
       try {
         const response = await fetch(new URL(message.path, localUrl), { method: message.method });
-        const body = Buffer.from(await response.arrayBuffer()).toString("base64");
+        const responseLength = Number(response.headers.get("content-length"));
+        if (Number.isFinite(responseLength) && responseLength > maxPreviewAssetBytes) {
+          throw new Error("Preview asset exceeds the maximum supported size.");
+        }
+        const bytes = Buffer.from(await response.arrayBuffer());
+        if (bytes.byteLength > maxPreviewAssetBytes) {
+          throw new Error("Preview asset exceeds the maximum supported size.");
+        }
         socket.send(
           JSON.stringify({
             type: "response",
             id: message.id,
             status: response.status,
-            headers: {
-              "content-type": response.headers.get("content-type") ?? "application/octet-stream",
-            },
-            body,
+            body: bytes.toString("base64"),
+            contentType: response.headers.get("content-type") ?? "application/octet-stream",
           }),
         );
       } catch {
         socket.send(
-          JSON.stringify({ type: "response", id: message.id, status: 502, headers: {}, body: "" }),
+          JSON.stringify({
+            type: "response",
+            id: message.id,
+            status: 502,
+            contentType: "text/plain",
+            body: "",
+          }),
         );
       }
     });
@@ -84,6 +102,7 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
   const data = result.data;
   connectPreviewTunnel(
     data.tunnelUrl,
+    data.tunnelToken,
     `http://${options.host ?? "127.0.0.1"}:${options.port ?? 4175}`,
   );
   await runExperimentalPreview(options);

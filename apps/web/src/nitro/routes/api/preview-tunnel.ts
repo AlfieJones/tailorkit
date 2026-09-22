@@ -11,8 +11,14 @@ const cleanups = new WeakMap<object, () => void>();
 export default defineWebSocketHandler({
   upgrade(request) {
     const url = new URL(request.url);
+    const token = request.headers
+      .get("sec-websocket-protocol")
+      ?.split(",")
+      .map((protocol) => protocol.trim())
+      .find((protocol) => /^[A-Za-z0-9_-]{43}$/u.test(protocol));
     return {
-      context: { sessionId: url.searchParams.get("session"), token: url.searchParams.get("token") },
+      context: { sessionId: url.searchParams.get("session"), token },
+      protocol: token,
     };
   },
   async open(peer) {

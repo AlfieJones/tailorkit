@@ -79,6 +79,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
     >,
   ) => {
     const url = new URL(request.url);
+    const previewPrefix = `${basePath}/preview/`;
     if (url.pathname === `${basePath}/schema`) {
       return Response.json(schema.serialize());
     }
@@ -88,6 +89,68 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
         assetsBaseUrl: assetsBaseUrl ?? null,
         schema: schema.serialize(),
       });
+    }
+
+    if (
+      (request.method === "GET" || request.method === "HEAD") &&
+      url.pathname.startsWith(previewPrefix)
+    ) {
+      const previewPath = url.pathname.slice(previewPrefix.length);
+      const separator = previewPath.indexOf("/");
+      const sessionId = previewPath.slice(0, separator);
+      const assetPath = previewPath.slice(separator + 1);
+      if (
+        separator <= 0 ||
+        !/^[a-zA-Z0-9._/-]+$/u.test(assetPath) ||
+        assetPath.split("/").some((segment) => segment === "." || segment === "..")
+      ) {
+        return new Response("Not found", { status: 404 });
+      }
+
+      const context = await createContext({
+        actions,
+        platform,
+        platformHeaders,
+        request,
+        schema,
+        authenticate: handlerOptions.authenticate,
+      });
+      const tailorkit = await context.authenticate({ request });
+      if (!tailorkit) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      const previewResult = await previewResolve({
+        client: context.platform,
+        headers: context.platformHeaders,
+        path: { sessionId },
+        query: { scopeId: tailorkit.scopeId },
+      });
+      const previewData = "data" in previewResult ? previewResult.data : previewResult;
+      const preview =
+        previewData && typeof previewData === "object" && "body" in previewData
+          ? previewData.body
+          : previewData;
+      if (!preview || typeof preview !== "object" || !("clientPath" in preview)) {
+        return new Response("Not found", { status: 404 });
+      }
+      const clientPath = preview.clientPath;
+      if (typeof clientPath !== "string") {
+        return new Response("Not found", { status: 404 });
+      }
+
+      const assetUrl = new URL(clientPath);
+      assetUrl.pathname = `${assetUrl.pathname.slice(0, assetUrl.pathname.lastIndexOf("/") + 1)}${assetPath}`;
+      const assetResponse = await fetch(assetUrl, { method: request.method });
+      const headers = new Headers();
+      for (const name of ["cache-control", "content-length", "content-type", "etag"] as const) {
+        const value = assetResponse.headers.get(name);
+        if (value) {
+          headers.set(name, value);
+        }
+      }
+      headers.set("X-Content-Type-Options", "nosniff");
+      return new Response(assetResponse.body, { headers, status: assetResponse.status });
     }
 
     if (request.method === "GET" && url.pathname === `${basePath}/apps`) {
@@ -156,7 +219,10 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
         item.publicId === resolvedPreview.appId
           ? {
               ...item,
-              clientPath: resolvedPreview.clientPath,
+              clientPath: new URL(
+                `${basePath}/preview/${resolvedPreview.sessionId}/client.js`,
+                url.origin,
+              ).href,
               preview: {
                 sessionId: resolvedPreview.sessionId,
                 status: resolvedPreview.status,

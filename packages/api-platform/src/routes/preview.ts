@@ -78,8 +78,6 @@ const startPreview = protectedRouter
     const baseUrl = getBaseUrl().replace(/^http/u, "ws");
     const tunnelUrl = new URL("/api/preview-tunnel", baseUrl);
     tunnelUrl.searchParams.set("session", session.id);
-    tunnelUrl.searchParams.set("token", tunnelToken);
-
     return { body: { expiresAt, sessionId: session.id, tunnelToken, tunnelUrl: tunnelUrl.href } };
   });
 

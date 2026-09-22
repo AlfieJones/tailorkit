@@ -16,9 +16,9 @@ export {
   deploymentsGet,
   deploymentsList,
   deploymentsPublish,
-  type Options,
   previewResolve,
   previewStart,
+  type Options,
 } from "./sdk.gen";
 export type {
   AppsCreateData,
