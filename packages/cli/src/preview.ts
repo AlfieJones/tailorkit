@@ -21,6 +21,41 @@ export interface PreviewOptions {
   port?: number;
 }
 
+async function respondToPreviewAssetRequest(
+  client: ReturnType<typeof createPreviewTunnelClient>,
+  message: { id: string; method: "GET" | "HEAD"; path: string },
+  localUrl: string,
+): Promise<void> {
+  try {
+    const response = await fetch(new URL(message.path, localUrl), {
+      method: message.method,
+    });
+    const responseLength = Number(response.headers.get("content-length"));
+    if (Number.isFinite(responseLength) && responseLength > maxPreviewAssetBytes) {
+      throw new Error("Preview asset exceeds the maximum supported size.");
+    }
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.byteLength > maxPreviewAssetBytes) {
+      throw new Error("Preview asset exceeds the maximum supported size.");
+    }
+    await client.respond({
+      type: "response",
+      id: message.id,
+      status: response.status,
+      body: bytes.toString("base64"),
+      contentType: response.headers.get("content-type") ?? "application/octet-stream",
+    });
+  } catch {
+    await client.respond({
+      type: "response",
+      id: message.id,
+      status: 502,
+      contentType: "text/plain",
+      body: "",
+    });
+  }
+}
+
 function connectPreviewTunnel(tunnelUrl: string, tunnelToken: string, localUrl: string): void {
   let delay = 1000;
   const connect = () => {
@@ -32,34 +67,7 @@ function connectPreviewTunnel(tunnelUrl: string, tunnelToken: string, localUrl: 
         try {
           const requests = await client.connect();
           for await (const message of requests) {
-            try {
-              const response = await fetch(new URL(message.path, localUrl), {
-                method: message.method,
-              });
-              const responseLength = Number(response.headers.get("content-length"));
-              if (Number.isFinite(responseLength) && responseLength > maxPreviewAssetBytes) {
-                throw new Error("Preview asset exceeds the maximum supported size.");
-              }
-              const bytes = Buffer.from(await response.arrayBuffer());
-              if (bytes.byteLength > maxPreviewAssetBytes) {
-                throw new Error("Preview asset exceeds the maximum supported size.");
-              }
-              await client.respond({
-                type: "response",
-                id: message.id,
-                status: response.status,
-                body: bytes.toString("base64"),
-                contentType: response.headers.get("content-type") ?? "application/octet-stream",
-              });
-            } catch {
-              await client.respond({
-                type: "response",
-                id: message.id,
-                status: 502,
-                contentType: "text/plain",
-                body: "",
-              });
-            }
+            void respondToPreviewAssetRequest(client, message, localUrl);
           }
         } catch {
           socket.close();
