@@ -1,0 +1,60 @@
+import { sql } from "drizzle-orm";
+import { index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { createSelectSchema } from "drizzle-orm/zod";
+import z from "zod";
+import { app } from "./apps";
+import { cliToken } from "./cli-auth";
+import { project } from "./project";
+
+/** The durable lifecycle of a local-development preview. */
+export const previewSessionStatus = pgEnum("preview_session_status", ["active", "ended"]);
+
+export const previewSession = pgTable(
+  "preview_session",
+  {
+    id: uuid("id")
+      .default(sql`pg_catalog.gen_random_uuid()`)
+      .primaryKey(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => project.id, { onDelete: "cascade" }),
+    appId: uuid("app_id")
+      .notNull()
+      .references(() => app.id, { onDelete: "cascade" }),
+    /**
+     * The host-authorized CLI credential that opened this session.
+     *
+     * `cli_token.scope_id` is issued by the host integration, so this is
+     * intentionally not a foreign key to a TailorKit dashboard user.
+     */
+    cliTokenId: uuid("cli_token_id")
+      .notNull()
+      .references(() => cliToken.id, { onDelete: "restrict" }),
+    /** A stable, host-defined authorization boundary (user, team, workspace, etc.). */
+    scopeId: text("scope_id").notNull(),
+    /** Hash of the credential accepted by the tunnel WebSocket, never the raw credential. */
+    tunnelTokenHash: text("tunnel_token_hash").notNull(),
+    status: previewSessionStatus("status").default("active").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    endedAt: timestamp("ended_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("preview_session_project_id_status_idx").on(table.projectId, table.status),
+    index("preview_session_cli_token_id_idx").on(table.cliTokenId),
+    index("preview_session_tunnel_token_hash_idx").on(table.tunnelTokenHash),
+    index("preview_session_app_id_scope_id_status_idx").on(
+      table.appId,
+      table.scopeId,
+      table.status,
+    ),
+    index("preview_session_expires_at_idx").on(table.expiresAt),
+  ],
+);
+
+export const PreviewSession = createSelectSchema(previewSession, { scopeId: z.string().max(255) });
+export type PreviewSession = z.output<typeof PreviewSession>;

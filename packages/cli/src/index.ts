@@ -7,7 +7,7 @@ import { createCliAuthApprovalUrl, runLogin, runLogout, runWhoami } from "./auth
 import { runDeploy } from "./deploy";
 import { generateTypes } from "./generator/types";
 import { runInit } from "./init";
-import { runExperimentalPreview, toPreviewOptions } from "./preview";
+import { runExperimentalPreview, toPreviewOptions, runPreview } from "./preview";
 import { openUrlInBrowser } from "./utils/open-browser";
 
 declare const __TAILORKIT_VERSION__: string;
@@ -32,6 +32,21 @@ const formatBytes = (bytes: number): string => {
 };
 
 cli.option("--cwd <path>", "Working directory", { default: "." });
+
+cli
+  .command("preview", "Preview the app inside a host app")
+  .option("--config <path>", "Path to tailorkit config")
+  .option("--host <host>", "Local preview host")
+  .option("--port <port>", "Local preview port")
+  .action(async (options: Record<string, unknown>) => {
+    intro(pc.bold("TailorKit"));
+    try {
+      await runPreview(toPreviewOptions(options));
+    } catch (error) {
+      log.error(error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
 
 cli
   .command("login", "Authenticate the TailorKit CLI with a host app")

@@ -27,6 +27,11 @@
       "types": "./dist/context.d.mts",
       "default": "./dist/context.mjs"
     },
+    "./preview-token": {
+      "development": "./src/preview-token.ts",
+      "types": "./dist/preview-token.d.mts",
+      "default": "./dist/preview-token.mjs"
+    },
     "./*": {
       "development": "./src/*.ts",
       "types": "./dist/*.d.mts",
@@ -34,7 +39,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/procedures.ts src/public-id.ts src/asset-url.ts src/assets.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts --format esm --dts --clean",
+    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/preview-token.ts src/procedures.ts src/public-id.ts src/asset-url.ts src/assets.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts src/routes/preview.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit",
     "generate:openapi": "tsx scripts/generate-openapi.ts",
     "test": "vitest run"
@@ -48,6 +53,7 @@
     "@tailorkit/auth": "workspace:*",
     "@tailorkit/db": "workspace:*",
     "@tailorkit/env": "workspace:*",
+    "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
     "@tailorkit/storage": "workspace:*",
     "drizzle-orm": "catalog:",

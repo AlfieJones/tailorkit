@@ -4,7 +4,11 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { log } from "@clack/prompts";
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
+import { createTailorKitClient } from "@tailorkit/core/server";
 import pc from "picocolors";
+import { getDeployToken, runWhoami } from "./auth";
+
+const maxPreviewAssetBytes = 1024 * 1024;
 
 export interface PreviewOptions {
   configPath?: string;
@@ -14,6 +18,95 @@ export interface PreviewOptions {
   mode?: string;
   outDir?: string;
   port?: number;
+}
+
+function connectPreviewTunnel(tunnelUrl: string, tunnelToken: string, localUrl: string): void {
+  let delay = 1000;
+  const connect = () => {
+    const socket = new WebSocket(tunnelUrl, tunnelToken);
+    socket.addEventListener("open", () => {
+      delay = 1000;
+    });
+    socket.addEventListener("message", async (event) => {
+      let message: { id: string; method: string; path: string; type: string };
+      try {
+        message = JSON.parse(String(event.data)) as {
+          id: string;
+          method: string;
+          path: string;
+          type: string;
+        };
+      } catch {
+        return;
+      }
+      if (message.type !== "request") {
+        return;
+      }
+      try {
+        const response = await fetch(new URL(message.path, localUrl), { method: message.method });
+        const responseLength = Number(response.headers.get("content-length"));
+        if (Number.isFinite(responseLength) && responseLength > maxPreviewAssetBytes) {
+          throw new Error("Preview asset exceeds the maximum supported size.");
+        }
+        const bytes = Buffer.from(await response.arrayBuffer());
+        if (bytes.byteLength > maxPreviewAssetBytes) {
+          throw new Error("Preview asset exceeds the maximum supported size.");
+        }
+        socket.send(
+          JSON.stringify({
+            type: "response",
+            id: message.id,
+            status: response.status,
+            body: bytes.toString("base64"),
+            contentType: response.headers.get("content-type") ?? "application/octet-stream",
+          }),
+        );
+      } catch {
+        socket.send(
+          JSON.stringify({
+            type: "response",
+            id: message.id,
+            status: 502,
+            contentType: "text/plain",
+            body: "",
+          }),
+        );
+      }
+    });
+    socket.addEventListener("close", () => {
+      setTimeout(connect, delay);
+      delay = Math.min(delay * 2, 30_000);
+    });
+  };
+  connect();
+}
+
+export async function runPreview(options: PreviewOptions): Promise<void> {
+  const loaded = await loadTailorKitConfig(options.configPath, options.cwd);
+  if (!loaded.config.appId) {
+    throw new Error("Missing appId. Deploy once before starting a remote preview.");
+  }
+  const auth = await runWhoami(options);
+  const stored = await getDeployToken(auth.hostUrl);
+  if (!stored?.deployToken) {
+    throw new Error("Not logged in. Run tailorkit login first.");
+  }
+  const client = createTailorKitClient({
+    headers: { authorization: `Bearer ${stored.deployToken}` },
+    url: auth.hostUrl,
+  });
+  const result = await client.preview.start({ appId: loaded.config.appId });
+  if (!("data" in result) || !result.data) {
+    throw new Error("Unable to start preview session.");
+  }
+  const data = result.data;
+  connectPreviewTunnel(
+    data.tunnelUrl,
+    data.tunnelToken,
+    `http://${options.host ?? "127.0.0.1"}:${options.port ?? 4175}`,
+  );
+  await runExperimentalPreview(options);
+  log.info(pc.green(`Host preview session: ${data.sessionId}`));
 }
 
 const contentTypes: Record<string, string> = {
