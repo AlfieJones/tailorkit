@@ -33,6 +33,10 @@ import type {
   DeploymentsListResponses,
   DeploymentsPublishData,
   DeploymentsPublishResponses,
+  PreviewResolveData,
+  PreviewResolveResponses,
+  PreviewStartData,
+  PreviewStartResponses,
 } from "./types.gen";
 
 export type Options<
@@ -58,6 +62,23 @@ export const appsList = <ThrowOnError extends boolean = false>(
 ): RequestResult<AppsListResponses, unknown, ThrowOnError> =>
   (options.client ?? client).get<AppsListResponses, unknown, ThrowOnError>({
     url: "/apps",
+    ...options,
+  });
+
+export const previewStart = <ThrowOnError extends boolean = false>(
+  options: Options<PreviewStartData, ThrowOnError>,
+): RequestResult<PreviewStartResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).post<PreviewStartResponses, unknown, ThrowOnError>({
+    url: "/preview/start",
+    ...options,
+    headers: { "Content-Type": "application/json", ...options.headers },
+  });
+
+export const previewResolve = <ThrowOnError extends boolean = false>(
+  options: Options<PreviewResolveData, ThrowOnError>,
+): RequestResult<PreviewResolveResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).get<PreviewResolveResponses, unknown, ThrowOnError>({
+    url: "/preview/{sessionId}",
     ...options,
   });
 

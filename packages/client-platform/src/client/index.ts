@@ -16,6 +16,8 @@ export {
   deploymentsGet,
   deploymentsList,
   deploymentsPublish,
+  previewResolve,
+  previewStart,
   type Options,
 } from "./sdk.gen";
 export type {
@@ -65,4 +67,10 @@ export type {
   DeploymentsPublishData,
   DeploymentsPublishResponse,
   DeploymentsPublishResponses,
+  PreviewResolveData,
+  PreviewResolveResponse,
+  PreviewResolveResponses,
+  PreviewStartData,
+  PreviewStartResponse,
+  PreviewStartResponses,
 } from "./types.gen";

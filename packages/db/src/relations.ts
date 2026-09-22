@@ -65,6 +65,10 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.project.id,
       to: r.cliToken.projectId,
     }),
+    previewSessions: r.many.previewSession({
+      from: r.project.id,
+      to: r.previewSession.projectId,
+    }),
   },
 
   cliAuthSession: {
@@ -79,6 +83,16 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.cliToken.projectId,
       to: r.project.id,
     }),
+    previewSessions: r.many.previewSession({
+      from: r.cliToken.id,
+      to: r.previewSession.cliTokenId,
+    }),
+  },
+
+  previewSession: {
+    app: r.one.app({ from: r.previewSession.appId, to: r.app.id }),
+    cliToken: r.one.cliToken({ from: r.previewSession.cliTokenId, to: r.cliToken.id }),
+    project: r.one.project({ from: r.previewSession.projectId, to: r.project.id }),
   },
 
   app: {
@@ -93,6 +107,10 @@ export const relations = defineRelations(schema, (r) => ({
     deployments: r.many.appDeployment({
       from: r.app.id,
       to: r.appDeployment.appId,
+    }),
+    previewSessions: r.many.previewSession({
+      from: r.app.id,
+      to: r.previewSession.appId,
     }),
   },
 

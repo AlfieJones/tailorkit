@@ -17,7 +17,11 @@ interface TailorKitMetaSnapshot {
 
 export type TailorKitStore = ReturnType<typeof createTailorKitStore>;
 
-export function createTailorKitStore(baseUrlInput: string | URL, initialApps?: TailorKitApp[]) {
+export function createTailorKitStore(
+  baseUrlInput: string | URL,
+  initialApps?: TailorKitApp[],
+  previewSessionId?: string,
+) {
   const baseUrl = toBaseUrl(baseUrlInput);
   const listeners = new Set<() => void>();
   let providedApps = initialApps;
@@ -75,7 +79,11 @@ export function createTailorKitStore(baseUrlInput: string | URL, initialApps?: T
 
       const requestId = ++fetchAppsRequestId;
 
-      fetchAppsPromise = fetch(new URL("apps", baseUrl))
+      const appsUrl = new URL("apps", baseUrl);
+      if (previewSessionId) {
+        appsUrl.searchParams.set("previewSessionId", previewSessionId);
+      }
+      fetchAppsPromise = fetch(appsUrl)
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`Unable to fetch TailorKit apps from ${baseUrl.toString()}.`);

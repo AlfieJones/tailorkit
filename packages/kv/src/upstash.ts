@@ -1,7 +1,7 @@
 import { env } from "@tailorkit/env/server";
-import { withSpan } from "@tailorkit/observability";
+import { sanitizeErrorForLog, withSpan } from "@tailorkit/observability";
 import { Redis } from "@upstash/redis";
-import type { KV, SetOptions } from "./types.js";
+import type { KV, MessageHandler, SetOptions, Unsubscribe } from "./types.js";
 
 const INCREMENT_WITH_TTL_SCRIPT = `
 local value = redis.call("INCR", KEYS[1])
@@ -10,6 +10,50 @@ if value == 1 then
 end
 return value
 `;
+
+function subscribe(redis: Redis, channel: string, handler: MessageHandler): Promise<Unsubscribe> {
+  const subscriber = redis.subscribe<string>(channel);
+  return new Promise((resolve, reject) => {
+    let setupSettled = false;
+    const rejectSetup = (error: Error): void => {
+      if (setupSettled) {
+        return;
+      }
+      setupSettled = true;
+      subscriber.removeAllListeners();
+      void finishSetupFailure(error);
+    };
+    const finishSetupFailure = async (error: Error): Promise<void> => {
+      try {
+        await subscriber.unsubscribe();
+      } catch {
+        // Keep the original subscription error.
+      }
+      reject(error);
+    };
+    subscriber.on("message", ({ message }) => handler(message));
+    subscriber.on("subscribe", () => {
+      if (setupSettled) {
+        return;
+      }
+      setupSettled = true;
+      resolve(async () => {
+        subscriber.removeAllListeners();
+        await subscriber.unsubscribe();
+      });
+    });
+    subscriber.on("error", (error) => {
+      if (setupSettled) {
+        // The subscription is already live; there is no setup promise left to
+        // reject. Surface the error instead of dropping it so a dead
+        // connection doesn't silently stop delivering messages.
+        console.error("Upstash subscription error", sanitizeErrorForLog(error));
+        return;
+      }
+      rejectSetup(error);
+    });
+  });
+}
 
 export function createUpstashKV(): KV<"upstash"> {
   const redis = new Redis({
@@ -85,5 +129,17 @@ export function createUpstashKV(): KV<"upstash"> {
         () => redis.del(key),
       );
     },
+    publish: (channel, message) =>
+      withSpan(
+        "kv.publish",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
+        () => redis.publish(channel, message),
+      ),
+    subscribe: (channel, handler) =>
+      withSpan(
+        "kv.subscribe",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
+        () => subscribe(redis, channel, handler),
+      ),
   };
 }
