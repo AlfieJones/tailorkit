@@ -1,5 +1,12 @@
 # @tailorkit/react
 
+## 0.1.0-beta.12
+
+### Patch Changes
+
+- @tailorkit/core@0.1.0-beta.12
+  - @tailorkit/sandbox@0.1.0-beta.12
+
 ## 0.1.0-beta.11
 
 ### Patch Changes
