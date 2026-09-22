@@ -1,5 +1,5 @@
 import { env } from "@tailorkit/env/server";
-import { withSpan } from "@tailorkit/observability";
+import { sanitizeErrorForLog, withSpan } from "@tailorkit/observability";
 import { Redis } from "@upstash/redis";
 import type { KV, MessageHandler, SetOptions, Unsubscribe } from "./types.js";
 
@@ -42,7 +42,16 @@ function subscribe(redis: Redis, channel: string, handler: MessageHandler): Prom
         await subscriber.unsubscribe();
       });
     });
-    subscriber.on("error", rejectSetup);
+    subscriber.on("error", (error) => {
+      if (setupSettled) {
+        // The subscription is already live; there is no setup promise left to
+        // reject. Surface the error instead of dropping it so a dead
+        // connection doesn't silently stop delivering messages.
+        console.error("Upstash subscription error", sanitizeErrorForLog(error));
+        return;
+      }
+      rejectSetup(error);
+    });
   });
 }
 
