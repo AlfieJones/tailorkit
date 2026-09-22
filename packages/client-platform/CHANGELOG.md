@@ -1,5 +1,11 @@
 # @tailorkit/client-platform
 
+## 0.1.0-beta.11
+
+### Patch Changes
+
+- 54eb091: Use a typed oRPC WebSocket client for local preview tunnels and generate the platform HTTP client from the OpenAPI schema.
+
 ## 0.1.0-beta.10
 
 ### Patch Changes
