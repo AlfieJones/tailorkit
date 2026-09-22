@@ -1,5 +1,12 @@
 # @tailorkit/core
 
+## 0.1.0-beta.11
+
+### Patch Changes
+
+- Updated dependencies [54eb091]
+  - @tailorkit/client-platform@0.1.0-beta.11
+
 ## 0.1.0-beta.10
 
 ### Patch Changes
