@@ -1,5 +1,15 @@
 # tailorkit
 
+## 0.1.0-beta.12
+
+### Patch Changes
+
+- 59ea06d: Fix the preview command when a host returns its successful session payload directly.
+- @tailorkit/app@0.1.0-beta.12
+  - @tailorkit/cli@0.1.0-beta.12
+  - @tailorkit/core@0.1.0-beta.12
+  - @tailorkit/react@0.1.0-beta.12
+
 ## 0.1.0-beta.11
 
 ### Patch Changes
