@@ -24,6 +24,19 @@ function createSecret(): string {
   return randomBytes(32).toString("base64url");
 }
 
+async function getValidCliToken(projectId: string, deployToken: string) {
+  const token = await db.query.cliToken.findFirst({
+    where: {
+      projectId,
+      tokenHash: hash(deployToken),
+    },
+  });
+  if (!token || token.revokedAt || token.expiresAt <= new Date()) {
+    throw new ORPCError("UNAUTHORIZED", { message: "Invalid CLI deploy token." });
+  }
+  return token;
+}
+
 const startPreview = protectedRouter
   .route({ path: "/start", method: "POST" })
   .input(z.object({ body: z.object({ appId: z.string().min(1), deployToken: z.string().min(1) }) }))
@@ -39,15 +52,7 @@ const startPreview = protectedRouter
   )
   .handler(async ({ context, input }) => {
     const now = new Date();
-    const token = await db.query.cliToken.findFirst({
-      where: {
-        projectId: context.project.id,
-        tokenHash: hash(input.body.deployToken),
-      },
-    });
-    if (!token || token.revokedAt || token.expiresAt <= now) {
-      throw new ORPCError("UNAUTHORIZED", { message: "Invalid CLI deploy token." });
-    }
+    const token = await getValidCliToken(context.project.id, input.body.deployToken);
 
     const previewApp = await db.query.app.findFirst({
       where: {
@@ -141,17 +146,9 @@ const stopPreview = protectedRouter
   )
   .output(z.object({ body: z.object({}) }))
   .handler(async ({ context, input }) => {
-    const token = await db.query.cliToken.findFirst({
-      where: {
-        projectId: context.project.id,
-        tokenHash: hash(input.body.deployToken),
-      },
-    });
-    if (!token || token.revokedAt || token.expiresAt <= new Date()) {
-      throw new ORPCError("UNAUTHORIZED", { message: "Invalid CLI deploy token." });
-    }
+    const token = await getValidCliToken(context.project.id, input.body.deployToken);
 
-    await db
+    const [endedSession] = await db
       .update(previewSession)
       .set({ endedAt: new Date(), status: "ended" })
       .where(
@@ -161,7 +158,11 @@ const stopPreview = protectedRouter
           eq(previewSession.cliTokenId, token.id),
           eq(previewSession.status, "active"),
         ),
-      );
+      )
+      .returning({ id: previewSession.id });
+    if (!endedSession) {
+      throw new ORPCError("NOT_FOUND", { message: "Preview session is unavailable." });
+    }
     return { body: {} };
   });
 
