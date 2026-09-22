@@ -9,7 +9,7 @@ import {
   TriangleAlertIcon,
 } from "lucide-react";
 import type React from "react";
-import { cn } from "@tailorkit/ui/lib/utils";
+import { cn } from "@tailorkit/ui";
 import { buttonVariants } from "@tailorkit/ui/components/button";
 
 const TOAST_ICONS = {

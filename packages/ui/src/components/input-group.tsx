@@ -3,7 +3,7 @@
 import { cva } from "class-variance-authority";
 import type { VariantProps } from "class-variance-authority";
 import type * as React from "react";
-import { cn } from "@tailorkit/ui/lib/utils";
+import { cn } from "@tailorkit/ui";
 import { Input } from "@tailorkit/ui/components/input";
 import type { InputProps } from "@tailorkit/ui/components/input";
 import { Textarea } from "@tailorkit/ui/components/textarea";

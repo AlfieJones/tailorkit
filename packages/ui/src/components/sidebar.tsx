@@ -5,7 +5,7 @@ import { useRender } from "@base-ui/react/use-render";
 import { ChevronLeftIcon, ChevronRightIcon, PanelLeftIcon } from "lucide-react";
 import * as React from "react";
 import { useMediaQuery } from "@tailorkit/ui/hooks/use-media-query";
-import { cn } from "@tailorkit/ui/lib/utils";
+import { cn } from "@tailorkit/ui";
 import { Button } from "@tailorkit/ui/components/button";
 import { ScrollArea } from "@tailorkit/ui/components/scroll-area";
 import { Separator } from "@tailorkit/ui/components/separator";
