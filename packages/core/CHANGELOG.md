@@ -1,5 +1,13 @@
 # @tailorkit/core
 
+## 0.1.0-beta.13
+
+### Patch Changes
+
+- 061adb2: Serve preview assets directly through the authenticated tunnel without starting a local HTTP server, and end preview sessions when the CLI exits or cannot establish its tunnel.
+- Updated dependencies [061adb2]
+  - @tailorkit/client-platform@0.1.0-beta.13
+
 ## 0.1.0-beta.12
 
 ### Patch Changes
