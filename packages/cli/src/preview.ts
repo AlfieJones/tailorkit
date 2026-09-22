@@ -97,10 +97,10 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     url: auth.hostUrl,
   });
   const result = await client.preview.start({ appId: loaded.config.appId });
-  if (!("data" in result) || !result.data) {
+  const data = "data" in result ? result.data : result;
+  if (!data) {
     throw new Error("Unable to start preview session.");
   }
-  const data = result.data;
   connectPreviewTunnel(
     data.tunnelUrl,
     data.tunnelToken,

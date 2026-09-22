@@ -10,6 +10,7 @@ import { createPreviewViewerToken } from "../preview-token";
 import { o, protectedRouter } from "../procedures";
 
 const previewSessionLifetimeMs = 8 * 60 * 60 * 1000;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function hash(value: string): string {
   if (!env.AUTH_SECRET) {
@@ -50,8 +51,10 @@ const startPreview = protectedRouter
     const previewApp = await db.query.app.findFirst({
       where: {
         projectId: context.project.id,
-        publicId: input.body.appId,
         scopeId: token.scopeId,
+        ...(uuidPattern.test(input.body.appId)
+          ? { id: input.body.appId }
+          : { publicId: input.body.appId }),
       },
     });
     if (!previewApp) {
