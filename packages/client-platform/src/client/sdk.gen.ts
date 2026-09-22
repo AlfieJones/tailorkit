@@ -37,6 +37,8 @@ import type {
   PreviewResolveResponses,
   PreviewStartData,
   PreviewStartResponses,
+  PreviewStopData,
+  PreviewStopResponses,
 } from "./types.gen";
 
 export type Options<
@@ -235,4 +237,16 @@ export const previewResolve = <ThrowOnError extends boolean = false>(
   (options.client ?? client).get<PreviewResolveResponses, unknown, ThrowOnError>({
     url: "/preview/{sessionId}",
     ...options,
+  });
+
+export const previewStop = <ThrowOnError extends boolean = false>(
+  options: Options<PreviewStopData, ThrowOnError>,
+): RequestResult<PreviewStopResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).post<PreviewStopResponses, unknown, ThrowOnError>({
+    url: "/preview/{sessionId}/stop",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });

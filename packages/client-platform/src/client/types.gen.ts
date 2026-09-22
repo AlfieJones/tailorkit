@@ -659,3 +659,25 @@ export type PreviewResolveResponses = {
 };
 
 export type PreviewResolveResponse = PreviewResolveResponses[keyof PreviewResolveResponses];
+
+export type PreviewStopData = {
+  body: {
+    deployToken: string;
+  };
+  path: {
+    sessionId: string;
+  };
+  query?: never;
+  url: "/preview/{sessionId}/stop";
+};
+
+export type PreviewStopResponses = {
+  /**
+   * OK
+   */
+  200: {
+    [key: string]: unknown;
+  };
+};
+
+export type PreviewStopResponse = PreviewStopResponses[keyof PreviewStopResponses];

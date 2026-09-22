@@ -1,6 +1,4 @@
-import { createServer } from "node:http";
-import type { Server } from "node:http";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { log } from "@clack/prompts";
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
@@ -15,99 +13,8 @@ export interface PreviewOptions {
   configPath?: string;
   cwd: string;
   entry?: string;
-  host?: string;
   mode?: string;
   outDir?: string;
-  port?: number;
-}
-
-async function respondToPreviewAssetRequest(
-  client: ReturnType<typeof createPreviewTunnelClient>,
-  message: { id: string; method: "GET" | "HEAD"; path: string },
-  localUrl: string,
-): Promise<void> {
-  try {
-    const response = await fetch(new URL(message.path, localUrl), {
-      method: message.method,
-    });
-    const responseLength = Number(response.headers.get("content-length"));
-    if (Number.isFinite(responseLength) && responseLength > maxPreviewAssetBytes) {
-      throw new Error("Preview asset exceeds the maximum supported size.");
-    }
-    const bytes = Buffer.from(await response.arrayBuffer());
-    if (bytes.byteLength > maxPreviewAssetBytes) {
-      throw new Error("Preview asset exceeds the maximum supported size.");
-    }
-    await client.respond({
-      type: "response",
-      id: message.id,
-      status: response.status,
-      body: bytes.toString("base64"),
-      contentType: response.headers.get("content-type") ?? "application/octet-stream",
-    });
-  } catch {
-    await client.respond({
-      type: "response",
-      id: message.id,
-      status: 502,
-      contentType: "text/plain",
-      body: "",
-    });
-  }
-}
-
-function connectPreviewTunnel(tunnelUrl: string, tunnelToken: string, localUrl: string): void {
-  let delay = 1000;
-  const connect = () => {
-    const socket = new WebSocket(tunnelUrl, tunnelToken);
-    const client = createPreviewTunnelClient(socket);
-    socket.addEventListener("open", () => {
-      delay = 1000;
-      void (async () => {
-        try {
-          const requests = await client.connect();
-          for await (const message of requests) {
-            void respondToPreviewAssetRequest(client, message, localUrl);
-          }
-        } catch {
-          socket.close();
-        }
-      })();
-    });
-    socket.addEventListener("close", () => {
-      setTimeout(connect, delay);
-      delay = Math.min(delay * 2, 30_000);
-    });
-  };
-  connect();
-}
-
-export async function runPreview(options: PreviewOptions): Promise<void> {
-  const loaded = await loadTailorKitConfig(options.configPath, options.cwd);
-  if (!loaded.config.appId) {
-    throw new Error("Missing appId. Deploy once before starting a remote preview.");
-  }
-  const auth = await runWhoami(options);
-  const stored = await getDeployToken(auth.hostUrl);
-  if (!stored?.deployToken) {
-    throw new Error("Not logged in. Run tailorkit login first.");
-  }
-  const client = createTailorKitClient({
-    headers: { authorization: `Bearer ${stored.deployToken}` },
-    url: auth.hostUrl,
-  });
-  const result = await client.preview.start({ appId: loaded.config.appId });
-  const data = "data" in result ? result.data : result;
-  if (!data) {
-    throw new Error("Unable to start preview session.");
-  }
-  connectPreviewTunnel(
-    data.tunnelUrl,
-    data.tunnelToken,
-    `http://${options.host ?? "127.0.0.1"}:${options.port ?? 4175}`,
-  );
-  await runExperimentalPreview(options);
-  log.info(pc.green(`Host preview session: ${data.sessionId}`));
 }
 
 const contentTypes: Record<string, string> = {
@@ -121,103 +28,197 @@ const contentTypes: Record<string, string> = {
 const getContentType = (filepath: string): string =>
   contentTypes[path.extname(filepath)] ?? "application/octet-stream";
 
-const parsePort = (value: unknown): number | undefined => {
-  if (value === undefined) {
-    return undefined;
+class PreviewAssetError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "PreviewAssetError";
+    this.status = status;
   }
-  const port = Number.parseInt(String(value), 10);
-  if (!Number.isInteger(port) || port <= 0) {
-    throw new Error("--port must be a positive integer.");
-  }
-  return port;
+}
+
+interface PreviewAssetResponse {
+  body: string;
+  contentType: string;
+  status: number;
+}
+
+const isPathOutsideRoot = (root: string, filepath: string): boolean => {
+  const relativeToRoot = path.relative(root, filepath);
+  return (
+    relativeToRoot === ".." ||
+    relativeToRoot.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativeToRoot)
+  );
 };
+
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
+async function getPreviewAssetResponse(
+  message: { method: "GET" | "HEAD"; path: string },
+  root: string,
+): Promise<PreviewAssetResponse> {
+  try {
+    let pathname: string;
+    try {
+      pathname = decodeURIComponent(new URL(message.path, "http://localhost").pathname);
+    } catch {
+      throw new PreviewAssetError("Invalid preview asset path.", 400);
+    }
+    const filepath = path.resolve(root, pathname.slice(1));
+    if (isPathOutsideRoot(root, filepath)) {
+      throw new PreviewAssetError("Preview asset path is outside the build output.", 403);
+    }
+
+    const realFilepath = await realpath(filepath).catch((error: unknown) => {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new PreviewAssetError("Preview asset was not found.", 404);
+      }
+      throw error;
+    });
+    if (isPathOutsideRoot(root, realFilepath)) {
+      throw new PreviewAssetError("Preview asset path is outside the build output.", 403);
+    }
+
+    const fileStat = await stat(realFilepath);
+    if (!fileStat?.isFile()) {
+      throw new PreviewAssetError("Preview asset was not found.", 404);
+    }
+    if (fileStat.size > maxPreviewAssetBytes) {
+      throw new PreviewAssetError("Preview asset exceeds the maximum supported size.", 413);
+    }
+
+    const bytes = message.method === "HEAD" ? undefined : await readFile(realFilepath);
+    return {
+      status: 200,
+      body: bytes?.toString("base64") ?? "",
+      contentType: getContentType(realFilepath),
+    };
+  } catch (error) {
+    const response =
+      error instanceof PreviewAssetError
+        ? error
+        : new PreviewAssetError(`Unable to read preview asset: ${errorMessage(error)}`, 500);
+    if (response.status >= 500) {
+      log.error(response.message);
+    }
+    return {
+      status: response.status,
+      body: Buffer.from(response.message).toString("base64"),
+      contentType: "text/plain; charset=utf-8",
+    };
+  }
+}
+
+async function respondToPreviewAssetRequest(
+  client: ReturnType<typeof createPreviewTunnelClient>,
+  message: { id: string; method: "GET" | "HEAD"; path: string },
+  root: string,
+): Promise<void> {
+  const response = await getPreviewAssetResponse(message, root);
+  await client.respond({ type: "response", id: message.id, ...response });
+}
+
+async function connectPreviewTunnel(
+  tunnelUrl: string,
+  tunnelToken: string,
+  root: string,
+): Promise<() => void> {
+  let delay = 1000;
+  let closed = false;
+  let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
+  let socket: WebSocket | undefined;
+  let hasConnected = false;
+
+  return await new Promise<() => void>((resolve, reject) => {
+    const close = (): void => {
+      closed = true;
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      socket?.close();
+    };
+    const failInitialConnection = (): void => {
+      if (!hasConnected && !closed) {
+        close();
+        reject(new Error("Unable to connect to the preview tunnel."));
+      }
+    };
+    const scheduleReconnect = (): void => {
+      reconnectTimeout = setTimeout(connect, delay);
+      delay = Math.min(delay * 2, 30_000);
+    };
+    const connect = (): void => {
+      if (closed) {
+        return;
+      }
+      let newSocket: WebSocket;
+      try {
+        newSocket = new WebSocket(tunnelUrl, tunnelToken);
+      } catch {
+        failInitialConnection();
+        return;
+      }
+      socket = newSocket;
+      const client = createPreviewTunnelClient(newSocket);
+      newSocket.addEventListener("open", () => {
+        delay = 1000;
+        if (!hasConnected) {
+          hasConnected = true;
+          resolve(close);
+        }
+        void (async () => {
+          try {
+            const requests = await client.connect();
+            for await (const message of requests) {
+              void respondToPreviewAssetRequest(client, message, root).catch((error: unknown) => {
+                log.error(`Unable to send preview asset response: ${errorMessage(error)}`);
+              });
+            }
+          } catch (error) {
+            log.error(`Preview tunnel request stream failed: ${errorMessage(error)}`);
+            newSocket.close();
+          }
+        })();
+      });
+      newSocket.addEventListener("error", () => {
+        failInitialConnection();
+      });
+      newSocket.addEventListener("close", () => {
+        if (closed) {
+          return;
+        }
+        if (!hasConnected) {
+          failInitialConnection();
+          return;
+        }
+        scheduleReconnect();
+      });
+    };
+    connect();
+  });
+}
 
 export const toPreviewOptions = (options: Record<string, unknown>): PreviewOptions => ({
   configPath: options.config as string | undefined,
   cwd: String(options.cwd ?? "."),
   entry: options.entry as string | undefined,
-  host: options.host as string | undefined,
   mode: options.mode as string | undefined,
   outDir: options.outDir as string | undefined,
-  port: parsePort(options.port),
 });
 
-interface AppRegistryItem {
-  clientPath: string;
-  description?: string;
-  id: string;
-  name?: string;
-}
-
-const createStaticServer = (root: string, apps: readonly AppRegistryItem[]): Server =>
-  createServer(async (request, response) => {
-    try {
-      const url = new URL(request.url ?? "/", "http://localhost");
-      if (url.pathname === "/apps") {
-        response.writeHead(200, {
-          "access-control-allow-origin": "*",
-          "content-type": "application/json; charset=utf-8",
-        });
-        response.end(JSON.stringify(apps));
-        return;
-      }
-
-      const pathname = decodeURIComponent(url.pathname);
-      const relativePath = pathname === "/" ? "client.js" : pathname.slice(1);
-      const filepath = path.resolve(root, relativePath);
-      const relativeToRoot = path.relative(root, filepath);
-
-      if (relativeToRoot.startsWith("..") || path.isAbsolute(relativeToRoot)) {
-        response.writeHead(403);
-        response.end("Forbidden");
-        return;
-      }
-
-      const fileStat = await stat(filepath).catch(() => null);
-      if (!fileStat?.isFile()) {
-        response.writeHead(404);
-        response.end("Not found");
-        return;
-      }
-
-      response.writeHead(200, {
-        "access-control-allow-origin": "*",
-        "content-type": getContentType(filepath),
-      });
-      response.end(await readFile(filepath));
-    } catch (error) {
-      response.writeHead(500);
-      response.end(error instanceof Error ? error.message : String(error));
-    }
-  });
-
-const loadAppRegistry = async (root: string): Promise<AppRegistryItem[]> => {
-  const packageJsonPath = path.join(root, "package.json");
-  const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8")) as {
-    description?: unknown;
-    name?: unknown;
-  };
-  const id = typeof packageJson.name === "string" ? packageJson.name : path.basename(root);
-
-  return [
-    {
-      clientPath: "/client.js",
-      description:
-        typeof packageJson.description === "string" ? packageJson.description : undefined,
-      id,
-      name: typeof packageJson.name === "string" ? packageJson.name : undefined,
-    },
-  ];
-};
-
-export const runExperimentalPreview = async (options: PreviewOptions): Promise<void> => {
+export async function runPreview(options: PreviewOptions): Promise<void> {
   const loaded = await loadTailorKitConfig(options.configPath, options.cwd);
-  const outDir = path.resolve(
-    loaded.root,
-    options.outDir ?? loaded.config.build?.outDir ?? ".tailorkit",
-  );
-  const host = options.host ?? "127.0.0.1";
-  const port = options.port ?? 4175;
+  if (!loaded.config.appId) {
+    throw new Error("Missing appId. Deploy once before starting a remote preview.");
+  }
+  const auth = await runWhoami(options);
+  const stored = await getDeployToken(auth.hostUrl);
+  if (!stored?.deployToken) {
+    throw new Error("Not logged in. Run tailorkit login first.");
+  }
 
   const { buildApp } = await import("@tailorkit/app/builder");
   const watcher = await buildApp({
@@ -228,31 +229,56 @@ export const runExperimentalPreview = async (options: PreviewOptions): Promise<v
     outDir: options.outDir,
     watch: true,
   });
-
   const closeWatcher = (): void => {
     if (watcher && typeof watcher === "object" && "close" in watcher) {
       void (watcher as { close: () => Promise<void> | void }).close();
     }
   };
-
-  const server = createStaticServer(outDir, await loadAppRegistry(loaded.root));
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(port, host, resolve);
+  const client = createTailorKitClient({
+    headers: { authorization: `Bearer ${stored.deployToken}` },
+    url: auth.hostUrl,
   });
-  server.removeAllListeners("error");
-
-  process.once("SIGINT", () => {
+  const result = await client.preview
+    .start({ appId: loaded.config.appId })
+    .catch((error: unknown) => {
+      closeWatcher();
+      throw error;
+    });
+  const data = "data" in result ? result.data : result;
+  if (!data) {
     closeWatcher();
-    server.close();
-    process.exit(0);
-  });
-  process.once("SIGTERM", () => {
+    throw new Error("Unable to start preview session.");
+  }
+  const endPreviewSession = async (): Promise<void> => {
+    try {
+      await client.preview.stop({ sessionId: data.sessionId });
+    } catch (error) {
+      log.warn(`Unable to end preview session: ${errorMessage(error)}`);
+    }
+  };
+  const outDir = path.resolve(
+    loaded.root,
+    options.outDir ?? loaded.config.build?.outDir ?? ".tailorkit",
+  );
+  const root = await realpath(outDir).catch(async (error: unknown) => {
     closeWatcher();
-    server.close();
-    process.exit(0);
+    await endPreviewSession();
+    throw new Error(`Unable to resolve preview build output: ${errorMessage(error)}`);
   });
-
-  log.info(pc.green(`Experimental preview running at http://${host}:${port}`));
-  log.info(pc.dim(`Serving built app client from ${outDir}`));
-};
+  const closeTunnel = await connectPreviewTunnel(data.tunnelUrl, data.tunnelToken, root).catch(
+    async (error: unknown) => {
+      closeWatcher();
+      await endPreviewSession();
+      throw error;
+    },
+  );
+  const closePreview = (): void => {
+    closeWatcher();
+    closeTunnel();
+    void endPreviewSession().finally(() => process.exit(0));
+  };
+  process.once("SIGINT", closePreview);
+  process.once("SIGTERM", closePreview);
+  log.info(pc.green(`Host preview session: ${data.sessionId}`));
+  log.info(pc.dim(`Serving built app assets from ${outDir} through the preview tunnel`));
+}

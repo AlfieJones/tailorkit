@@ -19,6 +19,7 @@ export {
   type Options,
   previewResolve,
   previewStart,
+  previewStop,
 } from "./sdk.gen";
 export type {
   AppsCreateData,
@@ -73,4 +74,7 @@ export type {
   PreviewStartData,
   PreviewStartResponse,
   PreviewStartResponses,
+  PreviewStopData,
+  PreviewStopResponse,
+  PreviewStopResponses,
 } from "./types.gen";
