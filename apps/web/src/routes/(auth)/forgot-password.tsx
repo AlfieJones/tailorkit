@@ -2,7 +2,7 @@
 
 import { ChevronLeftIcon } from "lucide-react";
 import { Fragment, useRef, useState } from "react";
-import { clsx } from "clsx";
+import { cn } from "@tailorkit/ui/lib/utils";
 import { Button } from "@tailorkit/ui/components/button";
 import {
   Card,
@@ -192,7 +192,7 @@ function RouteComponent() {
     return "Choose a new password for your account";
   };
 
-  const contentClass = clsx(
+  const contentClass = cn(
     "transition-all duration-150",
     visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1",
   );
