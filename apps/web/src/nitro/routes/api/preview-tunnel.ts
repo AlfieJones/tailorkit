@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { onError } from "@orpc/server";
+import { onError, ORPCError, ValidationError } from "@orpc/server";
 import { experimental_RPCHandler as RPCHandler } from "@orpc/server/crossws";
 import { hashSecret } from "@tailorkit/api-utils/hashing";
 import { db } from "@tailorkit/db";
@@ -12,9 +12,20 @@ import type { PreviewTunnelContext } from "@tailorkit/api-platform/preview-tunne
 
 const cleanups = new WeakMap<object, Unsubscribe>();
 const contexts = new WeakMap<object, PreviewTunnelContext>();
+function isInputValidationError(error: unknown): boolean {
+  return (
+    error instanceof ORPCError &&
+    error.code === "BAD_REQUEST" &&
+    error.cause instanceof ValidationError
+  );
+}
+
 const rpcHandler = new RPCHandler(previewTunnelRouter, {
   interceptors: [
     onError((error) => {
+      if (isInputValidationError(error)) {
+        return;
+      }
       console.error("Preview tunnel RPC failed", error);
     }),
   ],
@@ -62,11 +73,15 @@ export default defineWebSocketHandler({
       heartbeat();
       timer = setInterval(heartbeat, 20_000);
     };
-    contexts.set(peer, { activate, connectionId, sessionId: session.id });
-    cleanups.set(peer, () => {
+    const deactivate = () => {
       if (timer) {
         clearInterval(timer);
+        timer = undefined;
       }
+    };
+    contexts.set(peer, { activate, connectionId, deactivate, sessionId: session.id });
+    cleanups.set(peer, () => {
+      deactivate();
       return Promise.resolve();
     });
   },

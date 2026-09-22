@@ -7,13 +7,14 @@ import type { PreviewAssetRequest } from "./preview-tunnel-relay";
 export interface PreviewTunnelContext {
   activate: () => void;
   connectionId: string;
+  deactivate: () => void;
   sessionId: string;
 }
 
 const previewAssetRequest = z.object({
   id: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/u),
   method: z.enum(["GET", "HEAD"]),
-  path: z.string().min(1),
+  path: z.string().regex(/^\/(?!\/|\\)[^\\]*$/u),
   type: z.literal("request"),
 });
 
@@ -41,6 +42,7 @@ const connect = o.output(eventIterator(previewAssetRequest)).handler(async funct
   try {
     yield* requests.subscribe("request");
   } finally {
+    context.deactivate();
     await unsubscribe();
   }
 });
