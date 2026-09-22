@@ -179,8 +179,13 @@ async function connectPreviewTunnel(
               });
             }
           } catch (error) {
-            log.error(`Preview tunnel request stream failed: ${errorMessage(error)}`);
-            newSocket.close();
+            // RPCLink aborts its iterator after the WebSocket closes. The close
+            // handler below already reconnects that expected disconnect, so do
+            // not report the resulting AsyncIdQueue error as a tunnel failure.
+            if (!closed && newSocket.readyState === WebSocket.OPEN) {
+              log.error(`Preview tunnel request stream failed: ${errorMessage(error)}`);
+              newSocket.close();
+            }
           }
         })();
       });
