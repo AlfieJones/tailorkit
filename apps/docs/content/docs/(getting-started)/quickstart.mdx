@@ -72,6 +72,21 @@ styles. The generated `src/client.ts` already registers this view.
 </Step>
 <Step>
 
+### Link and deploy the app
+
+Authenticate the CLI with the host, then make the first deployment:
+
+```sh
+pnpm exec tailorkit login
+pnpm deploy
+```
+
+When prompted, create the TailorKit app. The deployment records its `appId` in
+`tailorkit.config.ts`, which the preview command uses to start a session.
+
+</Step>
+<Step>
+
 ### Preview the app
 
 Start a remote preview session:

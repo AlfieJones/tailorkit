@@ -37,7 +37,11 @@ async function respondToPreviewAssetRequest(
     const pathname = decodeURIComponent(new URL(message.path, "http://localhost").pathname);
     const filepath = path.resolve(root, pathname.slice(1));
     const relativeToRoot = path.relative(root, filepath);
-    if (relativeToRoot.startsWith("..") || path.isAbsolute(relativeToRoot)) {
+    if (
+      relativeToRoot === ".." ||
+      relativeToRoot.startsWith(`..${path.sep}`) ||
+      path.isAbsolute(relativeToRoot)
+    ) {
       throw new Error("Preview asset path is outside the build output.");
     }
 
