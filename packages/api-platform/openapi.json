@@ -2417,6 +2417,49 @@
           }
         }
       }
+    },
+    "/preview/{sessionId}/stop": {
+      "post": {
+        "operationId": "preview.stop",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "deployToken": {
+                    "type": "string"
+                  }
+                },
+                "required": ["deployToken"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -101,7 +101,9 @@ async function getPreviewAssetResponse(
       error instanceof PreviewAssetError
         ? error
         : new PreviewAssetError(`Unable to read preview asset: ${errorMessage(error)}`, 500);
-    log.error(response.message);
+    if (response.status >= 500) {
+      log.error(response.message);
+    }
     return {
       status: response.status,
       body: Buffer.from(response.message).toString("base64"),
@@ -247,24 +249,33 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     closeWatcher();
     throw new Error("Unable to start preview session.");
   }
+  const endPreviewSession = async (): Promise<void> => {
+    try {
+      await client.preview.stop({ sessionId: data.sessionId });
+    } catch (error) {
+      log.warn(`Unable to end preview session: ${errorMessage(error)}`);
+    }
+  };
   const outDir = path.resolve(
     loaded.root,
     options.outDir ?? loaded.config.build?.outDir ?? ".tailorkit",
   );
-  const root = await realpath(outDir).catch((error: unknown) => {
+  const root = await realpath(outDir).catch(async (error: unknown) => {
     closeWatcher();
+    await endPreviewSession();
     throw new Error(`Unable to resolve preview build output: ${errorMessage(error)}`);
   });
   const closeTunnel = await connectPreviewTunnel(data.tunnelUrl, data.tunnelToken, root).catch(
-    (error: unknown) => {
+    async (error: unknown) => {
       closeWatcher();
+      await endPreviewSession();
       throw error;
     },
   );
   const closePreview = (): void => {
     closeWatcher();
     closeTunnel();
-    process.exit(0);
+    void endPreviewSession().finally(() => process.exit(0));
   };
   process.once("SIGINT", closePreview);
   process.once("SIGTERM", closePreview);

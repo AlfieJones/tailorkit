@@ -4,6 +4,7 @@ import { getBaseUrl, env } from "@tailorkit/env/server";
 import { createPreviewTunnelPresence, getKV } from "@tailorkit/kv";
 import { db } from "@tailorkit/db";
 import { previewSession } from "@tailorkit/db/schema/preview-session";
+import { and, eq } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import z from "zod";
 import { createPreviewViewerToken } from "../preview-token";
@@ -130,6 +131,40 @@ const resolvePreview = protectedRouter
     };
   });
 
+const stopPreview = protectedRouter
+  .route({ path: "/:sessionId/stop", method: "POST" })
+  .input(
+    z.object({
+      body: z.object({ deployToken: z.string().min(1) }),
+      params: z.object({ sessionId: z.uuid() }),
+    }),
+  )
+  .output(z.object({ body: z.object({}) }))
+  .handler(async ({ context, input }) => {
+    const token = await db.query.cliToken.findFirst({
+      where: {
+        projectId: context.project.id,
+        tokenHash: hash(input.body.deployToken),
+      },
+    });
+    if (!token || token.revokedAt || token.expiresAt <= new Date()) {
+      throw new ORPCError("UNAUTHORIZED", { message: "Invalid CLI deploy token." });
+    }
+
+    await db
+      .update(previewSession)
+      .set({ endedAt: new Date(), status: "ended" })
+      .where(
+        and(
+          eq(previewSession.id, input.params.sessionId),
+          eq(previewSession.projectId, context.project.id),
+          eq(previewSession.cliTokenId, token.id),
+          eq(previewSession.status, "active"),
+        ),
+      );
+    return { body: {} };
+  });
+
 export const previewRouter = o
   .prefix("/preview")
-  .router({ start: startPreview, resolve: resolvePreview });
+  .router({ start: startPreview, resolve: resolvePreview, stop: stopPreview });
