@@ -18,6 +18,7 @@ const serverPackages = [
 
 export default defineConfig(({ mode }) => {
   const isDev = mode === "development";
+  const isTest = mode === "test";
 
   return {
     define: {
@@ -34,7 +35,7 @@ export default defineConfig(({ mode }) => {
         // The preview tunnel keeps the developer CLI connected through this
         // Nitro deployment. The session protocol uses Redis leases so a
         // Vercel-forced reconnect never ends a preview prematurely.
-        features: { websocket: true },
+        features: { websocket: !isTest },
         // Nitro's dev server otherwise treats client.js as a Vite static asset.
         // Forward this prefix to Start, which owns the endpoint and its handlers.
         handlers: [{ route: "/api/assets/**", handler: "#start-assets", env: "dev" }],
