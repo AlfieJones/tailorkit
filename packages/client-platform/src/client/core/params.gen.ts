@@ -111,36 +111,14 @@ export function buildClientParams(args: ReadonlyArray<unknown>, fields: FieldsCo
   };
 
   const map = buildKeyMap(fields);
-  let bodyMode: "mapped" | "raw" | undefined;
 
   function writeSlot(slot: Slot, key: string, value: unknown): void {
-    if (slot === "body") {
-      if (bodyMode === "raw") {
-        throw new Error("Cannot mix raw and mapped body parameters.");
-      }
-      bodyMode = "mapped";
-    }
     let record = params[slot] as Record<string, unknown> | undefined;
     if (record === undefined) {
       record = Object.create(null) as Record<string, unknown>;
       params[slot] = record;
     }
-    if (record === null || typeof record !== "object" || Array.isArray(record)) {
-      throw new Error(`Cannot map fields into a non-object ${slot} parameter.`);
-    }
     record[key] = value;
-  }
-
-  function writeRawSlot(slot: Slot, value: unknown): void {
-    if (slot === "body") {
-      if (bodyMode === "mapped") {
-        throw new Error("Cannot mix raw and mapped body parameters.");
-      }
-      bodyMode = "raw";
-      params.body = value;
-      return;
-    }
-    params[slot] = value as Record<string, unknown>;
   }
 
   let config: FieldsConfig[number] | undefined;
@@ -162,7 +140,7 @@ export function buildClientParams(args: ReadonlyArray<unknown>, fields: FieldsCo
           writeSlot(field.in, name, arg);
         }
       } else {
-        writeRawSlot("body", arg);
+        params.body = arg;
       }
     } else {
       for (const [key, value] of Object.entries(arg ?? {})) {
@@ -173,7 +151,7 @@ export function buildClientParams(args: ReadonlyArray<unknown>, fields: FieldsCo
             const name = field.map || key;
             writeSlot(field.in, name, value);
           } else {
-            writeRawSlot(field.map, value);
+            params[field.map] = value;
           }
         } else {
           const extra = extraPrefixes.find(([prefix]) => key.startsWith(prefix));

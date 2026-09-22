@@ -39,7 +39,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/preview-token.ts src/procedures.ts src/public-id.ts src/asset-url.ts src/assets.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts src/routes/preview.ts --format esm --dts --clean",
+    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/preview-token.ts src/preview-tunnel.ts src/preview-tunnel-relay.ts src/procedures.ts src/public-id.ts src/asset-url.ts src/assets.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts src/routes/preview.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit",
     "generate:openapi": "tsx scripts/generate-openapi.ts",
     "test": "vitest run"

@@ -29,6 +29,7 @@
   "dependencies": {
     "@clack/prompts": "^1.8.0",
     "@tailorkit/app": "workspace:*",
+    "@tailorkit/client-platform": "workspace:*",
     "@tailorkit/core": "workspace:*",
     "cac": "^7.0.0",
     "liquidjs": "^10.29.0",
