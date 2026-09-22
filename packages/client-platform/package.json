@@ -23,6 +23,10 @@
     "./client/*": {
       "types": "./dist/client/*.d.ts",
       "import": "./dist/client/*.js"
+    },
+    "./preview-tunnel": {
+      "types": "./dist/preview-tunnel.d.ts",
+      "import": "./dist/preview-tunnel.js"
     }
   },
   "publishConfig": {
@@ -30,12 +34,15 @@
   },
   "scripts": {
     "build": "tsup 'src/**/*.ts' --format esm --target node20 --clean && tsc -p tsconfig.build.json",
-    "generate": "openapi-ts",
+    "generate": "openapi-ts && node ./scripts/restore-openapi-params.mjs && oxfmt src/client",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@orpc/client": "catalog:"
+  },
   "devDependencies": {
-    "@hey-api/openapi-ts": "0.99.0",
+    "@hey-api/openapi-ts": "next",
     "@tailorkit/api-platform": "workspace:*",
     "@tailorkit/config": "workspace:*",
     "@types/node": "catalog:",

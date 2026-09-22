@@ -1,10 +1,10 @@
 import { db } from "@tailorkit/db";
 import { verifyPreviewViewerToken } from "@tailorkit/api-platform/preview-token";
-import { defineHandler } from "nitro/h3";
 import {
   PreviewTunnelOverloadedError,
   requestPreviewAsset,
-} from "../../../../../preview-tunnel-relay";
+} from "@tailorkit/api-platform/preview-tunnel-relay";
+import { defineHandler } from "nitro/h3";
 
 export default defineHandler(async (event) => {
   const url = new URL(event.req.url);
