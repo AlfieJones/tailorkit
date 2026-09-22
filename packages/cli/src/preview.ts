@@ -4,6 +4,7 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { log } from "@clack/prompts";
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
+import { createPreviewTunnelClient } from "@tailorkit/client-platform/preview-tunnel";
 import { createTailorKitClient } from "@tailorkit/core/server";
 import pc from "picocolors";
 import { getDeployToken, runWhoami } from "./auth";
@@ -20,58 +21,58 @@ export interface PreviewOptions {
   port?: number;
 }
 
+async function respondToPreviewAssetRequest(
+  client: ReturnType<typeof createPreviewTunnelClient>,
+  message: { id: string; method: "GET" | "HEAD"; path: string },
+  localUrl: string,
+): Promise<void> {
+  try {
+    const response = await fetch(new URL(message.path, localUrl), {
+      method: message.method,
+    });
+    const responseLength = Number(response.headers.get("content-length"));
+    if (Number.isFinite(responseLength) && responseLength > maxPreviewAssetBytes) {
+      throw new Error("Preview asset exceeds the maximum supported size.");
+    }
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.byteLength > maxPreviewAssetBytes) {
+      throw new Error("Preview asset exceeds the maximum supported size.");
+    }
+    await client.respond({
+      type: "response",
+      id: message.id,
+      status: response.status,
+      body: bytes.toString("base64"),
+      contentType: response.headers.get("content-type") ?? "application/octet-stream",
+    });
+  } catch {
+    await client.respond({
+      type: "response",
+      id: message.id,
+      status: 502,
+      contentType: "text/plain",
+      body: "",
+    });
+  }
+}
+
 function connectPreviewTunnel(tunnelUrl: string, tunnelToken: string, localUrl: string): void {
   let delay = 1000;
   const connect = () => {
     const socket = new WebSocket(tunnelUrl, tunnelToken);
+    const client = createPreviewTunnelClient(socket);
     socket.addEventListener("open", () => {
       delay = 1000;
-    });
-    socket.addEventListener("message", async (event) => {
-      let message: { id: string; method: string; path: string; type: string };
-      try {
-        message = JSON.parse(String(event.data)) as {
-          id: string;
-          method: string;
-          path: string;
-          type: string;
-        };
-      } catch {
-        return;
-      }
-      if (message.type !== "request") {
-        return;
-      }
-      try {
-        const response = await fetch(new URL(message.path, localUrl), { method: message.method });
-        const responseLength = Number(response.headers.get("content-length"));
-        if (Number.isFinite(responseLength) && responseLength > maxPreviewAssetBytes) {
-          throw new Error("Preview asset exceeds the maximum supported size.");
+      void (async () => {
+        try {
+          const requests = await client.connect();
+          for await (const message of requests) {
+            void respondToPreviewAssetRequest(client, message, localUrl);
+          }
+        } catch {
+          socket.close();
         }
-        const bytes = Buffer.from(await response.arrayBuffer());
-        if (bytes.byteLength > maxPreviewAssetBytes) {
-          throw new Error("Preview asset exceeds the maximum supported size.");
-        }
-        socket.send(
-          JSON.stringify({
-            type: "response",
-            id: message.id,
-            status: response.status,
-            body: bytes.toString("base64"),
-            contentType: response.headers.get("content-type") ?? "application/octet-stream",
-          }),
-        );
-      } catch {
-        socket.send(
-          JSON.stringify({
-            type: "response",
-            id: message.id,
-            status: 502,
-            contentType: "text/plain",
-            body: "",
-          }),
-        );
-      }
+      })();
     });
     socket.addEventListener("close", () => {
       setTimeout(connect, delay);

@@ -1,13 +1,35 @@
 import { randomUUID } from "node:crypto";
+import { onError, ORPCError, ValidationError } from "@orpc/server";
+import { experimental_RPCHandler as RPCHandler } from "@orpc/server/crossws";
 import { hashSecret } from "@tailorkit/api-utils/hashing";
 import { db } from "@tailorkit/db";
 import { env } from "@tailorkit/env/server";
 import { createPreviewTunnelPresence, getKV } from "@tailorkit/kv";
 import type { Unsubscribe } from "@tailorkit/kv";
 import { defineWebSocketHandler } from "nitro/h3";
-import { publishPreviewAssetResponse, subscribePreviewTunnel } from "../../../preview-tunnel-relay";
+import { previewTunnelRouter } from "@tailorkit/api-platform/preview-tunnel";
+import type { PreviewTunnelContext } from "@tailorkit/api-platform/preview-tunnel";
 
 const cleanups = new WeakMap<object, Unsubscribe>();
+const contexts = new WeakMap<object, PreviewTunnelContext>();
+function isInputValidationError(error: unknown): boolean {
+  return (
+    error instanceof ORPCError &&
+    error.code === "BAD_REQUEST" &&
+    error.cause instanceof ValidationError
+  );
+}
+
+const rpcHandler = new RPCHandler(previewTunnelRouter, {
+  interceptors: [
+    onError((error) => {
+      if (isInputValidationError(error)) {
+        return;
+      }
+      console.error("Preview tunnel RPC failed", error);
+    }),
+  ],
+});
 
 export default defineWebSocketHandler({
   upgrade(request) {
@@ -43,34 +65,44 @@ export default defineWebSocketHandler({
     const connectionId = randomUUID();
     const presence = createPreviewTunnelPresence(kv);
     const heartbeat = () => void presence.heartbeat(session.id, { connectionId, revision: 0 });
-    heartbeat();
-    const timer = setInterval(heartbeat, 20_000);
-    const unsubscribe = await subscribePreviewTunnel(session.id, connectionId, (request) =>
-      peer.send(JSON.stringify(request)),
-    );
-    cleanups.set(peer, async () => {
-      clearInterval(timer);
-      await unsubscribe();
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const activate = () => {
+      if (timer) {
+        return;
+      }
+      heartbeat();
+      timer = setInterval(heartbeat, 20_000);
+    };
+    const deactivate = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = undefined;
+      }
+    };
+    contexts.set(peer, { activate, connectionId, deactivate, sessionId: session.id });
+    cleanups.set(peer, () => {
+      deactivate();
+      return Promise.resolve();
     });
   },
-  async message(_peer, message) {
-    try {
-      const response = JSON.parse(message.text()) as Parameters<
-        typeof publishPreviewAssetResponse
-      >[0];
-      if (response.type === "response") {
-        await publishPreviewAssetResponse(response);
-      }
-    } catch {
-      /* ignore invalid peer messages */
+  message(peer, message) {
+    const context = contexts.get(peer);
+    if (!context) {
+      peer.close();
+      return;
     }
+    return rpcHandler.message(peer, message, {
+      context,
+    });
   },
   close(peer) {
+    rpcHandler.close(peer);
     void cleanups
       .get(peer)?.()
       .catch(() => {
         // WebSocket close hooks cannot await cleanup, but must consume failures.
       });
     cleanups.delete(peer);
+    contexts.delete(peer);
   },
 });
