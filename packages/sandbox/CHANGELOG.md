@@ -1,5 +1,12 @@
 # @tailorkit/sandbox
 
+## 0.1.0-beta.10
+
+### Patch Changes
+
+- Updated dependencies [a0d3233]
+  - @tailorkit/core@0.1.0-beta.10
+
 ## 0.1.0-beta.9
 
 ### Minor Changes
