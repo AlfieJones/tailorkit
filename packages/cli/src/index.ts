@@ -7,7 +7,7 @@ import { createCliAuthApprovalUrl, runLogin, runLogout, runWhoami } from "./auth
 import { runDeploy } from "./deploy";
 import { generateTypes } from "./generator/types";
 import { runInit } from "./init";
-import { runExperimentalPreview, toPreviewOptions, runPreview } from "./preview";
+import { toPreviewOptions, runPreview } from "./preview";
 import { openUrlInBrowser } from "./utils/open-browser";
 
 declare const __TAILORKIT_VERSION__: string;
@@ -36,8 +36,9 @@ cli.option("--cwd <path>", "Working directory", { default: "." });
 cli
   .command("preview", "Preview the app inside a host app")
   .option("--config <path>", "Path to tailorkit config")
-  .option("--host <host>", "Local preview host")
-  .option("--port <port>", "Local preview port")
+  .option("--entry <path>", "Client entry file")
+  .option("--out-dir <path>", "Build output directory")
+  .option("--mode <mode>", "Vite mode")
   .action(async (options: Record<string, unknown>) => {
     intro(pc.bold("TailorKit"));
     try {
@@ -247,24 +248,6 @@ cli
         outDir: options.outDir as string | undefined,
       });
       outro("Built app.");
-    } catch (error) {
-      log.error(error instanceof Error ? error.message : String(error));
-      process.exit(1);
-    }
-  });
-
-cli
-  .command("experimental-preview", "Build and preview the TailorKit app")
-  .option("--config <path>", "Path to tailorkit config")
-  .option("--entry <path>", "Client entry file")
-  .option("--out-dir <path>", "Build output directory")
-  .option("--host <host>", "Preview host")
-  .option("--port <port>", "Preview port")
-  .option("--mode <mode>", "Vite mode")
-  .action(async (options: Record<string, unknown>) => {
-    intro(pc.bold("TailorKit"));
-    try {
-      await runExperimentalPreview(toPreviewOptions(options));
     } catch (error) {
       log.error(error instanceof Error ? error.message : String(error));
       process.exit(1);

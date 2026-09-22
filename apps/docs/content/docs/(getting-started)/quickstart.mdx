@@ -74,15 +74,15 @@ styles. The generated `src/client.ts` already registers this view.
 
 ### Preview the app
 
-Start the local app server:
+Start a remote preview session:
 
 ```sh
-pnpm exec tailorkit experimental-preview
+pnpm exec tailorkit preview
 ```
 
-While developing, point the host client's `baseUrl` at
-`http://127.0.0.1:4175`. The host discovers the local app and renders it in an
-`AppView` on the `/` view.
+The CLI keeps Vite in watch mode and serves rebuilt assets directly through the
+authenticated preview tunnel. Select the resulting preview session in the host
+to render it in an `AppView` on the `/` view.
 
 </Step>
 </Steps>
