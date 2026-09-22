@@ -8,6 +8,7 @@ import pc from "picocolors";
 import { getDeployToken, runWhoami } from "./auth";
 
 const maxPreviewAssetBytes = 1024 * 1024;
+const previewSessionCleanupTimeoutMs = 5000;
 
 export interface PreviewOptions {
   configPath?: string;
@@ -249,9 +250,15 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     closeWatcher();
     throw new Error("Unable to start preview session.");
   }
+  const cleanupClient = createTailorKitClient({
+    fetch: (input, init) =>
+      fetch(input, { ...init, signal: AbortSignal.timeout(previewSessionCleanupTimeoutMs) }),
+    headers: { authorization: `Bearer ${stored.deployToken}` },
+    url: auth.hostUrl,
+  });
   const endPreviewSession = async (): Promise<void> => {
     try {
-      await client.preview.stop({ sessionId: data.sessionId });
+      await cleanupClient.preview.stop({ sessionId: data.sessionId });
     } catch (error) {
       log.warn(`Unable to end preview session: ${errorMessage(error)}`);
     }
