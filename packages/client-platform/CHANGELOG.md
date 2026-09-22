@@ -1,5 +1,11 @@
 # @tailorkit/client-platform
 
+## 0.1.0-beta.10
+
+### Patch Changes
+
+- a0d3233: Add authenticated local preview tunnels with bounded asset delivery and secure host-side asset proxying.
+
 ## 0.1.0-beta.9
 
 ## 0.1.0-beta.8
