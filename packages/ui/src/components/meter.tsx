@@ -2,7 +2,7 @@
 
 import { Meter as MeterPrimitive } from "@base-ui/react/meter";
 import type React from "react";
-import { cn } from "@tailorkit/ui/lib/utils";
+import { cn } from "@tailorkit/ui";
 
 export function Meter({
   className,

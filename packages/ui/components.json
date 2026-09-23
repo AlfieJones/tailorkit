@@ -15,7 +15,7 @@
   "menuAccent": "subtle",
   "aliases": {
     "components": "@tailorkit/ui/components",
-    "utils": "@tailorkit/ui/lib/utils",
+    "utils": "@tailorkit/ui",
     "ui": "@tailorkit/ui/components",
     "lib": "@tailorkit/ui/lib",
     "hooks": "@tailorkit/ui/hooks"

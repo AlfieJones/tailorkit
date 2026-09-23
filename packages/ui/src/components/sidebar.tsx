@@ -5,17 +5,11 @@ import { useRender } from "@base-ui/react/use-render";
 import { ChevronLeftIcon, ChevronRightIcon, PanelLeftIcon } from "lucide-react";
 import * as React from "react";
 import { useMediaQuery } from "@tailorkit/ui/hooks/use-media-query";
-import { cn } from "@tailorkit/ui/lib/utils";
-import { Button } from "@tailorkit/ui/components/button";
-import { ScrollArea } from "@tailorkit/ui/components/scroll-area";
-import { Separator } from "@tailorkit/ui/components/separator";
-import {
-  Sheet,
-  SheetDescription,
-  SheetHeader,
-  SheetPopup,
-  SheetTitle,
-} from "@tailorkit/ui/components/sheet";
+import { cn } from "@tailorkit/ui";
+import { Button } from "@tailorkit/ui/button";
+import { ScrollArea } from "@tailorkit/ui/scroll-area";
+import { Separator } from "@tailorkit/ui/separator";
+import { Sheet, SheetDescription, SheetHeader, SheetPopup, SheetTitle } from "@tailorkit/ui/sheet";
 
 const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";

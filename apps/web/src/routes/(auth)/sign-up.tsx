@@ -1,7 +1,7 @@
 "use client";
 
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { Button } from "@tailorkit/ui/components/button";
+import { Button } from "@tailorkit/ui/button";
 import {
   Card,
   CardFooter,
@@ -10,12 +10,12 @@ import {
   CardHeader,
   CardPanel,
   CardTitle,
-} from "@tailorkit/ui/components/card";
-import { Logo } from "@tailorkit/ui/components/logo";
-import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
+} from "@tailorkit/ui/card";
+import { Logo } from "@tailorkit/ui/logo";
+import { cn } from "@tailorkit/ui";
+import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/tooltip";
 import { useAppForm } from "@tailorkit/ui/form";
 import { ArrowLeftIcon } from "lucide-react";
-import { clsx } from "clsx";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -146,7 +146,7 @@ function RouteComponent() {
     }
   };
 
-  const contentClass = clsx(
+  const contentClass = cn(
     "transition-all duration-150",
     visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1",
   );

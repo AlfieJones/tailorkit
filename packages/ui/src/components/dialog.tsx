@@ -5,9 +5,9 @@ import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { XIcon } from "lucide-react";
 import type React from "react";
-import { cn } from "@tailorkit/ui/lib/utils";
-import { Button } from "@tailorkit/ui/components/button";
-import { ScrollArea } from "@tailorkit/ui/components/scroll-area";
+import { cn } from "@tailorkit/ui";
+import { Button } from "@tailorkit/ui/button";
+import { ScrollArea } from "@tailorkit/ui/scroll-area";
 
 export const DialogCreateHandle: typeof DialogPrimitive.createHandle = DialogPrimitive.createHandle;
 

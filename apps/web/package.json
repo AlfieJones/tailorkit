@@ -52,7 +52,6 @@
     "@tanstack/react-table": "^9.2.4",
     "@vercel/functions": "^3.9.7",
     "better-auth": "catalog:",
-    "clsx": "^2.1.1",
     "drizzle-orm": "catalog:",
     "lucide-react": "catalog:",
     "nitro": "3.0.260903-beta",
