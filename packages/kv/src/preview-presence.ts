@@ -1,4 +1,5 @@
 import type { KV, Unsubscribe } from "./types.js";
+import { z } from "zod";
 
 export const previewHeartbeatSeconds = 20;
 export const previewLeaseSeconds = 75;
@@ -18,33 +19,21 @@ function connectionChannel(sessionId: string): string {
   return `${channelPrefix}${sessionId}`;
 }
 
+const identifierSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/u);
+const connectionSchema = z.object({
+  connectionId: identifierSchema,
+  revision: z.number().int().nonnegative(),
+});
 function assertSessionId(sessionId: string): void {
-  if (!/^[a-zA-Z0-9_-]{1,128}$/u.test(sessionId)) {
-    throw new TypeError("Preview session id must be an opaque identifier.");
-  }
+  identifierSchema.parse(sessionId);
 }
 function assertConnection(connection: PreviewConnection): void {
-  if (!/^[a-zA-Z0-9_-]{1,128}$/u.test(connection.connectionId)) {
-    throw new TypeError("Preview tunnel connection id must be an opaque identifier.");
-  }
-  if (!Number.isSafeInteger(connection.revision) || connection.revision < 0) {
-    throw new TypeError("Preview tunnel revision must be a non-negative integer.");
-  }
+  connectionSchema.parse(connection);
 }
 
 function parseConnection(raw: string): PreviewConnection | null {
   try {
-    const value = JSON.parse(raw) as Partial<PreviewConnection>;
-    if (
-      typeof value.connectionId !== "string" ||
-      typeof value.revision !== "number" ||
-      !Number.isSafeInteger(value.revision) ||
-      value.revision < 0
-    ) {
-      return null;
-    }
-    assertConnection({ connectionId: value.connectionId, revision: value.revision });
-    return { connectionId: value.connectionId, revision: value.revision };
+    return connectionSchema.parse(JSON.parse(raw) as unknown);
   } catch {
     return null;
   }

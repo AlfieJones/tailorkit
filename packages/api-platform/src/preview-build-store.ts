@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { KV } from "@tailorkit/kv";
+import { z } from "zod";
 
 export const previewChunkBytes = 256 * 1024;
 export const previewMessageBytes = 512 * 1024;
@@ -34,12 +35,37 @@ const chunkKey = (sessionId: string, buildId: string, fileIndex: number, chunkIn
   `${buildKey(sessionId, buildId)}:${fileIndex}:${chunkIndex}`;
 const pointerKey = (sessionId: string) => `preview:current:${sessionId}`;
 const channel = (sessionId: string) => `preview:revision:${sessionId}`;
+const identifierSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/u);
 const requireId = (value: string): void => {
-  if (!/^[a-zA-Z0-9_-]{1,128}$/u.test(value)) {
-    throw new Error("Invalid preview identifier.");
-  }
+  identifierSchema.parse(value);
 };
-const parse = <T>(value: string | null): T | null => (value ? (JSON.parse(value) as T) : null);
+const fileSchema = z.object({
+  path: z.string().min(1).max(1024),
+  contentType: z.string().min(1).max(255),
+  size: z.number().int().min(0).max(previewFileBytes),
+  chunks: z.number().int().min(0).max(4),
+  sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+});
+const manifestSchema = z.object({ files: z.array(fileSchema).max(previewBuildFiles) });
+const buildSchema = z.object({
+  manifest: manifestSchema,
+  state: z.enum(["uploading", "committed"]),
+});
+const committedSchema = z.object({
+  buildId: identifierSchema,
+  manifest: manifestSchema,
+  revision: z.number().int().positive(),
+});
+const notificationSchema = z.union([
+  z.object({ ended: z.literal(true) }),
+  z.object({ revision: z.number().int().positive(), buildId: identifierSchema }),
+]);
+const base64Schema = z
+  .string()
+  .max(4 * Math.ceil(previewChunkBytes / 3))
+  .regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u);
+const parse = <T>(value: string | null, schema: z.ZodType<T>): T | null =>
+  value === null ? null : schema.parse(JSON.parse(value) as unknown);
 const hasControlCharacters = (value: string): boolean => {
   for (const character of value) {
     const code = character.codePointAt(0);
@@ -52,6 +78,7 @@ const hasControlCharacters = (value: string): boolean => {
 
 // oxlint-disable-next-line complexity -- path, file, and aggregate limits are checked together.
 export function validatePreviewManifest(manifest: PreviewBuildManifest): void {
+  manifestSchema.parse(manifest);
   if (!Array.isArray(manifest.files) || manifest.files.length > previewBuildFiles) {
     throw new Error("Preview build exceeds the file limit.");
   }
@@ -97,9 +124,7 @@ export function validatePreviewManifest(manifest: PreviewBuildManifest): void {
 
 export function createPreviewBuildStore(kv: KV) {
   async function readBuild(sessionId: string, buildId: string) {
-    return parse<{ manifest: PreviewBuildManifest; state: "uploading" | "committed" }>(
-      await kv.get(buildKey(sessionId, buildId)),
-    );
+    return parse(await kv.get(buildKey(sessionId, buildId)), buildSchema);
   }
   return {
     async begin(sessionId: string, manifest: PreviewBuildManifest): Promise<string> {
@@ -134,7 +159,7 @@ export function createPreviewBuildStore(kv: KV) {
       ) {
         throw new Error("Invalid preview chunk index.");
       }
-      if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u.test(base64)) {
+      if (!base64Schema.safeParse(base64).success) {
         throw new Error("Invalid preview chunk encoding.");
       }
       const bytes = Buffer.from(base64, "base64");
@@ -167,6 +192,9 @@ export function createPreviewBuildStore(kv: KV) {
           const value = await kv.get(chunkKey(sessionId, buildId, fileIndex, chunkIndex));
           if (value === null) {
             throw new Error("Preview build is incomplete.");
+          }
+          if (!base64Schema.safeParse(value).success) {
+            throw new Error("Corrupt preview chunk.");
           }
           const bytes = Buffer.from(value, "base64");
           if (
@@ -227,7 +255,7 @@ export function createPreviewBuildStore(kv: KV) {
     },
     async current(sessionId: string): Promise<CommittedPreviewBuild | null> {
       requireId(sessionId);
-      return parse<CommittedPreviewBuild>(await kv.get(pointerKey(sessionId)));
+      return parse(await kv.get(pointerKey(sessionId)), committedSchema);
     },
     async chunk(
       sessionId: string,
@@ -248,20 +276,19 @@ export function createPreviewBuildStore(kv: KV) {
       ) {
         return null;
       }
-      return kv.get(chunkKey(sessionId, buildId, fileIndex, chunkIndex));
+      const value = await kv.get(chunkKey(sessionId, buildId, fileIndex, chunkIndex));
+      return value !== null && base64Schema.safeParse(value).success ? value : null;
     },
     subscribe(sessionId: string, onRevision: (revision: number | null) => void) {
       requireId(sessionId);
       return kv.subscribe(channel(sessionId), (message) => {
         try {
-          const value = JSON.parse(message) as { revision?: unknown };
-          if ((value as { ended?: unknown }).ended === true) {
+          const value = notificationSchema.parse(JSON.parse(message) as unknown);
+          if ("ended" in value) {
             onRevision(null);
             return;
           }
-          if (typeof value.revision === "number" && Number.isSafeInteger(value.revision)) {
-            onRevision(value.revision);
-          }
+          onRevision(value.revision);
         } catch {
           /* Ignore malformed notifications. */
         }

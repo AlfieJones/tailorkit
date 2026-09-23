@@ -23,11 +23,12 @@ const requireKV = () => {
   return kv;
 };
 
-interface Grant {
-  projectId: string;
-  sessionId: string;
-  scopeId: string;
-}
+const grantSchema = z.object({
+  projectId: z.string().min(1),
+  sessionId: z.uuid(),
+  scopeId: z.string().min(1),
+});
+type Grant = z.infer<typeof grantSchema>;
 
 export const invitation = protectedRouter
   .route({ path: "/shares/:shareId", method: "GET" })
@@ -129,7 +130,7 @@ export const accepted = protectedRouter
       }
       let grant: Grant;
       try {
-        grant = JSON.parse(raw) as Grant;
+        grant = grantSchema.parse(JSON.parse(raw) as unknown);
       } catch {
         continue;
       }

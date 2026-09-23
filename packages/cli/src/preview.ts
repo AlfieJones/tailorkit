@@ -10,6 +10,7 @@ import type {
 } from "@tailorkit/client-platform/preview";
 import { createTailorKitClient } from "@tailorkit/core/server";
 import pc from "picocolors";
+import { z } from "zod";
 import { getDeployToken, runWhoami } from "./auth";
 
 const chunkBytes = 256 * 1024;
@@ -107,13 +108,23 @@ export async function uploadPreviewSnapshot(
   await client.commitBuild({ buildId });
 }
 
-export const toPreviewOptions = (options: Record<string, unknown>): PreviewOptions => ({
-  configPath: options.config as string | undefined,
-  cwd: String(options.cwd ?? "."),
-  entry: options.entry as string | undefined,
-  mode: options.mode as string | undefined,
-  outDir: options.outDir as string | undefined,
+const previewOptionsSchema = z.object({
+  config: z.string().optional(),
+  cwd: z.string().default("."),
+  entry: z.string().optional(),
+  mode: z.string().optional(),
+  outDir: z.string().optional(),
 });
+export const toPreviewOptions = (options: Record<string, unknown>): PreviewOptions => {
+  const parsed = previewOptionsSchema.parse(options);
+  return {
+    configPath: parsed.config,
+    cwd: parsed.cwd,
+    entry: parsed.entry,
+    mode: parsed.mode,
+    outDir: parsed.outDir,
+  };
+};
 
 export async function runPreview(options: PreviewOptions): Promise<void> {
   const loaded = await loadTailorKitConfig(options.configPath, options.cwd);

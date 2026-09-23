@@ -31,7 +31,8 @@
   },
   "dependencies": {
     "@tailorkit/env": "workspace:*",
-    "@tailorkit/observability": "workspace:*"
+    "@tailorkit/observability": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",

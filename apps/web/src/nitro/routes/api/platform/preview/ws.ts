@@ -3,9 +3,15 @@ import { authorizePreviewSocket } from "@tailorkit/api-platform/preview-ws-auth"
 import { previewWebSocketRouter } from "@tailorkit/api-platform/preview-ws";
 import type { PreviewWebSocketContext } from "@tailorkit/api-platform/preview-ws";
 import { defineWebSocketHandler } from "nitro/h3";
+import { z } from "zod";
 
 const handler = new RPCHandler(previewWebSocketRouter);
 const contexts = new WeakMap<object, PreviewWebSocketContext>();
+const upgradeSchema = z.object({
+  sessionId: z.uuid(),
+  role: z.enum(["uploader", "viewer"]),
+  token: z.string().min(1),
+});
 
 export default defineWebSocketHandler({
   upgrade(request) {
@@ -21,14 +27,11 @@ export default defineWebSocketHandler({
     };
   },
   async open(peer) {
-    const { sessionId, role, token } = peer.context as {
-      sessionId?: string;
-      role?: string;
-      token?: string;
-    };
-    if (!sessionId || !token || (role !== "uploader" && role !== "viewer")) {
+    const parsed = upgradeSchema.safeParse(peer.context);
+    if (!parsed.success) {
       return peer.close();
     }
+    const { sessionId, role, token } = parsed.data;
     const context = await authorizePreviewSocket(sessionId, token, role);
     if (!context) {
       return peer.close();

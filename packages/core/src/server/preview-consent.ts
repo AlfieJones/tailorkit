@@ -1,8 +1,12 @@
 import { previewAccept, previewInvitation } from "@tailorkit/client-platform/client";
 import type { Client as PlatformClient } from "@tailorkit/client-platform/client/client/index";
+import { z } from "zod";
 import { approvalStyles, escapeHtml } from "./cli-auth-page";
 
 export const previewCookieName = "tailorkit_preview_grants";
+const grantIdSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/u);
+const grantIdsSchema = z.array(grantIdSchema).max(20);
+const consentIntentSchema = z.enum(["accept", "cancel"]);
 
 export function readPreviewGrantIds(request: Request): string[] {
   const pair = request.headers
@@ -14,12 +18,9 @@ export function readPreviewGrantIds(request: Request): string[] {
     return [];
   }
   try {
-    const ids = JSON.parse(decodeURIComponent(pair.slice(previewCookieName.length + 1))) as unknown;
-    return Array.isArray(ids)
-      ? ids
-          .filter((id): id is string => typeof id === "string" && /^[A-Za-z0-9_-]{43}$/u.test(id))
-          .slice(-20)
-      : [];
+    return grantIdsSchema.parse(
+      JSON.parse(decodeURIComponent(pair.slice(previewCookieName.length + 1))) as unknown,
+    );
   } catch {
     return [];
   }
@@ -52,7 +53,7 @@ export async function handlePreviewConsent(options: ConsentOptions): Promise<Res
     authenticate,
   } = options;
   const url = new URL(request.url);
-  if (!/^[A-Za-z0-9_-]{43}$/u.test(shareId)) {
+  if (!grantIdSchema.safeParse(shareId).success) {
     return new Response("Preview unavailable", { status: 404, headers });
   }
   if (request.method !== "GET" && request.method !== "POST") {
@@ -69,11 +70,11 @@ export async function handlePreviewConsent(options: ConsentOptions): Promise<Res
       return new Response("Cross-origin preview acceptance is forbidden", { status: 403, headers });
     }
     const form = await request.formData();
-    const intent = form.get("intent");
-    if (intent === "cancel") {
+    const intent = consentIntentSchema.safeParse(form.get("intent"));
+    if (intent.success && intent.data === "cancel") {
       return new Response(null, { status: 303, headers: { ...headers, location: returnPath } });
     }
-    if (intent !== "accept") {
+    if (!intent.success || intent.data !== "accept") {
       return new Response("Invalid consent action", { status: 400, headers });
     }
   }

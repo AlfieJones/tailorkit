@@ -39,7 +39,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@orpc/client": "catalog:"
+    "@orpc/client": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "next",

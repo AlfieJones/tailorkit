@@ -1,4 +1,7 @@
-import { createPreviewWebSocketClient } from "@tailorkit/client-platform/preview";
+import {
+  createPreviewWebSocketClient,
+  previewMetadataSchema,
+} from "@tailorkit/client-platform/preview";
 import type { PreviewBuildManifest, PreviewEvent } from "@tailorkit/client-platform/preview";
 import type { TailorKitApp } from "./tailor-kit";
 
@@ -150,7 +153,7 @@ export function createPreviewManager(baseUrl: URL, onEnded: () => void) {
       refresh.searchParams.set("sessionId", metadata.sessionId);
       const response = await fetch(refresh, { credentials: "same-origin" });
       if (response.ok) {
-        metadata = (await response.json()) as typeof metadata;
+        metadata = previewMetadataSchema.parse(await response.json());
       } else if (response.status === 404) {
         close(entry);
         onEnded();
