@@ -27,7 +27,8 @@
   },
   "scripts": {
     "build": "tsdown src/index.ts src/kv.ts src/preview-presence.ts src/redis.ts src/upstash.ts src/types.ts --format esm --dts --clean",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tailorkit/env": "workspace:*",
