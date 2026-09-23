@@ -19,7 +19,9 @@ function connectionChannel(sessionId: string): string {
   return `${channelPrefix}${sessionId}`;
 }
 
-const identifierSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/u);
+const identifierSchema = z
+  .string()
+  .regex(/^[a-zA-Z0-9_-]{1,128}$/u, "Preview identifiers must be opaque identifiers.");
 const connectionSchema = z.object({
   connectionId: identifierSchema,
   revision: z.number().int().nonnegative(),
