@@ -11,7 +11,7 @@ import type {
 import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
 import { normalizeBasePath } from "./apps";
-import { handleCliAuthApprovalPage } from "./cli-auth-page";
+import { handleCliAuthApprovalPage, renderPreviewChoicePage } from "./cli-auth-page";
 import { createContext } from "./context";
 import { tailorkitRouter } from "./router";
 import type {
@@ -105,12 +105,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
           status: 303,
         });
       }
-      const escape = (value: string) =>
-        value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
-      return new Response(
-        `<!doctype html><html><head><meta charset="utf-8"><title>Open TailorKit preview</title></head><body><main><h1>Open this TailorKit preview?</h1><p>This will show the local preview in your TailorKit app slots.</p><form method="post"><input type="hidden" name="session" value="${escape(sessionId)}"><input type="hidden" name="returnTo" value="${escape(returnTo.href)}"><button type="submit">Use preview</button></form><p><a href="${escape(returnTo.href)}">Continue without preview</a></p></main></body></html>`,
-        { headers: { "Content-Type": "text/html; charset=utf-8" } },
-      );
+      return renderPreviewChoicePage({ returnTo: returnTo.href, sessionId });
     }
     if (url.pathname === `${basePath}/schema`) {
       return Response.json(schema.serialize());
