@@ -33,6 +33,23 @@ pnpm --filter tanstack-start dev
 Open `http://localhost:5010`. The example's TailorKit API handler is available
 at `http://localhost:5010/api/tailorkit`.
 
+## Preview an example app
+
+After deploying the todo app once and running `tailorkit login` for this host,
+start its live preview from the repository root:
+
+```sh
+pnpm --filter todo exec tailorkit preview
+```
+
+The CLI prints a link such as
+`http://localhost:5010/?tailorkitPreview=<session-id>`. Open it in the host
+app, sign in with the same scope used for the CLI login, and select the todo
+app. Edits under `examples/apps/todo/src` rebuild the app; the open panel
+reloads after the build and resets its local state. Use `--url` to point the
+link at a different host page. Others can open the link while the CLI is
+running if they can reach that host URL and sign in to the same scope.
+
 ## Relevant files
 
 - `src/lib/tailorkit.ts` defines the server contract.

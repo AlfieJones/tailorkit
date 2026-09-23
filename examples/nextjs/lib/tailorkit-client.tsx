@@ -9,6 +9,10 @@ import { Textarea } from "@tailorkit/ui/components/textarea";
 import { createTailorKitClient, primitives as reactPrimitives } from "tailorkit/react";
 
 export const tailor = createTailorKitClient<typeof tailorKit>({
+  previewSessionId:
+    typeof window === "undefined"
+      ? undefined
+      : (new URLSearchParams(window.location.search).get("tailorkitPreview") ?? undefined),
   baseUrl:
     typeof window === "undefined"
       ? "http://localhost:5020/api/tailorkit/"

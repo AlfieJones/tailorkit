@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { log } from "@clack/prompts";
@@ -16,6 +17,7 @@ export interface PreviewOptions {
   entry?: string;
   mode?: string;
   outDir?: string;
+  url?: string;
 }
 
 const contentTypes: Record<string, string> = {
@@ -42,6 +44,7 @@ class PreviewAssetError extends Error {
 interface PreviewAssetResponse {
   body: string;
   contentType: string;
+  etag?: string;
   status: number;
 }
 
@@ -57,7 +60,7 @@ const isPathOutsideRoot = (root: string, filepath: string): boolean => {
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
-async function getPreviewAssetResponse(
+export async function getPreviewAssetResponse(
   message: { method: "GET" | "HEAD"; path: string },
   root: string,
 ): Promise<PreviewAssetResponse> {
@@ -91,11 +94,12 @@ async function getPreviewAssetResponse(
       throw new PreviewAssetError("Preview asset exceeds the maximum supported size.", 413);
     }
 
-    const bytes = message.method === "HEAD" ? undefined : await readFile(realFilepath);
+    const bytes = await readFile(realFilepath);
     return {
       status: 200,
-      body: bytes?.toString("base64") ?? "",
+      body: message.method === "HEAD" ? "" : bytes.toString("base64"),
       contentType: getContentType(realFilepath),
+      etag: `"${createHash("sha256").update(bytes).digest("hex")}"`,
     };
   } catch (error) {
     const response =
@@ -208,7 +212,17 @@ export const toPreviewOptions = (options: Record<string, unknown>): PreviewOptio
   entry: options.entry as string | undefined,
   mode: options.mode as string | undefined,
   outDir: options.outDir as string | undefined,
+  url: options.url as string | undefined,
 });
+
+export function createPreviewUrl(hostUrl: string, sessionId: string, pageUrl?: string): string {
+  const url = new URL(pageUrl ?? "/", hostUrl);
+  if (!/^https?:$/u.test(url.protocol)) {
+    throw new Error("Preview page URL must use HTTP or HTTPS.");
+  }
+  url.searchParams.set("tailorkitPreview", sessionId);
+  return url.href;
+}
 
 export async function runPreview(options: PreviewOptions): Promise<void> {
   const loaded = await loadTailorKitConfig(options.configPath, options.cwd);
@@ -216,6 +230,7 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     throw new Error("Missing appId. Deploy once before starting a remote preview.");
   }
   const auth = await runWhoami(options);
+  createPreviewUrl(auth.hostUrl, "session", options.url);
   const stored = await getDeployToken(auth.hostUrl);
   if (!stored?.deployToken) {
     throw new Error("Not logged in. Run tailorkit login first.");
@@ -287,5 +302,6 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
   process.once("SIGINT", closePreview);
   process.once("SIGTERM", closePreview);
   log.info(pc.green(`Host preview session: ${data.sessionId}`));
+  log.info(`Preview URL: ${pc.cyan(createPreviewUrl(auth.hostUrl, data.sessionId, options.url))}`);
   log.info(pc.dim(`Serving built app assets from ${outDir} through the preview tunnel`));
 }

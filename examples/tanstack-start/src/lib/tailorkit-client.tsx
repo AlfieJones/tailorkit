@@ -7,6 +7,10 @@ import { Tabs, TabsList, TabsPanel, TabsTab } from "@tailorkit/ui/components/tab
 import { Textarea } from "@tailorkit/ui/components/textarea";
 
 export const tailor = createTailorKitClient<typeof tailorKit>({
+  previewSessionId:
+    typeof window === "undefined"
+      ? undefined
+      : (new URLSearchParams(window.location.search).get("tailorkitPreview") ?? undefined),
   baseUrl:
     typeof window === "undefined"
       ? "http://localhost/api/tailorkit/"

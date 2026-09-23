@@ -5,13 +5,14 @@ import { hashSecret } from "@tailorkit/api-utils/hashing";
 import { db } from "@tailorkit/db";
 import { env } from "@tailorkit/env/server";
 import { createPreviewTunnelPresence, getKV } from "@tailorkit/kv";
-import type { Unsubscribe } from "@tailorkit/kv";
 import { defineWebSocketHandler } from "nitro/h3";
 import { previewTunnelRouter } from "@tailorkit/api-platform/preview-tunnel";
 import type { PreviewTunnelContext } from "@tailorkit/api-platform/preview-tunnel";
 
-const cleanups = new WeakMap<object, Unsubscribe>();
+const cleanups = new WeakMap<object, () => void>();
 const contexts = new WeakMap<object, PreviewTunnelContext>();
+const opening = new WeakMap<object, Promise<void>>();
+const closed = new WeakSet<object>();
 function isInputValidationError(error: unknown): boolean {
   return (
     error instanceof ORPCError &&
@@ -44,48 +45,57 @@ export default defineWebSocketHandler({
       protocol: token,
     };
   },
-  async open(peer) {
-    const context = peer.context as { sessionId?: string; token?: string };
-    if (!context.sessionId || !context.token || !env.AUTH_SECRET) {
-      peer.close();
-      return;
-    }
-    const session = await db.query.previewSession.findFirst({
-      where: {
-        id: context.sessionId,
-        status: "active",
-        tunnelTokenHash: hashSecret(context.token, env.AUTH_SECRET),
-      },
-    });
-    const kv = getKV();
-    if (!session || session.expiresAt <= new Date() || !kv) {
-      peer.close();
-      return;
-    }
-    const connectionId = randomUUID();
-    const presence = createPreviewTunnelPresence(kv);
-    const heartbeat = () => void presence.heartbeat(session.id, { connectionId, revision: 0 });
-    let timer: ReturnType<typeof setInterval> | undefined;
-    const activate = () => {
-      if (timer) {
+  open(peer) {
+    const ready = (async () => {
+      const context = peer.context as { sessionId?: string; token?: string };
+      if (!context.sessionId || !context.token || !env.AUTH_SECRET) {
+        peer.close();
         return;
       }
-      heartbeat();
-      timer = setInterval(heartbeat, 20_000);
-    };
-    const deactivate = () => {
-      if (timer) {
-        clearInterval(timer);
-        timer = undefined;
+      const session = await db.query.previewSession.findFirst({
+        where: {
+          id: context.sessionId,
+          status: "active",
+          tunnelTokenHash: hashSecret(context.token, env.AUTH_SECRET),
+        },
+      });
+      const kv = getKV();
+      if (closed.has(peer)) {
+        return;
       }
-    };
-    contexts.set(peer, { activate, connectionId, deactivate, sessionId: session.id });
-    cleanups.set(peer, () => {
-      deactivate();
-      return Promise.resolve();
+      if (!session || session.expiresAt <= new Date() || !kv) {
+        peer.close();
+        return;
+      }
+      const connectionId = randomUUID();
+      const presence = createPreviewTunnelPresence(kv);
+      const heartbeat = () => void presence.heartbeat(session.id, { connectionId, revision: 0 });
+      let timer: ReturnType<typeof setInterval> | undefined;
+      const activate = () => {
+        if (timer) {
+          return;
+        }
+        heartbeat();
+        timer = setInterval(heartbeat, 20_000);
+      };
+      const deactivate = () => {
+        if (timer) {
+          clearInterval(timer);
+          timer = undefined;
+        }
+      };
+      contexts.set(peer, { activate, connectionId, deactivate, sessionId: session.id });
+      cleanups.set(peer, () => {
+        deactivate();
+      });
+    })().catch((error: unknown) => {
+      console.error("Preview tunnel open failed", error);
+      peer.close();
     });
+    opening.set(peer, ready);
   },
-  message(peer, message) {
+  async message(peer, message) {
+    await opening.get(peer);
     const context = contexts.get(peer);
     if (!context) {
       peer.close();
@@ -96,13 +106,11 @@ export default defineWebSocketHandler({
     });
   },
   close(peer) {
+    closed.add(peer);
     rpcHandler.close(peer);
-    void cleanups
-      .get(peer)?.()
-      .catch(() => {
-        // WebSocket close hooks cannot await cleanup, but must consume failures.
-      });
+    cleanups.get(peer)?.();
     cleanups.delete(peer);
     contexts.delete(peer);
+    opening.delete(peer);
   },
 });

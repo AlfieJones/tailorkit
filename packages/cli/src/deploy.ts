@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
@@ -207,137 +208,33 @@ const resolveTsconfig = (root: string): string | undefined => {
   }
 };
 
-interface TypeScriptModule {
-  createCompilerHost(options: unknown): unknown;
-  createProgram(options: { options: unknown; rootNames: string[]; host: unknown }): {
-    emit(): { diagnostics: readonly unknown[] };
-  };
-  flattenDiagnosticMessageText(messageText: unknown, newLine: string): string;
-  getLineAndCharacterOfPosition(
-    sourceFile: unknown,
-    position: number,
-  ): {
-    character: number;
-    line: number;
-  };
-  getPreEmitDiagnostics(program: unknown): readonly unknown[];
-  parseJsonConfigFileContent(
-    json: unknown,
-    host: unknown,
-    basePath: string,
-    existingOptions?: Record<string, unknown>,
-    configFileName?: string,
-  ): {
-    errors: readonly unknown[];
-    options: unknown;
-  };
-  readConfigFile(
-    configFileName: string,
-    readFile: (path: string) => string | undefined,
-  ): {
-    config?: unknown;
-    error?: unknown;
-  };
-  sys: {
-    fileExists: (path: string) => boolean;
-    readDirectory: unknown;
-    readFile: (path: string) => string | undefined;
-    useCaseSensitiveFileNames: boolean;
-  };
-}
-
-interface TypeScriptDiagnostic {
-  category: number;
-  code: number;
-  file?: {
-    fileName: string;
-  };
-  messageText: unknown;
-  start?: number;
-}
-
-const loadTypeScript = (root: string): TypeScriptModule | undefined => {
+const resolveTypeScriptCli = (root: string): string | undefined => {
   const requireFromApp = createRequire(path.join(root, "package.json"));
   try {
-    return requireFromApp("typescript") as TypeScriptModule;
+    return path.join(path.dirname(requireFromApp.resolve("typescript/package.json")), "bin", "tsc");
   } catch {
     return undefined;
   }
 };
 
-const formatDiagnostics = (
-  ts: TypeScriptModule,
-  diagnostics: readonly unknown[],
-  root: string,
-): string =>
-  diagnostics
-    .map((diagnostic) => {
-      const typedDiagnostic = diagnostic as TypeScriptDiagnostic;
-      const message = ts.flattenDiagnosticMessageText(typedDiagnostic.messageText, "\n");
-      if (typedDiagnostic.file === undefined || typedDiagnostic.start === undefined) {
-        return `TS${typedDiagnostic.code}: ${message}`;
-      }
-
-      const position = ts.getLineAndCharacterOfPosition(
-        typedDiagnostic.file,
-        typedDiagnostic.start,
-      );
-      const fileName = path.relative(root, typedDiagnostic.file.fileName);
-      return `${fileName}(${position.line + 1},${position.character + 1}): error TS${typedDiagnostic.code}: ${message}`;
-    })
-    .join("\n");
-
-const typecheckClientEntry = (
-  loaded: LoadedTailorKitConfig,
-  options: DeployOptions,
-): TypecheckFailure | undefined => {
-  const ts = loadTypeScript(loaded.root);
+const typecheckClientEntry = (loaded: LoadedTailorKitConfig): TypecheckFailure | undefined => {
+  const tsc = resolveTypeScriptCli(loaded.root);
   const baseTsconfig = resolveTsconfig(loaded.root);
-  if (ts === undefined || baseTsconfig === undefined) {
+  if (tsc === undefined || baseTsconfig === undefined) {
     return undefined;
   }
-
-  const entry = options.entry ?? loaded.config.client?.entry ?? "./src/client.ts";
-  const entryPath = path.resolve(loaded.root, entry);
-  const readResult = ts.readConfigFile(baseTsconfig, ts.sys.readFile);
-  if (readResult.error !== undefined) {
-    return {
-      command: `tsc --noEmit ${path.relative(loaded.root, entryPath)}`,
-      exitCode: 1,
-      output: formatDiagnostics(ts, [readResult.error], loaded.root),
-    };
-  }
-
-  const parsed = ts.parseJsonConfigFileContent(
-    readResult.config,
-    ts.sys,
-    loaded.root,
-    { noEmit: true },
-    baseTsconfig,
-  );
-  if (parsed.errors.length > 0) {
-    return {
-      command: `tsc --noEmit ${path.relative(loaded.root, entryPath)}`,
-      exitCode: 1,
-      output: formatDiagnostics(ts, parsed.errors, loaded.root),
-    };
-  }
-
-  const host = ts.createCompilerHost(parsed.options);
-  const program = ts.createProgram({
-    host,
-    options: parsed.options,
-    rootNames: [entryPath],
+  const command = `tsc --noEmit --project ${path.relative(loaded.root, baseTsconfig)}`;
+  const result = spawnSync(process.execPath, [tsc, "--noEmit", "--project", baseTsconfig], {
+    cwd: loaded.root,
+    encoding: "utf-8",
   });
-  const diagnostics = [...ts.getPreEmitDiagnostics(program), ...program.emit().diagnostics];
-  if (diagnostics.length === 0) {
+  if (!result.error && result.status === 0) {
     return undefined;
   }
-
   return {
-    command: `tsc --noEmit ${path.relative(loaded.root, entryPath)}`,
-    exitCode: 1,
-    output: formatDiagnostics(ts, diagnostics, loaded.root),
+    command,
+    exitCode: result.status,
+    output: result.error?.message ?? `${result.stdout}${result.stderr}`.trim(),
   };
 };
 
@@ -358,7 +255,7 @@ export const runDeploy = async (options: DeployOptions): Promise<DeployResult> =
   const { buildApp, tailorkitUploadManifestSchema } = await import("@tailorkit/app/builder");
   const [buildResult, typecheckResult] = await Promise.allSettled([
     buildApp(options),
-    typecheckClientEntry(loaded, options),
+    typecheckClientEntry(loaded),
   ]);
 
   if (buildResult.status === "rejected") {

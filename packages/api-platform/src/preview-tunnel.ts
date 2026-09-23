@@ -21,6 +21,7 @@ const previewAssetRequest = z.object({
 const previewAssetResponse = z.object({
   body: z.string(),
   contentType: z.string(),
+  etag: z.string().optional(),
   id: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/u),
   status: z.int().min(100).max(599),
   type: z.literal("response"),

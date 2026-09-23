@@ -17,6 +17,7 @@ export interface PreviewAssetRequest {
 export interface PreviewAssetResponse {
   body: string;
   contentType: string;
+  etag?: string;
   id: string;
   status: number;
   type: "response";
@@ -62,6 +63,10 @@ function isPreviewAssetResponse(value: unknown): value is PreviewAssetResponse {
     response.contentType.length > 0 &&
     response.contentType.length <= 255 &&
     !/[\r\n]/u.test(response.contentType) &&
+    (response.etag === undefined ||
+      (typeof response.etag === "string" &&
+        response.etag.length <= 128 &&
+        !/[\r\n]/u.test(response.etag))) &&
     typeof response.body === "string" &&
     response.body.length <= maxEncodedPreviewResponseBytes &&
     /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u.test(response.body)

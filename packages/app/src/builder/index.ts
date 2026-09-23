@@ -1,6 +1,6 @@
 import path from "node:path";
 import { createRequire } from "node:module";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { validateLogoAsset } from "@tailorkit/asset-delivery/logo-validation";
 import type { LogoContentType } from "@tailorkit/asset-delivery/logo-validation";
 import { build as viteBuild } from "vite";
@@ -35,55 +35,57 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
   assertSupportedPreactVersion(preactVersion);
 
   const resolvedOutDir = path.resolve(loaded.root, outDir);
-  const result = await viteBuild({
-    build: {
-      emptyOutDir: true,
-      lib: {
-        entry: path.resolve(loaded.root, entry),
-        fileName: "client",
-        formats: ["es"],
-      },
-      outDir: resolvedOutDir,
-      watch: options.watch ? {} : null,
-      minify: "oxc",
-      rollupOptions: {
-        output: {
-          comments: {
-            annotation: false,
-            jsdoc: false,
-            legal: false,
+  const build = (emptyOutDir: boolean) =>
+    viteBuild({
+      build: {
+        emptyOutDir,
+        lib: {
+          entry: path.resolve(loaded.root, entry),
+          fileName: "client",
+          formats: ["es"],
+        },
+        outDir: resolvedOutDir,
+        watch: null,
+        minify: "oxc",
+        rollupOptions: {
+          output: {
+            comments: {
+              annotation: false,
+              jsdoc: false,
+              legal: false,
+            },
+            minify: true,
+            minifyInternalExports: true,
           },
-          minify: true,
-          minifyInternalExports: true,
         },
       },
-    },
-    configFile: false,
-    mode: options.mode,
-    plugins: [
-      {
-        name: "tailorkit-preact-package-json",
-        enforce: "pre",
-        resolveId(id) {
-          if (id === preactPackageJson) {
-            return preactPackageJsonModuleId;
-          }
+      configFile: false,
+      mode: options.mode,
+      plugins: [
+        {
+          name: "tailorkit-preact-package-json",
+          enforce: "pre",
+          resolveId(id) {
+            if (id === preactPackageJson) {
+              return preactPackageJsonModuleId;
+            }
 
-          return null;
+            return null;
+          },
+          load(id) {
+            if (id === preactPackageJsonModuleId) {
+              const version = JSON.stringify(preactVersion);
+
+              return `export const version = ${version}; export default { version: ${version} };`;
+            }
+
+            return null;
+          },
         },
-        load(id) {
-          if (id === preactPackageJsonModuleId) {
-            const version = JSON.stringify(preactVersion);
-
-            return `export const version = ${version}; export default { version: ${version} };`;
-          }
-
-          return null;
-        },
-      },
-    ],
-    root: loaded.root,
-  });
+      ],
+      root: loaded.root,
+    });
+  const result = await build(true);
 
   const logoManifest: { dark?: string; light?: string } = {};
   for (const variant of ["light", "dark"] as const) {
@@ -115,8 +117,67 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
     "utf-8",
   );
 
-  return result;
+  if (!options.watch) {
+    return result;
+  }
+
+  let closed = false;
+  let scanning = false;
+  let rebuilding: Promise<unknown> = Promise.resolve();
+  const watchRoot = loaded.root;
+  let snapshot = await sourceSnapshot(watchRoot, resolvedOutDir);
+  const check = async () => {
+    if (closed || scanning) {
+      return;
+    }
+    scanning = true;
+    try {
+      const nextSnapshot = await sourceSnapshot(watchRoot, resolvedOutDir);
+      if (nextSnapshot !== snapshot) {
+        snapshot = nextSnapshot;
+        rebuilding = rebuilding
+          .then(() => (closed ? undefined : build(false)))
+          .catch((error: unknown) => {
+            console.error("TailorKit preview rebuild failed:", error);
+          });
+      }
+    } catch (error) {
+      console.error("TailorKit preview source check failed:", error);
+    } finally {
+      scanning = false;
+    }
+  };
+  const interval = setInterval(() => void check(), 500);
+
+  return {
+    close: async () => {
+      closed = true;
+      clearInterval(interval);
+      await rebuilding;
+    },
+  };
 };
+
+async function sourceSnapshot(root: string, outDir: string): Promise<string> {
+  const files: string[] = [];
+  const visit = async (directory: string): Promise<void> => {
+    const entries = await readdir(directory, { withFileTypes: true });
+    for (const entry of entries) {
+      const filepath = path.join(directory, entry.name);
+      if (filepath === outDir || ["node_modules", ".git", ".next", "dist"].includes(entry.name)) {
+        continue;
+      }
+      if (entry.isDirectory()) {
+        await visit(filepath);
+      } else if (entry.isFile()) {
+        const file = await stat(filepath);
+        files.push(`${filepath}:${file.size}:${file.mtimeMs}`);
+      }
+    }
+  };
+  await visit(root);
+  return files.toSorted().join("\n");
+}
 
 function getInstalledPreactVersion(root: string): string {
   const require = createRequire(path.join(root, "package.json"));

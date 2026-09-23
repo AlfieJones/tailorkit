@@ -44,6 +44,7 @@ export default defineHandler(async (event) => {
     headers: {
       "Cache-Control": "no-store",
       "Content-Type": result.contentType,
+      ...(result.etag ? { ETag: result.etag } : {}),
       "X-Content-Type-Options": "nosniff",
     },
   });
