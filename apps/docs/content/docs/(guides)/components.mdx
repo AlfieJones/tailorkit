@@ -156,14 +156,14 @@ Pass the component map to `createTailorKit`. This makes the component contract
 available from the TailorKit API route.
 
 ```ts title="examples/tanstack-start/src/lib/tailorkit.ts"
-import { actions, components, views } from "@examples/shared";
+import { actions, components, contexts } from "@examples/shared";
 import { createTailorKit } from "tailorkit";
 
 export const tailorKit = createTailorKit({
   assetsBaseUrl: process.env.TAILORKIT_ASSETS_BASE_URL ?? "http://localhost:8333/tailorkit",
   projectKey: process.env.TAILORKIT_PROJECT_KEY,
   components,
-  views,
+  contexts,
   actions,
 });
 ```
@@ -259,7 +259,7 @@ TailorKit serializes components into a stable runtime shape:
     },
   },
   slots: { panel: { views: ["/"] } },
-  views: { "/": {} },
+  contexts: { "/": z.object({}) },
   actions: {},
 }
 ```

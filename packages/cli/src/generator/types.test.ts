@@ -339,9 +339,9 @@ it("composes independent ancestor contexts and generates slot names", () => {
 it("preserves optional ancestor fields through schema serialization and generation", () => {
   const schema = createTailorKitSchema({
     components: {},
-    views: {
-      "/": { context: z.object({ workspaceId: z.string() }).optional() },
-      "/detail": { context: z.object({ id: z.string() }) },
+    contexts: {
+      "/": z.object({ workspaceId: z.string() }).optional(),
+      "/detail": z.object({ id: z.string() }),
     },
     slots: { panel: { views: ["/detail"] } },
   }).serialize();
