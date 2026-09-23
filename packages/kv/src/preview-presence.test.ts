@@ -21,6 +21,7 @@ function createKV(values = new Map<string, string>()): KV {
       values.set(key, value);
       return Promise.resolve();
     }),
+    setIfNewerRevision: vi.fn(),
     subscribe: vi.fn(),
     type: "redis",
   };

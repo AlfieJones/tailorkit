@@ -26,6 +26,13 @@ export interface KV<T extends KVType = KVType> {
   getAndDelete: (key: string) => Promise<string | null>;
   increment: (key: string, ttl: number) => Promise<number>;
   set: (key: string, value: string, options?: SetOptions) => Promise<void>;
+  /** Atomically replace a JSON pointer only when its revision increases. */
+  setIfNewerRevision: (
+    key: string,
+    value: string,
+    revision: number,
+    ttl: number,
+  ) => Promise<boolean>;
   delete: (key: string) => Promise<void>;
   publish: (channel: string, message: string) => Promise<number>;
   subscribe: (channel: string, handler: MessageHandler) => Promise<Unsubscribe>;

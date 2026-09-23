@@ -73,7 +73,25 @@ vi.mock("ioredis", () => ({
       state.redis.data.delete(key);
       return 1;
     }
-    async eval(_script: string, _count: number, key: string, ttl: number) {
+    async eval(
+      script: string,
+      _count: number,
+      key: string,
+      ttl: number,
+      pointer?: string,
+      pointerTtl?: number,
+    ) {
+      if (script.includes("cjson.decode")) {
+        const current = read(state.redis, key);
+        if (current && JSON.parse(current).revision >= ttl) {
+          return 0;
+        }
+        state.redis.data.set(key, {
+          value: pointer!,
+          until: state.redis.clock + pointerTtl! * 1000,
+        });
+        return 1;
+      }
       const value = Number(read(state.redis, key) ?? "0") + 1;
       state.redis.data.set(key, { value: String(value), until: state.redis.clock + ttl * 1000 });
       return value;
@@ -112,11 +130,22 @@ vi.mock("@upstash/redis", () => ({
       state.upstash.data.delete(key);
       return 1;
     }
-    async eval(_script: string, keys: string[], args: number[]) {
+    async eval(script: string, keys: string[], args: (number | string)[]) {
+      if (script.includes("cjson.decode")) {
+        const current = read(state.upstash, keys[0]!);
+        if (current && JSON.parse(current).revision >= Number(args[0])) {
+          return 0;
+        }
+        state.upstash.data.set(keys[0]!, {
+          value: String(args[1]),
+          until: state.upstash.clock + Number(args[2]) * 1000,
+        });
+        return 1;
+      }
       const value = Number(read(state.upstash, keys[0]!) ?? "0") + 1;
       state.upstash.data.set(keys[0]!, {
         value: String(value),
-        until: state.upstash.clock + args[0]! * 1000,
+        until: state.upstash.clock + Number(args[0]) * 1000,
       });
       return value;
     }
@@ -170,9 +199,21 @@ describe.each([
     await writer.set("pointer", "build-1");
     await writer.set("pointer", "build-2");
     expect(await reader.get("pointer")).toBe("build-2");
+    expect(
+      await writer.setIfNewerRevision("revision-pointer", JSON.stringify({ revision: 2 }), 2, 1),
+    ).toBe(true);
+    expect(
+      await writer.setIfNewerRevision("revision-pointer", JSON.stringify({ revision: 1 }), 1, 1),
+    ).toBe(false);
+    expect(await reader.get("revision-pointer")).toBe(JSON.stringify({ revision: 2 }));
+    expect(
+      await writer.setIfNewerRevision("revision-pointer", JSON.stringify({ revision: 3 }), 3, 1),
+    ).toBe(true);
+    expect(await reader.get("revision-pointer")).toBe(JSON.stringify({ revision: 3 }));
     await writer.set("expiring", "value", { ttl: 1 });
     store.clock += 1001;
     expect(await reader.get("expiring")).toBeNull();
+    expect(await reader.get("revision-pointer")).toBeNull();
     const messages: string[] = [];
     const unsubscribe = await reader.subscribe("changes", (message) => messages.push(message));
     await writer.publish("changes", "revision-1");

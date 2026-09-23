@@ -9,6 +9,14 @@ if value == 1 then
 end
 return value
 `;
+const SET_IF_NEWER_REVISION_SCRIPT = `
+local current = redis.call("GET", KEYS[1])
+if current and cjson.decode(current).revision >= tonumber(ARGV[1]) then
+  return 0
+end
+redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3])
+return 1
+`;
 
 async function subscribe(
   redis: IORedis,
@@ -97,6 +105,25 @@ export function createRedisKV(url: string): KV<"redis"> {
         );
       }
     },
+    setIfNewerRevision: (key, value, revision, ttl) =>
+      withSpan(
+        "kv.set_if_newer_revision",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "redis" } },
+        async () => {
+          if (
+            !Number.isSafeInteger(revision) ||
+            revision <= 0 ||
+            !Number.isInteger(ttl) ||
+            ttl <= 0
+          ) {
+            throw new TypeError("KV revision and TTL must be positive integers.");
+          }
+          return (
+            Number(await redis.eval(SET_IF_NEWER_REVISION_SCRIPT, 1, key, revision, value, ttl)) ===
+            1
+          );
+        },
+      ),
     delete: async (key) => {
       await withSpan(
         "kv.delete",

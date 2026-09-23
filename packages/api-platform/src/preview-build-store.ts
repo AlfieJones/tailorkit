@@ -268,7 +268,19 @@ export function createPreviewBuildStore(kv: KV) {
       }
       const committed = { buildId, manifest: build.manifest, revision };
       const previous = await this.current(sessionId);
-      await kv.set(pointerKey(sessionId), JSON.stringify(committed), { ttl: activeTtlSeconds });
+      const promoted = await kv.setIfNewerRevision(
+        pointerKey(sessionId),
+        JSON.stringify(committed),
+        revision,
+        activeTtlSeconds,
+      );
+      if (!promoted) {
+        const current = await this.current(sessionId);
+        if (current?.buildId === buildId && current.revision === revision) {
+          return committed;
+        }
+        throw new Error("Preview build was superseded by a newer revision.");
+      }
       try {
         if ((await kv.get(uploadingKey(sessionId))) === buildId) {
           await kv.delete(uploadingKey(sessionId));

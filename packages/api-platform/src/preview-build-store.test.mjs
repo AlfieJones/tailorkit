@@ -22,6 +22,14 @@ function fakeKV() {
     set: async (key, value) => {
       data.set(key, value);
     },
+    setIfNewerRevision: async (key, value, revision) => {
+      const current = data.get(key);
+      if (current && JSON.parse(current).revision >= revision) {
+        return false;
+      }
+      data.set(key, value);
+      return true;
+    },
     delete: async (key) => {
       data.delete(key);
     },
@@ -97,14 +105,14 @@ test("a failed pointer write leaves a verified build retryable with the same rev
   const next = Buffer.from("next");
   const nextId = await store.begin("session", manifestFor([["client.js", next]]));
   await store.upload("session", nextId, 0, 0, next.toString("base64"));
-  const write = kv.set;
+  const write = kv.setIfNewerRevision;
   let failPointer = true;
-  kv.set = async (key, value, options) => {
+  kv.setIfNewerRevision = async (key, value, revision, ttl) => {
     if (key === "preview:current:session" && failPointer) {
       failPointer = false;
       throw new Error("pointer write failed");
     }
-    return write(key, value, options);
+    return write(key, value, revision, ttl);
   };
   await assert.rejects(store.commit("session", nextId), /pointer write failed/);
   assert.equal((await store.current("session")).buildId, firstId);
@@ -115,6 +123,31 @@ test("a failed pointer write leaves a verified build retryable with the same rev
   assert.equal(committed.revision, 2);
   assert.equal((await store.current("session")).buildId, nextId);
   assert.equal(await store.chunk("session", nextId, 0, 0), next.toString("base64"));
+});
+
+test("an older concurrent commit cannot replace a newer current revision", async () => {
+  const kv = fakeKV();
+  const store = createPreviewBuildStore(kv);
+  const bytes = Buffer.from("same build");
+  const buildId = await store.begin("session", manifestFor([["client.js", bytes]]));
+  await store.upload("session", buildId, 0, 0, bytes.toString("base64"));
+  const entered = Promise.withResolvers();
+  const release = Promise.withResolvers();
+  const write = kv.set;
+  kv.set = async (key, value, options) => {
+    if (key === `preview:build:session:${buildId}` && JSON.parse(value).revision === 1) {
+      entered.resolve();
+      await release.promise;
+    }
+    return write(key, value, options);
+  };
+  const older = store.commit("session", buildId);
+  await entered.promise;
+  const newer = await store.commit("session", buildId);
+  release.resolve();
+  await assert.rejects(older, /superseded/);
+  assert.equal(newer.revision, 2);
+  assert.equal((await store.current("session")).revision, 2);
 });
 
 test("reads builds committed before the retryable-state rollout", async () => {
