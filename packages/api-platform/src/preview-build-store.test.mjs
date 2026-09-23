@@ -86,6 +86,49 @@ test("only complete verified builds replace the current pointer", async () => {
   assert.equal(await store.chunk("session", secondId, 0, 0), null);
 });
 
+test("a failed pointer write leaves a verified build retryable with the same revision", async () => {
+  const kv = fakeKV();
+  const store = createPreviewBuildStore(kv);
+  const first = Buffer.from("first");
+  const firstId = await store.begin("session", manifestFor([["client.js", first]]));
+  await store.upload("session", firstId, 0, 0, first.toString("base64"));
+  await store.commit("session", firstId);
+
+  const next = Buffer.from("next");
+  const nextId = await store.begin("session", manifestFor([["client.js", next]]));
+  await store.upload("session", nextId, 0, 0, next.toString("base64"));
+  const write = kv.set;
+  let failPointer = true;
+  kv.set = async (key, value, options) => {
+    if (key === "preview:current:session" && failPointer) {
+      failPointer = false;
+      throw new Error("pointer write failed");
+    }
+    return write(key, value, options);
+  };
+  await assert.rejects(store.commit("session", nextId), /pointer write failed/);
+  assert.equal((await store.current("session")).buildId, firstId);
+  assert.equal(await kv.get("preview:uploading:session"), nextId);
+  assert.equal(JSON.parse(await kv.get(`preview:build:session:${nextId}`)).state, "ready");
+
+  const committed = await store.commit("session", nextId);
+  assert.equal(committed.revision, 2);
+  assert.equal((await store.current("session")).buildId, nextId);
+  assert.equal(await store.chunk("session", nextId, 0, 0), next.toString("base64"));
+});
+
+test("reads builds committed before the retryable-state rollout", async () => {
+  const kv = fakeKV();
+  const store = createPreviewBuildStore(kv);
+  const bytes = Buffer.from("published before rollout");
+  await kv.set(
+    "preview:build:session:legacy",
+    JSON.stringify({ manifest: manifestFor([["client.js", bytes]]), state: "committed" }),
+  );
+  await kv.set("preview:build:session:legacy:0:0", bytes.toString("base64"));
+  assert.equal(await store.chunk("session", "legacy", 0, 0), bytes.toString("base64"));
+});
+
 test("large aggregate builds use bounded chunks and messages", async () => {
   const store = createPreviewBuildStore(fakeKV());
   const files = Array.from({ length: 6 }, (_, index) => [

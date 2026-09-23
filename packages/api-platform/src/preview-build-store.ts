@@ -48,10 +48,15 @@ const fileSchema = z.object({
   sha256: z.string().regex(/^[a-f0-9]{64}$/u),
 });
 const manifestSchema = z.object({ files: z.array(fileSchema).max(previewBuildFiles) });
-const buildSchema = z.object({
-  manifest: manifestSchema,
-  state: z.enum(["uploading", "committed"]),
-});
+const buildSchema = z.discriminatedUnion("state", [
+  z.object({ manifest: manifestSchema, state: z.literal("uploading") }),
+  z.object({
+    manifest: manifestSchema,
+    state: z.literal("ready"),
+    revision: z.number().int().positive(),
+  }),
+  z.object({ manifest: manifestSchema, state: z.literal("committed") }),
+]);
 const committedSchema = z.object({
   buildId: identifierSchema,
   manifest: manifestSchema,
@@ -129,7 +134,8 @@ export function createPreviewBuildStore(kv: KV) {
   }
   async function removeUploadingBuild(sessionId: string, buildId: string): Promise<void> {
     const build = await readBuild(sessionId, buildId);
-    if (build?.state !== "uploading") {
+    const current = parse(await kv.get(pointerKey(sessionId)), committedSchema);
+    if (!build || current?.buildId === buildId) {
       return;
     }
     await kv.delete(buildKey(sessionId, buildId));
@@ -208,58 +214,66 @@ export function createPreviewBuildStore(kv: KV) {
         throw new Error("Preview upload is unavailable.");
       }
       const build = await readBuild(sessionId, buildId);
-      if (build?.state !== "uploading") {
+      if (!build || build.state === "committed") {
         throw new Error("Preview upload is unavailable.");
       }
       validatePreviewManifest(build.manifest);
-      for (const [fileIndex, file] of build.manifest.files.entries()) {
-        const parts: Buffer[] = [];
-        for (let chunkIndex = 0; chunkIndex < file.chunks; chunkIndex += 1) {
-          const value = await kv.get(chunkKey(sessionId, buildId, fileIndex, chunkIndex));
-          if (value === null) {
-            throw new Error("Preview build is incomplete.");
+      let revision = build.state === "ready" ? build.revision : 0;
+      if (build.state === "uploading") {
+        for (const [fileIndex, file] of build.manifest.files.entries()) {
+          const parts: Buffer[] = [];
+          for (let chunkIndex = 0; chunkIndex < file.chunks; chunkIndex += 1) {
+            const value = await kv.get(chunkKey(sessionId, buildId, fileIndex, chunkIndex));
+            if (value === null) {
+              throw new Error("Preview build is incomplete.");
+            }
+            if (!base64Schema.safeParse(value).success) {
+              throw new Error("Corrupt preview chunk.");
+            }
+            const bytes = Buffer.from(value, "base64");
+            if (
+              bytes.length !==
+              Math.min(previewChunkBytes, file.size - chunkIndex * previewChunkBytes)
+            ) {
+              throw new Error("Corrupt preview chunk.");
+            }
+            parts.push(bytes);
           }
-          if (!base64Schema.safeParse(value).success) {
-            throw new Error("Corrupt preview chunk.");
+          const bytes = Buffer.concat(parts);
+          if (bytes.length !== file.size || sha256(bytes) !== file.sha256) {
+            throw new Error("Preview checksum mismatch.");
           }
-          const bytes = Buffer.from(value, "base64");
-          if (
-            bytes.length !== Math.min(previewChunkBytes, file.size - chunkIndex * previewChunkBytes)
-          ) {
-            throw new Error("Corrupt preview chunk.");
-          }
-          parts.push(bytes);
         }
-        const bytes = Buffer.concat(parts);
-        if (bytes.length !== file.size || sha256(bytes) !== file.sha256) {
-          throw new Error("Preview checksum mismatch.");
+        revision = await kv.increment(`preview:revision-counter:${sessionId}`, activeTtlSeconds);
+        for (const [fileIndex, file] of build.manifest.files.entries()) {
+          for (let chunkIndex = 0; chunkIndex < file.chunks; chunkIndex += 1) {
+            const key = chunkKey(sessionId, buildId, fileIndex, chunkIndex);
+            const value = await kv.get(key);
+            if (value === null) {
+              throw new Error("Preview build expired before commit.");
+            }
+            await kv.set(key, value, { ttl: activeTtlSeconds });
+          }
         }
+        await kv.set(
+          buildKey(sessionId, buildId),
+          JSON.stringify({ manifest: build.manifest, state: "ready", revision }),
+          {
+            ttl: activeTtlSeconds,
+          },
+        );
       }
-      const revision = await kv.increment(
-        `preview:revision-counter:${sessionId}`,
-        activeTtlSeconds,
-      );
+      if (!revision) {
+        throw new Error("Preview build is unavailable.");
+      }
       const committed = { buildId, manifest: build.manifest, revision };
       const previous = await this.current(sessionId);
-      for (const [fileIndex, file] of build.manifest.files.entries()) {
-        for (let chunkIndex = 0; chunkIndex < file.chunks; chunkIndex += 1) {
-          const key = chunkKey(sessionId, buildId, fileIndex, chunkIndex);
-          const value = await kv.get(key);
-          if (value === null) {
-            throw new Error("Preview build expired before commit.");
-          }
-          await kv.set(key, value, { ttl: activeTtlSeconds });
-        }
-      }
-      await kv.set(buildKey(sessionId, buildId), JSON.stringify({ ...build, state: "committed" }), {
-        ttl: activeTtlSeconds,
-      });
       await kv.set(pointerKey(sessionId), JSON.stringify(committed), { ttl: activeTtlSeconds });
-      if ((await kv.get(uploadingKey(sessionId))) === buildId) {
-        await kv.delete(uploadingKey(sessionId));
-      }
-      if (previous && previous.buildId !== buildId) {
-        try {
+      try {
+        if ((await kv.get(uploadingKey(sessionId))) === buildId) {
+          await kv.delete(uploadingKey(sessionId));
+        }
+        if (previous && previous.buildId !== buildId) {
           const previousBuild = await readBuild(sessionId, previous.buildId);
           if (previousBuild) {
             await kv.set(buildKey(sessionId, previous.buildId), JSON.stringify(previousBuild), {
@@ -275,11 +289,15 @@ export function createPreviewBuildStore(kv: KV) {
               }
             }
           }
-        } catch {
-          // Expiry of superseded data is best effort; the original TTL is still bounded.
         }
+      } catch {
+        // The pointer is durable and TTLs bound cleanup.
       }
-      await kv.publish(channel(sessionId), JSON.stringify({ revision, buildId }));
+      try {
+        await kv.publish(channel(sessionId), JSON.stringify({ revision, buildId }));
+      } catch {
+        // Polling recovers missed notifications.
+      }
       return committed;
     },
     async current(sessionId: string): Promise<CommittedPreviewBuild | null> {
@@ -295,7 +313,7 @@ export function createPreviewBuildStore(kv: KV) {
       requireId(sessionId);
       requireId(buildId);
       const build = await readBuild(sessionId, buildId);
-      if (build?.state !== "committed") {
+      if (build?.state !== "ready" && build?.state !== "committed") {
         return null;
       }
       if (
