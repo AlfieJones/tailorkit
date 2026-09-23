@@ -9,8 +9,8 @@ import {
   SunIcon,
   UserIcon,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@tailorkit/ui/components/avatar";
-import { Button } from "@tailorkit/ui/components/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@tailorkit/ui/avatar";
+import { Button } from "@tailorkit/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,10 +19,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@tailorkit/ui/components/dropdown-menu";
-import { ToggleGroup, ToggleGroupItem } from "@tailorkit/ui/components/toggle-group";
+} from "@tailorkit/ui/dropdown-menu";
+import { ToggleGroup, ToggleGroupItem } from "@tailorkit/ui/toggle-group";
 import { Link } from "@tanstack/react-router";
-import { toastManager } from "@tailorkit/ui/components/toast";
+import { toastManager } from "@tailorkit/ui/toast";
 
 import { authClient } from "#lib/auth-client";
 import { fallbackTheme, getUserTheme, isAppTheme, useTheme } from "#lib/theme";

@@ -1,7 +1,7 @@
 "use client";
 
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Button } from "@tailorkit/ui/components/button";
+import { Button } from "@tailorkit/ui/button";
 import {
   Card,
   CardDescription,
@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardPanel,
   CardTitle,
-} from "@tailorkit/ui/components/card";
+} from "@tailorkit/ui/card";
 import {
   Dialog,
   DialogClose,
@@ -20,10 +20,10 @@ import {
   DialogPanel,
   DialogPopup,
   DialogTitle,
-} from "@tailorkit/ui/components/dialog";
-import { Field, FieldError, FieldLabel } from "@tailorkit/ui/components/field";
-import { Logo } from "@tailorkit/ui/components/logo";
-import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/components/otp-field";
+} from "@tailorkit/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@tailorkit/ui/field";
+import { Logo } from "@tailorkit/ui/logo";
+import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/otp-field";
 import { Fragment, useState } from "react";
 
 import { authClient } from "#lib/auth-client";

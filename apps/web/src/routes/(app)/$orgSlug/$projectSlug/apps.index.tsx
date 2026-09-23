@@ -6,24 +6,11 @@ import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { AppWindowIcon, SearchIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
-import { Badge } from "@tailorkit/ui/components/badge";
-import { CardFrame } from "@tailorkit/ui/components/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@tailorkit/ui/components/empty";
-import { Input } from "@tailorkit/ui/components/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@tailorkit/ui/components/table";
+import { Badge } from "@tailorkit/ui/badge";
+import { CardFrame } from "@tailorkit/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@tailorkit/ui/empty";
+import { Input } from "@tailorkit/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@tailorkit/ui/table";
 import { DateAgo } from "@tailorkit/ui/date";
 import { AppLogo } from "#components/apps/app-logo";
 import { renderSortableHeader } from "#components/members/member-table-utils";

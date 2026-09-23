@@ -7,7 +7,7 @@ import {
   segmentedControlItemSizeClassNames,
 } from "@tailorkit/ui/lib/segmented-control";
 import type { SegmentedControlSize } from "@tailorkit/ui/lib/segmented-control";
-import { cn } from "@tailorkit/ui/lib/utils";
+import { cn } from "@tailorkit/ui";
 
 type TabsVariant = "default" | "underline";
 type TabsSize = SegmentedControlSize;

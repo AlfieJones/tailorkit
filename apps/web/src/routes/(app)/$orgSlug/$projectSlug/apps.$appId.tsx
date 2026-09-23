@@ -5,29 +5,16 @@ import { flexRender, useTable } from "@tanstack/react-table";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { ArrowLeftIcon, RocketIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Badge } from "@tailorkit/ui/components/badge";
-import { Button } from "@tailorkit/ui/components/button";
+import { Badge } from "@tailorkit/ui/badge";
+import { Button } from "@tailorkit/ui/button";
 import {
   CardFrame,
   CardFrameDescription,
   CardFrameHeader,
   CardFrameTitle,
-} from "@tailorkit/ui/components/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@tailorkit/ui/components/empty";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@tailorkit/ui/components/table";
+} from "@tailorkit/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@tailorkit/ui/empty";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@tailorkit/ui/table";
 import { DateAgo } from "@tailorkit/ui/date";
 import { AppLogo } from "#components/apps/app-logo";
 import { renderSortableHeader } from "#components/members/member-table-utils";
