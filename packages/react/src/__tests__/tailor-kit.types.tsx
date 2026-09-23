@@ -26,15 +26,13 @@ const server = createTailorKitServer({
   components: {
     Button: {},
   },
-  views: {
-    "/": { context: typedSchema<{ user: { id: string } }>() },
-    "/home": { context: typedSchema<{ page: { title: string } }>() },
-    "/home/detail": {
-      context: typedSchema<{
-        detail: { id: string };
-      }>(),
-    },
-    "/user": { context: typedSchema<{ userId: string }>() },
+  contexts: {
+    "/": typedSchema<{ user: { id: string } }>(),
+    "/home": typedSchema<{ page: { title: string } }>(),
+    "/home/detail": typedSchema<{
+      detail: { id: string };
+    }>(),
+    "/user": typedSchema<{ userId: string }>(),
   },
 });
 

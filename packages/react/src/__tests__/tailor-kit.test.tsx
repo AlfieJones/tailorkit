@@ -75,11 +75,11 @@ const server = createTailorKitServer({
   components: {
     Button: { children: true },
   },
-  views: {
-    "/": { context: emptySchema },
-    "/home": { context: emptySchema },
-    "/home/detail": { context: emptySchema },
-    "/user": { context: emptySchema },
+  contexts: {
+    "/": emptySchema,
+    "/home": emptySchema,
+    "/home/detail": emptySchema,
+    "/user": emptySchema,
   },
 });
 

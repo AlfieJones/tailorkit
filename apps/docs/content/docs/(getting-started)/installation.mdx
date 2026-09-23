@@ -74,11 +74,9 @@ export const tailorKit = createTailorKit({
   },
 
   slots: { panel: { views: ["/"] } },
-  views: {
+  contexts: {
     // Define the host context layers available to app views.
-    "/": {
-      context: z.object({}),
-    },
+    "/": z.object({}),
   },
 
   actions: {

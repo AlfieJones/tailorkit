@@ -7,12 +7,9 @@ import { useTailorRootContext } from "../components/context";
 
 export type ViewName<TViews extends Record<string, ViewDefinition>> = keyof TViews & string;
 
-export type ViewContext<TView> =
-  TView extends ViewDefinition<infer TContext>
-    ? TContext extends StandardJSONSchemaV1
-      ? StandardJSONSchemaV1.InferOutput<TContext>
-      : Record<string, never>
-    : never;
+export type ViewContext<TView> = TView extends StandardJSONSchemaV1
+  ? StandardJSONSchemaV1.InferOutput<TView>
+  : Record<string, never>;
 
 interface ReadyViewOptions<
   TViews extends Record<string, ViewDefinition>,
