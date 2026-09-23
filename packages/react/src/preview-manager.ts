@@ -19,6 +19,7 @@ interface Candidate {
 
 interface Entry {
   app: TailorKitApp;
+  metadata: NonNullable<TailorKitApp["preview"]> | null;
   candidate: Candidate | null;
   listeners: Set<() => void>;
   snapshot: PreviewSnapshot;
@@ -26,6 +27,11 @@ interface Entry {
   connecting: boolean;
   reconnect: ReturnType<typeof setTimeout> | null;
   delay: number;
+}
+
+function hasValidViewerToken(metadata: NonNullable<TailorKitApp["preview"]>): boolean {
+  const expiresAt = Number(metadata.token.split(".", 1)[0]);
+  return Number.isSafeInteger(expiresAt) && expiresAt > Date.now();
 }
 
 function bytesFromBase64(value: string): Uint8Array {
@@ -87,10 +93,16 @@ export function createPreviewManager(baseUrl: URL, onEnded: () => void) {
     entry.connecting = false;
     entry.candidate = null;
   };
+  const end = (entry: Entry) => {
+    close(entry);
+    entry.metadata = null;
+    entry.snapshot = empty;
+    notify(entry);
+    onEnded();
+  };
   const handleEvent = async (entry: Entry, event: PreviewEvent) => {
     if (event.type === "ended") {
-      close(entry);
-      onEnded();
+      end(entry);
       return;
     }
     if (event.revision <= entry.snapshot.revision) {
@@ -139,7 +151,9 @@ export function createPreviewManager(baseUrl: URL, onEnded: () => void) {
         entry.snapshot = { revision: candidate.revision, source };
         notify(entry);
       }
-      entry.candidate = null;
+      if (entry.candidate === candidate) {
+        entry.candidate = null;
+      }
     }
   };
   const connect = async (entry: Entry) => {
@@ -147,16 +161,17 @@ export function createPreviewManager(baseUrl: URL, onEnded: () => void) {
       return;
     }
     entry.connecting = true;
-    let metadata = entry.app.preview;
+    let metadata =
+      entry.metadata && hasValidViewerToken(entry.metadata) ? entry.metadata : entry.app.preview;
     try {
       const refresh = new URL("preview/metadata", baseUrl);
       refresh.searchParams.set("sessionId", metadata.sessionId);
       const response = await fetch(refresh, { credentials: "same-origin" });
       if (response.ok) {
         metadata = previewMetadataSchema.parse(await response.json());
+        entry.metadata = metadata;
       } else if (response.status === 404) {
-        close(entry);
-        onEnded();
+        end(entry);
         return;
       }
     } catch {
@@ -212,6 +227,7 @@ export function createPreviewManager(baseUrl: URL, onEnded: () => void) {
       if (!entry) {
         entry = {
           app,
+          metadata: null,
           candidate: null,
           listeners: new Set(),
           snapshot: empty,

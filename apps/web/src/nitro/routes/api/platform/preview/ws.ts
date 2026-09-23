@@ -6,7 +6,7 @@ import { defineWebSocketHandler } from "nitro/h3";
 import { z } from "zod";
 
 const handler = new RPCHandler(previewWebSocketRouter);
-const contexts = new WeakMap<object, PreviewWebSocketContext>();
+const authorizations = new WeakMap<object, Promise<PreviewWebSocketContext | null>>();
 const upgradeSchema = z.object({
   sessionId: z.uuid(),
   role: z.enum(["uploader", "viewer"]),
@@ -32,15 +32,19 @@ export default defineWebSocketHandler({
       return peer.close();
     }
     const { sessionId, role, token } = parsed.data;
-    const context = await authorizePreviewSocket(sessionId, token, role);
+    const authorization = authorizePreviewSocket(sessionId, token, role);
+    authorizations.set(peer, authorization);
+    const context = await authorization;
+    if (authorizations.get(peer) !== authorization) {
+      return;
+    }
     if (!context) {
       return peer.close();
     }
-    contexts.set(peer, context);
   },
-  message(peer, message) {
-    const context = contexts.get(peer);
-    if (!context) {
+  async message(peer, message) {
+    const authorization = authorizations.get(peer);
+    if (!authorization) {
       return peer.close();
     }
     const payload = message.rawData;
@@ -53,10 +57,17 @@ export default defineWebSocketHandler({
     if (size > 512 * 1024) {
       return peer.close();
     }
+    const context = await authorization;
+    if (authorizations.get(peer) !== authorization) {
+      return;
+    }
+    if (!context) {
+      return peer.close();
+    }
     return handler.message(peer, message, { context });
   },
   close(peer) {
     handler.close(peer);
-    contexts.delete(peer);
+    authorizations.delete(peer);
   },
 });

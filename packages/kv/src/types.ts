@@ -24,6 +24,31 @@ export interface KV<T extends KVType = KVType> {
   engine: KVEngine<T>;
   get: (key: string) => Promise<string | null>;
   getAndDelete: (key: string) => Promise<string | null>;
+  /** Claim or renew an upload marker only if it still matches the observed owner and the session is active. */
+  claimUpload: (
+    ownerKey: string,
+    endedKey: string,
+    expectedOwner: string | null,
+    newOwner: string,
+    ttl: number,
+  ) => Promise<boolean>;
+  /** Atomically renew the developer lease and seen marker unless the session ended. */
+  setPreviewPresenceIfActive: (
+    presenceKey: string,
+    seenKey: string,
+    endedKey: string,
+    value: string,
+    presenceTtl: number,
+    seenTtl: number,
+  ) => Promise<boolean>;
+  /** Atomically end a previously connected session only when its lease is absent. */
+  keepPreviewSessionIfDeveloperPresent: (
+    presenceKey: string,
+    seenKey: string,
+    endedKey: string,
+    endedTtl: number,
+    expireUnseen?: boolean,
+  ) => Promise<boolean>;
   increment: (key: string, ttl: number) => Promise<number>;
   set: (key: string, value: string, options?: SetOptions) => Promise<void>;
   /** Atomically promote the owned upload if its revision advances the pointer. */

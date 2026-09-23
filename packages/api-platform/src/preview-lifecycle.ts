@@ -6,19 +6,38 @@ import { and, eq } from "drizzle-orm";
 import { createPreviewBuildStore } from "./preview-build-store";
 
 const everKey = (sessionId: string) => `preview:developer-seen:${sessionId}`;
+const presenceKey = (sessionId: string) => `preview:developer-connection:${sessionId}`;
+const endedKey = (sessionId: string) => `preview:ended:${sessionId}`;
+const activeTtlSeconds = 8 * 60 * 60;
 
-export async function recordPreviewHeartbeat(kv: KV, sessionId: string): Promise<void> {
-  await createPreviewPresence(kv).heartbeat(sessionId, {
-    connectionId: sessionId,
-    revision: 0,
-  });
-  await kv.set(everKey(sessionId), "1", { ttl: 8 * 60 * 60 });
+export function recordPreviewHeartbeat(kv: KV, sessionId: string): Promise<boolean> {
+  return createPreviewPresence(kv).heartbeatIfActive(
+    sessionId,
+    {
+      connectionId: sessionId,
+      revision: 0,
+    },
+    everKey(sessionId),
+    endedKey(sessionId),
+    activeTtlSeconds,
+  );
 }
 
 /** A developer has 75 seconds from the last heartbeat to reconnect. */
-export async function ensurePreviewDeveloperGrace(kv: KV, sessionId: string): Promise<boolean> {
-  const everConnected = await kv.get(everKey(sessionId));
-  if (!everConnected || (await createPreviewPresence(kv).get(sessionId))) {
+export async function ensurePreviewDeveloperGrace(
+  kv: KV,
+  sessionId: string,
+  expireUnseen = false,
+): Promise<boolean> {
+  if (
+    await kv.keepPreviewSessionIfDeveloperPresent(
+      presenceKey(sessionId),
+      everKey(sessionId),
+      endedKey(sessionId),
+      activeTtlSeconds,
+      expireUnseen,
+    )
+  ) {
     return true;
   }
   await db

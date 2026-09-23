@@ -27,7 +27,9 @@ const connectionSchema = z.object({
   revision: z.number().int().nonnegative(),
 });
 function assertSessionId(sessionId: string): void {
-  identifierSchema.parse(sessionId);
+  if (!identifierSchema.safeParse(sessionId).success) {
+    throw new TypeError("Preview session id must be an opaque identifier.");
+  }
 }
 function assertConnection(connection: PreviewConnection): void {
   connectionSchema.parse(connection);
@@ -44,6 +46,33 @@ function parseConnection(raw: string): PreviewConnection | null {
 /** Stores a renewable CLI presence lease. Socket closes are not session ends. */
 export function createPreviewPresence(kv: KV) {
   return {
+    async heartbeatIfActive(
+      sessionId: string,
+      connection: PreviewConnection,
+      seenKey: string,
+      endedKey: string,
+      seenTtl: number,
+    ): Promise<boolean> {
+      assertSessionId(sessionId);
+      assertConnection(connection);
+      const value = JSON.stringify(connection);
+      const active = await kv.setPreviewPresenceIfActive(
+        connectionKey(sessionId),
+        seenKey,
+        endedKey,
+        value,
+        previewLeaseSeconds,
+        seenTtl,
+      );
+      if (active) {
+        try {
+          await kv.publish(connectionChannel(sessionId), value);
+        } catch {
+          // The lease is authoritative; pub/sub only reduces update latency.
+        }
+      }
+      return active;
+    },
     async heartbeat(sessionId: string, connection: PreviewConnection): Promise<void> {
       assertSessionId(sessionId);
       assertConnection(connection);

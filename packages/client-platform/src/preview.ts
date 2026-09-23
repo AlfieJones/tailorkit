@@ -11,8 +11,20 @@ const hasControlCharacters = (value: string) =>
   [...value].some((character) => (character.codePointAt(0) ?? 0) < 32);
 
 export const previewFileManifestSchema = z.object({
-  path: z.string().min(1).max(1024),
-  contentType: z.string().min(1).max(255),
+  path: z
+    .string()
+    .min(1)
+    .max(1024)
+    .refine((path) => new TextEncoder().encode(path).byteLength <= 1024, {
+      message: "Preview path exceeds 1024 UTF-8 bytes",
+    }),
+  contentType: z
+    .string()
+    .min(1)
+    .max(255)
+    .refine((contentType) => !/[\r\n]/u.test(contentType), {
+      message: "Invalid preview content type",
+    }),
   size: z
     .number()
     .int()

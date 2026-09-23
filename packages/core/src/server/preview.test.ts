@@ -7,7 +7,7 @@ const grantId = "g".repeat(43);
 const basePath = "/custom/tailorkit";
 const baseUrl = `https://host.test${basePath}`;
 
-function server(requests: string[]) {
+function server(requests: string[], previewError?: unknown) {
   return createTailorKitServer({
     basePath,
     components: {},
@@ -20,9 +20,15 @@ function server(requests: string[]) {
         const url = new URL(request.url);
         requests.push(`${request.method} ${url.pathname}${url.search}`);
         if (url.pathname.endsWith(`/preview/shares/${shareId}/accept`)) {
+          if (previewError) {
+            return Response.json(previewError, { status: 503 });
+          }
           return Response.json({ grantId, sessionId: "session" });
         }
         if (url.pathname.endsWith(`/preview/shares/${shareId}`)) {
+          if (previewError) {
+            return Response.json(previewError, { status: 503 });
+          }
           return Response.json({
             appName: "Example app",
             expiresAt: new Date().toISOString(),
@@ -76,6 +82,27 @@ function server(requests: string[]) {
 }
 
 describe("preview host flow", () => {
+  it("returns 503 for structured platform storage errors", async () => {
+    const tailor = server([], { code: "SERVICE_UNAVAILABLE", message: "KV unavailable" });
+    const consentUrl = `${baseUrl}/preview/${shareId}`;
+    const options = { authenticate: () => ({ scopeId: "viewer" }) };
+    const invitation = await tailor.handler(new Request(consentUrl), options);
+    expect(invitation.status).toBe(503);
+
+    const acceptance = await tailor.handler(
+      new Request(consentUrl, {
+        method: "POST",
+        headers: {
+          origin: "https://host.test",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: "intent=accept",
+      }),
+      options,
+    );
+    expect(acceptance.status).toBe(503);
+  });
+
   it("uses the custom mount, requires login, and rejects cross-origin acceptance", async () => {
     const requests: string[] = [];
     const tailor = server(requests);

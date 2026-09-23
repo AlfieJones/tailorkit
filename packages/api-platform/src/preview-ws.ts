@@ -130,7 +130,9 @@ const heartbeat = o.output(z.object({ accepted: z.literal(true) })).handler(asyn
   if (!kv) {
     throw new ORPCError("SERVICE_UNAVAILABLE");
   }
-  await recordPreviewHeartbeat(kv, context.sessionId);
+  if (!(await recordPreviewHeartbeat(kv, context.sessionId))) {
+    throw new ORPCError("UNAUTHORIZED", { message: "Preview session is unavailable." });
+  }
   return { accepted: true as const };
 });
 

@@ -34,6 +34,35 @@ function fakeKV() {
       data.delete(key);
       return value;
     },
+    setPreviewPresenceIfActive: async (
+      presenceKey: string,
+      seenKey: string,
+      endedKey: string,
+      value: string,
+    ) => {
+      if (data.has(endedKey)) {
+        return false;
+      }
+      data.set(presenceKey, value);
+      data.set(seenKey, "1");
+      return true;
+    },
+    keepPreviewSessionIfDeveloperPresent: async (
+      presenceKey: string,
+      seenKey: string,
+      endedKey: string,
+      _endedTtl: number,
+      expireUnseen = false,
+    ) => {
+      if (data.has(endedKey)) {
+        return false;
+      }
+      if (data.has(presenceKey) || (!data.has(seenKey) && !expireUnseen)) {
+        return true;
+      }
+      data.set(endedKey, "1");
+      return false;
+    },
     set: async (key: string, value: string) => {
       data.set(key, value);
     },
@@ -134,17 +163,72 @@ describe("platform preview lifecycle and grants", () => {
     expect(first.body.shareId).toHaveLength(43);
     expect(first.body.tunnelUrl).toContain("/api/platform/preview/ws");
     await expect(start()).rejects.toMatchObject({ code: "CONFLICT" });
+    const kv = state.kv as ReturnType<typeof fakeKV>;
+    const expiredBuildId = "expired_build";
+    const manifest = {
+      files: [
+        {
+          path: "client.js",
+          contentType: "text/javascript",
+          size: 1,
+          chunks: 1,
+          sha256: "0".repeat(64),
+        },
+      ],
+    };
+    const buildKey = `preview:build:${first.body.sessionId}:${expiredBuildId}`;
+    await kv.set(
+      `preview:current:${first.body.sessionId}`,
+      JSON.stringify({ buildId: expiredBuildId, manifest, revision: 1 }),
+    );
+    await kv.set(buildKey, JSON.stringify({ state: "ready", manifest, revision: 1 }));
+    await kv.set(`${buildKey}:0:0`, "YQ==");
     await db
       .update(previewSession)
       .set({ expiresAt: new Date(Date.now() - 1000) })
       .where(eq(previewSession.id, first.body.sessionId));
     const second = await start();
     expect(second.body.sessionId).not.toBe(first.body.sessionId);
+    expect(await kv.get(`preview:current:${first.body.sessionId}`)).toBeNull();
+    expect(await kv.get(buildKey)).toBeNull();
+    expect(await kv.get(`${buildKey}:0:0`)).toBeNull();
+    expect(await kv.get(`preview:ended:${first.body.sessionId}`)).toBe("1");
     await db.update(cliToken).set({ revokedAt: new Date() }).where(eq(cliToken.id, tokenId));
     await expect(start()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     expect(
       await authorizePreviewSocket(second.body.sessionId, second.body.tunnelToken, "uploader"),
     ).toBeNull();
+  });
+
+  it("retires a disconnected developer before checking the app conflict", async () => {
+    const first = await start();
+    const kv = state.kv as ReturnType<typeof fakeKV>;
+    await kv.set(`preview:developer-seen:${first.body.sessionId}`, "1");
+    await kv.set(`preview:developer-connection:${first.body.sessionId}`, "connected");
+    await expect(start()).rejects.toMatchObject({ code: "CONFLICT" });
+
+    await kv.delete(`preview:developer-connection:${first.body.sessionId}`);
+    const replacement = await start();
+    expect(replacement.body.sessionId).not.toBe(first.body.sessionId);
+    expect(await kv.get(`preview:ended:${first.body.sessionId}`)).toBe("1");
+    const oldSession = await db.query.previewSession.findFirst({
+      where: { id: first.body.sessionId },
+    });
+    expect(oldSession?.status).toBe("ended");
+  });
+
+  it("retires a session that never connected after its first-connection grace", async () => {
+    const first = await start();
+    await expect(start()).rejects.toMatchObject({ code: "CONFLICT" });
+    await db
+      .update(previewSession)
+      .set({ createdAt: new Date(Date.now() - 3 * 60 * 1000) })
+      .where(eq(previewSession.id, first.body.sessionId));
+
+    const replacement = await start();
+    expect(replacement.body.sessionId).not.toBe(first.body.sessionId);
+    const kv = state.kv as ReturnType<typeof fakeKV>;
+    expect(await kv.get(`preview:ended:${first.body.sessionId}`)).toBe("1");
   });
 
   it("binds grants to the viewer scope and invalidates them on stop", async () => {
@@ -178,6 +262,57 @@ describe("platform preview lifecycle and grants", () => {
       { context },
     );
     expect(ended.body.items).toEqual([]);
+  });
+
+  it("retries KV cleanup after the session was durably stopped", async () => {
+    const started = await start();
+    const kv = state.kv as ReturnType<typeof fakeKV>;
+    const buildId = "retry_build";
+    const buildKey = `preview:build:${started.body.sessionId}:${buildId}`;
+    const chunkKey = `${buildKey}:0:0`;
+    const manifest = {
+      files: [
+        {
+          path: "client.js",
+          contentType: "text/javascript",
+          size: 1,
+          chunks: 1,
+          sha256: "0".repeat(64),
+        },
+      ],
+    };
+    await kv.set(
+      `preview:current:${started.body.sessionId}`,
+      JSON.stringify({ buildId, manifest, revision: 1 }),
+    );
+    await kv.set(buildKey, JSON.stringify({ state: "ready", manifest, revision: 1 }));
+    await kv.set(chunkKey, "YQ==");
+    const remove = kv.delete;
+    let failOnce = true;
+    kv.delete = async (key) => {
+      if (key === chunkKey && failOnce) {
+        failOnce = false;
+        throw new Error("KV cleanup failed");
+      }
+      await remove(key);
+    };
+    const stop = () =>
+      call(
+        previewRouter.stop,
+        { params: { sessionId: started.body.sessionId }, body: { deployToken: "deploy-token" } },
+        { context },
+      );
+
+    await expect(stop()).rejects.toThrow("KV cleanup failed");
+    const session = await db.query.previewSession.findFirst({
+      where: { id: started.body.sessionId },
+    });
+    expect(session?.status).toBe("ended");
+    expect(await kv.get(`preview:current:${started.body.sessionId}`)).not.toBeNull();
+    await expect(stop()).resolves.toEqual({ body: {} });
+    expect(await kv.get(`preview:current:${started.body.sessionId}`)).toBeNull();
+    expect(await kv.get(buildKey)).toBeNull();
+    expect(await kv.get(chunkKey)).toBeNull();
   });
 
   it("ends an idle viewer stream when its bearer token expires", async () => {
@@ -240,7 +375,8 @@ describe("platform preview lifecycle and grants", () => {
     expect(afterStop.body.sessionId).toBeTruthy();
   });
 
-  it("serializes concurrent starts across different apps in the same scope", async () => {
+  // PGlite uses one connection here; this checks the cap and error, not PostgreSQL row locking.
+  it("enforces the scope cap when several starts are requested together", async () => {
     const appIds = Array.from(
       { length: 6 },
       (_, index) => `raceapp${String(index).padStart(5, "0")}`,
@@ -256,6 +392,11 @@ describe("platform preview lifecycle and grants", () => {
       ),
     );
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(5);
-    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    const rejected = results.filter((result) => result.status === "rejected");
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]?.reason).toMatchObject({
+      code: "CONFLICT",
+      message: "This scope already has 5 active previews.",
+    });
   });
 });

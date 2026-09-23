@@ -15,6 +15,9 @@ function createKV(values = new Map<string, string>()): KV {
       values.delete(key);
       return Promise.resolve(value);
     }),
+    claimUpload: vi.fn(),
+    setPreviewPresenceIfActive: vi.fn(),
+    keepPreviewSessionIfDeveloperPresent: vi.fn(),
     increment: vi.fn(),
     publish: vi.fn(),
     set: vi.fn((key: string, value: string) => {
@@ -74,7 +77,10 @@ describe("preview presence", () => {
 
     await expect(
       presence.heartbeat("session:other", { connectionId: "connection_123", revision: 0 }),
-    ).rejects.toThrow("opaque identifier");
+    ).rejects.toMatchObject({
+      name: "TypeError",
+      message: "Preview session id must be an opaque identifier.",
+    });
   });
 
   it("forwards only valid connection-change events to subscribers", async () => {

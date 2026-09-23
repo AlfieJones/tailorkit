@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { isViewAncestor } from "@tailorkit/core/views";
 import { toBaseUrl } from "../store";
@@ -44,9 +44,16 @@ export const AppView = ({
   }, [context, currentView, view, status, slot]);
   const meta = useSyncExternalStore(store.subscribe, store.getMetaSnapshot, store.getMetaSnapshot);
   const previewSessionId = app.preview?.sessionId ?? "";
+  const appRef = useRef(app);
+  appRef.current = app;
   const subscribePreview = useCallback(
-    (listener: () => void) => store.previews.subscribe(app, listener),
-    [store, app],
+    (listener: () => void) => {
+      const currentApp = appRef.current;
+      return currentApp.preview?.sessionId === previewSessionId
+        ? store.previews.subscribe(currentApp, listener)
+        : () => {};
+    },
+    [store, previewSessionId],
   );
   const getPreviewSnapshot = useCallback(
     () => store.previews.getSnapshot(previewSessionId),

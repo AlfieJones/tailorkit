@@ -171,6 +171,55 @@ describe("tailorKitClient React adapter", () => {
 
   afterEach(() => {
     cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps a preview subscription when an inline app is rendered again", async () => {
+    class PreviewSocket extends EventTarget {
+      static instances: PreviewSocket[] = [];
+      closed = false;
+
+      constructor(_url: string, _protocol: string) {
+        super();
+        PreviewSocket.instances.push(this);
+      }
+
+      close() {
+        this.closed = true;
+        this.dispatchEvent(new Event("close"));
+      }
+    }
+    vi.stubGlobal("WebSocket", PreviewSocket);
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: "http://runtime.test/api/tailorkit",
+      components,
+    });
+    const suppliedApps: TailorKitApp[] = [];
+    const content = () => (
+      <Root client={tailor} apps={suppliedApps}>
+        <HomeAppView
+          tailor={tailor}
+          app={{
+            id: "preview",
+            clientPath: "/apps/preview.js",
+            preview: {
+              sessionId: "session",
+              expiresAt: "later",
+              websocketUrl: "wss://platform.test/preview",
+              token: "initial-token",
+            },
+          }}
+        />
+      </Root>
+    );
+    const view = render(content());
+    await waitFor(() => expect(PreviewSocket.instances).toHaveLength(1));
+    const socket = PreviewSocket.instances[0];
+    view.rerender(content());
+    expect(PreviewSocket.instances).toHaveLength(1);
+    expect(socket?.closed).toBe(false);
+    view.unmount();
+    expect(socket?.closed).toBe(true);
   });
 
   it("fetches and caches apps", async () => {

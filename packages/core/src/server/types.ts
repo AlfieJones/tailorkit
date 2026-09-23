@@ -46,7 +46,11 @@ export interface TailorKitServerBaseOptions {
   };
   /** Configuration for accepted preview invitations. */
   preview?: {
-    /** Same-origin root-relative destination after Accept preview or Cancel. Defaults to "/". */
+    /**
+     * Same-origin root-relative destination after Accept preview or Cancel. Defaults to "/".
+     * Must start with a single slash and contain no backslashes or CR/LF.
+     * Invalid values throw when the server is created.
+     */
     returnPath?: `/${string}`;
   };
   /**

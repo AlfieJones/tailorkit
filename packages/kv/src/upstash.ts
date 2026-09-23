@@ -10,6 +10,37 @@ if value == 1 then
 end
 return value
 `;
+const CLAIM_UPLOAD_SCRIPT = `
+if redis.call("EXISTS", KEYS[2]) == 1 then
+  return 0
+end
+if (redis.call("GET", KEYS[1]) or "") ~= ARGV[1] then
+  return 0
+end
+redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3])
+return 1
+`;
+const SET_PREVIEW_PRESENCE_IF_ACTIVE_SCRIPT = `
+if redis.call("EXISTS", KEYS[3]) == 1 then
+  return 0
+end
+redis.call("SET", KEYS[1], ARGV[1], "EX", ARGV[2])
+redis.call("SET", KEYS[2], "1", "EX", ARGV[3])
+return 1
+`;
+const KEEP_PREVIEW_SESSION_IF_DEVELOPER_PRESENT_SCRIPT = `
+if redis.call("EXISTS", KEYS[3]) == 1 then
+  return 0
+end
+if redis.call("EXISTS", KEYS[1]) == 1 then
+  return 1
+end
+if redis.call("EXISTS", KEYS[2]) == 0 and ARGV[2] ~= "1" then
+  return 1
+end
+redis.call("SET", KEYS[3], "1", "EX", ARGV[1])
+return 0
+`;
 const PROMOTE_IF_OWNER_AND_NEWER_SCRIPT = `
 if redis.call("EXISTS", KEYS[3]) == 1 then
   return 0
@@ -96,6 +127,57 @@ export function createUpstashKV(): KV<"upstash"> {
           const value = await redis.getdel<string>(key);
           return value ?? null;
         },
+      ),
+    claimUpload: (ownerKey, endedKey, expectedOwner, newOwner, ttl) =>
+      withSpan(
+        "kv.claim_upload",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
+        async () => {
+          if (!Number.isInteger(ttl) || ttl <= 0) {
+            throw new TypeError("KV upload TTL must be a positive integer.");
+          }
+          return (
+            Number(
+              await redis.eval(
+                CLAIM_UPLOAD_SCRIPT,
+                [ownerKey, endedKey],
+                [expectedOwner ?? "", newOwner, ttl],
+              ),
+            ) === 1
+          );
+        },
+      ),
+    setPreviewPresenceIfActive: (presenceKey, seenKey, endedKey, value, presenceTtl, seenTtl) =>
+      withSpan(
+        "kv.set_preview_presence_if_active",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
+        async () =>
+          Number(
+            await redis.eval(
+              SET_PREVIEW_PRESENCE_IF_ACTIVE_SCRIPT,
+              [presenceKey, seenKey, endedKey],
+              [value, presenceTtl, seenTtl],
+            ),
+          ) === 1,
+      ),
+    keepPreviewSessionIfDeveloperPresent: (
+      presenceKey,
+      seenKey,
+      endedKey,
+      endedTtl,
+      expireUnseen,
+    ) =>
+      withSpan(
+        "kv.keep_preview_session_if_developer_present",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
+        async () =>
+          Number(
+            await redis.eval(
+              KEEP_PREVIEW_SESSION_IF_DEVELOPER_PRESENT_SCRIPT,
+              [presenceKey, seenKey, endedKey],
+              [endedTtl, expireUnseen ? "1" : "0"],
+            ),
+          ) === 1,
       ),
     increment: (key, ttl) =>
       withSpan(

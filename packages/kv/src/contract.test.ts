@@ -75,6 +75,49 @@ vi.mock("ioredis", () => ({
     }
     async eval(script: string, _count: number, ...args: (string | number)[]) {
       const key = String(args[0]);
+      if (script.includes('redis.call("SET", KEYS[2], "1", "EX"')) {
+        if (read(state.redis, String(args[2])) !== null) {
+          return 0;
+        }
+        state.redis.data.set(key, {
+          value: String(args[3]),
+          until: state.redis.clock + Number(args[4]) * 1000,
+        });
+        state.redis.data.set(String(args[1]), {
+          value: "1",
+          until: state.redis.clock + Number(args[5]) * 1000,
+        });
+        return 1;
+      }
+      if (script.includes('redis.call("SET", KEYS[3], "1", "EX"')) {
+        if (read(state.redis, String(args[2])) !== null) {
+          return 0;
+        }
+        if (
+          read(state.redis, key) !== null ||
+          (read(state.redis, String(args[1])) === null && args[4] !== "1")
+        ) {
+          return 1;
+        }
+        state.redis.data.set(String(args[2]), {
+          value: "1",
+          until: state.redis.clock + Number(args[3]) * 1000,
+        });
+        return 0;
+      }
+      if (script.includes('ARGV[2], "EX", ARGV[3]')) {
+        if (
+          read(state.redis, String(args[1])) !== null ||
+          (read(state.redis, key) ?? "") !== args[2]
+        ) {
+          return 0;
+        }
+        state.redis.data.set(key, {
+          value: String(args[3]),
+          until: state.redis.clock + Number(args[4]) * 1000,
+        });
+        return 1;
+      }
       if (script.includes("cjson.decode")) {
         const ownerKey = String(args[1]);
         if (
@@ -136,6 +179,49 @@ vi.mock("@upstash/redis", () => ({
       return 1;
     }
     async eval(script: string, keys: string[], args: (number | string)[]) {
+      if (script.includes('redis.call("SET", KEYS[2], "1", "EX"')) {
+        if (read(state.upstash, keys[2]!) !== null) {
+          return 0;
+        }
+        state.upstash.data.set(keys[0]!, {
+          value: String(args[0]),
+          until: state.upstash.clock + Number(args[1]) * 1000,
+        });
+        state.upstash.data.set(keys[1]!, {
+          value: "1",
+          until: state.upstash.clock + Number(args[2]) * 1000,
+        });
+        return 1;
+      }
+      if (script.includes('redis.call("SET", KEYS[3], "1", "EX"')) {
+        if (read(state.upstash, keys[2]!) !== null) {
+          return 0;
+        }
+        if (
+          read(state.upstash, keys[0]!) !== null ||
+          (read(state.upstash, keys[1]!) === null && args[1] !== "1")
+        ) {
+          return 1;
+        }
+        state.upstash.data.set(keys[2]!, {
+          value: "1",
+          until: state.upstash.clock + Number(args[0]) * 1000,
+        });
+        return 0;
+      }
+      if (script.includes('ARGV[2], "EX", ARGV[3]')) {
+        if (
+          read(state.upstash, keys[1]!) !== null ||
+          (read(state.upstash, keys[0]!) ?? "") !== args[0]
+        ) {
+          return 0;
+        }
+        state.upstash.data.set(keys[0]!, {
+          value: String(args[1]),
+          until: state.upstash.clock + Number(args[2]) * 1000,
+        });
+        return 1;
+      }
       if (script.includes("cjson.decode")) {
         if (read(state.upstash, keys[2]!) !== null || read(state.upstash, keys[1]!) !== args[0]) {
           return 0;
@@ -321,5 +407,164 @@ describe.each([
     expect(notifications).toEqual([committed.revision, null]);
     expect(await viewer.current("session")).toBeNull();
     await unsubscribe();
+  });
+  it("allows only one begin to claim an unchanged upload marker", async () => {
+    const moduleUrl = new URL("../../api-platform/src/preview-build-store.ts", import.meta.url)
+      .href;
+    const { createPreviewBuildStore } = await import(moduleUrl);
+    store.data.clear();
+    store.clock = 0;
+    let reads = 0;
+    let releaseReads: (() => void) | undefined;
+    const bothRead = new Promise<void>((resolve) => {
+      releaseReads = resolve;
+    });
+    const withConcurrentRead = () => {
+      const kv = create();
+      return {
+        ...kv,
+        get: async (key: string) => {
+          const value = await kv.get(key);
+          if (key === "preview:uploading:session" && ++reads <= 2) {
+            if (reads === 2) {
+              releaseReads?.();
+            }
+            await bothRead;
+          }
+          return value;
+        },
+      };
+    };
+    const first = createPreviewBuildStore(withConcurrentRead());
+    const second = createPreviewBuildStore(withConcurrentRead());
+    const bytes = Buffer.from("export default 1");
+    const manifest = {
+      files: [
+        {
+          path: "client.js",
+          contentType: "text/javascript",
+          size: bytes.length,
+          chunks: 1,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+        },
+      ],
+    };
+    const results = await Promise.allSettled([
+      first.begin("session", manifest),
+      second.begin("session", manifest),
+    ]);
+    const accepted = results.filter((result) => result.status === "fulfilled");
+    const rejected = results.filter((result) => result.status === "rejected");
+    expect(accepted).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]?.reason).toMatchObject({
+      message: "Preview upload was cancelled or superseded.",
+    });
+    const buildId = accepted[0]?.value;
+    expect(await create().get("preview:uploading:session")).toBe(buildId);
+    await first.upload("session", buildId!, 0, 0, bytes.toString("base64"));
+  });
+  it("keeps a verified build retryable after the initial upload lease expires", async () => {
+    const moduleUrl = new URL("../../api-platform/src/preview-build-store.ts", import.meta.url)
+      .href;
+    const { createPreviewBuildStore } = await import(moduleUrl);
+    store.data.clear();
+    store.clock = 0;
+    const kv = create();
+    let failPromotion = true;
+    const uploader = createPreviewBuildStore({
+      ...kv,
+      promoteIfOwnerAndNewer: (...args: Parameters<typeof kv.promoteIfOwnerAndNewer>) => {
+        if (failPromotion) {
+          failPromotion = false;
+          throw new Error("Transient KV failure");
+        }
+        return kv.promoteIfOwnerAndNewer(...args);
+      },
+    });
+    const bytes = Buffer.from("export default 1");
+    const buildId = await uploader.begin("session", {
+      files: [
+        {
+          path: "client.js",
+          contentType: "text/javascript",
+          size: bytes.length,
+          chunks: 1,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+        },
+      ],
+    });
+    await uploader.upload("session", buildId, 0, 0, bytes.toString("base64"));
+    await expect(uploader.commit("session", buildId)).rejects.toThrow("Transient KV failure");
+    store.clock += 15 * 60 * 1000 + 1;
+    expect(await kv.get("preview:uploading:session")).toBe(buildId);
+    const committed = await uploader.commit("session", buildId);
+    expect(committed.buildId).toBe(buildId);
+    expect((await uploader.current("session"))?.buildId).toBe(buildId);
+  });
+  it("fences grace expiry against a renewing heartbeat", async () => {
+    store.data.clear();
+    store.clock = 0;
+    const checker = create();
+    const heartbeat = create();
+    const presenceKey = "preview:developer-connection:session";
+    const seenKey = "preview:developer-seen:session";
+    const endedKey = "preview:ended:session";
+
+    expect(
+      await checker.keepPreviewSessionIfDeveloperPresent(presenceKey, seenKey, endedKey, 3600),
+    ).toBe(true);
+    expect(
+      await heartbeat.setPreviewPresenceIfActive(presenceKey, seenKey, endedKey, "first", 75, 3600),
+    ).toBe(true);
+    store.clock += 75_001;
+    expect(await checker.get(presenceKey)).toBeNull();
+
+    // The heartbeat wins after the checker has observed the expired lease.
+    expect(
+      await heartbeat.setPreviewPresenceIfActive(
+        presenceKey,
+        seenKey,
+        endedKey,
+        "reconnected",
+        75,
+        3600,
+      ),
+    ).toBe(true);
+    expect(
+      await checker.keepPreviewSessionIfDeveloperPresent(presenceKey, seenKey, endedKey, 3600),
+    ).toBe(true);
+    expect(await checker.get(endedKey)).toBeNull();
+
+    store.clock += 75_001;
+    expect(
+      await checker.keepPreviewSessionIfDeveloperPresent(presenceKey, seenKey, endedKey, 3600),
+    ).toBe(false);
+    expect(
+      await heartbeat.setPreviewPresenceIfActive(
+        presenceKey,
+        seenKey,
+        endedKey,
+        "too-late",
+        75,
+        3600,
+      ),
+    ).toBe(false);
+    expect(await checker.get(presenceKey)).toBeNull();
+  });
+  it("expires a never-connected session only when first-connection grace has elapsed", async () => {
+    store.data.clear();
+    store.clock = 0;
+    const kv = create();
+    const presenceKey = "preview:developer-connection:session";
+    const seenKey = "preview:developer-seen:session";
+    const endedKey = "preview:ended:session";
+    expect(
+      await kv.keepPreviewSessionIfDeveloperPresent(presenceKey, seenKey, endedKey, 3600),
+    ).toBe(true);
+    expect(
+      await kv.keepPreviewSessionIfDeveloperPresent(presenceKey, seenKey, endedKey, 3600, true),
+    ).toBe(false);
+    expect(await kv.get(endedKey)).toBe("1");
   });
 });

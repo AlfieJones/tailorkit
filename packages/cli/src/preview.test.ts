@@ -4,11 +4,36 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
 import type { PreviewWebSocketClient } from "@tailorkit/client-platform/preview";
-import { capturePreviewSnapshot, uploadPreviewSnapshot } from "./preview";
+import {
+  capturePreviewSnapshot,
+  createLatestPreviewCapture,
+  uploadPreviewSnapshot,
+} from "./preview";
 
 const dirs: string[] = [];
 afterEach(async () => {
   await Promise.all(dirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
+});
+
+it("discards a stale snapshot that finishes after a later rebuild", async () => {
+  const older = Promise.withResolvers<string>();
+  const newer = Promise.withResolvers<string>();
+  const published: string[] = [];
+  let attempts = 0;
+  const capture = createLatestPreviewCapture(
+    () => (++attempts === 1 ? older.promise : newer.promise),
+    (snapshot) => published.push(snapshot),
+    () => {},
+  );
+
+  const first = capture();
+  const second = capture();
+  newer.resolve("newer");
+  await second;
+  older.resolve("older");
+  await first;
+
+  expect(published).toEqual(["newer"]);
 });
 
 it("uploads a build larger than 4.5 MiB in sequential bounded messages", async () => {
@@ -108,7 +133,9 @@ it("chunks exact boundaries and the largest allowed aggregate build", async () =
   for (const [fileIndex, source] of snapshot.files.entries()) {
     const parts = sent.filter((part) => part.fileIndex === fileIndex);
     expect(parts.map((part) => part.chunkIndex)).toEqual([0, 1, 2, 3]);
-    expect(Buffer.concat(parts.map((part) => Buffer.from(part.base64, "base64")))).toEqual(source);
+    const reassembled = Buffer.concat(parts.map((part) => Buffer.from(part.base64, "base64")));
+    expect(reassembled.length).toBe(source.length);
+    expect(reassembled.equals(source)).toBe(true);
     for (const part of parts) {
       expect(
         Buffer.byteLength(JSON.stringify({ id: 1, method: "uploadChunk", params: part })),

@@ -135,8 +135,18 @@ export async function handlePreviewConsent(options: ConsentOptions): Promise<Res
 }
 
 function previewErrorResponse(error: unknown): Response {
-  const message = error instanceof Error ? error.message : String(error);
-  return /storage is unavailable|SERVICE_UNAVAILABLE/u.test(message)
+  const details = error !== null && typeof error === "object" ? error : null;
+  const code = details && "code" in details ? details.code : undefined;
+  let message = "";
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (details && "message" in details && typeof details.message === "string") {
+    message = details.message;
+  } else if (typeof error === "string") {
+    message = error;
+  }
+  return code === "SERVICE_UNAVAILABLE" ||
+    /storage is unavailable|SERVICE_UNAVAILABLE/u.test(message)
     ? new Response("Preview storage is unavailable: configure KV.", { status: 503, headers })
     : new Response("Preview unavailable", { status: 404, headers });
 }

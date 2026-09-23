@@ -84,6 +84,27 @@ export async function capturePreviewSnapshot(root: string): Promise<Snapshot> {
   };
 }
 
+export function createLatestPreviewCapture<T>(
+  captureSnapshot: () => Promise<T>,
+  onSnapshot: (snapshot: T) => void,
+  onError: (error: unknown) => void,
+): () => Promise<void> {
+  let generation = 0;
+  return async () => {
+    const current = ++generation;
+    try {
+      const snapshot = await captureSnapshot();
+      if (current === generation) {
+        onSnapshot(snapshot);
+      }
+    } catch (error) {
+      if (current === generation) {
+        onError(error);
+      }
+    }
+  };
+}
+
 export async function uploadPreviewSnapshot(
   client: PreviewWebSocketClient,
   current: Snapshot,
@@ -138,9 +159,9 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
   }
   const { buildApp } = await import("@tailorkit/app/builder");
   const watcher = await buildApp({ ...options, watch: true });
-  const closeWatcher = () => {
+  const closeWatcher = async (): Promise<void> => {
     if (watcher && typeof watcher === "object" && "close" in watcher) {
-      void (watcher as { close: () => Promise<void> | void }).close();
+      await (watcher as { close: () => Promise<void> | void }).close();
     }
   };
   const client = createTailorKitClient({
@@ -149,13 +170,13 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
   });
   const result = await client.preview
     .start({ appId: loaded.config.appId })
-    .catch((error: unknown) => {
-      closeWatcher();
+    .catch(async (error: unknown) => {
+      await closeWatcher();
       throw error;
     });
   const data = "data" in result ? result.data : result;
   if (!data) {
-    closeWatcher();
+    await closeWatcher();
     throw new Error("Unable to start preview session.");
   }
   const cleanupClient = createTailorKitClient({
@@ -174,8 +195,20 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     loaded.root,
     options.outDir ?? loaded.config.build?.outDir ?? ".tailorkit",
   );
-  const root = await realpath(outDir);
-  let latest = await capturePreviewSnapshot(root);
+  let root: string;
+  let latest: Snapshot;
+  try {
+    root = await realpath(outDir);
+    latest = await capturePreviewSnapshot(root);
+  } catch (error) {
+    try {
+      await closeWatcher();
+    } catch (closeError) {
+      log.warn(`Unable to close preview watcher: ${errorMessage(closeError)}`);
+    }
+    await stop();
+    throw error;
+  }
   let uploadedFingerprint: string | undefined;
   let activeClient: PreviewWebSocketClient | undefined;
   let activeSocket: WebSocket | undefined;
@@ -228,14 +261,21 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
       Math.max(500, 500 - (Date.now() - lastUploadStart)),
     );
   };
-  const capture = async () => {
-    try {
-      latest = await capturePreviewSnapshot(root);
+  const capture = createLatestPreviewCapture(
+    () => capturePreviewSnapshot(root),
+    (snapshot) => {
+      if (closed) {
+        return;
+      }
+      latest = snapshot;
       scheduleUpload();
-    } catch (error) {
-      log.warn(`Keeping the last successful preview: ${errorMessage(error)}`);
-    }
-  };
+    },
+    (error) => {
+      if (!closed) {
+        log.warn(`Keeping the last successful preview: ${errorMessage(error)}`);
+      }
+    },
+  );
   if (watcher && typeof watcher === "object" && "on" in watcher) {
     (watcher as { on: (name: string, listener: (event: { code: string }) => void) => void }).on(
       "event",
@@ -258,7 +298,6 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
       connectionGeneration += 1;
       reconnectDelay = 1000;
       activeClient = createPreviewWebSocketClient(socket);
-      uploadedFingerprint = undefined;
       const sendHeartbeat = () => void activeClient?.heartbeat().catch(() => socket.close());
       sendHeartbeat();
       heartbeatTimer = setInterval(sendHeartbeat, 20_000);
@@ -287,7 +326,9 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
       return;
     }
     closed = true;
-    closeWatcher();
+    void closeWatcher().catch((error: unknown) => {
+      log.warn(`Unable to close preview watcher: ${errorMessage(error)}`);
+    });
     if (idleTimer) {
       clearTimeout(idleTimer);
     }

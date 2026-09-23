@@ -10,35 +10,75 @@ import {
 
 function fakeKV() {
   const data = new Map();
+  const expiries = new Map();
   const listeners = new Map();
   let revision = 0;
-  return {
-    get: async (key) => data.get(key) ?? null,
-    getAndDelete: async (key) => {
-      const value = data.get(key) ?? null;
+  let now = 0;
+  const get = (key) => {
+    const expiresAt = expiries.get(key);
+    if (expiresAt !== undefined && expiresAt <= now) {
       data.delete(key);
+      expiries.delete(key);
+    }
+    return data.get(key) ?? null;
+  };
+  const set = (key, value, options) => {
+    data.set(key, value);
+    if (options?.ttl) {
+      expiries.set(key, now + options.ttl * 1000);
+    } else {
+      expiries.delete(key);
+    }
+  };
+  const remove = (key) => {
+    data.delete(key);
+    expiries.delete(key);
+  };
+  return {
+    advance: (milliseconds) => {
+      now += milliseconds;
+    },
+    get: async (key) => get(key),
+    getAndDelete: async (key) => {
+      const value = get(key);
+      remove(key);
       return value;
     },
-    set: async (key, value) => {
-      data.set(key, value);
+    set: async (key, value, options) => {
+      set(key, value, options);
     },
-    promoteIfOwnerAndNewer: async (key, ownerKey, endedKey, expectedOwner, value, revision) => {
-      if (data.has(endedKey)) {
+    claimUpload: async (ownerKey, endedKey, expectedOwner, newOwner, ttl) => {
+      if (get(endedKey) !== null || get(ownerKey) !== expectedOwner) {
         return false;
       }
-      if (data.get(ownerKey) !== expectedOwner) {
+      set(ownerKey, newOwner, { ttl });
+      return true;
+    },
+    promoteIfOwnerAndNewer: async (
+      key,
+      ownerKey,
+      endedKey,
+      expectedOwner,
+      value,
+      revision,
+      ttl,
+    ) => {
+      if (get(endedKey) !== null) {
         return false;
       }
-      const current = data.get(key);
+      if (get(ownerKey) !== expectedOwner) {
+        return false;
+      }
+      const current = get(key);
       if (current && JSON.parse(current).revision >= revision) {
         return false;
       }
-      data.set(key, value);
-      data.delete(ownerKey);
+      set(key, value, { ttl });
+      remove(ownerKey);
       return true;
     },
     delete: async (key) => {
-      data.delete(key);
+      remove(key);
     },
     increment: async () => ++revision,
     publish: async (channel, message) => {
@@ -102,6 +142,20 @@ test("only complete verified builds replace the current pointer", async () => {
   assert.equal(await kv.get(`preview:build:session:${secondId}`), null);
   assert.equal(await kv.get(`preview:build:session:${secondId}:0:0`), null);
   assert.equal(await kv.get("preview:ended:session"), "1");
+});
+
+test("committed chunks remain readable after the upload TTL expires", async () => {
+  const kv = fakeKV();
+  const store = createPreviewBuildStore(kv);
+  const bytes = Buffer.from("export default 1");
+  const buildId = await store.begin("session", manifestFor([["client.js", bytes]]));
+  const base64 = bytes.toString("base64");
+  await store.upload("session", buildId, 0, 0, base64);
+  await store.commit("session", buildId);
+
+  kv.advance(15 * 60 * 1000 + 1);
+  assert.equal(await store.chunk("session", buildId, 0, 0), base64);
+  assert.equal((await store.current("session")).buildId, buildId);
 });
 
 test("a failed pointer write leaves a verified build retryable with the same revision", async () => {
@@ -330,12 +384,15 @@ test("begin replaces only the previous unfinished upload and removes its chunks"
 });
 
 test("revision subscription can be released", async () => {
-  const store = createPreviewBuildStore(fakeKV());
+  const kv = fakeKV();
+  const store = createPreviewBuildStore(kv);
   const revisions = [];
   const unsubscribe = await store.subscribe("session", (revision) => revisions.push(revision));
   const empty = manifestFor([["client.js", Buffer.alloc(0)]]);
   await store.commit("session", await store.begin("session", empty));
+  await store.end("session");
+  assert.deepEqual(revisions, [1, null]);
   await unsubscribe();
-  await store.commit("session", await store.begin("session", empty));
-  assert.deepEqual(revisions, [1]);
+  await kv.publish("preview:revision:session", JSON.stringify({ revision: 2, buildId: "later" }));
+  assert.deepEqual(revisions, [1, null]);
 });

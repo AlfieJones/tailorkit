@@ -139,12 +139,12 @@ export function createPreviewBuildStore(kv: KV) {
     if (!build || current?.buildId === buildId) {
       return;
     }
-    await kv.delete(buildKey(sessionId, buildId));
     for (const [fileIndex, file] of build.manifest.files.entries()) {
       for (let chunkIndex = 0; chunkIndex < file.chunks; chunkIndex += 1) {
         await kv.delete(chunkKey(sessionId, buildId, fileIndex, chunkIndex));
       }
     }
+    await kv.delete(buildKey(sessionId, buildId));
   }
   return {
     async begin(sessionId: string, manifest: PreviewBuildManifest): Promise<string> {
@@ -153,16 +153,32 @@ export function createPreviewBuildStore(kv: KV) {
         throw new Error("Preview session has ended.");
       }
       validatePreviewManifest(manifest);
-      const previous = await kv.getAndDelete(uploadingKey(sessionId));
+      const previous = await kv.get(uploadingKey(sessionId));
       if (previous) {
         requireId(previous);
-        await removeUploadingBuild(sessionId, previous);
       }
       const buildId = randomUUID();
       await kv.set(buildKey(sessionId, buildId), JSON.stringify({ manifest, state: "uploading" }), {
         ttl: uploadTtlSeconds,
       });
-      await kv.set(uploadingKey(sessionId), buildId, { ttl: uploadTtlSeconds });
+      const claimed = await kv.claimUpload(
+        uploadingKey(sessionId),
+        endedKey(sessionId),
+        previous,
+        buildId,
+        uploadTtlSeconds,
+      );
+      if (!claimed) {
+        await kv.delete(buildKey(sessionId, buildId));
+        throw new Error("Preview upload was cancelled or superseded.");
+      }
+      if (previous) {
+        try {
+          await removeUploadingBuild(sessionId, previous);
+        } catch {
+          // The previous upload is bounded by its KV TTL.
+        }
+      }
       return buildId;
     },
     async upload(
@@ -272,6 +288,16 @@ export function createPreviewBuildStore(kv: KV) {
             ttl: activeTtlSeconds,
           },
         );
+        const stillOwned = await kv.claimUpload(
+          uploadingKey(sessionId),
+          endedKey(sessionId),
+          buildId,
+          buildId,
+          activeTtlSeconds,
+        );
+        if (!stillOwned) {
+          throw new Error("Preview build was cancelled or superseded.");
+        }
       }
       if (!revision) {
         throw new Error("Preview build is unavailable.");
@@ -378,20 +404,25 @@ export function createPreviewBuildStore(kv: KV) {
       requireId(sessionId);
       await kv.set(endedKey(sessionId), "1", { ttl: activeTtlSeconds });
       const active = parse(await kv.get(pointerKey(sessionId)), committedSchema);
-      const uploading = await kv.getAndDelete(uploadingKey(sessionId));
-      await kv.delete(pointerKey(sessionId));
-      await kv.publish(channel(sessionId), JSON.stringify({ ended: true }));
+      const uploading = await kv.get(uploadingKey(sessionId));
       if (uploading) {
         requireId(uploading);
         await removeUploadingBuild(sessionId, uploading);
       }
       if (active) {
-        await kv.delete(buildKey(sessionId, active.buildId));
         for (const [fileIndex, file] of active.manifest.files.entries()) {
           for (let chunkIndex = 0; chunkIndex < file.chunks; chunkIndex += 1) {
             await kv.delete(chunkKey(sessionId, active.buildId, fileIndex, chunkIndex));
           }
         }
+        await kv.delete(buildKey(sessionId, active.buildId));
+      }
+      await kv.delete(uploadingKey(sessionId));
+      await kv.delete(pointerKey(sessionId));
+      try {
+        await kv.publish(channel(sessionId), JSON.stringify({ ended: true }));
+      } catch {
+        // The ended marker is authoritative; polling recovers missed notifications.
       }
     },
   };
