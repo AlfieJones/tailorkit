@@ -6,8 +6,7 @@ import type {
   NoComponentFieldCallbackConflicts,
   ResolveActionTreeContext,
   ViewContextHierarchy,
-  ViewDefinition,
-  ViewDefinitions,
+  ContextDefinitions,
   SlotDefinitions,
   TailorKitSchema,
 } from "../schema/index";
@@ -64,37 +63,39 @@ export interface TailorKitServerBaseOptions {
 
 export interface TailorKitServerSchemaOptions<
   TComponents extends ComponentDefinitions,
-  TViews extends Record<string, ViewDefinition>,
+  TContexts extends ContextDefinitions,
   TActions extends ActionTree = Record<never, never>,
 > {
   actions?: TActions & ActionDefinitions & NoMixedActionContexts<TActions>;
   components: TComponents & NoComponentFieldCallbackConflicts<TComponents>;
-  views?: TViews & ViewContextHierarchy<TViews>;
-  slots?: SlotDefinitions<keyof TViews & string>;
+  contexts?: TContexts & ViewContextHierarchy<TContexts>;
+  slots?: SlotDefinitions<keyof TContexts & string>;
 }
 
 export interface TailorKitServerInputOptions extends TailorKitServerBaseOptions {
   slots?: SlotDefinitions;
   actions?: ActionDefinitions;
   components: ComponentDefinitions;
-  views?: ViewDefinitions;
+  contexts?: ContextDefinitions;
 }
 
 export type InferTailorKitServerComponents<TOptions extends TailorKitServerInputOptions> =
   TOptions["components"];
 
-export type InferTailorKitServerViews<TOptions extends TailorKitServerInputOptions> =
-  TOptions extends { views: infer TViews } ? TViews : Record<never, never>;
+export type InferTailorKitServerContexts<TOptions extends TailorKitServerInputOptions> =
+  TOptions extends { contexts: infer TContexts } ? TContexts : Record<never, never>;
 
 export type InferTailorKitServerActions<TOptions extends TailorKitServerInputOptions> =
   TOptions extends { actions: infer TActions } ? TActions : Record<never, never>;
 
 export interface TailorKitServerOptions<
   TComponents extends ComponentDefinitions,
-  TViews extends Record<string, ViewDefinition>,
+  TContexts extends ContextDefinitions,
   TActions extends ActionTree = Record<never, never>,
 >
-  extends TailorKitServerBaseOptions, TailorKitServerSchemaOptions<TComponents, TViews, TActions> {}
+  extends
+    TailorKitServerBaseOptions,
+    TailorKitServerSchemaOptions<TComponents, TContexts, TActions> {}
 
 export type TailorKitHostContext<TActionContext = never> = {
   scopeId: string;
@@ -115,7 +116,7 @@ export type TailorKitHandlerContext<TActionContext = never> = TailorKitHostConte
 
 export interface TailorKitServer<
   TComponents extends ComponentDefinitions,
-  TViews extends Record<string, ViewDefinition>,
+  TContexts extends ContextDefinitions,
   TActions extends ActionTree = Record<never, never>,
   TActionContext = ResolveActionTreeContext<TActions>,
 > {
@@ -137,6 +138,6 @@ export interface TailorKitServer<
     assetsBaseUrl?: string;
     platformBaseUrl: string;
     router: TailorKitRouter;
-    schema: TailorKitSchema<TComponents, TViews, TActions>;
+    schema: TailorKitSchema<TComponents, TContexts, TActions>;
   };
 }
