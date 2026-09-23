@@ -153,10 +153,8 @@ export const createDemoSchema = (theme: TailorKitTheme = defaultTheme) => {
       TabsPanel: TabsPanelComponent,
     },
     slots: { panel: { views: ["/"] } },
-    views: {
-      "/": {
-        context: z.object({}).optional(),
-      },
+    contexts: {
+      "/": z.object({}).optional(),
     },
   } as const;
 };

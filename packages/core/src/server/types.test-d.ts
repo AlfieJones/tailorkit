@@ -1,4 +1,5 @@
 import { createTailorKitServer } from "./handler";
+import { z } from "zod";
 import { expectTypeOf } from "vitest";
 import type { TailorKitHandlerOptions, TailorKitHostContext } from "./types";
 
@@ -39,12 +40,12 @@ void invalidContextlessHandlerContext;
 
 createTailorKitServer({
   components: {},
-  views: { "/": {}, "/users": {} },
+  contexts: { "/": z.object({}), "/users": z.object({}) },
   slots: { navbar: { views: ["/"] }, panel: { views: ["/users"] } },
 });
 createTailorKitServer({
   components: {},
-  views: { "/": {} },
+  contexts: { "/": z.object({}) },
   // @ts-expect-error A slot cannot reference an undeclared global view.
   slots: { panel: { views: ["/missing"] } },
 });

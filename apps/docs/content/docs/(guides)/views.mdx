@@ -17,10 +17,10 @@ host publishes explicitly.
 export const tailorKit = createTailorKit({
   components: {},
   slots: { navbar: { views: ["/"] }, panel: { views: ["/users", "/users/detail"] } },
-  views: {
-    "/": { context: z.object({ workspaceId: z.string() }) },
-    "/users": { context: z.object({ canManageUsers: z.boolean() }) },
-    "/users/detail": { context: z.object({ user: userSchema }) },
+  contexts: {
+    "/": z.object({ workspaceId: z.string() }),
+    "/users": z.object({ canManageUsers: z.boolean() }),
+    "/users/detail": z.object({ user: userSchema }),
   },
 });
 ```

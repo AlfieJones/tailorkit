@@ -17,7 +17,7 @@ import { tailorkitRouter } from "./router";
 import type {
   InferTailorKitServerActions,
   InferTailorKitServerComponents,
-  InferTailorKitServerViews,
+  InferTailorKitServerContexts,
   TailorKitHandlerOptions,
   TailorKitServer,
   TailorKitServerInputOptions,
@@ -28,17 +28,17 @@ type AbsolutePath = `/${string}`;
 
 export function createTailorKitServer<const TOptions extends TailorKitServerInputOptions>(
   options: TOptions & {
-    slots?: SlotDefinitions<keyof InferTailorKitServerViews<NoInfer<TOptions>> & string>;
+    slots?: SlotDefinitions<keyof InferTailorKitServerContexts<NoInfer<TOptions>> & string>;
     actions?: InferTailorKitServerActions<TOptions> &
       NoMixedActionContexts<InferTailorKitServerActions<TOptions>>;
     components: InferTailorKitServerComponents<TOptions> &
       NoComponentFieldCallbackConflicts<InferTailorKitServerComponents<TOptions>>;
-    views?: InferTailorKitServerViews<TOptions> &
-      ViewContextHierarchy<InferTailorKitServerViews<TOptions>>;
+    contexts?: InferTailorKitServerContexts<TOptions> &
+      ViewContextHierarchy<InferTailorKitServerContexts<TOptions>>;
   },
 ): TailorKitServer<
   InferTailorKitServerComponents<TOptions>,
-  InferTailorKitServerViews<TOptions>,
+  InferTailorKitServerContexts<TOptions>,
   InferTailorKitServerActions<TOptions>
 > & {
   readonly $slots?: TOptions extends { slots: infer V } ? V : Record<never, never>;
@@ -46,7 +46,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
   const basePath = normalizeBasePath(options.basePath ?? "/api/tailorkit");
   const schema = createTailorKitSchema<
     InferTailorKitServerComponents<TOptions>,
-    InferTailorKitServerViews<TOptions>,
+    InferTailorKitServerContexts<TOptions>,
     InferTailorKitServerActions<TOptions>
   >({
     actions: options.actions as
@@ -55,7 +55,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
       | undefined,
     slots: options.slots,
     components: options.components,
-    views: options.views,
+    contexts: options.contexts,
   });
   const platformBaseUrl = options.$internal?.platformBaseUrl ?? defaultPlatformBaseUrl;
   const assetsBaseUrl = options.assetsBaseUrl;
