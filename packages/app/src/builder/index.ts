@@ -1,6 +1,8 @@
 import path from "node:path";
 import { createRequire } from "node:module";
-import { readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { statSync, watch } from "node:fs";
+import type { FSWatcher } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { validateLogoAsset } from "@tailorkit/asset-delivery/logo-validation";
 import type { LogoContentType } from "@tailorkit/asset-delivery/logo-validation";
 import { build as viteBuild } from "vite";
@@ -35,12 +37,50 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
   assertSupportedPreactVersion(preactVersion);
 
   const resolvedOutDir = path.resolve(loaded.root, outDir);
+  const resolvedEntry = path.resolve(loaded.root, entry);
+  const logoPaths = (["light", "dark"] as const)
+    .map((variant) => loaded.config.logos?.[variant])
+    .filter((logoPath): logoPath is string => Boolean(logoPath))
+    .map((logoPath) => path.resolve(loaded.root, logoPath));
+
+  const writeUploadAssets = async () => {
+    const logoManifest: { dark?: string; light?: string } = {};
+    for (const variant of ["light", "dark"] as const) {
+      const configuredPath = loaded.config.logos?.[variant];
+      if (!configuredPath) {
+        continue;
+      }
+
+      const extension = path.extname(configuredPath).toLowerCase().slice(1);
+      const contentType = {
+        png: "image/png",
+        svg: "image/svg+xml",
+        webp: "image/webp",
+      }[extension] as LogoContentType | undefined;
+      if (!contentType) {
+        throw new Error(`The ${variant} logo must be an SVG, PNG, or WebP file.`);
+      }
+
+      const content = await readFile(path.resolve(loaded.root, configuredPath));
+      validateLogoAsset(content, contentType);
+      const filename = `logo-${variant}.${extension}`;
+      await writeFile(path.join(resolvedOutDir, filename), content);
+      logoManifest[variant] = filename;
+    }
+
+    await writeFile(
+      path.join(resolvedOutDir, "tailorkit-upload.json"),
+      `${JSON.stringify(createTailorKitUploadManifest(logoManifest), null, 2)}\n`,
+      "utf-8",
+    );
+  };
+
   const build = (emptyOutDir: boolean) =>
     viteBuild({
       build: {
         emptyOutDir,
         lib: {
-          entry: path.resolve(loaded.root, entry),
+          entry: resolvedEntry,
           fileName: "client",
           formats: ["es"],
         },
@@ -65,6 +105,9 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
         {
           name: "tailorkit-preact-package-json",
           enforce: "pre",
+          async closeBundle() {
+            await writeUploadAssets();
+          },
           resolveId(id) {
             if (id === preactPackageJson) {
               return preactPackageJsonModuleId;
@@ -87,97 +130,148 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
     });
   const result = await build(true);
 
-  const logoManifest: { dark?: string; light?: string } = {};
-  for (const variant of ["light", "dark"] as const) {
-    const configuredPath = loaded.config.logos?.[variant];
-    if (!configuredPath) {
-      continue;
-    }
-
-    const extension = path.extname(configuredPath).toLowerCase().slice(1);
-    const contentType = {
-      png: "image/png",
-      svg: "image/svg+xml",
-      webp: "image/webp",
-    }[extension] as LogoContentType | undefined;
-    if (!contentType) {
-      throw new Error(`The ${variant} logo must be an SVG, PNG, or WebP file.`);
-    }
-
-    const content = await readFile(path.resolve(loaded.root, configuredPath));
-    validateLogoAsset(content, contentType);
-    const filename = `logo-${variant}.${extension}`;
-    await writeFile(path.join(resolvedOutDir, filename), content);
-    logoManifest[variant] = filename;
-  }
-
-  await writeFile(
-    path.join(resolvedOutDir, "tailorkit-upload.json"),
-    `${JSON.stringify(createTailorKitUploadManifest(logoManifest), null, 2)}\n`,
-    "utf-8",
-  );
-
   if (!options.watch) {
     return result;
   }
 
+  const watchers = new Map<string, FSWatcher>();
+  const inputVersions = new Map<string, string>();
   let closed = false;
-  let scanning = false;
-  let rebuilding: Promise<unknown> = Promise.resolve();
-  const watchRoot = loaded.root;
-  let snapshot = await sourceSnapshot(watchRoot, resolvedOutDir);
-  const check = async () => {
-    if (closed || scanning) {
-      return;
-    }
-    scanning = true;
+  let pending = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let fallbackInterval: ReturnType<typeof setInterval> | undefined;
+  let rebuilding: Promise<void> = Promise.resolve();
+
+  const inputVersion = (filepath: string): string => {
     try {
-      const nextSnapshot = await sourceSnapshot(watchRoot, resolvedOutDir);
-      if (nextSnapshot !== snapshot) {
-        snapshot = nextSnapshot;
-        rebuilding = rebuilding
-          .then(() => (closed ? undefined : build(false)))
-          .catch((error: unknown) => {
-            console.error("TailorKit preview rebuild failed:", error);
-          });
-      }
-    } catch (error) {
-      console.error("TailorKit preview source check failed:", error);
-    } finally {
-      scanning = false;
+      const file = statSync(filepath);
+      return `${file.size}:${file.mtimeMs}`;
+    } catch {
+      return "missing";
     }
   };
-  const interval = setInterval(() => void check(), 500);
 
+  const shouldIgnore = (filepath: string) => {
+    const relativeToOutput = path.relative(resolvedOutDir, filepath);
+    if (
+      relativeToOutput === "" ||
+      (!relativeToOutput.startsWith("..") && !path.isAbsolute(relativeToOutput))
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  const schedule = (directory: string, filename: string | Buffer | null) => {
+    if (closed || (filename && shouldIgnore(path.join(directory, filename.toString())))) {
+      return;
+    }
+    pending = true;
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(() => {
+      timer = undefined;
+      if (rebuilding === idle) {
+        void rebuild();
+      }
+    }, 100);
+  };
+
+  const startFallback = (error: unknown) => {
+    if (fallbackInterval || closed) {
+      return;
+    }
+    console.warn("TailorKit preview watcher unavailable; checking build inputs instead:", error);
+    for (const activeWatcher of watchers.values()) {
+      activeWatcher.close();
+    }
+    watchers.clear();
+    fallbackInterval = setInterval(() => {
+      for (const [filepath, version] of inputVersions) {
+        const nextVersion = inputVersion(filepath);
+        if (nextVersion !== version) {
+          inputVersions.set(filepath, nextVersion);
+          schedule(path.dirname(filepath), path.basename(filepath));
+        }
+      }
+    }, 500);
+  };
+
+  const watchDirectory = (directory: string) => {
+    if (watchers.has(directory) || fallbackInterval) {
+      return;
+    }
+    try {
+      const watcher = watch(directory, (_event, filename) => schedule(directory, filename));
+      watcher.on("error", startFallback);
+      watchers.set(directory, watcher);
+    } catch (error) {
+      startFallback(error);
+    }
+  };
+
+  const addInputWatchers = (buildResult: Awaited<ReturnType<typeof viteBuild>>) => {
+    const outputs = Array.isArray(buildResult) ? buildResult : [buildResult];
+    const inputs = [resolvedEntry, ...logoPaths];
+    for (const output of outputs) {
+      if (!output || typeof output !== "object" || !("output" in output)) {
+        continue;
+      }
+      for (const chunk of output.output) {
+        if (chunk.type === "chunk") {
+          inputs.push(
+            ...Object.keys(chunk.modules).filter(
+              (moduleId) => !moduleId.split(path.sep).includes("node_modules"),
+            ),
+          );
+        }
+      }
+    }
+    for (const input of inputs) {
+      if (!path.isAbsolute(input) || shouldIgnore(input)) {
+        continue;
+      }
+      inputVersions.set(input, inputVersion(input));
+      const directory = path.dirname(input);
+      watchDirectory(directory);
+    }
+  };
+
+  const idle = rebuilding;
+  const rebuild = () => {
+    if (closed || !pending) {
+      return;
+    }
+    pending = false;
+    rebuilding = build(false)
+      .then((nextResult) => addInputWatchers(nextResult))
+      .catch((error: unknown) => console.error("TailorKit preview rebuild failed:", error))
+      .then(() => {
+        rebuilding = idle;
+        if (pending && !closed) {
+          void rebuild();
+        }
+      });
+  };
+
+  addInputWatchers(result);
   return {
     close: async () => {
       closed = true;
-      clearInterval(interval);
+      if (timer) {
+        clearTimeout(timer);
+      }
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+      }
+      for (const watcher of watchers.values()) {
+        watcher.close();
+      }
       await rebuilding;
     },
   };
 };
-
-async function sourceSnapshot(root: string, outDir: string): Promise<string> {
-  const files: string[] = [];
-  const visit = async (directory: string): Promise<void> => {
-    const entries = await readdir(directory, { withFileTypes: true });
-    for (const entry of entries) {
-      const filepath = path.join(directory, entry.name);
-      if (filepath === outDir || ["node_modules", ".git", ".next", "dist"].includes(entry.name)) {
-        continue;
-      }
-      if (entry.isDirectory()) {
-        await visit(filepath);
-      } else if (entry.isFile()) {
-        const file = await stat(filepath);
-        files.push(`${filepath}:${file.size}:${file.mtimeMs}`);
-      }
-    }
-  };
-  await visit(root);
-  return files.toSorted().join("\n");
-}
 
 function getInstalledPreactVersion(root: string): string {
   const require = createRequire(path.join(root, "package.json"));

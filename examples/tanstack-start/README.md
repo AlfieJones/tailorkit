@@ -35,6 +35,10 @@ at `http://localhost:5010/api/tailorkit`.
 
 ## Preview an example app
 
+For local previews, set `KV_PROVIDER=redis` and
+`KV_REDIS_URL=redis://localhost:6379` in `apps/web/.env.local` before
+starting `pnpm dev`.
+
 After deploying the todo app once and running `tailorkit login` for this host,
 start its live preview from the repository root:
 

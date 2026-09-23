@@ -107,9 +107,23 @@ function usePreviewRevision(appUrl: URL | null, enabled: boolean): string | null
     if (!enabled || !url) {
       return;
     }
+    // Preview source loading also requires the host origin. Cross-origin assets
+    // cannot reliably expose their ETag without an explicit CORS contract.
+    if (new URL(url).origin !== window.location.origin) {
+      console.warn("TailorKit live preview requires a same-origin client URL.");
+      return;
+    }
     let active = true;
     let previousEtag: string | null = null;
+    let failedCheck = false;
+    let warnedMissingEtag = false;
     let checking = false;
+    const warnMissingEtag = () => {
+      if (!warnedMissingEtag) {
+        console.warn("TailorKit live preview could not read the client ETag.");
+        warnedMissingEtag = true;
+      }
+    };
     const check = async () => {
       if (checking || document.visibilityState === "hidden") {
         return;
@@ -118,15 +132,24 @@ function usePreviewRevision(appUrl: URL | null, enabled: boolean): string | null
       try {
         const response = await fetch(url, { method: "HEAD", cache: "no-store" });
         const etag = response.ok ? response.headers.get("etag") : null;
-        if (!active || !etag) {
+        if (!active) {
           return;
         }
-        if (previousEtag && previousEtag !== etag) {
+        if (!etag) {
+          failedCheck = true;
+          warnMissingEtag();
+          return;
+        }
+        if ((previousEtag && previousEtag !== etag) || (previousEtag === null && failedCheck)) {
           setRevision(etag);
         }
         previousEtag = etag;
       } catch {
         // Keep the current app mounted while the preview tunnel reconnects.
+        failedCheck = true;
+        if (active) {
+          warnMissingEtag();
+        }
       } finally {
         checking = false;
       }

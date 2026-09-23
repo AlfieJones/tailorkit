@@ -4,7 +4,7 @@ import { AppView, Root, useApps, useView } from "tailorkit/react";
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BlocksIcon, XIcon } from "lucide-react";
 import type { DemoUser } from "@examples/shared";
 import { signOutDemoUser } from "@examples/shared";
@@ -161,8 +161,18 @@ function TailorKitAppView({ app, onClose }: { app: TailorKitApp | null; onClose:
 }
 
 export function TailorKitShell(props: Parameters<typeof TailorKitShellWithApps>[0]) {
+  const previewSessionId = useSearchParams().get("tailorkitPreview") ?? undefined;
+  const [capturedPreviewSessionId, setCapturedPreviewSessionId] = useState(previewSessionId);
+
+  if (previewSessionId && previewSessionId !== capturedPreviewSessionId) {
+    setCapturedPreviewSessionId(previewSessionId);
+  }
+
   return (
-    <Root client={tailor}>
+    <Root
+      client={{ ...tailor, previewSessionId: capturedPreviewSessionId }}
+      key={capturedPreviewSessionId}
+    >
       <TailorKitShellWithApps {...props} />
     </Root>
   );
