@@ -11,17 +11,15 @@ afterEach(async () => {
 });
 
 describe("preview link", () => {
-  it("links to the host page with the selected session", () => {
+  it("links to the TailorKit preview route and keeps return URLs on the host", () => {
     expect(createPreviewUrl("http://localhost:5010/api/tailorkit", "session-1")).toBe(
-      "http://localhost:5010/?tailorkitPreview=session-1",
+      "http://localhost:5010/api/tailorkit/preview?session=session-1",
     );
     expect(
-      createPreviewUrl(
-        "http://localhost:5010/api/tailorkit",
-        "session-2",
-        "https://example.com/customers?tab=apps",
-      ),
-    ).toBe("https://example.com/customers?tab=apps&tailorkitPreview=session-2");
+      createPreviewUrl("http://localhost:5010/api/tailorkit", "session-2", "/customers?tab=apps"),
+    ).toBe(
+      "http://localhost:5010/api/tailorkit/preview?session=session-2&returnTo=http%3A%2F%2Flocalhost%3A5010%2Fcustomers%3Ftab%3Dapps",
+    );
   });
 });
 

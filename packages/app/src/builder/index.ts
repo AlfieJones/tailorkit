@@ -26,6 +26,7 @@ export interface BuildAppOptions {
   mode?: string;
   outDir?: string;
   watch?: boolean;
+  onBuild?: () => void;
 }
 
 export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> => {
@@ -141,6 +142,7 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
   let timer: ReturnType<typeof setTimeout> | undefined;
   let fallbackInterval: ReturnType<typeof setInterval> | undefined;
   let rebuilding: Promise<void> = Promise.resolve();
+  let buildNotification: ReturnType<typeof setTimeout> | undefined;
 
   const inputVersion = (filepath: string): string => {
     try {
@@ -245,7 +247,15 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
     }
     pending = false;
     rebuilding = build(false)
-      .then((nextResult) => addInputWatchers(nextResult))
+      .then((nextResult) => {
+        addInputWatchers(nextResult);
+        if (options.onBuild) {
+          if (buildNotification) {
+            clearTimeout(buildNotification);
+          }
+          buildNotification = setTimeout(options.onBuild, 500);
+        }
+      })
       .catch((error: unknown) => console.error("TailorKit preview rebuild failed:", error))
       .then(() => {
         rebuilding = idle;
@@ -261,6 +271,9 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
       closed = true;
       if (timer) {
         clearTimeout(timer);
+      }
+      if (buildNotification) {
+        clearTimeout(buildNotification);
       }
       if (fallbackInterval) {
         clearInterval(fallbackInterval);

@@ -1,7 +1,11 @@
 import { eventIterator, EventPublisher, os } from "@orpc/server";
 import type { RouterClient } from "@orpc/server";
 import z from "zod";
-import { publishPreviewAssetResponse, subscribePreviewTunnel } from "./preview-tunnel-relay";
+import {
+  publishPreviewAssetResponse,
+  publishPreviewEvent,
+  subscribePreviewTunnel,
+} from "./preview-tunnel-relay";
 import type { PreviewAssetRequest } from "./preview-tunnel-relay";
 
 export interface PreviewTunnelContext {
@@ -27,6 +31,8 @@ const previewAssetResponse = z.object({
   type: z.literal("response"),
 });
 
+const previewBuild = z.object({ type: z.literal("build") });
+
 const o = os.$context<PreviewTunnelContext>();
 
 const connect = o.output(eventIterator(previewAssetRequest)).handler(async function* connect({
@@ -49,8 +55,12 @@ const connect = o.output(eventIterator(previewAssetRequest)).handler(async funct
 });
 
 const respond = o
-  .input(previewAssetResponse)
-  .handler(({ input }) => publishPreviewAssetResponse(input));
+  .input(z.union([previewAssetResponse, previewBuild]))
+  .handler(({ context, input }) =>
+    input.type === "build"
+      ? publishPreviewEvent(context.sessionId, "build")
+      : publishPreviewAssetResponse(input),
+  );
 
 export const previewTunnelRouter = { connect, respond };
 export type PreviewTunnelRouterClient = RouterClient<typeof previewTunnelRouter>;

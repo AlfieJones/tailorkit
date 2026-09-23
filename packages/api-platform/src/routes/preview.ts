@@ -8,6 +8,7 @@ import { and, eq } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import z from "zod";
 import { createPreviewViewerToken } from "../preview-token";
+import { publishPreviewEvent } from "../preview-tunnel-relay";
 import { o, protectedRouter } from "../procedures";
 
 const previewSessionLifetimeMs = 8 * 60 * 60 * 1000;
@@ -103,6 +104,8 @@ const resolvePreview = protectedRouter
       body: z.object({
         appId: z.string(),
         clientPath: z.url(),
+        eventsUrl: z.url(),
+        eventToken: z.string(),
         sessionId: z.string(),
         status: z.enum(["connected", "offline"]),
       }),
@@ -123,13 +126,18 @@ const resolvePreview = protectedRouter
     }
 
     const assetUrl = new URL(`/api/preview/${session.id}/client.js`, getBaseUrl());
-    assetUrl.searchParams.set("token", createPreviewViewerToken(session.id));
+    const viewerToken = createPreviewViewerToken(session.id);
+    assetUrl.searchParams.set("token", viewerToken);
+    const eventsUrl = new URL("/api/preview-events", getBaseUrl().replace(/^http/u, "ws"));
+    eventsUrl.searchParams.set("session", session.id);
     const kv = getKV();
     const connected = kv ? await createPreviewTunnelPresence(kv).get(session.id) : null;
     return {
       body: {
         appId: session.app.publicId,
         clientPath: assetUrl.href,
+        eventsUrl: eventsUrl.href,
+        eventToken: viewerToken,
         sessionId: session.id,
         status: connected ? "connected" : "offline",
       },
@@ -163,6 +171,7 @@ const stopPreview = protectedRouter
     if (!endedSession) {
       throw new ORPCError("NOT_FOUND", { message: "Preview session is unavailable." });
     }
+    await publishPreviewEvent(endedSession.id, "ended").catch(() => {});
     return { body: {} };
   });
 

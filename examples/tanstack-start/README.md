@@ -47,12 +47,12 @@ pnpm --filter todo exec tailorkit preview
 ```
 
 The CLI prints a link such as
-`http://localhost:5010/?tailorkitPreview=<session-id>`. Open it in the host
-app, sign in with the same scope used for the CLI login, and select the todo
-app. Edits under `examples/apps/todo/src` rebuild the app; the open panel
-reloads after the build and resets its local state. Use `--url` to point the
-link at a different host page. Others can open the link while the CLI is
-running if they can reach that host URL and sign in to the same scope.
+`http://localhost:5010/api/tailorkit/preview?session=<session-id>`. Open it,
+choose “Use preview,” and then select the todo app. Edits under
+`examples/apps/todo/src` rebuild the app; the open panel reloads after the
+build and resets its local state. Use `--url` to return to a different page on
+the same host. Others can open the link while the CLI is running if they can
+reach that host URL and sign in to the same scope.
 
 ## Relevant files
 

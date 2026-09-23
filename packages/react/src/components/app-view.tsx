@@ -59,20 +59,31 @@ export const AppView = ({
     () => resolveAppUrl(app, store.baseUrl, assetsBaseUrl),
     [app, assetsBaseUrl, store.baseUrl],
   );
-  const previewRevision = usePreviewRevision(appUrl, Boolean(app.preview));
-  const renderedAppUrl = useMemo(() => {
-    if (!appUrl || previewRevision === null) {
-      return appUrl;
+  const [previewRevision, setPreviewRevision] = useState(0);
+  const preview = app.preview;
+
+  useEffect(() => {
+    if (preview?.status !== "connected" || !preview.eventsUrl || !preview.eventToken) {
+      return;
     }
-    const url = new URL(appUrl);
-    url.searchParams.set("revision", previewRevision);
-    return url;
-  }, [appUrl, previewRevision]);
+    const socket = new WebSocket(preview.eventsUrl, preview.eventToken);
+    socket.addEventListener("message", (event) => {
+      try {
+        if ((JSON.parse(String(event.data)) as { type?: string }).type === "build") {
+          setPreviewRevision((revision) => revision + 1);
+        }
+      } catch {
+        // Ignore malformed events from a closed or interrupted connection.
+      }
+    });
+    return () => socket.close();
+  }, [preview?.eventToken, preview?.eventsUrl, preview?.status]);
 
   useEffect(() => {
     void store.fetchMeta();
   }, [store]);
 
+  const renderedAppUrl = preview?.clientPath ? new URL(preview.clientPath, store.baseUrl) : appUrl;
   if (props === undefined || renderedAppUrl === null || meta.schema === null) {
     return fallback;
   }
@@ -84,88 +95,16 @@ export const AppView = ({
       <div data-tailorkit-view={viewId}>
         <style data-tailorkit-theme-style={viewId}>{buildThemeCss(viewId, theme)}</style>
         <RemoteViewHost
+          key={previewRevision}
           appUrl={renderedAppUrl.toString()}
           components={wrappedComponents}
           createIframe={createIframe}
-          preview={Boolean(
-            app.preview &&
-            typeof window !== "undefined" &&
-            renderedAppUrl.origin === window.location.origin,
-          )}
           props={runtimeProps}
         />
       </div>
     </PrimitiveThemeContext.Provider>
   );
 };
-
-function usePreviewRevision(appUrl: URL | null, enabled: boolean): string | null {
-  const [revision, setRevision] = useState<string | null>(null);
-  const url = appUrl?.toString();
-
-  useEffect(() => {
-    if (!enabled || !url) {
-      return;
-    }
-    // Preview source loading also requires the host origin. Cross-origin assets
-    // cannot reliably expose their ETag without an explicit CORS contract.
-    if (new URL(url).origin !== window.location.origin) {
-      console.warn("TailorKit live preview requires a same-origin client URL.");
-      return;
-    }
-    let active = true;
-    let previousEtag: string | null = null;
-    let failedCheck = false;
-    let warnedMissingEtag = false;
-    let checking = false;
-    const warnMissingEtag = () => {
-      if (!warnedMissingEtag) {
-        console.warn("TailorKit live preview could not read the client ETag.");
-        warnedMissingEtag = true;
-      }
-    };
-    const check = async () => {
-      if (checking || document.visibilityState === "hidden") {
-        return;
-      }
-      checking = true;
-      try {
-        const response = await fetch(url, { method: "HEAD", cache: "no-store" });
-        const etag = response.ok ? response.headers.get("etag") : null;
-        if (!active) {
-          return;
-        }
-        if (!etag) {
-          failedCheck = true;
-          warnMissingEtag();
-          return;
-        }
-        if ((previousEtag && previousEtag !== etag) || (previousEtag === null && failedCheck)) {
-          setRevision(etag);
-        }
-        previousEtag = etag;
-      } catch {
-        // Keep the current app mounted while the preview tunnel reconnects.
-        failedCheck = true;
-        if (active) {
-          warnMissingEtag();
-        }
-      } finally {
-        checking = false;
-      }
-    };
-    void check();
-    const interval = window.setInterval(() => void check(), 1500);
-    document.addEventListener("visibilitychange", check);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", check);
-    };
-  }, [enabled, url]);
-
-  return revision;
-}
 
 function resolveAppUrl(app: TailorKitApp, baseUrl: URL, assetsBaseUrl: string | null): URL | null {
   if (app.clientPath) {

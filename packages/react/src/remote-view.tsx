@@ -54,18 +54,13 @@ interface RemoteViewHostProps {
   appUrl: string | URL;
   components: Record<string, unknown>;
   createIframe?: () => HTMLIFrameElement;
-  preview?: boolean;
   props?: Record<string, unknown>;
 }
-
-const fetchPreviewSource: typeof fetch = (input, init) =>
-  fetch(input, { ...init, credentials: "same-origin" });
 
 export function RemoteViewHost({
   appUrl,
   components,
   createIframe,
-  preview,
   props,
 }: RemoteViewHostProps): ReactNode {
   const appKey = appUrl.toString();
@@ -117,7 +112,6 @@ export function RemoteViewHost({
   useEffect(() => {
     const host = createIframeUiHost(appUrl, {
       createIframe,
-      fetch: preview ? fetchPreviewSource : undefined,
       onError: (error) => {
         console.error("TailorKit remote app failed", error);
         setError(error);
@@ -147,7 +141,7 @@ export function RemoteViewHost({
       hostRef.current = null;
       host.destroy();
     };
-  }, [appUrl, createIframe, preview, store]);
+  }, [appUrl, createIframe, store]);
 
   if (status === "error" && error) {
     return createElement("div", null, formatError(error));

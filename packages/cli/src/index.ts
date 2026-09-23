@@ -39,7 +39,7 @@ cli
   .option("--entry <path>", "Client entry file")
   .option("--out-dir <path>", "Build output directory")
   .option("--mode <mode>", "Vite mode")
-  .option("--url <url>", "Host page URL to open with the preview session")
+  .option("--url <url>", "Host page URL to open after selecting the preview")
   .action(async (options: Record<string, unknown>) => {
     intro(pc.bold("TailorKit"));
     try {

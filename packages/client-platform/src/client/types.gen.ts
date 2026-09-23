@@ -653,6 +653,8 @@ export type PreviewResolveResponses = {
   200: {
     appId: string;
     clientPath: string;
+    eventsUrl: string;
+    eventToken: string;
     sessionId: string;
     status: "connected" | "offline";
   };

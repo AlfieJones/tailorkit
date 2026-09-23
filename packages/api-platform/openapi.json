@@ -2402,6 +2402,12 @@
                     "clientPath": {
                       "type": "string"
                     },
+                    "eventsUrl": {
+                      "type": "string"
+                    },
+                    "eventToken": {
+                      "type": "string"
+                    },
                     "sessionId": {
                       "type": "string"
                     },
@@ -2410,7 +2416,14 @@
                       "type": "string"
                     }
                   },
-                  "required": ["appId", "clientPath", "sessionId", "status"]
+                  "required": [
+                    "appId",
+                    "clientPath",
+                    "eventsUrl",
+                    "eventToken",
+                    "sessionId",
+                    "status"
+                  ]
                 }
               }
             }
