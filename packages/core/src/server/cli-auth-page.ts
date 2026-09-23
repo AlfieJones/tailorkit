@@ -145,9 +145,11 @@ function renderHtml(state: ApprovalPageState): string {
 }
 
 export function renderPreviewChoicePage({
+  optOutUrl,
   returnTo,
   sessionId,
 }: {
+  optOutUrl: string;
   returnTo: string;
   sessionId: string;
 }): Response {
@@ -159,7 +161,7 @@ export function renderPreviewChoicePage({
       <input type="hidden" name="returnTo" value="${escapeHtml(returnTo)}">
       <div class="actions">
         <button class="button primary" type="submit">Use preview</button>
-        <a class="button secondary" href="${escapeHtml(returnTo)}">Continue without preview</a>
+        <a class="button secondary" href="${escapeHtml(optOutUrl)}">Continue without preview</a>
       </div>
     </form>
   </section>`;

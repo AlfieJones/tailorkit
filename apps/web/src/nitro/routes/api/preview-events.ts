@@ -13,7 +13,7 @@ export default defineWebSocketHandler({
       .get("sec-websocket-protocol")
       ?.split(",")
       .map((protocol) => protocol.trim())
-      .find((protocol) => /^\d+\.[A-Za-z0-9_-]{43}$/u.test(protocol));
+      .find((protocol) => /^\d+\.[a-fA-F0-9]{64}$/u.test(protocol));
     return { context: { sessionId: url.searchParams.get("session"), token }, protocol: token };
   },
   async open(peer) {
@@ -40,6 +40,15 @@ export default defineWebSocketHandler({
         await unsubscribe();
       } else {
         cleanups.set(peer, unsubscribe);
+        // The session can end while subscribePreviewEvents is connecting to Redis.
+        // Recheck after subscription so a terminal event published in that gap is
+        // still observed before this socket is left open.
+        const currentSession = await db.query.previewSession.findFirst({
+          where: { id: sessionId, status: "active" },
+        });
+        if (!currentSession || currentSession.expiresAt <= new Date()) {
+          peer.close();
+        }
       }
     } catch {
       peer.close();

@@ -206,5 +206,8 @@ export async function subscribePreviewEvents(
     }
   });
   await subscriber.subscribe(channel);
-  return () => subscriber.disconnect();
+  return () => {
+    subscriber.disconnect();
+    return Promise.resolve();
+  };
 }

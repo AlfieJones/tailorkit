@@ -81,6 +81,26 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
     const url = new URL(request.url);
     const previewPrefix = `${basePath}/preview/`;
     if (url.pathname === `${basePath}/preview`) {
+      if (request.method === "GET" && url.searchParams.get("tailorkit-preview-opt-out") === "1") {
+        const returnToInput = url.searchParams.get("returnTo") ?? "/";
+        let returnTo: URL;
+        try {
+          returnTo = new URL(returnToInput, url.origin);
+        } catch {
+          return new Response("Invalid return URL", { status: 400 });
+        }
+        if (returnTo.origin !== url.origin) {
+          return new Response("Invalid return URL", { status: 400 });
+        }
+        return new Response(null, {
+          headers: {
+            "Cache-Control": "no-store",
+            "Set-Cookie": `tailorkit-preview=; Path=${basePath}; HttpOnly; SameSite=Strict; Max-Age=0${url.protocol === "https:" ? "; Secure" : ""}`,
+            Location: returnTo.href,
+          },
+          status: 303,
+        });
+      }
       const formData = request.method === "POST" ? await request.formData() : null;
       const sessionId = String(formData?.get("session") ?? url.searchParams.get("session") ?? "");
       const returnToInput = String(
@@ -96,16 +116,31 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
         return new Response("Invalid preview request", { status: 400 });
       }
       if (request.method === "POST") {
+        const origin = request.headers.get("origin");
+        const fetchSite = request.headers.get("sec-fetch-site");
+        if (
+          (origin !== null && origin !== url.origin) ||
+          (fetchSite !== null && fetchSite !== "same-origin")
+        ) {
+          return new Response("Cross-origin preview request rejected", { status: 403 });
+        }
         const secure = url.protocol === "https:" ? "; Secure" : "";
         return new Response(null, {
           headers: {
-            "Set-Cookie": `tailorkit-preview=${encodeURIComponent(sessionId)}; Path=${basePath}; HttpOnly; SameSite=Lax${secure}; Max-Age=28800`,
+            "Set-Cookie": `tailorkit-preview=${encodeURIComponent(sessionId)}; Path=${basePath}; HttpOnly; SameSite=Strict${secure}; Max-Age=28800`,
             Location: returnTo.href,
           },
           status: 303,
         });
       }
-      return renderPreviewChoicePage({ returnTo: returnTo.href, sessionId });
+      const optOutUrl = new URL(`${basePath}/preview`, url.origin);
+      optOutUrl.searchParams.set("tailorkit-preview-opt-out", "1");
+      optOutUrl.searchParams.set("returnTo", returnTo.href);
+      return renderPreviewChoicePage({
+        optOutUrl: optOutUrl.href,
+        returnTo: returnTo.href,
+        sessionId,
+      });
     }
     if (url.pathname === `${basePath}/schema`) {
       return Response.json(schema.serialize());

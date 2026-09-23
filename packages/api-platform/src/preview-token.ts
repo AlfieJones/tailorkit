@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { hashSecret } from "@tailorkit/api-utils/hashing";
 import { env } from "@tailorkit/env/server";
 
-const viewerTokenLifetimeMs = 8 * 60 * 60 * 1000;
+const viewerTokenLifetimeMs = 5 * 60 * 1000;
 
 function getSigningSecret(): string {
   if (!env.AUTH_SECRET) {

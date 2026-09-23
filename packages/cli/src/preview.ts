@@ -136,6 +136,7 @@ async function connectPreviewTunnel(
   let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
   let socket: WebSocket | undefined;
   let hasConnected = false;
+  let buildPending = false;
   let notifyBuild = async (): Promise<void> => {};
 
   return await new Promise<{ close: () => void; notifyBuild: () => Promise<void> }>(
@@ -172,7 +173,14 @@ async function connectPreviewTunnel(
         const client = createPreviewTunnelClient(newSocket);
         newSocket.addEventListener("open", () => {
           delay = 1000;
-          notifyBuild = () => client.respond({ type: "build" }).then(() => {});
+          notifyBuild = async () => {
+            buildPending = true;
+            await client.respond({ type: "build" });
+            buildPending = false;
+          };
+          if (buildPending) {
+            void notifyBuild().catch(() => {});
+          }
           if (!hasConnected) {
             hasConnected = true;
             resolve({ close, notifyBuild: () => notifyBuild() });
