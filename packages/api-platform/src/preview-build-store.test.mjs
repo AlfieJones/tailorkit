@@ -14,6 +14,11 @@ function fakeKV() {
   let revision = 0;
   return {
     get: async (key) => data.get(key) ?? null,
+    getAndDelete: async (key) => {
+      const value = data.get(key) ?? null;
+      data.delete(key);
+      return value;
+    },
     set: async (key, value) => {
       data.set(key, value);
     },
@@ -119,6 +124,56 @@ test("corrupt and missing chunks never become visible", async () => {
     store.upload("session", id, 0, 1, bytes.subarray(previewChunkBytes).toString("base64")),
     /Conflicting/,
   );
+});
+
+test("begin replaces only the previous unfinished upload and removes its chunks", async () => {
+  const kv = fakeKV();
+  const store = createPreviewBuildStore(kv);
+  const oldBytes = Buffer.alloc(previewChunkBytes + 1, 7);
+  const extraBytes = Buffer.from("old asset");
+  const oldId = await store.begin(
+    "session",
+    manifestFor([
+      ["client.js", oldBytes],
+      ["asset.js", extraBytes],
+    ]),
+  );
+  await store.upload(
+    "session",
+    oldId,
+    0,
+    0,
+    oldBytes.subarray(0, previewChunkBytes).toString("base64"),
+  );
+  await store.upload(
+    "session",
+    oldId,
+    0,
+    1,
+    oldBytes.subarray(previewChunkBytes).toString("base64"),
+  );
+  await store.upload("session", oldId, 1, 0, extraBytes.toString("base64"));
+  const nextBytes = Buffer.from("new build");
+  const nextId = await store.begin("session", manifestFor([["client.js", nextBytes]]));
+  assert.equal(await kv.get(`preview:build:session:${oldId}`), null);
+  assert.equal(await kv.get(`preview:build:session:${oldId}:0:0`), null);
+  assert.equal(await kv.get(`preview:build:session:${oldId}:0:1`), null);
+  assert.equal(await kv.get(`preview:build:session:${oldId}:1:0`), null);
+  assert.equal(await kv.get("preview:uploading:session"), nextId);
+  await assert.rejects(
+    store.upload("session", oldId, 0, 0, oldBytes.toString("base64")),
+    /unavailable/,
+  );
+  await assert.rejects(store.commit("session", oldId), /unavailable/);
+  await store.upload("session", nextId, 0, 0, nextBytes.toString("base64"));
+  await store.commit("session", nextId);
+  assert.equal(await kv.get("preview:uploading:session"), null);
+  const abandonedId = await store.begin("session", manifestFor([["client.js", extraBytes]]));
+  await store.upload("session", abandonedId, 0, 0, extraBytes.toString("base64"));
+  assert.equal((await store.current("session")).buildId, nextId);
+  await store.end("session");
+  assert.equal(await kv.get(`preview:build:session:${abandonedId}`), null);
+  assert.equal(await kv.get(`preview:build:session:${abandonedId}:0:0`), null);
 });
 
 test("revision subscription can be released", async () => {

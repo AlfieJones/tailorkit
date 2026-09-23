@@ -4,7 +4,8 @@ import { getBaseUrl, env } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
 import { db } from "@tailorkit/db";
 import { previewSession } from "@tailorkit/db/schema/preview-session";
-import { and, eq, lt } from "drizzle-orm";
+import { project } from "@tailorkit/db/schema/project";
+import { and, count, eq, lt } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import z from "zod";
 import { createPreviewBuildStore } from "../preview-build-store";
@@ -12,6 +13,7 @@ import { o, protectedRouter } from "../procedures";
 import { previewGrantRoutes } from "./preview-grants";
 
 const previewSessionLifetimeMs = 8 * 60 * 60 * 1000;
+const maxActivePreviewsPerScope = 5;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function hash(value: string): string {
@@ -79,12 +81,19 @@ const startPreview = protectedRouter
     const expiresAt = new Date(now.getTime() + previewSessionLifetimeMs);
     const session = await db
       .transaction(async (tx) => {
+        // Serialize starts in this project so concurrent app starts cannot exceed the scope cap.
+        await tx
+          .select({ id: project.id })
+          .from(project)
+          .where(eq(project.id, context.project.id))
+          .for("update");
         await tx
           .update(previewSession)
           .set({ endedAt: now, status: "ended" })
           .where(
             and(
-              eq(previewSession.appId, previewApp.id),
+              eq(previewSession.projectId, context.project.id),
+              eq(previewSession.scopeId, token.scopeId),
               eq(previewSession.status, "active"),
               lt(previewSession.expiresAt, now),
             ),
@@ -98,6 +107,21 @@ const startPreview = protectedRouter
         if (active) {
           throw new ORPCError("CONFLICT", {
             message: "An active preview already exists for this app.",
+          });
+        }
+        const [scopeCount] = await tx
+          .select({ total: count() })
+          .from(previewSession)
+          .where(
+            and(
+              eq(previewSession.projectId, context.project.id),
+              eq(previewSession.scopeId, token.scopeId),
+              eq(previewSession.status, "active"),
+            ),
+          );
+        if ((scopeCount?.total ?? 0) >= maxActivePreviewsPerScope) {
+          throw new ORPCError("CONFLICT", {
+            message: `This scope already has ${maxActivePreviewsPerScope} active previews.`,
           });
         }
         const [created] = await tx

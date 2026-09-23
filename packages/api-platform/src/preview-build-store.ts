@@ -34,6 +34,7 @@ const buildKey = (sessionId: string, buildId: string) => `preview:build:${sessio
 const chunkKey = (sessionId: string, buildId: string, fileIndex: number, chunkIndex: number) =>
   `${buildKey(sessionId, buildId)}:${fileIndex}:${chunkIndex}`;
 const pointerKey = (sessionId: string) => `preview:current:${sessionId}`;
+const uploadingKey = (sessionId: string) => `preview:uploading:${sessionId}`;
 const channel = (sessionId: string) => `preview:revision:${sessionId}`;
 const identifierSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/u);
 const requireId = (value: string): void => {
@@ -126,14 +127,32 @@ export function createPreviewBuildStore(kv: KV) {
   async function readBuild(sessionId: string, buildId: string) {
     return parse(await kv.get(buildKey(sessionId, buildId)), buildSchema);
   }
+  async function removeUploadingBuild(sessionId: string, buildId: string): Promise<void> {
+    const build = await readBuild(sessionId, buildId);
+    if (build?.state !== "uploading") {
+      return;
+    }
+    await kv.delete(buildKey(sessionId, buildId));
+    for (const [fileIndex, file] of build.manifest.files.entries()) {
+      for (let chunkIndex = 0; chunkIndex < file.chunks; chunkIndex += 1) {
+        await kv.delete(chunkKey(sessionId, buildId, fileIndex, chunkIndex));
+      }
+    }
+  }
   return {
     async begin(sessionId: string, manifest: PreviewBuildManifest): Promise<string> {
       requireId(sessionId);
       validatePreviewManifest(manifest);
+      const previous = await kv.getAndDelete(uploadingKey(sessionId));
+      if (previous) {
+        requireId(previous);
+        await removeUploadingBuild(sessionId, previous);
+      }
       const buildId = randomUUID();
       await kv.set(buildKey(sessionId, buildId), JSON.stringify({ manifest, state: "uploading" }), {
         ttl: uploadTtlSeconds,
       });
+      await kv.set(uploadingKey(sessionId), buildId, { ttl: uploadTtlSeconds });
       return buildId;
     },
     async upload(
@@ -145,6 +164,9 @@ export function createPreviewBuildStore(kv: KV) {
     ): Promise<void> {
       requireId(sessionId);
       requireId(buildId);
+      if ((await kv.get(uploadingKey(sessionId))) !== buildId) {
+        throw new Error("Preview upload is unavailable.");
+      }
       const build = await readBuild(sessionId, buildId);
       if (build?.state !== "uploading") {
         throw new Error("Preview upload is unavailable.");
@@ -178,9 +200,13 @@ export function createPreviewBuildStore(kv: KV) {
       }
       await kv.set(key, base64, { ttl: uploadTtlSeconds });
     },
+    // oxlint-disable-next-line complexity -- commit verifies all chunks before advancing the pointer.
     async commit(sessionId: string, buildId: string): Promise<CommittedPreviewBuild> {
       requireId(sessionId);
       requireId(buildId);
+      if ((await kv.get(uploadingKey(sessionId))) !== buildId) {
+        throw new Error("Preview upload is unavailable.");
+      }
       const build = await readBuild(sessionId, buildId);
       if (build?.state !== "uploading") {
         throw new Error("Preview upload is unavailable.");
@@ -229,6 +255,9 @@ export function createPreviewBuildStore(kv: KV) {
         ttl: activeTtlSeconds,
       });
       await kv.set(pointerKey(sessionId), JSON.stringify(committed), { ttl: activeTtlSeconds });
+      if ((await kv.get(uploadingKey(sessionId))) === buildId) {
+        await kv.delete(uploadingKey(sessionId));
+      }
       if (previous && previous.buildId !== buildId) {
         try {
           const previousBuild = await readBuild(sessionId, previous.buildId);
@@ -296,6 +325,11 @@ export function createPreviewBuildStore(kv: KV) {
     },
     async end(sessionId: string): Promise<void> {
       requireId(sessionId);
+      const uploading = await kv.getAndDelete(uploadingKey(sessionId));
+      if (uploading) {
+        requireId(uploading);
+        await removeUploadingBuild(sessionId, uploading);
+      }
       const active = await this.current(sessionId);
       await kv.delete(pointerKey(sessionId));
       await kv.publish(channel(sessionId), JSON.stringify({ ended: true }));

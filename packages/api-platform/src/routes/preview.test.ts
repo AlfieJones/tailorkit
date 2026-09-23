@@ -28,6 +28,11 @@ function fakeKV() {
   const data = new Map<string, string>();
   return {
     get: async (key: string) => data.get(key) ?? null,
+    getAndDelete: async (key: string) => {
+      const value = data.get(key) ?? null;
+      data.delete(key);
+      return value;
+    },
     set: async (key: string, value: string) => {
       data.set(key, value);
     },
@@ -172,5 +177,71 @@ describe("platform preview lifecycle and grants", () => {
       { context },
     );
     expect(ended.body.items).toEqual([]);
+  });
+
+  it("allows five active apps per scope, retires expired sessions, and frees a slot on stop", async () => {
+    const appIds = Array.from(
+      { length: 7 },
+      (_, index) => `scopeapp${String(index).padStart(4, "0")}`,
+    );
+    await db
+      .insert(appTable)
+      .values(
+        appIds.map((publicId) => ({ projectId, publicId, name: publicId, scopeId: "author" })),
+      );
+    const startApp = (appId: string) =>
+      call(previewRouter.start, { body: { appId, deployToken: "deploy-token" } }, { context });
+    const started = await Promise.all(appIds.slice(0, 5).map(startApp));
+    await expect(startApp(appIds[5]!)).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "This scope already has 5 active previews.",
+    });
+    const { hashSecret } = await import("@tailorkit/api-utils/hashing");
+    await db.insert(cliToken).values({
+      id: "44444444-4444-4444-8444-444444444444",
+      projectId,
+      scopeId: "other",
+      tokenHash: hashSecret("other-token", process.env.AUTH_SECRET!),
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    const otherScope = await call(
+      previewRouter.start,
+      { body: { appId: "otherapp0001", deployToken: "other-token" } },
+      { context },
+    );
+    expect(otherScope.body.sessionId).toBeTruthy();
+    await db
+      .update(previewSession)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(previewSession.id, started[0]!.body.sessionId));
+    const replacement = await startApp(appIds[5]!);
+    expect(replacement.body.sessionId).toBeTruthy();
+    await expect(startApp(appIds[6]!)).rejects.toMatchObject({ code: "CONFLICT" });
+    await call(
+      previewRouter.stop,
+      { params: { sessionId: started[1]!.body.sessionId }, body: { deployToken: "deploy-token" } },
+      { context },
+    );
+    const afterStop = await startApp(appIds[6]!);
+    expect(afterStop.body.sessionId).toBeTruthy();
+  });
+
+  it("serializes concurrent starts across different apps in the same scope", async () => {
+    const appIds = Array.from(
+      { length: 6 },
+      (_, index) => `raceapp${String(index).padStart(5, "0")}`,
+    );
+    await db
+      .insert(appTable)
+      .values(
+        appIds.map((publicId) => ({ projectId, publicId, name: publicId, scopeId: "author" })),
+      );
+    const results = await Promise.allSettled(
+      appIds.map((appId) =>
+        call(previewRouter.start, { body: { appId, deployToken: "deploy-token" } }, { context }),
+      ),
+    );
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(5);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
   });
 });
