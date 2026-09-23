@@ -35,6 +35,7 @@ const chunkKey = (sessionId: string, buildId: string, fileIndex: number, chunkIn
   `${buildKey(sessionId, buildId)}:${fileIndex}:${chunkIndex}`;
 const pointerKey = (sessionId: string) => `preview:current:${sessionId}`;
 const uploadingKey = (sessionId: string) => `preview:uploading:${sessionId}`;
+const endedKey = (sessionId: string) => `preview:ended:${sessionId}`;
 const channel = (sessionId: string) => `preview:revision:${sessionId}`;
 const identifierSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/u);
 const requireId = (value: string): void => {
@@ -148,6 +149,9 @@ export function createPreviewBuildStore(kv: KV) {
   return {
     async begin(sessionId: string, manifest: PreviewBuildManifest): Promise<string> {
       requireId(sessionId);
+      if (await kv.get(endedKey(sessionId))) {
+        throw new Error("Preview session has ended.");
+      }
       validatePreviewManifest(manifest);
       const previous = await kv.getAndDelete(uploadingKey(sessionId));
       if (previous) {
@@ -170,6 +174,9 @@ export function createPreviewBuildStore(kv: KV) {
     ): Promise<void> {
       requireId(sessionId);
       requireId(buildId);
+      if (await kv.get(endedKey(sessionId))) {
+        throw new Error("Preview session has ended.");
+      }
       if ((await kv.get(uploadingKey(sessionId))) !== buildId) {
         throw new Error("Preview upload is unavailable.");
       }
@@ -210,6 +217,9 @@ export function createPreviewBuildStore(kv: KV) {
     async commit(sessionId: string, buildId: string): Promise<CommittedPreviewBuild> {
       requireId(sessionId);
       requireId(buildId);
+      if (await kv.get(endedKey(sessionId))) {
+        throw new Error("Preview session has ended.");
+      }
       if ((await kv.get(uploadingKey(sessionId))) !== buildId) {
         throw new Error("Preview upload is unavailable.");
       }
@@ -271,6 +281,7 @@ export function createPreviewBuildStore(kv: KV) {
       const promoted = await kv.promoteIfOwnerAndNewer(
         pointerKey(sessionId),
         uploadingKey(sessionId),
+        endedKey(sessionId),
         buildId,
         JSON.stringify(committed),
         revision,
@@ -318,6 +329,9 @@ export function createPreviewBuildStore(kv: KV) {
     },
     async current(sessionId: string): Promise<CommittedPreviewBuild | null> {
       requireId(sessionId);
+      if (await kv.get(endedKey(sessionId))) {
+        return null;
+      }
       return parse(await kv.get(pointerKey(sessionId)), committedSchema);
     },
     async chunk(
@@ -328,6 +342,9 @@ export function createPreviewBuildStore(kv: KV) {
     ): Promise<string | null> {
       requireId(sessionId);
       requireId(buildId);
+      if (await kv.get(endedKey(sessionId))) {
+        return null;
+      }
       const build = await readBuild(sessionId, buildId);
       if (build?.state !== "ready" && build?.state !== "committed") {
         return null;
@@ -359,14 +376,15 @@ export function createPreviewBuildStore(kv: KV) {
     },
     async end(sessionId: string): Promise<void> {
       requireId(sessionId);
+      await kv.set(endedKey(sessionId), "1", { ttl: activeTtlSeconds });
+      const active = parse(await kv.get(pointerKey(sessionId)), committedSchema);
       const uploading = await kv.getAndDelete(uploadingKey(sessionId));
+      await kv.delete(pointerKey(sessionId));
+      await kv.publish(channel(sessionId), JSON.stringify({ ended: true }));
       if (uploading) {
         requireId(uploading);
         await removeUploadingBuild(sessionId, uploading);
       }
-      const active = await this.current(sessionId);
-      await kv.delete(pointerKey(sessionId));
-      await kv.publish(channel(sessionId), JSON.stringify({ ended: true }));
       if (active) {
         await kv.delete(buildKey(sessionId, active.buildId));
         for (const [fileIndex, file] of active.manifest.files.entries()) {

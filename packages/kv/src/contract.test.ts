@@ -77,16 +77,19 @@ vi.mock("ioredis", () => ({
       const key = String(args[0]);
       if (script.includes("cjson.decode")) {
         const ownerKey = String(args[1]);
-        if (read(state.redis, ownerKey) !== args[2]) {
+        if (
+          read(state.redis, String(args[2])) !== null ||
+          read(state.redis, ownerKey) !== args[3]
+        ) {
           return 0;
         }
         const current = read(state.redis, key);
-        if (current && JSON.parse(current).revision >= Number(args[3])) {
+        if (current && JSON.parse(current).revision >= Number(args[4])) {
           return 0;
         }
         state.redis.data.set(key, {
-          value: String(args[4]),
-          until: state.redis.clock + Number(args[5]) * 1000,
+          value: String(args[5]),
+          until: state.redis.clock + Number(args[6]) * 1000,
         });
         state.redis.data.delete(ownerKey);
         return 1;
@@ -134,7 +137,7 @@ vi.mock("@upstash/redis", () => ({
     }
     async eval(script: string, keys: string[], args: (number | string)[]) {
       if (script.includes("cjson.decode")) {
-        if (read(state.upstash, keys[1]!) !== args[0]) {
+        if (read(state.upstash, keys[2]!) !== null || read(state.upstash, keys[1]!) !== args[0]) {
           return 0;
         }
         const current = read(state.upstash, keys[0]!);
@@ -210,6 +213,7 @@ describe.each([
       await writer.promoteIfOwnerAndNewer(
         "revision-pointer",
         "upload-owner",
+        "ended-marker",
         "build-2",
         JSON.stringify({ revision: 2 }),
         2,
@@ -222,6 +226,7 @@ describe.each([
       await writer.promoteIfOwnerAndNewer(
         "revision-pointer",
         "upload-owner",
+        "ended-marker",
         "build-1",
         JSON.stringify({ revision: 1 }),
         1,
@@ -234,6 +239,7 @@ describe.each([
       await writer.promoteIfOwnerAndNewer(
         "revision-pointer",
         "upload-owner",
+        "ended-marker",
         "cancelled",
         JSON.stringify({ revision: 3 }),
         3,
@@ -245,12 +251,27 @@ describe.each([
       await writer.promoteIfOwnerAndNewer(
         "revision-pointer",
         "upload-owner",
+        "ended-marker",
         "build-3",
         JSON.stringify({ revision: 3 }),
         3,
         1,
       ),
     ).toBe(true);
+    expect(await reader.get("revision-pointer")).toBe(JSON.stringify({ revision: 3 }));
+    await writer.set("upload-owner", "build-4", { ttl: 1 });
+    await writer.set("ended-marker", "1", { ttl: 1 });
+    expect(
+      await writer.promoteIfOwnerAndNewer(
+        "revision-pointer",
+        "upload-owner",
+        "ended-marker",
+        "build-4",
+        JSON.stringify({ revision: 4 }),
+        4,
+        1,
+      ),
+    ).toBe(false);
     expect(await reader.get("revision-pointer")).toBe(JSON.stringify({ revision: 3 }));
     await writer.set("expiring", "value", { ttl: 1 });
     store.clock += 1001;

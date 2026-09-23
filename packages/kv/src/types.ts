@@ -30,6 +30,7 @@ export interface KV<T extends KVType = KVType> {
   promoteIfOwnerAndNewer: (
     pointerKey: string,
     ownerKey: string,
+    endedKey: string,
     expectedOwner: string,
     value: string,
     revision: number,

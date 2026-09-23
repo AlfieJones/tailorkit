@@ -11,6 +11,9 @@ end
 return value
 `;
 const PROMOTE_IF_OWNER_AND_NEWER_SCRIPT = `
+if redis.call("EXISTS", KEYS[3]) == 1 then
+  return 0
+end
 if redis.call("GET", KEYS[2]) ~= ARGV[1] then
   return 0
 end
@@ -134,7 +137,7 @@ export function createUpstashKV(): KV<"upstash"> {
         );
       }
     },
-    promoteIfOwnerAndNewer: (pointerKey, ownerKey, expectedOwner, value, revision, ttl) =>
+    promoteIfOwnerAndNewer: (pointerKey, ownerKey, endedKey, expectedOwner, value, revision, ttl) =>
       withSpan(
         "kv.promote_if_owner_and_newer",
         { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
@@ -151,7 +154,7 @@ export function createUpstashKV(): KV<"upstash"> {
             Number(
               await redis.eval(
                 PROMOTE_IF_OWNER_AND_NEWER_SCRIPT,
-                [pointerKey, ownerKey],
+                [pointerKey, ownerKey, endedKey],
                 [expectedOwner, revision, value, ttl],
               ),
             ) === 1
