@@ -268,8 +268,10 @@ export function createPreviewBuildStore(kv: KV) {
       }
       const committed = { buildId, manifest: build.manifest, revision };
       const previous = await this.current(sessionId);
-      const promoted = await kv.setIfNewerRevision(
+      const promoted = await kv.promoteIfOwnerAndNewer(
         pointerKey(sessionId),
+        uploadingKey(sessionId),
+        buildId,
         JSON.stringify(committed),
         revision,
         activeTtlSeconds,
@@ -279,12 +281,14 @@ export function createPreviewBuildStore(kv: KV) {
         if (current?.buildId === buildId && current.revision === revision) {
           return committed;
         }
-        throw new Error("Preview build was superseded by a newer revision.");
+        try {
+          await removeUploadingBuild(sessionId, buildId);
+        } catch {
+          // An abandoned build is still bounded by its KV TTL.
+        }
+        throw new Error("Preview build was cancelled or superseded.");
       }
       try {
-        if ((await kv.get(uploadingKey(sessionId))) === buildId) {
-          await kv.delete(uploadingKey(sessionId));
-        }
         if (previous && previous.buildId !== buildId) {
           const previousBuild = await readBuild(sessionId, previous.buildId);
           if (previousBuild) {

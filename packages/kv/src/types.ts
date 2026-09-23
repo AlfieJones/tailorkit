@@ -26,9 +26,11 @@ export interface KV<T extends KVType = KVType> {
   getAndDelete: (key: string) => Promise<string | null>;
   increment: (key: string, ttl: number) => Promise<number>;
   set: (key: string, value: string, options?: SetOptions) => Promise<void>;
-  /** Atomically replace a JSON pointer only when its revision increases. */
-  setIfNewerRevision: (
-    key: string,
+  /** Atomically promote the owned upload if its revision advances the pointer. */
+  promoteIfOwnerAndNewer: (
+    pointerKey: string,
+    ownerKey: string,
+    expectedOwner: string,
     value: string,
     revision: number,
     ttl: number,

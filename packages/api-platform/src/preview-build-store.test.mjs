@@ -22,12 +22,16 @@ function fakeKV() {
     set: async (key, value) => {
       data.set(key, value);
     },
-    setIfNewerRevision: async (key, value, revision) => {
+    promoteIfOwnerAndNewer: async (key, ownerKey, expectedOwner, value, revision) => {
+      if (data.get(ownerKey) !== expectedOwner) {
+        return false;
+      }
       const current = data.get(key);
       if (current && JSON.parse(current).revision >= revision) {
         return false;
       }
       data.set(key, value);
+      data.delete(ownerKey);
       return true;
     },
     delete: async (key) => {
@@ -105,14 +109,14 @@ test("a failed pointer write leaves a verified build retryable with the same rev
   const next = Buffer.from("next");
   const nextId = await store.begin("session", manifestFor([["client.js", next]]));
   await store.upload("session", nextId, 0, 0, next.toString("base64"));
-  const write = kv.setIfNewerRevision;
+  const write = kv.promoteIfOwnerAndNewer;
   let failPointer = true;
-  kv.setIfNewerRevision = async (key, value, revision, ttl) => {
+  kv.promoteIfOwnerAndNewer = async (key, ownerKey, expectedOwner, value, revision, ttl) => {
     if (key === "preview:current:session" && failPointer) {
       failPointer = false;
       throw new Error("pointer write failed");
     }
-    return write(key, value, revision, ttl);
+    return write(key, ownerKey, expectedOwner, value, revision, ttl);
   };
   await assert.rejects(store.commit("session", nextId), /pointer write failed/);
   assert.equal((await store.current("session")).buildId, firstId);
@@ -148,6 +152,41 @@ test("an older concurrent commit cannot replace a newer current revision", async
   await assert.rejects(older, /superseded/);
   assert.equal(newer.revision, 2);
   assert.equal((await store.current("session")).revision, 2);
+});
+
+test("a cancelled upload cannot promote after a replacement begin", async () => {
+  const kv = fakeKV();
+  const store = createPreviewBuildStore(kv);
+  const old = Buffer.from("visible");
+  const oldId = await store.begin("session", manifestFor([["client.js", old]]));
+  await store.upload("session", oldId, 0, 0, old.toString("base64"));
+  await store.commit("session", oldId);
+
+  const interrupted = Buffer.from("interrupted");
+  const interruptedId = await store.begin("session", manifestFor([["client.js", interrupted]]));
+  await store.upload("session", interruptedId, 0, 0, interrupted.toString("base64"));
+  const entered = Promise.withResolvers();
+  const release = Promise.withResolvers();
+  const promote = kv.promoteIfOwnerAndNewer;
+  kv.promoteIfOwnerAndNewer = async (...args) => {
+    if (args[2] === interruptedId) {
+      entered.resolve();
+      await release.promise;
+    }
+    return promote(...args);
+  };
+  const pending = store.commit("session", interruptedId);
+  await entered.promise;
+  const replacement = Buffer.from("replacement");
+  const replacementId = await store.begin("session", manifestFor([["client.js", replacement]]));
+  release.resolve();
+  await assert.rejects(pending, /cancelled or superseded/);
+  assert.equal((await store.current("session")).buildId, oldId);
+  assert.equal(await kv.get(`preview:build:session:${interruptedId}`), null);
+  assert.equal(await kv.get(`preview:build:session:${interruptedId}:0:0`), null);
+  await store.upload("session", replacementId, 0, 0, replacement.toString("base64"));
+  await store.commit("session", replacementId);
+  assert.equal((await store.current("session")).buildId, replacementId);
 });
 
 test("reads builds committed before the retryable-state rollout", async () => {

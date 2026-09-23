@@ -9,12 +9,16 @@ if value == 1 then
 end
 return value
 `;
-const SET_IF_NEWER_REVISION_SCRIPT = `
-local current = redis.call("GET", KEYS[1])
-if current and cjson.decode(current).revision >= tonumber(ARGV[1]) then
+const PROMOTE_IF_OWNER_AND_NEWER_SCRIPT = `
+if redis.call("GET", KEYS[2]) ~= ARGV[1] then
   return 0
 end
-redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3])
+local current = redis.call("GET", KEYS[1])
+if current and cjson.decode(current).revision >= tonumber(ARGV[2]) then
+  return 0
+end
+redis.call("SET", KEYS[1], ARGV[3], "EX", ARGV[4])
+redis.call("DEL", KEYS[2])
 return 1
 `;
 
@@ -105,9 +109,9 @@ export function createRedisKV(url: string): KV<"redis"> {
         );
       }
     },
-    setIfNewerRevision: (key, value, revision, ttl) =>
+    promoteIfOwnerAndNewer: (pointerKey, ownerKey, expectedOwner, value, revision, ttl) =>
       withSpan(
-        "kv.set_if_newer_revision",
+        "kv.promote_if_owner_and_newer",
         { attributes: { "tailorkit.package": "kv", "kv.type": "redis" } },
         async () => {
           if (
@@ -119,8 +123,18 @@ export function createRedisKV(url: string): KV<"redis"> {
             throw new TypeError("KV revision and TTL must be positive integers.");
           }
           return (
-            Number(await redis.eval(SET_IF_NEWER_REVISION_SCRIPT, 1, key, revision, value, ttl)) ===
-            1
+            Number(
+              await redis.eval(
+                PROMOTE_IF_OWNER_AND_NEWER_SCRIPT,
+                2,
+                pointerKey,
+                ownerKey,
+                expectedOwner,
+                revision,
+                value,
+                ttl,
+              ),
+            ) === 1
           );
         },
       ),
