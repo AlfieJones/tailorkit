@@ -11,7 +11,7 @@ import type {
 import { createTailorKitSchema } from "../schema/schema";
 import { flattenActionRouter } from "./actions";
 import { normalizeBasePath } from "./apps";
-import { handleCliAuthApprovalPage } from "./cli-auth-page";
+import { handleCliAuthApprovalPage, renderPreviewChoicePage } from "./cli-auth-page";
 import { createContext } from "./context";
 import { tailorkitRouter } from "./router";
 import type {
@@ -80,6 +80,68 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
   ) => {
     const url = new URL(request.url);
     const previewPrefix = `${basePath}/preview/`;
+    if (url.pathname === `${basePath}/preview`) {
+      if (request.method === "GET" && url.searchParams.get("tailorkit-preview-opt-out") === "1") {
+        const returnToInput = url.searchParams.get("returnTo") ?? "/";
+        let returnTo: URL;
+        try {
+          returnTo = new URL(returnToInput, url.origin);
+        } catch {
+          return new Response("Invalid return URL", { status: 400 });
+        }
+        if (returnTo.origin !== url.origin) {
+          return new Response("Invalid return URL", { status: 400 });
+        }
+        return new Response(null, {
+          headers: {
+            "Cache-Control": "no-store",
+            "Set-Cookie": `tailorkit-preview=; Path=${basePath}; HttpOnly; SameSite=Strict; Max-Age=0${url.protocol === "https:" ? "; Secure" : ""}`,
+            Location: returnTo.href,
+          },
+          status: 303,
+        });
+      }
+      const formData = request.method === "POST" ? await request.formData() : null;
+      const sessionId = String(formData?.get("session") ?? url.searchParams.get("session") ?? "");
+      const returnToInput = String(
+        formData?.get("returnTo") ?? url.searchParams.get("returnTo") ?? "/",
+      );
+      let returnTo: URL;
+      try {
+        returnTo = new URL(returnToInput, url.origin);
+      } catch {
+        return new Response("Invalid return URL", { status: 400 });
+      }
+      if (returnTo.origin !== url.origin || !sessionId) {
+        return new Response("Invalid preview request", { status: 400 });
+      }
+      if (request.method === "POST") {
+        const origin = request.headers.get("origin");
+        const fetchSite = request.headers.get("sec-fetch-site");
+        if (
+          (origin !== null && origin !== url.origin) ||
+          (fetchSite !== null && fetchSite !== "same-origin")
+        ) {
+          return new Response("Cross-origin preview request rejected", { status: 403 });
+        }
+        const secure = url.protocol === "https:" ? "; Secure" : "";
+        return new Response(null, {
+          headers: {
+            "Set-Cookie": `tailorkit-preview=${encodeURIComponent(sessionId)}; Path=${basePath}; HttpOnly; SameSite=Strict${secure}; Max-Age=28800`,
+            Location: returnTo.href,
+          },
+          status: 303,
+        });
+      }
+      const optOutUrl = new URL(`${basePath}/preview`, url.origin);
+      optOutUrl.searchParams.set("tailorkit-preview-opt-out", "1");
+      optOutUrl.searchParams.set("returnTo", returnTo.href);
+      return renderPreviewChoicePage({
+        optOutUrl: optOutUrl.href,
+        returnTo: returnTo.href,
+        sessionId,
+      });
+    }
     if (url.pathname === `${basePath}/schema`) {
       return Response.json(schema.serialize());
     }
@@ -180,7 +242,12 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
       const data = "data" in result ? result.data : result;
       const body = data && typeof data === "object" && "body" in data ? data.body : data;
 
-      const previewSessionId = url.searchParams.get("previewSessionId");
+      const previewSessionId = request.headers
+        .get("cookie")
+        ?.split(";")
+        .map((cookie) => cookie.trim())
+        .find((cookie) => cookie.startsWith("tailorkit-preview="))
+        ?.slice("tailorkit-preview=".length);
       if (!previewSessionId || !body || typeof body !== "object" || !("items" in body)) {
         return Response.json(body && typeof body === "object" && "items" in body ? body.items : []);
       }
@@ -190,7 +257,13 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
         headers: context.platformHeaders,
         path: { sessionId: previewSessionId },
         query: { scopeId: tailorkit.scopeId },
-      });
+      }).catch(() => null);
+      const clearPreviewCookie = {
+        "Set-Cookie": `tailorkit-preview=; Path=${basePath}; HttpOnly; SameSite=Lax; Max-Age=0${url.protocol === "https:" ? "; Secure" : ""}`,
+      };
+      if (!previewResult) {
+        return Response.json((body as { items: unknown }).items, { headers: clearPreviewCookie });
+      }
       const previewData = "data" in previewResult ? previewResult.data : previewResult;
       const preview =
         previewData && typeof previewData === "object" && "body" in previewData
@@ -198,32 +271,38 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
           : previewData;
 
       if (!preview || typeof preview !== "object") {
-        return Response.json((body as { items: unknown }).items);
+        return Response.json((body as { items: unknown }).items, { headers: clearPreviewCookie });
       }
       const resolvedPreview = preview as {
         appId?: unknown;
         clientPath?: unknown;
+        eventsUrl?: unknown;
+        eventToken?: unknown;
         sessionId?: unknown;
         status?: unknown;
       };
       if (
         typeof resolvedPreview.appId !== "string" ||
         typeof resolvedPreview.clientPath !== "string" ||
+        typeof resolvedPreview.eventsUrl !== "string" ||
+        typeof resolvedPreview.eventToken !== "string" ||
         typeof resolvedPreview.sessionId !== "string" ||
         (resolvedPreview.status !== "connected" && resolvedPreview.status !== "offline")
       ) {
-        return Response.json((body as { items: unknown }).items);
+        return Response.json((body as { items: unknown }).items, { headers: clearPreviewCookie });
       }
 
       const items = (body as { items: Record<string, unknown>[] }).items.map((item) =>
         item.publicId === resolvedPreview.appId
           ? {
               ...item,
-              clientPath: new URL(
-                `${basePath}/preview/${resolvedPreview.sessionId}/client.js`,
-                url.origin,
-              ).href,
               preview: {
+                clientPath: new URL(
+                  `${basePath}/preview/${resolvedPreview.sessionId}/client.js`,
+                  url.origin,
+                ).href,
+                eventsUrl: resolvedPreview.eventsUrl,
+                eventToken: resolvedPreview.eventToken,
                 sessionId: resolvedPreview.sessionId,
                 status: resolvedPreview.status,
               },

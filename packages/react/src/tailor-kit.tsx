@@ -45,7 +45,13 @@ export interface TailorKitApp {
     id: string;
   } | null;
   name?: string;
-  preview?: { sessionId: string; status: "connected" | "offline" };
+  preview?: {
+    clientPath?: string;
+    eventsUrl?: string;
+    eventToken?: string;
+    sessionId: string;
+    status: "connected" | "offline";
+  };
 }
 
 interface AppViewBaseProps {
@@ -111,11 +117,6 @@ export interface TailorKitInstance<
   readonly $slots?: TSlots;
   readonly $views?: TViews;
   readonly baseUrl: string | URL;
-  /**
-   * A host-selected, scope-authorized local-development preview session.
-   * The host handler resolves this server-side before returning app URLs.
-   */
-  readonly previewSessionId?: string;
   readonly components: Record<string, unknown>;
   readonly theme: TailorKitTheme;
 }
@@ -165,7 +166,6 @@ type ServerViews<TTailor extends TailorKitServerShape> = {
 
 export function createTailorKitClient<TTailor extends TailorKitServerShape>(options: {
   baseUrl: string | URL;
-  previewSessionId?: string;
   components?: CompleteComponentRenderers<ServerComponents<TTailor>>;
   theme?: TailorKitTheme;
 }): TailorKitInstance<
@@ -185,7 +185,6 @@ function createReactTailorKitClient<
   TSlots extends SlotDefinitions = SlotDefinitions,
 >(options: {
   baseUrl: string | URL;
-  previewSessionId?: string;
   components?: ComponentRenderers<TComponents>;
   theme?: TailorKitTheme;
 }): TailorKitInstance<TViews, TSlots> {
@@ -212,7 +211,6 @@ function createReactTailorKitClient<
   return {
     baseUrl: options.baseUrl,
     components: wrappedComponents,
-    previewSessionId: options.previewSessionId,
     theme,
   };
 }

@@ -133,27 +133,64 @@ function redirectToSignIn({
 }
 
 function renderCliAuthApprovalPage(state: ApprovalPageState): Response {
-  return new Response(`<!doctype html>${renderHtml(state)}`, {
+  return htmlResponse(renderHtml(state));
+}
+
+function renderHtml(state: ApprovalPageState): string {
+  return renderPageHtml(
+    "Approve TailorKit CLI",
+    renderCard(state),
+    state.status === "idle" ? `<script>${script}</script>` : "",
+  );
+}
+
+export function renderPreviewChoicePage({
+  optOutUrl,
+  returnTo,
+  sessionId,
+}: {
+  optOutUrl: string;
+  returnTo: string;
+  sessionId: string;
+}): Response {
+  const content = `<section class="card" aria-labelledby="title">
+    <h1 id="title">Open this TailorKit preview?</h1>
+    <p class="description">This will show the local preview in your TailorKit app slots.</p>
+    <form method="post">
+      <input type="hidden" name="session" value="${escapeHtml(sessionId)}">
+      <input type="hidden" name="returnTo" value="${escapeHtml(returnTo)}">
+      <div class="actions">
+        <button class="button primary" type="submit">Use preview</button>
+        <a class="button secondary" href="${escapeHtml(optOutUrl)}">Continue without preview</a>
+      </div>
+    </form>
+  </section>`;
+  return htmlResponse(renderPageHtml("Open TailorKit preview", content));
+}
+
+function htmlResponse(html: string): Response {
+  return new Response(`<!doctype html>${html}`, {
     headers: {
+      "cache-control": "no-store",
       "content-type": "text/html; charset=utf-8",
     },
   });
 }
 
-function renderHtml(state: ApprovalPageState): string {
+function renderPageHtml(title: string, content: string, scriptMarkup = ""): string {
   return `<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Approve TailorKit CLI</title>
+  <title>${escapeHtml(title)}</title>
   <style>${styles}</style>
 </head>
 <body>
   <main class="page">
-    ${renderCard(state)}
+    ${content}
     <p class="footer-link">Powered by <a href="https://tailorkit.dev/home">TailorKit</a></p>
   </main>
-  ${state.status === "idle" ? `<script>${script}</script>` : ""}
+  ${scriptMarkup}
 </body>
 </html>`;
 }
@@ -406,6 +443,7 @@ legend {
   font: inherit;
   font-size: 14px;
   font-weight: 600;
+  text-decoration: none;
 }
 
 .button.primary {

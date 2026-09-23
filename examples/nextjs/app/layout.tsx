@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { Suspense } from "react";
 import type { ReactNode } from "react";
 import { demoAuthCookieName, getDemoUser } from "@examples/shared";
 import { AuthScreen } from "@/components/auth-screen";
@@ -20,7 +21,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {user ? <TailorKitShell user={user}>{children}</TailorKitShell> : <AuthScreen />}
+          {user ? (
+            <Suspense>
+              <TailorKitShell user={user}>{children}</TailorKitShell>
+            </Suspense>
+          ) : (
+            <AuthScreen />
+          )}
         </ThemeProvider>
       </body>
     </html>

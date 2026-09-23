@@ -6,6 +6,7 @@ const requestTimeoutMs = 25_000;
 const maxInFlightRequestsPerSession = 8;
 const maxEncodedPreviewResponseBytes = 4 * Math.ceil(maxAssetBytes / 3);
 const responseChannelPattern = "preview-tunnel:responses:*";
+const eventChannel = (sessionId: string) => `preview-tunnel:events:${sessionId}`;
 
 export interface PreviewAssetRequest {
   id: string;
@@ -17,6 +18,7 @@ export interface PreviewAssetRequest {
 export interface PreviewAssetResponse {
   body: string;
   contentType: string;
+  etag?: string;
   id: string;
   status: number;
   type: "response";
@@ -62,6 +64,10 @@ function isPreviewAssetResponse(value: unknown): value is PreviewAssetResponse {
     response.contentType.length > 0 &&
     response.contentType.length <= 255 &&
     !/[\r\n]/u.test(response.contentType) &&
+    (response.etag === undefined ||
+      (typeof response.etag === "string" &&
+        response.etag.length <= 128 &&
+        !/[\r\n]/u.test(response.etag))) &&
     typeof response.body === "string" &&
     response.body.length <= maxEncodedPreviewResponseBytes &&
     /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u.test(response.body)
@@ -166,7 +172,7 @@ export async function subscribePreviewTunnel(
     }
   });
   await subscriber.subscribe(channel);
-  return () => subscriber.disconnect();
+  return () => Promise.resolve(subscriber.disconnect());
 }
 
 export async function publishPreviewAssetResponse(response: PreviewAssetResponse): Promise<void> {
@@ -174,4 +180,34 @@ export async function publishPreviewAssetResponse(response: PreviewAssetResponse
     throw new TypeError("Invalid preview tunnel response.");
   }
   await getRedis().publish(responseChannel(response.id), JSON.stringify(response));
+}
+
+export async function publishPreviewEvent(
+  sessionId: string,
+  type: "build" | "ended",
+): Promise<void> {
+  await getRedis().publish(eventChannel(sessionId), JSON.stringify({ type }));
+}
+
+export async function subscribePreviewEvents(
+  sessionId: string,
+  send: (type: "build" | "ended") => void,
+): Promise<() => Promise<void>> {
+  const subscriber = getRedis().duplicate();
+  const channel = eventChannel(sessionId);
+  subscriber.on("message", (_channel: string, message: string) => {
+    try {
+      const value = JSON.parse(message) as { type?: unknown };
+      if (value.type === "build" || value.type === "ended") {
+        send(value.type);
+      }
+    } catch {
+      // Ignore malformed transport messages.
+    }
+  });
+  await subscriber.subscribe(channel);
+  return () => {
+    subscriber.disconnect();
+    return Promise.resolve();
+  };
 }

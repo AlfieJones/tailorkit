@@ -10,14 +10,18 @@ import type { HostToIframePayload, RemoteNode } from "@tailorkit/sandbox/protoco
 import { createTailorKitClient } from "../tailor-kit";
 import type { TailorKitApp } from "../tailor-kit";
 
-const hostRecords: { appUrl: string; props: Record<string, unknown> | undefined }[] = [];
+const hostRecords: {
+  appUrl: string;
+  fetch?: typeof fetch;
+  props: Record<string, unknown> | undefined;
+}[] = [];
 
 vi.mock("@tailorkit/sandbox/host", () => ({
   createIframeUiHost: (
     appUrl: string | URL,
-    options: { props?: Record<string, unknown> } = {},
+    options: { fetch?: typeof fetch; props?: Record<string, unknown> } = {},
   ): IframeUiHost => {
-    const record = { appUrl: appUrl.toString(), props: options.props };
+    const record = { appUrl: appUrl.toString(), fetch: options.fetch, props: options.props };
     hostRecords.push(record);
 
     const tree: RemoteNode = {
@@ -143,6 +147,7 @@ describe("tailorKitClient React adapter", () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
   });
 
   it("fetches and caches apps", async () => {
@@ -297,6 +302,110 @@ describe("tailorKitClient React adapter", () => {
       { context: { page: { title: "home" } }, path: "/home", status: "ready" },
       { context: { page: { title: "home" } }, path: "/home", status: "ready" },
     ]);
+  });
+
+  it("restarts a preview app when the built asset changes", async () => {
+    vi.useFakeTimers();
+    let etag = '"first"';
+    vi.spyOn(globalThis, "fetch").mockImplementation((_input, init) =>
+      Promise.resolve(
+        init?.method === "HEAD"
+          ? new Response(null, { headers: { ETag: etag } })
+          : Response.json({ assetsBaseUrl: null, schema: schema.serialize() }),
+      ),
+    );
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: window.location.origin,
+      components,
+    });
+    const app: TailorKitApp = {
+      clientPath: "/apps/todo.js",
+      id: "todo",
+      preview: { sessionId: "session-1", status: "connected" },
+    };
+
+    await act(async () => {
+      render(
+        <Root client={tailor} apps={[app]}>
+          <HomeAppView app={app} tailor={tailor} />
+        </Root>,
+      );
+      await Promise.resolve();
+    });
+    expect(hostRecords).toHaveLength(1);
+
+    etag = '"second"';
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500);
+    });
+    expect(hostRecords).toHaveLength(2);
+    expect(hostRecords[1]?.appUrl).toContain("revision=%22second%22");
+  });
+
+  it("retries a preview after the first ETag check fails", async () => {
+    vi.useFakeTimers();
+    let headAvailable = false;
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(globalThis, "fetch").mockImplementation((_input, init) => {
+      if (init?.method === "HEAD") {
+        return headAvailable
+          ? Promise.resolve(new Response(null, { headers: { ETag: '"recovered"' } }))
+          : Promise.reject(new Error("preview tunnel offline"));
+      }
+      return Promise.resolve(Response.json({ assetsBaseUrl: null, schema: schema.serialize() }));
+    });
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: window.location.origin,
+      components,
+    });
+    const app: TailorKitApp = {
+      clientPath: "/apps/todo.js",
+      id: "todo",
+      preview: { sessionId: "session-1", status: "connected" },
+    };
+
+    await act(async () => {
+      render(
+        <Root client={tailor} apps={[app]}>
+          <HomeAppView app={app} tailor={tailor} />
+        </Root>,
+      );
+      await Promise.resolve();
+    });
+    expect(hostRecords).toHaveLength(1);
+    expect(consoleWarn).toHaveBeenCalledTimes(1);
+
+    headAvailable = true;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500);
+    });
+    expect(hostRecords).toHaveLength(2);
+    expect(hostRecords[1]?.appUrl).toContain("revision=%22recovered%22");
+  });
+
+  it("sends host cookies only when loading a same-origin preview bundle", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    const tailor = createTailorKitClient<typeof server>({
+      baseUrl: window.location.origin,
+      components,
+    });
+    const previewPath = `${window.location.origin}/api/tailorkit/preview/session-1/client.js`;
+    const previewApp: TailorKitApp = {
+      clientPath: previewPath,
+      id: "todo",
+      preview: { sessionId: "session-1", status: "connected" },
+    };
+
+    render(
+      <Root client={tailor} apps={[previewApp]}>
+        <HomeAppView app={previewApp} tailor={tailor} />
+      </Root>,
+    );
+    await waitFor(() => expect(hostRecords[0]?.fetch).toBeDefined());
+    await hostRecords[0]?.fetch?.(previewPath, { credentials: "omit" });
+    expect(fetchMock).toHaveBeenCalledWith(previewPath, {
+      credentials: "same-origin",
+    });
   });
 
   it("renders an explicit view override without a registered current view", async () => {
