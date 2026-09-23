@@ -1,14 +1,27 @@
-import { readFile, realpath, stat } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
 import { log } from "@clack/prompts";
 import { loadTailorKitConfig } from "@tailorkit/app/config/loader";
-import { createPreviewTunnelClient } from "@tailorkit/client-platform/preview-tunnel";
+import { createPreviewWebSocketClient } from "@tailorkit/client-platform/preview";
+import type {
+  PreviewBuildManifest,
+  PreviewWebSocketClient,
+} from "@tailorkit/client-platform/preview";
 import { createTailorKitClient } from "@tailorkit/core/server";
 import pc from "picocolors";
 import { getDeployToken, runWhoami } from "./auth";
 
-const maxPreviewAssetBytes = 1024 * 1024;
-const previewSessionCleanupTimeoutMs = 5000;
+const chunkBytes = 256 * 1024;
+const contentTypes: Record<string, string> = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
+};
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
 
 export interface PreviewOptions {
   configPath?: string;
@@ -17,194 +30,81 @@ export interface PreviewOptions {
   mode?: string;
   outDir?: string;
 }
+interface Snapshot {
+  files: Buffer[];
+  manifest: PreviewBuildManifest;
+  fingerprint: string;
+}
 
-const contentTypes: Record<string, string> = {
-  ".css": "text/css; charset=utf-8",
-  ".html": "text/html; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".map": "application/json; charset=utf-8",
-};
-
-const getContentType = (filepath: string): string =>
-  contentTypes[path.extname(filepath)] ?? "application/octet-stream";
-
-class PreviewAssetError extends Error {
-  readonly status: number;
-
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = "PreviewAssetError";
-    this.status = status;
+export async function capturePreviewSnapshot(root: string): Promise<Snapshot> {
+  const actualRoot = await realpath(root);
+  const outputEntries = await readdir(actualRoot, { recursive: true, withFileTypes: true });
+  const entries = outputEntries
+    .filter((entry) => entry.isFile())
+    .toSorted((a, b) =>
+      path.join(a.parentPath, a.name).localeCompare(path.join(b.parentPath, b.name)),
+    );
+  if (entries.length > 100) {
+    throw new Error("Preview build exceeds 100 files.");
   }
-}
-
-interface PreviewAssetResponse {
-  body: string;
-  contentType: string;
-  status: number;
-}
-
-const isPathOutsideRoot = (root: string, filepath: string): boolean => {
-  const relativeToRoot = path.relative(root, filepath);
-  return (
-    relativeToRoot === ".." ||
-    relativeToRoot.startsWith(`..${path.sep}`) ||
-    path.isAbsolute(relativeToRoot)
-  );
-};
-
-const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
-
-async function getPreviewAssetResponse(
-  message: { method: "GET" | "HEAD"; path: string },
-  root: string,
-): Promise<PreviewAssetResponse> {
-  try {
-    let pathname: string;
-    try {
-      pathname = decodeURIComponent(new URL(message.path, "http://localhost").pathname);
-    } catch {
-      throw new PreviewAssetError("Invalid preview asset path.", 400);
+  const files: Buffer[] = [];
+  const manifest: PreviewBuildManifest = { files: [] };
+  let total = 0;
+  for (const entry of entries) {
+    const resolved = await realpath(path.join(entry.parentPath, entry.name));
+    const relative = path.relative(actualRoot, resolved).replaceAll(path.sep, "/");
+    if (!relative || relative.startsWith("../") || path.isAbsolute(relative)) {
+      throw new Error("Preview file escapes the build output.");
     }
-    const filepath = path.resolve(root, pathname.slice(1));
-    if (isPathOutsideRoot(root, filepath)) {
-      throw new PreviewAssetError("Preview asset path is outside the build output.", 403);
+    const bytes = await readFile(resolved);
+    if (bytes.length > 1024 * 1024) {
+      throw new Error(`Preview file ${relative} exceeds 1 MiB.`);
     }
-
-    const realFilepath = await realpath(filepath).catch((error: unknown) => {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        throw new PreviewAssetError("Preview asset was not found.", 404);
-      }
-      throw error;
+    total += bytes.length;
+    if (total > 10 * 1024 * 1024) {
+      throw new Error("Preview build exceeds 10 MiB.");
+    }
+    files.push(bytes);
+    manifest.files.push({
+      path: relative,
+      contentType: contentTypes[path.extname(relative)] ?? "application/octet-stream",
+      size: bytes.length,
+      chunks: Math.ceil(bytes.length / chunkBytes),
+      sha256: createHash("sha256").update(bytes).digest("hex"),
     });
-    if (isPathOutsideRoot(root, realFilepath)) {
-      throw new PreviewAssetError("Preview asset path is outside the build output.", 403);
-    }
-
-    const fileStat = await stat(realFilepath);
-    if (!fileStat?.isFile()) {
-      throw new PreviewAssetError("Preview asset was not found.", 404);
-    }
-    if (fileStat.size > maxPreviewAssetBytes) {
-      throw new PreviewAssetError("Preview asset exceeds the maximum supported size.", 413);
-    }
-
-    const bytes = message.method === "HEAD" ? undefined : await readFile(realFilepath);
-    return {
-      status: 200,
-      body: bytes?.toString("base64") ?? "",
-      contentType: getContentType(realFilepath),
-    };
-  } catch (error) {
-    const response =
-      error instanceof PreviewAssetError
-        ? error
-        : new PreviewAssetError(`Unable to read preview asset: ${errorMessage(error)}`, 500);
-    if (response.status >= 500) {
-      log.error(response.message);
-    }
-    return {
-      status: response.status,
-      body: Buffer.from(response.message).toString("base64"),
-      contentType: "text/plain; charset=utf-8",
-    };
   }
+  if (!manifest.files.some((file) => file.path === "client.js")) {
+    throw new Error("Preview build is missing client.js.");
+  }
+  return {
+    files,
+    manifest,
+    fingerprint: createHash("sha256").update(JSON.stringify(manifest)).digest("hex"),
+  };
 }
 
-async function respondToPreviewAssetRequest(
-  client: ReturnType<typeof createPreviewTunnelClient>,
-  message: { id: string; method: "GET" | "HEAD"; path: string },
-  root: string,
+export async function uploadPreviewSnapshot(
+  client: PreviewWebSocketClient,
+  current: Snapshot,
 ): Promise<void> {
-  const response = await getPreviewAssetResponse(message, root);
-  await client.respond({ type: "response", id: message.id, ...response });
-}
-
-async function connectPreviewTunnel(
-  tunnelUrl: string,
-  tunnelToken: string,
-  root: string,
-): Promise<() => void> {
-  let delay = 1000;
-  let closed = false;
-  let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
-  let socket: WebSocket | undefined;
-  let hasConnected = false;
-
-  return await new Promise<() => void>((resolve, reject) => {
-    const close = (): void => {
-      closed = true;
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-      }
-      socket?.close();
-    };
-    const failInitialConnection = (): void => {
-      if (!hasConnected && !closed) {
-        close();
-        reject(new Error("Unable to connect to the preview tunnel."));
-      }
-    };
-    const scheduleReconnect = (): void => {
-      reconnectTimeout = setTimeout(connect, delay);
-      delay = Math.min(delay * 2, 30_000);
-    };
-    const connect = (): void => {
-      if (closed) {
-        return;
-      }
-      let newSocket: WebSocket;
-      try {
-        newSocket = new WebSocket(tunnelUrl, tunnelToken);
-      } catch {
-        failInitialConnection();
-        return;
-      }
-      socket = newSocket;
-      const client = createPreviewTunnelClient(newSocket);
-      newSocket.addEventListener("open", () => {
-        delay = 1000;
-        if (!hasConnected) {
-          hasConnected = true;
-          resolve(close);
-        }
-        void (async () => {
-          try {
-            const requests = await client.connect();
-            for await (const message of requests) {
-              void respondToPreviewAssetRequest(client, message, root).catch((error: unknown) => {
-                log.error(`Unable to send preview asset response: ${errorMessage(error)}`);
-              });
-            }
-          } catch (error) {
-            // RPCLink aborts its iterator after the WebSocket closes. The close
-            // handler below already reconnects that expected disconnect, so do
-            // not report the resulting AsyncIdQueue error as a tunnel failure.
-            if (!closed && newSocket.readyState === WebSocket.OPEN) {
-              log.error(`Preview tunnel request stream failed: ${errorMessage(error)}`);
-              newSocket.close();
-            }
-          }
-        })();
+  const { buildId } = await client.beginBuild({ manifest: current.manifest });
+  for (const [fileIndex, bytes] of current.files.entries()) {
+    for (
+      let chunkIndex = 0;
+      chunkIndex < (current.manifest.files[fileIndex]?.chunks ?? 0);
+      chunkIndex++
+    ) {
+      await client.uploadChunk({
+        buildId,
+        fileIndex,
+        chunkIndex,
+        base64: bytes
+          .subarray(chunkIndex * chunkBytes, (chunkIndex + 1) * chunkBytes)
+          .toString("base64"),
       });
-      newSocket.addEventListener("error", () => {
-        failInitialConnection();
-      });
-      newSocket.addEventListener("close", () => {
-        if (closed) {
-          return;
-        }
-        if (!hasConnected) {
-          failInitialConnection();
-          return;
-        }
-        scheduleReconnect();
-      });
-    };
-    connect();
-  });
+    }
+  }
+  await client.commitBuild({ buildId });
 }
 
 export const toPreviewOptions = (options: Record<string, unknown>): PreviewOptions => ({
@@ -225,17 +125,9 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
   if (!stored?.deployToken) {
     throw new Error("Not logged in. Run tailorkit login first.");
   }
-
   const { buildApp } = await import("@tailorkit/app/builder");
-  const watcher = await buildApp({
-    configPath: options.configPath,
-    cwd: options.cwd,
-    entry: options.entry,
-    mode: options.mode,
-    outDir: options.outDir,
-    watch: true,
-  });
-  const closeWatcher = (): void => {
+  const watcher = await buildApp({ ...options, watch: true });
+  const closeWatcher = () => {
     if (watcher && typeof watcher === "object" && "close" in watcher) {
       void (watcher as { close: () => Promise<void> | void }).close();
     }
@@ -256,12 +148,11 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     throw new Error("Unable to start preview session.");
   }
   const cleanupClient = createTailorKitClient({
-    fetch: (input, init) =>
-      fetch(input, { ...init, signal: AbortSignal.timeout(previewSessionCleanupTimeoutMs) }),
+    fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.timeout(5000) }),
     headers: { authorization: `Bearer ${stored.deployToken}` },
     url: auth.hostUrl,
   });
-  const endPreviewSession = async (): Promise<void> => {
+  const stop = async () => {
     try {
       await cleanupClient.preview.stop({ sessionId: data.sessionId });
     } catch (error) {
@@ -272,25 +163,136 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     loaded.root,
     options.outDir ?? loaded.config.build?.outDir ?? ".tailorkit",
   );
-  const root = await realpath(outDir).catch(async (error: unknown) => {
+  const root = await realpath(outDir);
+  let latest = await capturePreviewSnapshot(root);
+  let uploadedFingerprint: string | undefined;
+  let activeClient: PreviewWebSocketClient | undefined;
+  let activeSocket: WebSocket | undefined;
+  let closed = false;
+  let uploading = false;
+  let idleTimer: ReturnType<typeof setTimeout> | undefined;
+  let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+  let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
+  let lastUploadStart = 0;
+  let reconnectDelay = 1000;
+  let connectionGeneration = 0;
+  const scheduleUpload = () => {
+    if (closed || !activeClient || uploading) {
+      return;
+    }
+    if (idleTimer) {
+      clearTimeout(idleTimer);
+    }
+    idleTimer = setTimeout(
+      () => {
+        idleTimer = undefined;
+        if (!activeClient || latest.fingerprint === uploadedFingerprint) {
+          return;
+        }
+        const current = latest;
+        const wsClient = activeClient;
+        const generation = connectionGeneration;
+        uploading = true;
+        lastUploadStart = Date.now();
+        void uploadPreviewSnapshot(wsClient, current)
+          .then(() => {
+            if (generation === connectionGeneration) {
+              uploadedFingerprint = current.fingerprint;
+            }
+          })
+          .catch((error: unknown) => {
+            if (!closed) {
+              log.warn(`Preview upload interrupted: ${errorMessage(error)}`);
+            }
+          })
+          .finally(() => {
+            if (generation === connectionGeneration) {
+              uploading = false;
+              if (latest.fingerprint !== uploadedFingerprint) {
+                scheduleUpload();
+              }
+            }
+          });
+      },
+      Math.max(500, 500 - (Date.now() - lastUploadStart)),
+    );
+  };
+  const capture = async () => {
+    try {
+      latest = await capturePreviewSnapshot(root);
+      scheduleUpload();
+    } catch (error) {
+      log.warn(`Keeping the last successful preview: ${errorMessage(error)}`);
+    }
+  };
+  if (watcher && typeof watcher === "object" && "on" in watcher) {
+    (watcher as { on: (name: string, listener: (event: { code: string }) => void) => void }).on(
+      "event",
+      (event) => {
+        if (event.code === "BUNDLE_END") {
+          void capture();
+        }
+      },
+    );
+  }
+  const connect = () => {
+    if (closed) {
+      return;
+    }
+    const url = new URL(data.tunnelUrl);
+    url.searchParams.set("role", "uploader");
+    const socket = new WebSocket(url, data.tunnelToken);
+    activeSocket = socket;
+    socket.addEventListener("open", () => {
+      connectionGeneration += 1;
+      reconnectDelay = 1000;
+      activeClient = createPreviewWebSocketClient(socket);
+      uploadedFingerprint = undefined;
+      const sendHeartbeat = () => void activeClient?.heartbeat().catch(() => socket.close());
+      sendHeartbeat();
+      heartbeatTimer = setInterval(sendHeartbeat, 20_000);
+      scheduleUpload();
+    });
+    socket.addEventListener("close", () => {
+      connectionGeneration += 1;
+      uploading = false;
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+      }
+      if (activeSocket === socket) {
+        activeSocket = undefined;
+        activeClient = undefined;
+      }
+      if (!closed) {
+        reconnectTimer = setTimeout(connect, reconnectDelay);
+        reconnectDelay = Math.min(reconnectDelay * 2, 30_000);
+      }
+    });
+    socket.addEventListener("error", () => socket.close());
+  };
+  connect();
+  const closePreview = () => {
+    if (closed) {
+      return;
+    }
+    closed = true;
     closeWatcher();
-    await endPreviewSession();
-    throw new Error(`Unable to resolve preview build output: ${errorMessage(error)}`);
-  });
-  const closeTunnel = await connectPreviewTunnel(data.tunnelUrl, data.tunnelToken, root).catch(
-    async (error: unknown) => {
-      closeWatcher();
-      await endPreviewSession();
-      throw error;
-    },
-  );
-  const closePreview = (): void => {
-    closeWatcher();
-    closeTunnel();
-    void endPreviewSession().finally(() => process.exit(0));
+    if (idleTimer) {
+      clearTimeout(idleTimer);
+    }
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+    }
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+    }
+    activeSocket?.close();
+    void stop().finally(() => process.exit(0));
   };
   process.once("SIGINT", closePreview);
   process.once("SIGTERM", closePreview);
-  log.info(pc.green(`Host preview session: ${data.sessionId}`));
-  log.info(pc.dim(`Serving built app assets from ${outDir} through the preview tunnel`));
+  const shareUrl = new URL(auth.hostUrl);
+  shareUrl.pathname = `${shareUrl.pathname.replace(/\/+$/u, "")}/preview/${data.shareId}`;
+  log.info(pc.green(`Host preview: ${shareUrl.href}`));
+  log.info(pc.dim(`Uploading built app assets from ${outDir}`));
 }

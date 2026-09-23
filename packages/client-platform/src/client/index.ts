@@ -17,10 +17,12 @@ export {
   deploymentsList,
   deploymentsPublish,
   type Options,
-  previewResolve,
+  previewAccept,
+  previewAccepted,
+  previewInvitation,
   previewStart,
   previewStop,
-} from "./sdk.gen";
+} from "./sdk.gen.js";
 export type {
   AppsCreateData,
   AppsCreateResponse,
@@ -68,13 +70,19 @@ export type {
   DeploymentsPublishData,
   DeploymentsPublishResponse,
   DeploymentsPublishResponses,
-  PreviewResolveData,
-  PreviewResolveResponse,
-  PreviewResolveResponses,
+  PreviewAcceptData,
+  PreviewAcceptedData,
+  PreviewAcceptedResponse,
+  PreviewAcceptedResponses,
+  PreviewAcceptResponse,
+  PreviewAcceptResponses,
+  PreviewInvitationData,
+  PreviewInvitationResponse,
+  PreviewInvitationResponses,
   PreviewStartData,
   PreviewStartResponse,
   PreviewStartResponses,
   PreviewStopData,
   PreviewStopResponse,
   PreviewStopResponses,
-} from "./types.gen";
+} from "./types.gen.js";

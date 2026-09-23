@@ -52,6 +52,7 @@ class RemoteErrorBoundary extends Component<RemoteErrorBoundaryProps, RemoteErro
 
 interface RemoteViewHostProps {
   appUrl: string | URL;
+  sourceText?: string;
   components: Record<string, unknown>;
   createIframe?: () => HTMLIFrameElement;
   props?: Record<string, unknown>;
@@ -59,6 +60,7 @@ interface RemoteViewHostProps {
 
 export function RemoteViewHost({
   appUrl,
+  sourceText,
   components,
   createIframe,
   props,
@@ -112,6 +114,7 @@ export function RemoteViewHost({
   useEffect(() => {
     const host = createIframeUiHost(appUrl, {
       createIframe,
+      sourceText,
       onError: (error) => {
         console.error("TailorKit remote app failed", error);
         setError(error);
@@ -141,7 +144,7 @@ export function RemoteViewHost({
       hostRef.current = null;
       host.destroy();
     };
-  }, [appUrl, createIframe, store]);
+  }, [appUrl, createIframe, sourceText, store]);
 
   if (status === "error" && error) {
     return createElement("div", null, formatError(error));

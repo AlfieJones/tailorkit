@@ -9,7 +9,7 @@ export interface SetOptions {
 export type Unsubscribe = () => Promise<void>;
 
 /**
- * Pub/sub is used for short-lived, best-effort signals such as preview-tunnel
+ * Pub/sub is used for short-lived, best-effort signals such as preview
  * traffic. Consumers must still be able to recover their state from durable
  * storage after reconnecting, because Redis does not retain published values.
  */

@@ -35,6 +35,41 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
   assertSupportedPreactVersion(preactVersion);
 
   const resolvedOutDir = path.resolve(loaded.root, outDir);
+  const writeBuildExtras = async (): Promise<void> => {
+    const logoManifest: { dark?: string; light?: string } = {};
+    for (const variant of ["light", "dark"] as const) {
+      const configuredPath = loaded.config.logos?.[variant];
+      if (!configuredPath) {
+        continue;
+      }
+      const extension = path.extname(configuredPath).toLowerCase().slice(1);
+      const contentType = { png: "image/png", svg: "image/svg+xml", webp: "image/webp" }[
+        extension
+      ] as LogoContentType | undefined;
+      if (!contentType) {
+        throw new Error(`The ${variant} logo must be an SVG, PNG, or WebP file.`);
+      }
+      const content = await readFile(path.resolve(loaded.root, configuredPath));
+      validateLogoAsset(content, contentType);
+      const filename = `logo-${variant}.${extension}`;
+      await writeFile(path.join(resolvedOutDir, filename), content);
+      logoManifest[variant] = filename;
+    }
+    await writeFile(
+      path.join(resolvedOutDir, "tailorkit-upload.json"),
+      `${JSON.stringify(createTailorKitUploadManifest(logoManifest), null, 2)}\n`,
+      "utf-8",
+    );
+  };
+  let firstBuildDone: (() => void) | undefined;
+  let firstBuildFailed: ((error: Error) => void) | undefined;
+  const firstBuild = new Promise<void>((resolve, reject) => {
+    firstBuildDone = resolve;
+    firstBuildFailed = reject;
+  });
+  if (!options.watch) {
+    void firstBuild.catch(() => {});
+  }
   const result = await viteBuild({
     build: {
       emptyOutDir: true,
@@ -62,6 +97,18 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
     mode: options.mode,
     plugins: [
       {
+        name: "tailorkit-preview-build-ready",
+        async closeBundle() {
+          try {
+            await writeBuildExtras();
+            firstBuildDone?.();
+          } catch (error) {
+            firstBuildFailed?.(error instanceof Error ? error : new Error(String(error)));
+            throw error;
+          }
+        },
+      },
+      {
         name: "tailorkit-preact-package-json",
         enforce: "pre",
         resolveId(id) {
@@ -84,36 +131,20 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
     ],
     root: loaded.root,
   });
-
-  const logoManifest: { dark?: string; light?: string } = {};
-  for (const variant of ["light", "dark"] as const) {
-    const configuredPath = loaded.config.logos?.[variant];
-    if (!configuredPath) {
-      continue;
+  if (options.watch) {
+    if (result && typeof result === "object" && "on" in result) {
+      (
+        result as {
+          on: (name: string, listener: (event: { code: string; error?: Error }) => void) => void;
+        }
+      ).on("event", (event) => {
+        if (event.code === "ERROR") {
+          firstBuildFailed?.(event.error ?? new Error("Initial app build failed."));
+        }
+      });
     }
-
-    const extension = path.extname(configuredPath).toLowerCase().slice(1);
-    const contentType = {
-      png: "image/png",
-      svg: "image/svg+xml",
-      webp: "image/webp",
-    }[extension] as LogoContentType | undefined;
-    if (!contentType) {
-      throw new Error(`The ${variant} logo must be an SVG, PNG, or WebP file.`);
-    }
-
-    const content = await readFile(path.resolve(loaded.root, configuredPath));
-    validateLogoAsset(content, contentType);
-    const filename = `logo-${variant}.${extension}`;
-    await writeFile(path.join(resolvedOutDir, filename), content);
-    logoManifest[variant] = filename;
+    await firstBuild;
   }
-
-  await writeFile(
-    path.join(resolvedOutDir, "tailorkit-upload.json"),
-    `${JSON.stringify(createTailorKitUploadManifest(logoManifest), null, 2)}\n`,
-    "utf-8",
-  );
 
   return result;
 };

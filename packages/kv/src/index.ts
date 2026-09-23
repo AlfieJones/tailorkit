@@ -1,8 +1,8 @@
 export type { KV, KVType, MessageHandler, SetOptions, Unsubscribe } from "./types.js";
 export { getKV } from "./kv.js";
 export {
-  createPreviewTunnelPresence,
-  previewTunnelHeartbeatSeconds,
-  previewTunnelLeaseSeconds,
-} from "./preview-tunnel.js";
-export type { PreviewTunnelConnection } from "./preview-tunnel.js";
+  createPreviewPresence,
+  previewHeartbeatSeconds,
+  previewLeaseSeconds,
+} from "./preview-presence.js";
+export type { PreviewConnection } from "./preview-presence.js";

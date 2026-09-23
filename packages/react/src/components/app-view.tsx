@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useMemo, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { isViewAncestor } from "@tailorkit/core/views";
 import { toBaseUrl } from "../store";
@@ -43,6 +43,20 @@ export const AppView = ({
     return currentView === null ? undefined : { slot, ...currentView };
   }, [context, currentView, view, status, slot]);
   const meta = useSyncExternalStore(store.subscribe, store.getMetaSnapshot, store.getMetaSnapshot);
+  const previewSessionId = app.preview?.sessionId ?? "";
+  const subscribePreview = useCallback(
+    (listener: () => void) => store.previews.subscribe(app, listener),
+    [store, app],
+  );
+  const getPreviewSnapshot = useCallback(
+    () => store.previews.getSnapshot(previewSessionId),
+    [store, previewSessionId],
+  );
+  const previewSnapshot = useSyncExternalStore(
+    subscribePreview,
+    getPreviewSnapshot,
+    getPreviewSnapshot,
+  );
   const runtimeProps = useMemo(
     () =>
       props === undefined
@@ -64,7 +78,11 @@ export const AppView = ({
     void store.fetchMeta();
   }, [store]);
 
-  if (props === undefined || appUrl === null || meta.schema === null) {
+  if (
+    props === undefined ||
+    (appUrl === null && previewSnapshot.source === null) ||
+    meta.schema === null
+  ) {
     return fallback;
   }
 
@@ -75,7 +93,11 @@ export const AppView = ({
       <div data-tailorkit-view={viewId}>
         <style data-tailorkit-theme-style={viewId}>{buildThemeCss(viewId, theme)}</style>
         <RemoteViewHost
-          appUrl={appUrl.toString()}
+          key={previewSnapshot.revision || appUrl?.toString()}
+          appUrl={(
+            appUrl ?? new URL(`preview/${previewSessionId}/client.js`, store.baseUrl)
+          ).toString()}
+          sourceText={previewSnapshot.source ?? undefined}
           components={wrappedComponents}
           createIframe={createIframe}
           props={runtimeProps}

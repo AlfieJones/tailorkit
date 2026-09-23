@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-orm/zod";
 import z from "zod";
 import { app } from "./apps";
@@ -34,6 +34,8 @@ export const previewSession = pgTable(
     scopeId: text("scope_id").notNull(),
     /** Hash of the credential accepted by the tunnel WebSocket, never the raw credential. */
     tunnelTokenHash: text("tunnel_token_hash").notNull(),
+    /** Public invitation identifier; separate from the CLI upload credential. */
+    shareId: text("share_id").notNull().unique(),
     status: previewSessionStatus("status").default("active").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     endedAt: timestamp("ended_at"),
@@ -53,6 +55,9 @@ export const previewSession = pgTable(
       table.status,
     ),
     index("preview_session_expires_at_idx").on(table.expiresAt),
+    uniqueIndex("preview_session_one_active_per_app_idx")
+      .on(table.appId)
+      .where(sql`${table.status} = 'active'`),
   ],
 );
 

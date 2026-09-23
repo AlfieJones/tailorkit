@@ -25,6 +25,8 @@ export interface IframeUiHostOptions {
   mountTarget?: HTMLElement;
   onError?: (error: Error) => void;
   props?: Record<string, unknown>;
+  /** Complete source for a committed preview revision. */
+  sourceText?: string;
 }
 
 export function createIframeUiHost(
@@ -139,7 +141,10 @@ export function createIframeUiHost(
         return;
       }
       mounted = true;
-      appSourcePromise = fetchSource(fetchImplementation, resolvedAppUrl);
+      appSourcePromise =
+        options.sourceText === undefined
+          ? fetchSource(fetchImplementation, resolvedAppUrl)
+          : Promise.resolve(options.sourceText);
       (options.mountTarget ?? document.body).append(iframe);
       void sendInit().catch(reportError);
     },

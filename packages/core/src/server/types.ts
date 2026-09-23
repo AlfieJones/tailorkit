@@ -44,6 +44,11 @@ export interface TailorKitServerBaseOptions {
      */
     signInPath: `/${string}`;
   };
+  /** Configuration for accepted preview invitations. */
+  preview?: {
+    /** Same-origin root-relative destination after Accept preview or Cancel. Defaults to "/". */
+    returnPath?: `/${string}`;
+  };
   /**
    * Internal TailorKit implementation options.
    *

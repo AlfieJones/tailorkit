@@ -1,11 +1,11 @@
 import type { KV, Unsubscribe } from "./types.js";
 
-export const previewTunnelHeartbeatSeconds = 20;
-export const previewTunnelLeaseSeconds = 75;
-const keyPrefix = "preview-tunnel:connection:";
-const channelPrefix = "preview-tunnel:connection-events:";
+export const previewHeartbeatSeconds = 20;
+export const previewLeaseSeconds = 75;
+const keyPrefix = "preview:developer-connection:";
+const channelPrefix = "preview:developer-events:";
 
-export interface PreviewTunnelConnection {
+export interface PreviewConnection {
   connectionId: string;
   revision: number;
 }
@@ -20,10 +20,10 @@ function connectionChannel(sessionId: string): string {
 
 function assertSessionId(sessionId: string): void {
   if (!/^[a-zA-Z0-9_-]{1,128}$/u.test(sessionId)) {
-    throw new TypeError("Preview tunnel session id must be an opaque identifier.");
+    throw new TypeError("Preview session id must be an opaque identifier.");
   }
 }
-function assertConnection(connection: PreviewTunnelConnection): void {
+function assertConnection(connection: PreviewConnection): void {
   if (!/^[a-zA-Z0-9_-]{1,128}$/u.test(connection.connectionId)) {
     throw new TypeError("Preview tunnel connection id must be an opaque identifier.");
   }
@@ -32,9 +32,9 @@ function assertConnection(connection: PreviewTunnelConnection): void {
   }
 }
 
-function parseConnection(raw: string): PreviewTunnelConnection | null {
+function parseConnection(raw: string): PreviewConnection | null {
   try {
-    const value = JSON.parse(raw) as Partial<PreviewTunnelConnection>;
+    const value = JSON.parse(raw) as Partial<PreviewConnection>;
     if (
       typeof value.connectionId !== "string" ||
       typeof value.revision !== "number" ||
@@ -51,13 +51,13 @@ function parseConnection(raw: string): PreviewTunnelConnection | null {
 }
 
 /** Stores a renewable CLI presence lease. Socket closes are not session ends. */
-export function createPreviewTunnelPresence(kv: KV) {
+export function createPreviewPresence(kv: KV) {
   return {
-    async heartbeat(sessionId: string, connection: PreviewTunnelConnection): Promise<void> {
+    async heartbeat(sessionId: string, connection: PreviewConnection): Promise<void> {
       assertSessionId(sessionId);
       assertConnection(connection);
       await kv.set(connectionKey(sessionId), JSON.stringify(connection), {
-        ttl: previewTunnelLeaseSeconds,
+        ttl: previewLeaseSeconds,
       });
       // Pub/sub wakes already-connected tunnel handlers immediately. The lease
       // above remains the source of truth when a subscriber reconnects late or
@@ -68,7 +68,7 @@ export function createPreviewTunnelPresence(kv: KV) {
         // The lease is authoritative; pub/sub only reduces update latency.
       }
     },
-    async get(sessionId: string): Promise<PreviewTunnelConnection | null> {
+    async get(sessionId: string): Promise<PreviewConnection | null> {
       assertSessionId(sessionId);
       const raw = await kv.get(connectionKey(sessionId));
       if (!raw) {
@@ -83,7 +83,7 @@ export function createPreviewTunnelPresence(kv: KV) {
      */
     subscribe(
       sessionId: string,
-      handler: (connection: PreviewTunnelConnection) => void,
+      handler: (connection: PreviewConnection) => void,
     ): Promise<Unsubscribe> {
       assertSessionId(sessionId);
       return kv.subscribe(connectionChannel(sessionId), (message) => {
