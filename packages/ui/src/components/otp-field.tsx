@@ -2,8 +2,8 @@
 
 import { OTPField as OTPFieldPrimitive } from "@base-ui/react/otp-field";
 import type * as React from "react";
-import { cn } from "@tailorkit/ui/lib/utils";
-import { Separator } from "@tailorkit/ui/components/separator";
+import { cn } from "@tailorkit/ui";
+import { Separator } from "@tailorkit/ui/separator";
 
 export function OTPField({
   className,

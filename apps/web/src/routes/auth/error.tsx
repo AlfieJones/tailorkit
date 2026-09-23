@@ -1,4 +1,4 @@
-import { Button } from "@tailorkit/ui/components/button";
+import { Button } from "@tailorkit/ui/button";
 import {
   Card,
   CardFrame,
@@ -6,8 +6,8 @@ import {
   CardHeader,
   CardPanel,
   CardTitle,
-} from "@tailorkit/ui/components/card";
-import { Logo } from "@tailorkit/ui/components/logo";
+} from "@tailorkit/ui/card";
+import { Logo } from "@tailorkit/ui/logo";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 

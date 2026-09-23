@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-form";
 import { FolderIcon, FolderPlusIcon } from "lucide-react";
-import { Button } from "@tailorkit/ui/components/button";
+import { Button } from "@tailorkit/ui/button";
 import {
   Empty,
   EmptyContent,
@@ -12,7 +12,7 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@tailorkit/ui/components/empty";
+} from "@tailorkit/ui/empty";
 import {
   Dialog,
   DialogClose,
@@ -23,8 +23,8 @@ import {
   DialogTitle,
   DialogPopup,
   DialogTrigger,
-} from "@tailorkit/ui/components/dialog";
-import { toastManager } from "@tailorkit/ui/components/toast";
+} from "@tailorkit/ui/dialog";
+import { toastManager } from "@tailorkit/ui/toast";
 import { useAppForm } from "@tailorkit/ui/form";
 import { z } from "zod";
 import { PageLayout } from "#components/page-layout";

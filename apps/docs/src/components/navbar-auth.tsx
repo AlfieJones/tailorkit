@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Button } from "@tailorkit/ui/components/button";
+import { Button } from "@tailorkit/ui/button";
 
 type DocsSession = {
   user?: {
