@@ -2,8 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
-import { Badge } from "@tailorkit/ui/components/badge";
-import { Button } from "@tailorkit/ui/components/button";
+import { Badge } from "@tailorkit/ui/badge";
+import { Button } from "@tailorkit/ui/button";
 import {
   Card,
   CardDescription,
@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardPanel,
   CardTitle,
-} from "@tailorkit/ui/components/card";
+} from "@tailorkit/ui/card";
 import {
   Dialog,
   DialogClose,
@@ -22,11 +22,11 @@ import {
   DialogPanel,
   DialogPopup,
   DialogTitle,
-} from "@tailorkit/ui/components/dialog";
-import { Field, FieldLabel } from "@tailorkit/ui/components/field";
-import { Input } from "@tailorkit/ui/components/input";
-import { Skeleton } from "@tailorkit/ui/components/skeleton";
-import { toastManager } from "@tailorkit/ui/components/toast";
+} from "@tailorkit/ui/dialog";
+import { Field, FieldLabel } from "@tailorkit/ui/field";
+import { Input } from "@tailorkit/ui/input";
+import { Skeleton } from "@tailorkit/ui/skeleton";
+import { toastManager } from "@tailorkit/ui/toast";
 import { useAppForm } from "@tailorkit/ui/form";
 import { KeyRoundIcon, LaptopIcon, SmartphoneIcon } from "lucide-react";
 import { useState } from "react";

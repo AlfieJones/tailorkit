@@ -3,7 +3,7 @@
 import { ChevronLeftIcon } from "lucide-react";
 import { Fragment, useRef, useState } from "react";
 import { cn } from "@tailorkit/ui";
-import { Button } from "@tailorkit/ui/components/button";
+import { Button } from "@tailorkit/ui/button";
 import {
   Card,
   CardFooter,
@@ -12,11 +12,11 @@ import {
   CardHeader,
   CardPanel,
   CardTitle,
-} from "@tailorkit/ui/components/card";
-import { Field, FieldDescription, FieldError } from "@tailorkit/ui/components/field";
-import { Logo } from "@tailorkit/ui/components/logo";
-import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/components/otp-field";
-import { toastManager } from "@tailorkit/ui/components/toast";
+} from "@tailorkit/ui/card";
+import { Field, FieldDescription, FieldError } from "@tailorkit/ui/field";
+import { Logo } from "@tailorkit/ui/logo";
+import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/otp-field";
+import { toastManager } from "@tailorkit/ui/toast";
 import { useAppForm } from "@tailorkit/ui/form";
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { z } from "zod";

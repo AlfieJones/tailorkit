@@ -5,8 +5,8 @@ import { useRender } from "@base-ui/react/use-render";
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react";
 import type * as React from "react";
 import { cn } from "@tailorkit/ui";
-import { buttonVariants } from "@tailorkit/ui/components/button";
-import type { Button } from "@tailorkit/ui/components/button";
+import { buttonVariants } from "@tailorkit/ui/button";
+import type { Button } from "@tailorkit/ui/button";
 
 export function Pagination({
   className,

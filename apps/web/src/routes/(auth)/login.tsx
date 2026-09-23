@@ -1,7 +1,7 @@
 "use client";
 
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { Button } from "@tailorkit/ui/components/button";
+import { Button } from "@tailorkit/ui/button";
 import {
   Card,
   CardFooter,
@@ -10,10 +10,10 @@ import {
   CardHeader,
   CardPanel,
   CardTitle,
-} from "@tailorkit/ui/components/card";
-import { Logo } from "@tailorkit/ui/components/logo";
+} from "@tailorkit/ui/card";
+import { Logo } from "@tailorkit/ui/logo";
 import { cn } from "@tailorkit/ui";
-import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
+import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/tooltip";
 import { useAppForm } from "@tailorkit/ui/form";
 import { ArrowLeftIcon, KeyRoundIcon } from "lucide-react";
 import { useState } from "react";

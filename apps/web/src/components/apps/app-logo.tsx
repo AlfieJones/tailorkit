@@ -1,5 +1,5 @@
 import { AppWindowIcon } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@tailorkit/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@tailorkit/ui/avatar";
 import { cn } from "@tailorkit/ui";
 import { useTheme } from "#lib/theme";
 

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@tailorkit/ui/components/button";
+import { Button } from "@tailorkit/ui/button";
 import {
   Card,
   CardDescription,
@@ -8,8 +8,8 @@ import {
   CardHeader,
   CardPanel,
   CardTitle,
-} from "@tailorkit/ui/components/card";
-import { Checkbox } from "@tailorkit/ui/components/checkbox";
+} from "@tailorkit/ui/card";
+import { Checkbox } from "@tailorkit/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -19,14 +19,14 @@ import {
   DialogPanel,
   DialogPopup,
   DialogTitle,
-} from "@tailorkit/ui/components/dialog";
-import { Field, FieldLabel } from "@tailorkit/ui/components/field";
-import { Frame, FrameFooter, FramePanel } from "@tailorkit/ui/components/frame";
-import { Input } from "@tailorkit/ui/components/input";
-import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/components/otp-field";
-import { Skeleton } from "@tailorkit/ui/components/skeleton";
-import { toastManager } from "@tailorkit/ui/components/toast";
-import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/components/tooltip";
+} from "@tailorkit/ui/dialog";
+import { Field, FieldLabel } from "@tailorkit/ui/field";
+import { Frame, FrameFooter, FramePanel } from "@tailorkit/ui/frame";
+import { Input } from "@tailorkit/ui/input";
+import { OTPField, OTPFieldInput, OTPFieldSeparator } from "@tailorkit/ui/otp-field";
+import { Skeleton } from "@tailorkit/ui/skeleton";
+import { toastManager } from "@tailorkit/ui/toast";
+import { Tooltip, TooltipPopup, TooltipTrigger } from "@tailorkit/ui/tooltip";
 import { QRCodeSVG } from "qrcode.react";
 import { CopyIcon, DownloadIcon } from "lucide-react";
 import { Fragment, useState } from "react";

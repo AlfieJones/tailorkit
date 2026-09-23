@@ -1,7 +1,7 @@
 import { AppView, Root, useApps, useView } from "tailorkit/react";
 import type { DemoUser } from "@examples/shared";
-import { Button } from "@tailorkit/ui/components/button";
-import { SidebarInset, SidebarProvider } from "@tailorkit/ui/components/sidebar";
+import { Button } from "@tailorkit/ui/button";
+import { SidebarInset, SidebarProvider } from "@tailorkit/ui/sidebar";
 import { XIcon } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";

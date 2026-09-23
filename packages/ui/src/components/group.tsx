@@ -5,7 +5,7 @@ import { useRender } from "@base-ui/react/use-render";
 import { cva } from "class-variance-authority";
 import type { VariantProps } from "class-variance-authority";
 import type * as React from "react";
-import { Separator } from "@tailorkit/ui/components/separator";
+import { Separator } from "@tailorkit/ui/separator";
 import { cn } from "@tailorkit/ui";
 
 export const groupVariants = cva(

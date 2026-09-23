@@ -10,8 +10,8 @@ import { ChevronRightIcon, XIcon } from "lucide-react";
 import type React from "react";
 import { createContext, useContext } from "react";
 import { cn } from "@tailorkit/ui";
-import { Button } from "@tailorkit/ui/components/button";
-import { ScrollArea } from "@tailorkit/ui/components/scroll-area";
+import { Button } from "@tailorkit/ui/button";
+import { ScrollArea } from "@tailorkit/ui/scroll-area";
 
 type DrawerPosition = "right" | "left" | "top" | "bottom";
 

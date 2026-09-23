@@ -4,16 +4,16 @@ import { primitives } from "tailorkit/zod";
 import { createTailorKitClient, primitives as reactPrimitives } from "tailorkit/react";
 import type React from "react";
 import { z } from "zod";
-import { Badge } from "@tailorkit/ui/components/badge";
-import { Button } from "@tailorkit/ui/components/button";
+import { Badge } from "@tailorkit/ui/badge";
+import { Button } from "@tailorkit/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@tailorkit/ui/components/dropdown-menu";
-import { Tabs, TabsList, TabsPanel, TabsTab } from "@tailorkit/ui/components/tabs";
+} from "@tailorkit/ui/dropdown-menu";
+import { Tabs, TabsList, TabsPanel, TabsTab } from "@tailorkit/ui/tabs";
 import {
   Card,
   CardContent,
@@ -21,10 +21,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@tailorkit/ui/components/card";
-import { Checkbox } from "@tailorkit/ui/components/checkbox";
-import { Input } from "@tailorkit/ui/components/input";
-import { Separator } from "@tailorkit/ui/components/separator";
+} from "@tailorkit/ui/card";
+import { Checkbox } from "@tailorkit/ui/checkbox";
+import { Input } from "@tailorkit/ui/input";
+import { Separator } from "@tailorkit/ui/separator";
 import { defaultTheme, withPrimitiveThemeTokens } from "./demo-theme";
 
 const component = <const TComponent extends Component>(definition: TComponent): TComponent =>
