@@ -4,12 +4,23 @@ import { afterEach, expect, it, vi } from "vitest";
 import { createPreviewManager } from "../preview-manager";
 import type { PreviewEvent } from "@tailorkit/client-platform/preview";
 
-const state = vi.hoisted(() => ({ events: [] as PreviewEvent[], batches: [] as PreviewEvent[][] }));
-vi.mock("@tailorkit/client-platform/preview", () => ({
+const state = vi.hoisted(() => ({
+  events: [] as PreviewEvent[],
+  batches: [] as PreviewEvent[][],
+  hold: false,
+  release: undefined as (() => void) | undefined,
+}));
+vi.mock("@tailorkit/client-platform/preview", async (original) => ({
+  ...(await original()),
   createPreviewWebSocketClient: () => ({
     subscribe: async () =>
       (async function* subscribe() {
         yield* state.batches.shift() ?? state.events;
+        if (state.hold) {
+          await new Promise<void>((resolve) => {
+            state.release = resolve;
+          });
+        }
       })(),
   }),
 }));
@@ -17,8 +28,10 @@ vi.mock("@tailorkit/client-platform/preview", () => ({
 class FakeSocket extends EventTarget {
   static instances: FakeSocket[] = [];
   closed = false;
-  constructor(_url: string, _protocol: string) {
+  readonly protocol: string;
+  constructor(_url: string, protocol: string) {
     super();
+    this.protocol = protocol;
     FakeSocket.instances.push(this);
   }
   close() {
@@ -30,7 +43,50 @@ class FakeSocket extends EventTarget {
   }
 }
 
+it("refreshes the viewer token and reconnects when its stream ends", async () => {
+  const sessionId = "11111111-1111-4111-8111-111111111111";
+  vi.stubGlobal("WebSocket", FakeSocket);
+  let refreshes = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        sessionId,
+        websocketUrl: "wss://platform.test/preview",
+        token: `token-${++refreshes}`,
+        expiresAt: "2030-01-01T00:00:00.000Z",
+      }),
+    })),
+  );
+  const onEnded = vi.fn();
+  const manager = createPreviewManager(new URL("https://host.test/api/tailorkit/"), onEnded);
+  const unsubscribe = manager.subscribe(
+    {
+      id: "app",
+      preview: {
+        sessionId,
+        expiresAt: "later",
+        websocketUrl: "wss://platform.test/preview",
+        token: "initial-token",
+      },
+    },
+    vi.fn(),
+  );
+  await vi.waitFor(() => expect(FakeSocket.instances).toHaveLength(1));
+  expect(FakeSocket.instances[0]?.protocol).toBe("token-1");
+  FakeSocket.instances[0]?.open();
+  await vi.waitFor(() => expect(FakeSocket.instances[0]?.closed).toBe(true));
+  await vi.waitFor(() => expect(FakeSocket.instances).toHaveLength(2), { timeout: 2500 });
+  expect(FakeSocket.instances[1]?.protocol).toBe("token-2");
+  expect(onEnded).not.toHaveBeenCalled();
+  unsubscribe();
+});
+
 afterEach(() => {
+  state.release?.();
+  state.release = undefined;
+  state.hold = false;
   vi.unstubAllGlobals();
   FakeSocket.instances = [];
   state.events = [];
@@ -118,6 +174,7 @@ it("keeps the last complete build through a corrupt transfer and recovers after 
 });
 
 it("shares one socket, applies only complete checksummed revisions, and closes on last unsubscribe", async () => {
+  state.hold = true;
   vi.stubGlobal("WebSocket", FakeSocket);
   vi.stubGlobal(
     "fetch",

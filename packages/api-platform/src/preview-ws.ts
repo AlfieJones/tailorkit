@@ -36,9 +36,21 @@ const event = z.discriminatedUnion("type", [
   z.object({ type: z.literal("ended") }),
 ]);
 
-export interface PreviewWebSocketContext {
-  sessionId: string;
-  role: "uploader" | "viewer";
+export type PreviewWebSocketContext =
+  | {
+      sessionId: string;
+      role: "uploader";
+    }
+  | {
+      sessionId: string;
+      role: "viewer";
+      viewerTokenExpiresAt: number;
+    };
+
+function requireFreshViewerToken(context: PreviewWebSocketContext): void {
+  if (context.role !== "viewer" || context.viewerTokenExpiresAt <= Date.now()) {
+    throw new ORPCError("UNAUTHORIZED", { message: "Preview viewer token expired." });
+  }
 }
 
 const o = os.$context<PreviewWebSocketContext>();
@@ -123,6 +135,7 @@ const heartbeat = o.output(z.object({ accepted: z.literal(true) })).handler(asyn
 });
 
 const subscribe = o.output(eventIterator(event)).handler(async function* subscribe({ context }) {
+  requireFreshViewerToken(context);
   const store = await requireRole(context, "viewer");
   let wake: (() => void) | undefined;
   const waitForSignal = () =>
@@ -136,6 +149,10 @@ const subscribe = o.output(eventIterator(event)).handler(async function* subscri
   };
   const unsubscribe = await store.subscribe(context.sessionId, notify);
   const timer = setInterval(notify, 10_000);
+  const expiryTimer =
+    context.role === "viewer"
+      ? setTimeout(notify, Math.max(0, context.viewerTokenExpiresAt - Date.now()))
+      : undefined;
   let lastRevision = 0;
   try {
     for (;;) {
@@ -144,6 +161,7 @@ const subscribe = o.output(eventIterator(event)).handler(async function* subscri
       }
       wake = undefined;
       signalled = false;
+      requireFreshViewerToken(context);
       try {
         await requireRole(context, "viewer");
       } catch {
@@ -155,6 +173,7 @@ const subscribe = o.output(eventIterator(event)).handler(async function* subscri
         continue;
       }
       const { buildId, manifest, revision } = build;
+      requireFreshViewerToken(context);
       yield { type: "begin" as const, buildId, manifest, revision };
       let complete = true;
       for (const [fileIndex, file] of manifest.files.entries()) {
@@ -164,6 +183,7 @@ const subscribe = o.output(eventIterator(event)).handler(async function* subscri
             complete = false;
             break;
           }
+          requireFreshViewerToken(context);
           yield { type: "chunk" as const, revision, fileIndex, chunkIndex, base64 };
         }
         if (!complete) {
@@ -171,12 +191,14 @@ const subscribe = o.output(eventIterator(event)).handler(async function* subscri
         }
       }
       if (complete) {
+        requireFreshViewerToken(context);
         yield { type: "complete" as const, revision };
         lastRevision = revision;
       }
     }
   } finally {
     clearInterval(timer);
+    clearTimeout(expiryTimer);
     await unsubscribe();
   }
 });

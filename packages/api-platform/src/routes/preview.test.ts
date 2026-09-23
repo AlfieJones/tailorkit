@@ -20,6 +20,7 @@ vi.mock("@tailorkit/kv", async (original) => ({ ...(await original()), getKV: ()
 
 const { previewRouter } = await import("./preview");
 const { authorizePreviewSocket } = await import("../preview-ws-auth");
+const { previewWebSocketRouter } = await import("../preview-ws");
 const orgId = "11111111-1111-4111-8111-111111111111";
 const projectId = "22222222-2222-4222-8222-222222222222";
 const tokenId = "33333333-3333-4333-8333-333333333333";
@@ -177,6 +178,19 @@ describe("platform preview lifecycle and grants", () => {
       { context },
     );
     expect(ended.body.items).toEqual([]);
+  });
+
+  it("ends an idle viewer stream when its bearer token expires", async () => {
+    const started = await start();
+    const stream = await call(previewWebSocketRouter.subscribe, undefined, {
+      context: {
+        sessionId: started.body.sessionId,
+        role: "viewer",
+        viewerTokenExpiresAt: Date.now() + 30,
+      },
+    });
+    const iterator = stream[Symbol.asyncIterator]();
+    await expect(iterator.next()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
   it("allows five active apps per scope, retires expired sessions, and frees a slot on stop", async () => {

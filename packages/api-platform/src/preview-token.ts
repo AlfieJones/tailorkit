@@ -28,17 +28,27 @@ export function verifyPreviewViewerToken(
   token: string,
   now = Date.now(),
 ): boolean {
+  return previewViewerTokenExpiresAt(sessionId, token, now) !== null;
+}
+
+export function previewViewerTokenExpiresAt(
+  sessionId: string,
+  token: string,
+  now = Date.now(),
+): number | null {
   const parsed = tokenSchema.safeParse(token.split("."));
   if (!parsed.success) {
-    return false;
+    return null;
   }
   const [expiresAt, receivedSignature] = parsed.data;
   if (expiresAt <= now) {
-    return false;
+    return null;
   }
 
   const expectedSignature = signature(sessionId, expiresAt);
   const received = Buffer.from(receivedSignature);
   const expected = Buffer.from(expectedSignature);
-  return received.length === expected.length && timingSafeEqual(received, expected);
+  return received.length === expected.length && timingSafeEqual(received, expected)
+    ? expiresAt
+    : null;
 }

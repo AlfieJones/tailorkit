@@ -2,7 +2,7 @@ import { hashSecret } from "@tailorkit/api-utils/hashing";
 import { db } from "@tailorkit/db";
 import { env } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
-import { verifyPreviewViewerToken } from "./preview-token";
+import { previewViewerTokenExpiresAt } from "./preview-token";
 import { ensurePreviewDeveloperGrace } from "./preview-lifecycle";
 import type { PreviewWebSocketContext } from "./preview-ws";
 
@@ -27,7 +27,8 @@ export async function authorizePreviewSocket(
     return null;
   }
   if (role === "viewer") {
-    return verifyPreviewViewerToken(sessionId, token) ? { sessionId, role } : null;
+    const viewerTokenExpiresAt = previewViewerTokenExpiresAt(sessionId, token);
+    return viewerTokenExpiresAt === null ? null : { sessionId, role, viewerTokenExpiresAt };
   }
   if (!session.cliToken || session.cliToken.revokedAt || session.cliToken.expiresAt <= new Date()) {
     return null;

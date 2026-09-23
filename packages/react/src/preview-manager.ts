@@ -179,6 +179,8 @@ export function createPreviewManager(baseUrl: URL, onEnded: () => void) {
             await handleEvent(entry, event);
           }
         } catch {
+          /* A token expiry ends this stream and requires fresh metadata. */
+        } finally {
           socket.close();
         }
       })();
