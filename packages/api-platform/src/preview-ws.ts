@@ -2,6 +2,7 @@ import { eventIterator, ORPCError, os } from "@orpc/server";
 import type { RouterClient } from "@orpc/server";
 import { db } from "@tailorkit/db";
 import { getKV } from "@tailorkit/kv";
+import { sanitizeErrorForLog } from "@tailorkit/observability";
 import z from "zod";
 import {
   createPreviewBuildStore,
@@ -39,6 +40,18 @@ const event = z.discriminatedUnion("type", [
   z.object({ type: z.literal("complete"), revision: z.number().int() }),
   z.object({ type: z.literal("ended") }),
 ]);
+
+async function logPreviewOperationFailure<T>(operation: string, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    console.error("Preview WebSocket operation failed", {
+      operation,
+      error: sanitizeErrorForLog(error),
+    });
+    throw error;
+  }
+}
 
 export type PreviewWebSocketContext =
   | {
@@ -94,10 +107,12 @@ const requireRole = async (
 const beginBuild = o
   .input(z.object({ manifest }))
   .output(z.object({ buildId: id }))
-  .handler(async ({ context, input }) => {
-    const store = await requireRole(context, "uploader");
-    return { buildId: await store.begin(context.sessionId, input.manifest) };
-  });
+  .handler(({ context, input }) =>
+    logPreviewOperationFailure("begin", async () => {
+      const store = await requireRole(context, "uploader");
+      return { buildId: await store.begin(context.sessionId, input.manifest) };
+    }),
+  );
 const uploadChunk = o
   .input(
     z.object({
@@ -108,28 +123,32 @@ const uploadChunk = o
     }),
   )
   .output(z.object({ accepted: z.literal(true) }))
-  .handler(async ({ context, input }) => {
-    if (Buffer.byteLength(JSON.stringify(input)) > previewMessageBytes) {
-      throw new ORPCError("PAYLOAD_TOO_LARGE");
-    }
-    const store = await requireRole(context, "uploader");
-    await store.upload(
-      context.sessionId,
-      input.buildId,
-      input.fileIndex,
-      input.chunkIndex,
-      input.base64,
-    );
-    return { accepted: true as const };
-  });
+  .handler(({ context, input }) =>
+    logPreviewOperationFailure("upload_chunk", async () => {
+      if (Buffer.byteLength(JSON.stringify(input)) > previewMessageBytes) {
+        throw new ORPCError("PAYLOAD_TOO_LARGE");
+      }
+      const store = await requireRole(context, "uploader");
+      await store.upload(
+        context.sessionId,
+        input.buildId,
+        input.fileIndex,
+        input.chunkIndex,
+        input.base64,
+      );
+      return { accepted: true as const };
+    }),
+  );
 const commitBuild = o
   .input(z.object({ buildId: id }))
   .output(z.object({ revision: z.number().int() }))
-  .handler(async ({ context, input }) => {
-    const store = await requireRole(context, "uploader");
-    const result = await store.commit(context.sessionId, input.buildId);
-    return { revision: result.revision };
-  });
+  .handler(({ context, input }) =>
+    logPreviewOperationFailure("commit", async () => {
+      const store = await requireRole(context, "uploader");
+      const result = await store.commit(context.sessionId, input.buildId);
+      return { revision: result.revision };
+    }),
+  );
 const heartbeat = o.output(z.object({ accepted: z.literal(true) })).handler(async ({ context }) => {
   await requireRole(context, "uploader");
   const kv = getKV();
