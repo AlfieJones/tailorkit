@@ -142,7 +142,7 @@ export async function handlePreviewConsent(options: ConsentOptions): Promise<Res
     return html(
       `Preview ${appName}`,
       "After you accept, this preview is available only in this browser.",
-      `<aside class="warning" role="note" aria-labelledby="preview-warning-title"><span class="warning-icon" aria-hidden="true">⚠</span><div><h2 class="warning-title" id="preview-warning-title">Heads up!</h2><p class="warning-description">Only accept previews from trusted developers. They can use your host app’s permissions.</p></div></aside><form method="post"><input type="hidden" name="csrfToken" value="${csrfToken}"><div class="actions"><button class="button primary" name="intent" value="accept" type="submit">Accept preview</button><button class="button secondary" name="intent" value="cancel" type="submit">Cancel</button></div></form>`,
+      `<aside class="warning" role="note" aria-labelledby="preview-warning-title"><span class="warning-icon" aria-hidden="true">⚠</span><div><h2 class="warning-title" id="preview-warning-title">Untrusted content</h2><p class="warning-description">Only accept previews from trusted developers.</p></div></aside><form method="post"><input type="hidden" name="csrfToken" value="${csrfToken}"><div class="actions"><button class="button primary" name="intent" value="accept" type="submit">Accept preview</button><button class="button secondary" name="intent" value="cancel" type="submit">Cancel</button></div></form>`,
       200,
       { "set-cookie": csrfCookie },
     );
