@@ -40,6 +40,7 @@ export interface PreviewOptions {
   entry?: string;
   mode?: string;
   outDir?: string;
+  replace?: boolean;
 }
 interface Snapshot {
   files: Buffer[];
@@ -145,6 +146,7 @@ const previewOptionsSchema = z.object({
   entry: z.string().optional(),
   mode: z.string().optional(),
   outDir: z.string().optional(),
+  replace: z.boolean().optional(),
 });
 export const toPreviewOptions = (options: Record<string, unknown>): PreviewOptions => {
   const parsed = previewOptionsSchema.parse(options);
@@ -154,6 +156,7 @@ export const toPreviewOptions = (options: Record<string, unknown>): PreviewOptio
     entry: parsed.entry,
     mode: parsed.mode,
     outDir: parsed.outDir,
+    replace: parsed.replace,
   };
 };
 
@@ -179,7 +182,7 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     url: auth.hostUrl,
   });
   const result = await client.preview
-    .start({ appId: loaded.config.appId })
+    .start({ appId: loaded.config.appId, replaceActive: options.replace })
     .catch(async (error: unknown) => {
       await closeWatcher();
       throw error;

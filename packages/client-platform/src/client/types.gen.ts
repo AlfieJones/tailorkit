@@ -615,6 +615,7 @@ export type PreviewStartData = {
   body: {
     appId: string;
     deployToken: string;
+    replaceActive?: boolean;
   };
   path?: never;
   query?: never;
