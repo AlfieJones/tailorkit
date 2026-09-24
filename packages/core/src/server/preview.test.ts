@@ -136,8 +136,9 @@ describe("preview host flow", () => {
     const csrfCookie = consent.headers.get("set-cookie")?.split(";", 1)[0];
     expect(consentHtml).toContain("Accept preview");
     expect(consentHtml).toContain('class="warning" role="note"');
-    expect(consentHtml).toContain("Only accept previews from developers you trust.");
-    expect(consentHtml).toContain("A preview can use your host app’s existing permissions.");
+    expect(consentHtml).toContain(
+      "Only accept previews from trusted developers. They can use your host app’s permissions.",
+    );
     expect(csrfToken).toBeDefined();
     expect(csrfCookie).toContain("tailorkit_preview_csrf=");
     expect(consent.headers.get("set-cookie")).toContain("HttpOnly; SameSite=Strict");
