@@ -2355,62 +2355,12 @@
                     },
                     "tunnelUrl": {
                       "type": "string"
-                    }
-                  },
-                  "required": ["expiresAt", "sessionId", "tunnelToken", "tunnelUrl"]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/preview/{sessionId}": {
-      "get": {
-        "operationId": "preview.resolve",
-        "parameters": [
-          {
-            "name": "sessionId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "scopeId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "allowEmptyValue": true,
-            "allowReserved": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "appId": {
-                      "type": "string"
                     },
-                    "clientPath": {
-                      "type": "string"
-                    },
-                    "sessionId": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "enum": ["connected", "offline"],
+                    "shareId": {
                       "type": "string"
                     }
                   },
-                  "required": ["appId", "clientPath", "sessionId", "status"]
+                  "required": ["expiresAt", "sessionId", "tunnelToken", "tunnelUrl", "shareId"]
                 }
               }
             }
@@ -2454,6 +2404,349 @@
               "application/json": {
                 "schema": {
                   "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preview/shares/{shareId}": {
+      "get": {
+        "operationId": "preview.invitation",
+        "parameters": [
+          {
+            "name": "shareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "appName": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "x-native-type": "date"
+                    },
+                    "sessionId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["appName", "expiresAt", "sessionId"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preview/shares/{shareId}/accept": {
+      "post": {
+        "operationId": "preview.accept",
+        "parameters": [
+          {
+            "name": "shareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "scopeId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["scopeId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "grantId": {
+                      "type": "string"
+                    },
+                    "sessionId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["grantId", "sessionId"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preview/grants/resolve": {
+      "post": {
+        "operationId": "preview.accepted",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grantIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "scopeId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["grantIds", "scopeId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "app": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "publicId": {
+                                "type": "string"
+                              },
+                              "projectId": {
+                                "type": "string"
+                              },
+                              "scopeId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "currentDeploymentId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "x-native-type": "date"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "x-native-type": "date"
+                              },
+                              "currentDeployment": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "publicId": {
+                                        "type": "string"
+                                      },
+                                      "appId": {
+                                        "type": "string"
+                                      },
+                                      "status": {
+                                        "enum": [
+                                          "uploading",
+                                          "deploying",
+                                          "verifying",
+                                          "published"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "clientEntryFileId": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "logoLightFileId": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "logoDarkFileId": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "logoLightPath": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "logoDarkPath": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "createdAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "x-native-type": "date"
+                                      },
+                                      "updatedAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "x-native-type": "date"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "publicId",
+                                      "appId",
+                                      "status",
+                                      "clientEntryFileId",
+                                      "logoLightFileId",
+                                      "logoDarkFileId",
+                                      "logoLightPath",
+                                      "logoDarkPath",
+                                      "createdAt",
+                                      "updatedAt"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "clientPath": {
+                                "type": "string"
+                              },
+                              "logoPaths": {
+                                "type": "object",
+                                "properties": {
+                                  "dark": {
+                                    "type": "string"
+                                  },
+                                  "light": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "publicId",
+                              "projectId",
+                              "scopeId",
+                              "name",
+                              "description",
+                              "currentDeploymentId",
+                              "createdAt",
+                              "updatedAt",
+                              "currentDeployment"
+                            ]
+                          },
+                          "preview": {
+                            "type": "object",
+                            "properties": {
+                              "sessionId": {
+                                "type": "string"
+                              },
+                              "expiresAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "x-native-type": "date"
+                              },
+                              "websocketUrl": {
+                                "type": "string"
+                              },
+                              "token": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["sessionId", "expiresAt", "websocketUrl", "token"]
+                          }
+                        },
+                        "required": ["app", "preview"]
+                      }
+                    }
+                  },
+                  "required": ["items"]
                 }
               }
             }

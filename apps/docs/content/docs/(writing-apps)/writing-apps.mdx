@@ -125,9 +125,12 @@ Run a TailorKit preview session while developing an app.
 pnpm exec tailorkit preview
 ```
 
-The CLI builds the app in Vite watch mode and serves its output directly through
-the authenticated preview tunnel. Changes are available to the host after each
-rebuild; no local HTTP server is started.
+The CLI builds the app in Vite watch mode and uploads complete successful
+builds to TailorKit in bounded chunks. Open the printed host link, sign in,
+and choose **Accept preview**. The accepted app runs in the host sandbox with
+your host context and action permissions. Each complete rebuild replaces the
+iframe; failed builds leave the last successful version running. Stop the CLI
+to end the preview. No local HTTP server is started.
 
 Build the production bundle without starting a server:
 

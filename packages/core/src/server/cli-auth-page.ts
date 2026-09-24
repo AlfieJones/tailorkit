@@ -146,7 +146,7 @@ function renderHtml(state: ApprovalPageState): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Approve TailorKit CLI</title>
-  <style>${styles}</style>
+  <style>${approvalStyles}</style>
 </head>
 <body>
   <main class="page">
@@ -225,7 +225,7 @@ function formatCode(code: string): string {
   return normalizeCode(code).replaceAll(/(.{3})(?=.)/gu, "$1-");
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -234,7 +234,7 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
-const styles = `
+export const approvalStyles = `
 :root {
   color-scheme: light;
   --background: hsl(0, 0%, 96%);

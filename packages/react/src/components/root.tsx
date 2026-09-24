@@ -15,17 +15,16 @@ export interface RootProps extends ComponentProps<"div"> {
 
 export function Root({ apps: appsProp, children, render, client, ...props }: RootProps): ReactNode {
   const baseUrl = toBaseUrl(client.baseUrl).toString();
-  const [previousStore, setStore] = useState(() =>
-    createTailorKitStore(baseUrl, appsProp, client.previewSessionId),
-  );
+  const [previousStore, setStore] = useState(() => createTailorKitStore(baseUrl, appsProp));
   let store = previousStore;
   if (previousStore.baseUrl.toString() !== baseUrl) {
-    store = createTailorKitStore(baseUrl, appsProp, client.previewSessionId);
+    store = createTailorKitStore(baseUrl, appsProp);
     setStore(store);
   }
   useEffect(() => {
     store.setProvidedApps(appsProp);
   }, [store, appsProp]);
+  useEffect(() => () => store.previews.dispose(), [store]);
 
   const context = useMemo<TailorRootContextValue>(
     () => ({

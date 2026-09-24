@@ -1,6 +1,7 @@
 import type { TailorKitSchemaSpecType } from "@tailorkit/core/spec";
 import type { TailorKitApp } from "./tailor-kit";
 import { createViewRegistry } from "./view-registry";
+import { createPreviewManager } from "./preview-manager";
 
 export interface TailorKitAppsSnapshot {
   apps: TailorKitApp[];
@@ -17,11 +18,7 @@ interface TailorKitMetaSnapshot {
 
 export type TailorKitStore = ReturnType<typeof createTailorKitStore>;
 
-export function createTailorKitStore(
-  baseUrlInput: string | URL,
-  initialApps?: TailorKitApp[],
-  previewSessionId?: string,
-) {
+export function createTailorKitStore(baseUrlInput: string | URL, initialApps?: TailorKitApp[]) {
   const baseUrl = toBaseUrl(baseUrlInput);
   const listeners = new Set<() => void>();
   let providedApps = initialApps;
@@ -80,9 +77,6 @@ export function createTailorKitStore(
       const requestId = ++fetchAppsRequestId;
 
       const appsUrl = new URL("apps", baseUrl);
-      if (previewSessionId) {
-        appsUrl.searchParams.set("previewSessionId", previewSessionId);
-      }
       fetchAppsPromise = fetch(appsUrl)
         .then(async (response) => {
           if (!response.ok) {
@@ -158,7 +152,12 @@ export function createTailorKitStore(
       };
     },
   };
-  return store;
+  return {
+    ...store,
+    previews: createPreviewManager(baseUrl, () => {
+      void store.fetchApps({ force: true });
+    }),
+  };
 }
 
 export function toBaseUrl(value: string | URL): URL {

@@ -10,6 +10,52 @@ if value == 1 then
 end
 return value
 `;
+const CLAIM_UPLOAD_SCRIPT = `
+if redis.call("EXISTS", KEYS[2]) == 1 then
+  return 0
+end
+if (redis.call("GET", KEYS[1]) or "") ~= ARGV[1] then
+  return 0
+end
+redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3])
+return 1
+`;
+const SET_PREVIEW_PRESENCE_IF_ACTIVE_SCRIPT = `
+if redis.call("EXISTS", KEYS[3]) == 1 then
+  return 0
+end
+redis.call("SET", KEYS[1], ARGV[1], "EX", ARGV[2])
+redis.call("SET", KEYS[2], "1", "EX", ARGV[3])
+return 1
+`;
+const KEEP_PREVIEW_SESSION_IF_DEVELOPER_PRESENT_SCRIPT = `
+if redis.call("EXISTS", KEYS[3]) == 1 then
+  return 0
+end
+if redis.call("EXISTS", KEYS[1]) == 1 then
+  return 1
+end
+if redis.call("EXISTS", KEYS[2]) == 0 and ARGV[2] ~= "1" then
+  return 1
+end
+redis.call("SET", KEYS[3], "1", "EX", ARGV[1])
+return 0
+`;
+const PROMOTE_IF_OWNER_AND_NEWER_SCRIPT = `
+if redis.call("EXISTS", KEYS[3]) == 1 then
+  return 0
+end
+if redis.call("GET", KEYS[2]) ~= ARGV[1] then
+  return 0
+end
+local current = redis.call("GET", KEYS[1])
+if current and cjson.decode(current).revision >= tonumber(ARGV[2]) then
+  return 0
+end
+redis.call("SET", KEYS[1], ARGV[3], "EX", ARGV[4])
+redis.call("DEL", KEYS[2])
+return 1
+`;
 
 function subscribe(redis: Redis, channel: string, handler: MessageHandler): Promise<Unsubscribe> {
   const subscriber = redis.subscribe<string>(channel);
@@ -82,6 +128,57 @@ export function createUpstashKV(): KV<"upstash"> {
           return value ?? null;
         },
       ),
+    claimUpload: (ownerKey, endedKey, expectedOwner, newOwner, ttl) =>
+      withSpan(
+        "kv.claim_upload",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
+        async () => {
+          if (!Number.isInteger(ttl) || ttl <= 0) {
+            throw new TypeError("KV upload TTL must be a positive integer.");
+          }
+          return (
+            Number(
+              await redis.eval(
+                CLAIM_UPLOAD_SCRIPT,
+                [ownerKey, endedKey],
+                [expectedOwner ?? "", newOwner, ttl],
+              ),
+            ) === 1
+          );
+        },
+      ),
+    setPreviewPresenceIfActive: (presenceKey, seenKey, endedKey, value, presenceTtl, seenTtl) =>
+      withSpan(
+        "kv.set_preview_presence_if_active",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
+        async () =>
+          Number(
+            await redis.eval(
+              SET_PREVIEW_PRESENCE_IF_ACTIVE_SCRIPT,
+              [presenceKey, seenKey, endedKey],
+              [value, presenceTtl, seenTtl],
+            ),
+          ) === 1,
+      ),
+    keepPreviewSessionIfDeveloperPresent: (
+      presenceKey,
+      seenKey,
+      endedKey,
+      endedTtl,
+      expireUnseen,
+    ) =>
+      withSpan(
+        "kv.keep_preview_session_if_developer_present",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
+        async () =>
+          Number(
+            await redis.eval(
+              KEEP_PREVIEW_SESSION_IF_DEVELOPER_PRESENT_SCRIPT,
+              [presenceKey, seenKey, endedKey],
+              [endedTtl, expireUnseen ? "1" : "0"],
+            ),
+          ) === 1,
+      ),
     increment: (key, ttl) =>
       withSpan(
         "kv.increment",
@@ -122,6 +219,30 @@ export function createUpstashKV(): KV<"upstash"> {
         );
       }
     },
+    promoteIfOwnerAndNewer: (pointerKey, ownerKey, endedKey, expectedOwner, value, revision, ttl) =>
+      withSpan(
+        "kv.promote_if_owner_and_newer",
+        { attributes: { "tailorkit.package": "kv", "kv.type": "upstash" } },
+        async () => {
+          if (
+            !Number.isSafeInteger(revision) ||
+            revision <= 0 ||
+            !Number.isInteger(ttl) ||
+            ttl <= 0
+          ) {
+            throw new TypeError("KV revision and TTL must be positive integers.");
+          }
+          return (
+            Number(
+              await redis.eval(
+                PROMOTE_IF_OWNER_AND_NEWER_SCRIPT,
+                [pointerKey, ownerKey, endedKey],
+                [expectedOwner, revision, value, ttl],
+              ),
+            ) === 1
+          );
+        },
+      ),
     delete: async (key) => {
       await withSpan(
         "kv.delete",

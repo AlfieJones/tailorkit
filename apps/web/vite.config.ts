@@ -32,9 +32,8 @@ export default defineConfig(({ mode }) => {
       tanstackStart(),
       nitro({
         serverDir: "./src/nitro",
-        // The preview tunnel keeps the developer CLI connected through this
-        // Nitro deployment. The session protocol uses Redis leases so a
-        // Vercel-forced reconnect never ends a preview prematurely.
+        // Preview uploads and viewer revisions share this Nitro deployment.
+        // KV leases give the CLI 75 seconds to reconnect after an upgrade.
         features: { websocket: !isTest },
         // Nitro's dev server otherwise treats client.js as a Vite static asset.
         // Forward this prefix to Start, which owns the endpoint and its handlers.

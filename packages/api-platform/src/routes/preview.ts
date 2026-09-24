@@ -1,16 +1,21 @@
 import { ORPCError } from "@orpc/server";
 import { hashSecret } from "@tailorkit/api-utils/hashing";
 import { getBaseUrl, env } from "@tailorkit/env/server";
-import { createPreviewTunnelPresence, getKV } from "@tailorkit/kv";
+import { getKV } from "@tailorkit/kv";
 import { db } from "@tailorkit/db";
 import { previewSession } from "@tailorkit/db/schema/preview-session";
-import { and, eq } from "drizzle-orm";
+import { project } from "@tailorkit/db/schema/project";
+import { and, count, eq, lt } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import z from "zod";
-import { createPreviewViewerToken } from "../preview-token";
+import { createPreviewBuildStore } from "../preview-build-store";
+import { ensurePreviewDeveloperGrace } from "../preview-lifecycle";
 import { o, protectedRouter } from "../procedures";
+import { previewGrantRoutes } from "./preview-grants";
 
 const previewSessionLifetimeMs = 8 * 60 * 60 * 1000;
+const firstConnectionGraceMs = 2 * 60 * 1000;
+const maxActivePreviewsPerScope = 5;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function hash(value: string): string {
@@ -47,10 +52,17 @@ const startPreview = protectedRouter
         sessionId: z.string(),
         tunnelToken: z.string(),
         tunnelUrl: z.url(),
+        shareId: z.string(),
       }),
     }),
   )
   .handler(async ({ context, input }) => {
+    const kv = getKV();
+    if (!kv) {
+      throw new ORPCError("SERVICE_UNAVAILABLE", {
+        message: "Preview storage is unavailable: configure KV.",
+      });
+    }
     const now = new Date();
     const token = await getValidCliToken(context.project.id, input.body.deployToken);
 
@@ -67,71 +79,126 @@ const startPreview = protectedRouter
       throw new ORPCError("NOT_FOUND", { message: "App not found for this host scope." });
     }
 
-    const tunnelToken = createSecret();
-    const expiresAt = new Date(now.getTime() + previewSessionLifetimeMs);
-    const [session] = await db
-      .insert(previewSession)
-      .values({
-        appId: previewApp.id,
-        cliTokenId: token.id,
-        expiresAt,
+    const activeSessions = await db.query.previewSession.findMany({
+      where: {
         projectId: context.project.id,
         scopeId: token.scopeId,
-        tunnelTokenHash: hash(tunnelToken),
+        status: "active",
+      },
+    });
+    for (const activeSession of activeSessions) {
+      if (activeSession.expiresAt > now) {
+        await ensurePreviewDeveloperGrace(
+          kv,
+          activeSession.id,
+          activeSession.createdAt.getTime() + firstConnectionGraceMs <= now.getTime(),
+        );
+      }
+    }
+
+    const tunnelToken = createSecret();
+    const shareId = createSecret();
+    const expiresAt = new Date(now.getTime() + previewSessionLifetimeMs);
+    const started = await db
+      .transaction(async (tx) => {
+        // Serialize starts in this project so concurrent app starts cannot exceed the scope cap.
+        await tx
+          .select({ id: project.id })
+          .from(project)
+          .where(eq(project.id, context.project.id))
+          .for("update");
+        const expiredSessions = await tx
+          .update(previewSession)
+          .set({ endedAt: now, status: "ended" })
+          .where(
+            and(
+              eq(previewSession.projectId, context.project.id),
+              eq(previewSession.scopeId, token.scopeId),
+              eq(previewSession.status, "active"),
+              lt(previewSession.expiresAt, now),
+            ),
+          )
+          .returning({ id: previewSession.id });
+        const active = await tx.query.previewSession.findFirst({
+          where: {
+            appId: previewApp.id,
+            status: "active",
+          },
+        });
+        if (active) {
+          throw new ORPCError("CONFLICT", {
+            message: "An active preview already exists for this app.",
+          });
+        }
+        const [scopeCount] = await tx
+          .select({ total: count() })
+          .from(previewSession)
+          .where(
+            and(
+              eq(previewSession.projectId, context.project.id),
+              eq(previewSession.scopeId, token.scopeId),
+              eq(previewSession.status, "active"),
+            ),
+          );
+        if ((scopeCount?.total ?? 0) >= maxActivePreviewsPerScope) {
+          throw new ORPCError("CONFLICT", {
+            message: `This scope already has ${maxActivePreviewsPerScope} active previews.`,
+          });
+        }
+        const [created] = await tx
+          .insert(previewSession)
+          .values({
+            appId: previewApp.id,
+            cliTokenId: token.id,
+            expiresAt,
+            projectId: context.project.id,
+            scopeId: token.scopeId,
+            shareId,
+            tunnelTokenHash: hash(tunnelToken),
+          })
+          .returning({ id: previewSession.id });
+        return { session: created, expiredSessions };
       })
-      .returning({ id: previewSession.id });
-    if (!session) {
+      .catch((error: unknown) => {
+        if (error instanceof ORPCError) {
+          throw error;
+        }
+        const candidate =
+          error && typeof error === "object" && "cause" in error ? error.cause : error;
+        if (
+          candidate &&
+          typeof candidate === "object" &&
+          "code" in candidate &&
+          candidate.code === "23505"
+        ) {
+          throw new ORPCError("CONFLICT", {
+            message: "An active preview already exists for this app.",
+          });
+        }
+        throw error;
+      });
+    if (!started.session) {
       throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Failed to create preview." });
+    }
+    const builds = createPreviewBuildStore(kv);
+    for (const expired of started.expiredSessions) {
+      try {
+        await builds.end(expired.id);
+      } catch {
+        // Existing KV TTLs bound cleanup if the store is temporarily unavailable.
+      }
     }
 
     const baseUrl = getBaseUrl().replace(/^http/u, "ws");
-    const tunnelUrl = new URL("/api/preview-tunnel", baseUrl);
-    tunnelUrl.searchParams.set("session", session.id);
-    return { body: { expiresAt, sessionId: session.id, tunnelToken, tunnelUrl: tunnelUrl.href } };
-  });
-
-const resolvePreview = protectedRouter
-  .route({ path: "/:sessionId", method: "GET" })
-  .input(
-    z.object({
-      params: z.object({ sessionId: z.uuid() }),
-      query: z.object({ scopeId: z.string().min(1) }),
-    }),
-  )
-  .output(
-    z.object({
-      body: z.object({
-        appId: z.string(),
-        clientPath: z.url(),
-        sessionId: z.string(),
-        status: z.enum(["connected", "offline"]),
-      }),
-    }),
-  )
-  .handler(async ({ context, input }) => {
-    const session = await db.query.previewSession.findFirst({
-      where: {
-        id: input.params.sessionId,
-        projectId: context.project.id,
-        scopeId: input.query.scopeId,
-        status: "active",
-      },
-      with: { app: true },
-    });
-    if (!session || !session.app || session.expiresAt <= new Date()) {
-      throw new ORPCError("NOT_FOUND", { message: "Preview session is unavailable." });
-    }
-
-    const assetUrl = new URL(`/api/preview/${session.id}/client.js`, getBaseUrl());
-    assetUrl.searchParams.set("token", createPreviewViewerToken(session.id));
-    const kv = getKV();
-    const connected = kv ? await createPreviewTunnelPresence(kv).get(session.id) : null;
+    const tunnelUrl = new URL("/api/platform/preview/ws", baseUrl);
+    tunnelUrl.searchParams.set("session", started.session.id);
     return {
       body: {
-        appId: session.app.publicId,
-        clientPath: assetUrl.href,
-        sessionId: session.id,
-        status: connected ? "connected" : "offline",
+        expiresAt,
+        sessionId: started.session.id,
+        shareId,
+        tunnelToken,
+        tunnelUrl: tunnelUrl.href,
       },
     };
   });
@@ -160,12 +227,27 @@ const stopPreview = protectedRouter
         ),
       )
       .returning({ id: previewSession.id });
-    if (!endedSession) {
+    const alreadyEnded = endedSession
+      ? null
+      : await db.query.previewSession.findFirst({
+          where: {
+            id: input.params.sessionId,
+            projectId: context.project.id,
+            cliTokenId: token.id,
+            status: "ended",
+          },
+        });
+    const sessionId = endedSession?.id ?? alreadyEnded?.id;
+    if (!sessionId) {
       throw new ORPCError("NOT_FOUND", { message: "Preview session is unavailable." });
+    }
+    const kv = getKV();
+    if (kv) {
+      await createPreviewBuildStore(kv).end(sessionId);
     }
     return { body: {} };
   });
 
 export const previewRouter = o
   .prefix("/preview")
-  .router({ start: startPreview, resolve: resolvePreview, stop: stopPreview });
+  .router({ start: startPreview, stop: stopPreview, ...previewGrantRoutes });

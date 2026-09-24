@@ -8,7 +8,7 @@ import { o, protectedRouter, requireApp } from "../procedures";
 import { createPublicId } from "../public-id";
 import { withAppAssetUrl } from "../asset-url";
 
-const AppWithCurrentDeployment = App.extend({
+export const AppWithCurrentDeployment = App.extend({
   currentDeployment: AppDeployment.nullable(),
   clientPath: z.url().optional(),
   logoPaths: z.object({ dark: z.url().optional(), light: z.url().optional() }).optional(),

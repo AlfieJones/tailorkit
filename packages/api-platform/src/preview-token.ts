@@ -1,8 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { hashSecret } from "@tailorkit/api-utils/hashing";
 import { env } from "@tailorkit/env/server";
+import { z } from "zod";
 
 const viewerTokenLifetimeMs = 5 * 60 * 1000;
+const tokenSchema = z.tuple([z.coerce.number().int().positive(), z.string().min(1)]);
 
 function getSigningSecret(): string {
   if (!env.AUTH_SECRET) {
@@ -26,18 +28,27 @@ export function verifyPreviewViewerToken(
   token: string,
   now = Date.now(),
 ): boolean {
-  const [expiresAtValue, receivedSignature, ...rest] = token.split(".");
-  if (rest.length > 0 || !expiresAtValue || !receivedSignature) {
-    return false;
-  }
+  return previewViewerTokenExpiresAt(sessionId, token, now) !== null;
+}
 
-  const expiresAt = Number(expiresAtValue);
-  if (!Number.isSafeInteger(expiresAt) || expiresAt <= now) {
-    return false;
+export function previewViewerTokenExpiresAt(
+  sessionId: string,
+  token: string,
+  now = Date.now(),
+): number | null {
+  const parsed = tokenSchema.safeParse(token.split("."));
+  if (!parsed.success) {
+    return null;
+  }
+  const [expiresAt, receivedSignature] = parsed.data;
+  if (expiresAt <= now) {
+    return null;
   }
 
   const expectedSignature = signature(sessionId, expiresAt);
   const received = Buffer.from(receivedSignature);
   const expected = Buffer.from(expectedSignature);
-  return received.length === expected.length && timingSafeEqual(received, expected);
+  return received.length === expected.length && timingSafeEqual(received, expected)
+    ? expiresAt
+    : null;
 }

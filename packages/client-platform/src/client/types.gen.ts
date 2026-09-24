@@ -630,35 +630,11 @@ export type PreviewStartResponses = {
     sessionId: string;
     tunnelToken: string;
     tunnelUrl: string;
+    shareId: string;
   };
 };
 
 export type PreviewStartResponse = PreviewStartResponses[keyof PreviewStartResponses];
-
-export type PreviewResolveData = {
-  body?: never;
-  path: {
-    sessionId: string;
-  };
-  query: {
-    scopeId: string;
-  };
-  url: "/preview/{sessionId}";
-};
-
-export type PreviewResolveResponses = {
-  /**
-   * OK
-   */
-  200: {
-    appId: string;
-    clientPath: string;
-    sessionId: string;
-    status: "connected" | "offline";
-  };
-};
-
-export type PreviewResolveResponse = PreviewResolveResponses[keyof PreviewResolveResponses];
 
 export type PreviewStopData = {
   body: {
@@ -681,3 +657,106 @@ export type PreviewStopResponses = {
 };
 
 export type PreviewStopResponse = PreviewStopResponses[keyof PreviewStopResponses];
+
+export type PreviewInvitationData = {
+  body?: never;
+  path: {
+    shareId: string;
+  };
+  query?: never;
+  url: "/preview/shares/{shareId}";
+};
+
+export type PreviewInvitationResponses = {
+  /**
+   * OK
+   */
+  200: {
+    appName: string;
+    expiresAt: string;
+    sessionId: string;
+  };
+};
+
+export type PreviewInvitationResponse =
+  PreviewInvitationResponses[keyof PreviewInvitationResponses];
+
+export type PreviewAcceptData = {
+  body: {
+    scopeId: string;
+  };
+  path: {
+    shareId: string;
+  };
+  query?: never;
+  url: "/preview/shares/{shareId}/accept";
+};
+
+export type PreviewAcceptResponses = {
+  /**
+   * OK
+   */
+  200: {
+    grantId: string;
+    sessionId: string;
+  };
+};
+
+export type PreviewAcceptResponse = PreviewAcceptResponses[keyof PreviewAcceptResponses];
+
+export type PreviewAcceptedData = {
+  body: {
+    grantIds: Array<string>;
+    scopeId: string;
+  };
+  path?: never;
+  query?: never;
+  url: "/preview/grants/resolve";
+};
+
+export type PreviewAcceptedResponses = {
+  /**
+   * OK
+   */
+  200: {
+    items: Array<{
+      app: {
+        id: string;
+        publicId: string;
+        projectId: string;
+        scopeId: string;
+        name: string;
+        description: string | null;
+        currentDeploymentId: string | null;
+        createdAt: string;
+        updatedAt: string;
+        currentDeployment: {
+          id: string;
+          publicId: string;
+          appId: string;
+          status: "uploading" | "deploying" | "verifying" | "published";
+          clientEntryFileId: string | null;
+          logoLightFileId: string | null;
+          logoDarkFileId: string | null;
+          logoLightPath: string | null;
+          logoDarkPath: string | null;
+          createdAt: string;
+          updatedAt: string;
+        } | null;
+        clientPath?: string;
+        logoPaths?: {
+          dark?: string;
+          light?: string;
+        };
+      };
+      preview: {
+        sessionId: string;
+        expiresAt: string;
+        websocketUrl: string;
+        token: string;
+      };
+    }>;
+  };
+};
+
+export type PreviewAcceptedResponse = PreviewAcceptedResponses[keyof PreviewAcceptedResponses];

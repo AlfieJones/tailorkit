@@ -1,0 +1,199 @@
+/* oxlint-disable require-await -- the platform fetch mock has the Fetch promise shape. */
+import { describe, expect, it } from "vitest";
+import { createTailorKitServer } from "./handler";
+
+const shareId = "s".repeat(43);
+const grantId = "g".repeat(43);
+const basePath = "/custom/tailorkit";
+const baseUrl = `https://host.test${basePath}`;
+
+function server(requests: string[], previewError?: unknown) {
+  return createTailorKitServer({
+    basePath,
+    components: {},
+    cliAuth: { signInPath: "/sign-in" },
+    preview: { returnPath: "/dashboard" },
+    projectKey: "server-key",
+    $internal: {
+      platformFetch: async (input, init) => {
+        const request = input instanceof Request ? input : new Request(input, init);
+        const url = new URL(request.url);
+        requests.push(`${request.method} ${url.pathname}${url.search}`);
+        if (url.pathname.endsWith(`/preview/shares/${shareId}/accept`)) {
+          if (previewError) {
+            return Response.json(previewError, { status: 503 });
+          }
+          return Response.json({ grantId, sessionId: "session" });
+        }
+        if (url.pathname.endsWith(`/preview/shares/${shareId}`)) {
+          if (previewError) {
+            return Response.json(previewError, { status: 503 });
+          }
+          return Response.json({
+            appName: "Example app",
+            expiresAt: new Date().toISOString(),
+            sessionId: "session",
+          });
+        }
+        if (url.pathname.endsWith("/apps")) {
+          const page = Number(url.searchParams.get("page"));
+          return Response.json(
+            page === 1
+              ? {
+                  items: [
+                    { id: "first", name: "Published", clientPath: "https://assets.test/first.js" },
+                  ],
+                  pagination: { hasMore: true, page: 1, pageSize: 100 },
+                }
+              : {
+                  items: [{ id: "second", name: "Published 2" }],
+                  pagination: { hasMore: false, page: 2, pageSize: 100 },
+                },
+          );
+        }
+        if (url.pathname.endsWith("/preview/grants/resolve")) {
+          return Response.json({
+            items: [
+              {
+                app: { id: "first", name: "Preview copy" },
+                preview: {
+                  sessionId: "session-1",
+                  token: "t1",
+                  websocketUrl: "wss://platform.test/ws",
+                  expiresAt: "later",
+                },
+              },
+              {
+                app: { id: "other", name: "Cross scope" },
+                preview: {
+                  sessionId: "session-2",
+                  token: "t2",
+                  websocketUrl: "wss://platform.test/ws",
+                  expiresAt: "later",
+                },
+              },
+            ],
+          });
+        }
+        return new Response("Not found", { status: 404 });
+      },
+    },
+  });
+}
+
+describe("preview host flow", () => {
+  it("returns 503 for structured platform storage errors", async () => {
+    const tailor = server([], { code: "SERVICE_UNAVAILABLE", message: "KV unavailable" });
+    const consentUrl = `${baseUrl}/preview/${shareId}`;
+    const options = { authenticate: () => ({ scopeId: "viewer" }) };
+    const invitation = await tailor.handler(new Request(consentUrl), options);
+    expect(invitation.status).toBe(503);
+
+    const acceptance = await tailor.handler(
+      new Request(consentUrl, {
+        method: "POST",
+        headers: {
+          origin: "https://host.test",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: "intent=accept",
+      }),
+      options,
+    );
+    expect(acceptance.status).toBe(503);
+  });
+
+  it("uses the custom mount, requires login, and rejects cross-origin acceptance", async () => {
+    const requests: string[] = [];
+    const tailor = server(requests);
+    const consentUrl = `${baseUrl}/preview/${shareId}`;
+    const guest = await tailor.handler(new Request(consentUrl), { authenticate: () => null });
+    expect(guest.status).toBe(302);
+    expect(guest.headers.get("location")).toContain("/sign-in?returnTo=");
+
+    const consent = await tailor.handler(new Request(consentUrl), {
+      authenticate: () => ({ scopeId: "viewer" }),
+    });
+    expect(await consent.text()).toContain("Accept preview");
+    expect(consent.headers.get("cache-control")).toBe("no-store");
+
+    const foreign = await tailor.handler(
+      new Request(consentUrl, {
+        method: "POST",
+        headers: {
+          origin: "https://evil.test",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: "intent=accept",
+      }),
+      { authenticate: () => ({ scopeId: "viewer" }) },
+    );
+    expect(foreign.status).toBe(403);
+    expect(requests.some((value) => value.endsWith("/accept"))).toBe(false);
+
+    const accepted = await tailor.handler(
+      new Request(consentUrl, {
+        method: "POST",
+        headers: {
+          origin: "https://host.test",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: "intent=accept",
+      }),
+      { authenticate: () => ({ scopeId: "viewer" }) },
+    );
+    expect(accepted.status).toBe(303);
+    expect(accepted.headers.get("location")).toBe("/dashboard");
+    expect(accepted.headers.get("set-cookie")).toContain("HttpOnly; SameSite=Lax; Secure");
+    expect(accepted.headers.get("set-cookie")).toContain(`Path=${basePath}`);
+    const cancelled = await tailor.handler(
+      new Request(consentUrl, {
+        method: "POST",
+        headers: {
+          origin: "https://host.test",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: "intent=cancel",
+      }),
+      { authenticate: () => null },
+    );
+    expect(cancelled.status).toBe(303);
+    expect(cancelled.headers.get("location")).toBe("/dashboard");
+  });
+
+  it("rejects a return path that could leave the host origin", () => {
+    expect(() =>
+      createTailorKitServer({ components: {}, preview: { returnPath: "//evil.test" } }),
+    ).toThrow("same-origin root-relative");
+  });
+
+  it("keeps every published app field across pages and appends accepted cross-scope apps", async () => {
+    const requests: string[] = [];
+    const tailor = server(requests);
+    const cookie = `tailorkit_preview_grants=${encodeURIComponent(JSON.stringify([grantId]))}`;
+    const response = await tailor.handler(new Request(`${baseUrl}/apps`, { headers: { cookie } }), {
+      authenticate: () => ({ scopeId: "viewer" }),
+    });
+    expect(response.status).toBe(200);
+    const apps = (await response.json()) as {
+      id: string;
+      name: string;
+      clientPath?: string;
+      preview?: { sessionId: string };
+    }[];
+    expect(apps).toHaveLength(3);
+    expect(apps[0]).toMatchObject({
+      id: "first",
+      name: "Published",
+      clientPath: "https://assets.test/first.js",
+      preview: { sessionId: "session-1" },
+    });
+    expect(apps[1]).toMatchObject({ id: "second", name: "Published 2" });
+    expect(apps[2]).toMatchObject({
+      id: "other",
+      name: "Cross scope",
+      preview: { sessionId: "session-2" },
+    });
+    expect(requests.filter((value) => value.includes("/apps?"))).toHaveLength(2);
+  });
+});
