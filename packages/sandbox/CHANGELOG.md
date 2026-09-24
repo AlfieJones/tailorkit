@@ -1,5 +1,13 @@
 # @tailorkit/sandbox
 
+## 0.1.0-beta.14
+
+### Patch Changes
+
+- e06e450: Upload complete preview builds to KV in bounded oRPC chunks, accept previews through a host consent page, and stream verified revisions to sandboxed app views.
+- Updated dependencies [e06e450]
+  - @tailorkit/core@0.1.0-beta.14
+
 ## 0.1.0-beta.13
 
 ### Patch Changes

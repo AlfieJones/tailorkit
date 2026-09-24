@@ -1,5 +1,16 @@
 # @tailorkit/cli
 
+## 0.1.0-beta.14
+
+### Patch Changes
+
+- e06e450: Upload complete preview builds to KV in bounded oRPC chunks, accept previews through a host consent page, and stream verified revisions to sandboxed app views.
+- 9a8ecab: Avoid logging expected request-stream aborts while the preview tunnel reconnects.
+- Updated dependencies [e06e450]
+  - @tailorkit/core@0.1.0-beta.14
+  - @tailorkit/client-platform@0.1.0-beta.14
+  - @tailorkit/app@0.1.0-beta.14
+
 ## 0.1.0-beta.13
 
 ### Patch Changes
