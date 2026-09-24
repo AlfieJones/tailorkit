@@ -95,6 +95,9 @@ describe("preview host flow", () => {
       isActivePreviewConflict({ code: "CONFLICT", message: "A preview is already running." }),
     ).toBe(true);
     expect(
+      isActivePreviewConflict({ code: "CONFLICT", message: "An active preview already exists." }),
+    ).toBe(true);
+    expect(
       isActivePreviewConflict({
         code: "CONFLICT",
         message: "This scope already has 5 active previews.",
