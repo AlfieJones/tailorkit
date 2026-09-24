@@ -131,7 +131,16 @@ describe("preview host flow", () => {
     const consent = await tailor.handler(new Request(consentUrl), {
       authenticate: () => ({ scopeId: "viewer" }),
     });
-    expect(await consent.text()).toContain("Accept preview");
+    const consentHtml = await consent.text();
+    const csrfToken = consentHtml.match(/name="csrfToken" value="([a-f0-9]{64})"/u)?.[1];
+    const csrfCookie = consent.headers.get("set-cookie")?.split(";", 1)[0];
+    expect(consentHtml).toContain("Accept preview");
+    expect(consentHtml).toContain('class="warning" role="note"');
+    expect(consentHtml).toContain("Only accept previews from developers you trust.");
+    expect(consentHtml).toContain("A preview can use your host app’s existing permissions.");
+    expect(csrfToken).toBeDefined();
+    expect(csrfCookie).toContain("tailorkit_preview_csrf=");
+    expect(consent.headers.get("set-cookie")).toContain("HttpOnly; SameSite=Strict");
     expect(consent.headers.get("cache-control")).toBe("no-store");
 
     const foreign = await tailor.handler(
@@ -148,14 +157,28 @@ describe("preview host flow", () => {
     expect(foreign.status).toBe(403);
     expect(requests.some((value) => value.endsWith("/accept"))).toBe(false);
 
+    const opaqueOriginWithoutToken = await tailor.handler(
+      new Request(consentUrl, {
+        method: "POST",
+        headers: {
+          origin: "null",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: "intent=accept",
+      }),
+      { authenticate: () => ({ scopeId: "viewer" }) },
+    );
+    expect(opaqueOriginWithoutToken.status).toBe(403);
+
     const accepted = await tailor.handler(
       new Request(consentUrl, {
         method: "POST",
         headers: {
-          origin: "https://host.test",
+          cookie: csrfCookie ?? "",
+          origin: "null",
           "content-type": "application/x-www-form-urlencoded",
         },
-        body: "intent=accept",
+        body: `intent=accept&csrfToken=${csrfToken}`,
       }),
       { authenticate: () => ({ scopeId: "viewer" }) },
     );
