@@ -178,9 +178,11 @@ describe("tailorKitClient React adapter", () => {
     class PreviewSocket extends EventTarget {
       static instances: PreviewSocket[] = [];
       closed = false;
+      readonly protocol: string;
 
-      constructor(_url: string, _protocol: string) {
+      constructor(_url: string, protocol: string) {
         super();
+        this.protocol = protocol;
         PreviewSocket.instances.push(this);
       }
 
@@ -195,7 +197,7 @@ describe("tailorKitClient React adapter", () => {
       components,
     });
     const suppliedApps: TailorKitApp[] = [];
-    const content = () => (
+    const content = (token: string) => (
       <Root client={tailor} apps={suppliedApps}>
         <HomeAppView
           tailor={tailor}
@@ -206,20 +208,23 @@ describe("tailorKitClient React adapter", () => {
               sessionId: "session",
               expiresAt: "later",
               websocketUrl: "wss://platform.test/preview",
-              token: "initial-token",
+              token,
             },
           }}
         />
       </Root>
     );
-    const view = render(content());
+    const view = render(content("initial-token"));
     await waitFor(() => expect(PreviewSocket.instances).toHaveLength(1));
     const socket = PreviewSocket.instances[0];
-    view.rerender(content());
+    view.rerender(content("updated-token"));
     expect(PreviewSocket.instances).toHaveLength(1);
     expect(socket?.closed).toBe(false);
+    socket?.close();
+    await waitFor(() => expect(PreviewSocket.instances).toHaveLength(2), { timeout: 2500 });
+    expect(PreviewSocket.instances[1]?.protocol).toBe("updated-token");
     view.unmount();
-    expect(socket?.closed).toBe(true);
+    expect(PreviewSocket.instances[1]?.closed).toBe(true);
   });
 
   it("fetches and caches apps", async () => {

@@ -23,6 +23,14 @@ const contentTypes: Record<string, string> = {
 };
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
+const isEndedSessionError = (error: unknown): boolean =>
+  error !== null &&
+  typeof error === "object" &&
+  "code" in error &&
+  error.code === "UNAUTHORIZED" &&
+  "message" in error &&
+  typeof error.message === "string" &&
+  /Preview session is unavailable|Preview developer reconnect grace expired/u.test(error.message);
 
 export interface PreviewOptions {
   configPath?: string;
@@ -220,6 +228,26 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
   let lastUploadStart = 0;
   let reconnectDelay = 1000;
   let connectionGeneration = 0;
+  const endTerminalSession = () => {
+    if (closed) {
+      return;
+    }
+    closed = true;
+    if (idleTimer) {
+      clearTimeout(idleTimer);
+    }
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+    }
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+    }
+    activeSocket?.close();
+    void closeWatcher().catch((error: unknown) => {
+      log.warn(`Unable to close preview watcher: ${errorMessage(error)}`);
+    });
+    log.warn("Preview session ended. Start a new preview to continue.");
+  };
   const scheduleUpload = () => {
     if (closed || !activeClient || uploading) {
       return;
@@ -298,7 +326,17 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
       connectionGeneration += 1;
       reconnectDelay = 1000;
       activeClient = createPreviewWebSocketClient(socket);
-      const sendHeartbeat = () => void activeClient?.heartbeat().catch(() => socket.close());
+      const sendHeartbeat = () =>
+        void activeClient?.heartbeat().catch((error: unknown) => {
+          if (activeSocket !== socket || closed) {
+            return;
+          }
+          if (isEndedSessionError(error)) {
+            endTerminalSession();
+          } else {
+            socket.close();
+          }
+        });
       sendHeartbeat();
       heartbeatTimer = setInterval(sendHeartbeat, 20_000);
       scheduleUpload();

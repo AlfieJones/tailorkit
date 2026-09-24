@@ -64,6 +64,9 @@ export const AppView = ({
     getPreviewSnapshot,
     getPreviewSnapshot,
   );
+  useEffect(() => {
+    store.previews.updateApp(app);
+  }, [store, app]);
   const runtimeProps = useMemo(
     () =>
       props === undefined

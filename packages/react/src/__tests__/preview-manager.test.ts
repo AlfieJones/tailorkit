@@ -126,6 +126,36 @@ it("reuses a still-valid refreshed token when the next metadata request fails", 
   unsubscribe();
 });
 
+it("uses updated app metadata after a failed refresh without replacing the subscription", async () => {
+  const sessionId = "11111111-1111-4111-8111-111111111111";
+  const oldToken = `${Date.now() - 1000}.old`;
+  const newToken = `${Date.now() + 60_000}.new`;
+  vi.stubGlobal("WebSocket", FakeSocket);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => {
+      throw new Error("Metadata unavailable.");
+    }),
+  );
+  const manager = createPreviewManager(new URL("https://host.test/api/tailorkit/"), vi.fn());
+  const app = (token: string) => ({
+    id: "app",
+    preview: {
+      sessionId,
+      expiresAt: "later",
+      websocketUrl: "wss://platform.test/preview",
+      token,
+    },
+  });
+  const unsubscribe = manager.subscribe(app(oldToken), vi.fn());
+  await vi.waitFor(() => expect(FakeSocket.instances).toHaveLength(1));
+  manager.updateApp(app(newToken));
+  FakeSocket.instances[0]?.close();
+  await vi.waitFor(() => expect(FakeSocket.instances).toHaveLength(2), { timeout: 2500 });
+  expect(FakeSocket.instances[1]?.protocol).toBe(newToken);
+  unsubscribe();
+});
+
 afterEach(() => {
   state.release?.();
   state.release = undefined;

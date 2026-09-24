@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -12,11 +12,15 @@ const mocks = vi.hoisted(() => ({
   stop: vi.fn(),
   token: vi.fn(),
   whoami: vi.fn(),
+  heartbeat: vi.fn(),
 }));
 
 vi.mock("@tailorkit/app/config/loader", () => ({ loadTailorKitConfig: mocks.load }));
 vi.mock("@tailorkit/app/builder", () => ({ buildApp: mocks.build }));
 vi.mock("@tailorkit/core/server", () => ({ createTailorKitClient: mocks.client }));
+vi.mock("@tailorkit/client-platform/preview", () => ({
+  createPreviewWebSocketClient: () => ({ heartbeat: mocks.heartbeat }),
+}));
 vi.mock("./auth", () => ({ getDeployToken: mocks.token, runWhoami: mocks.whoami }));
 
 const { runPreview } = await import("./preview");
@@ -31,6 +35,52 @@ beforeEach(() => {
   mocks.stop.mockImplementation(async () => {});
   mocks.token.mockResolvedValue({ deployToken: "token" });
   mocks.whoami.mockResolvedValue({ hostUrl: "https://host.test" });
+  mocks.heartbeat.mockResolvedValue({ accepted: true });
+});
+
+it("stops reconnecting when heartbeat reports an ended session", async () => {
+  class PreviewSocket extends EventTarget {
+    static instances: PreviewSocket[] = [];
+    closed = false;
+    constructor(_url: URL, _protocol: string) {
+      super();
+      PreviewSocket.instances.push(this);
+    }
+    close() {
+      this.closed = true;
+      this.dispatchEvent(new Event("close"));
+    }
+    open() {
+      this.dispatchEvent(new Event("open"));
+    }
+  }
+  vi.stubGlobal("WebSocket", PreviewSocket);
+  const cwd = await mkdtemp(path.join(tmpdir(), "tailorkit-preview-terminal-"));
+  dirs.push(cwd);
+  await mkdir(path.join(cwd, "output"));
+  await writeFile(path.join(cwd, "output/client.js"), "export default 1");
+  mocks.load.mockResolvedValue({ root: cwd, config: { appId: "app" } });
+  mocks.start.mockResolvedValue({
+    data: {
+      sessionId: "session",
+      tunnelUrl: "wss://platform.test/preview",
+      tunnelToken: "token",
+      shareId: "share",
+    },
+  });
+  mocks.heartbeat.mockRejectedValue({
+    code: "UNAUTHORIZED",
+    message: "Preview session is unavailable.",
+  });
+
+  await runPreview({ cwd, outDir: "output" });
+  const socket = PreviewSocket.instances[0];
+  socket?.open();
+  await vi.waitFor(() => expect(mocks.close).toHaveBeenCalledOnce());
+  expect(socket?.closed).toBe(true);
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+  expect(PreviewSocket.instances).toHaveLength(1);
+  vi.unstubAllGlobals();
 });
 
 afterEach(async () => {

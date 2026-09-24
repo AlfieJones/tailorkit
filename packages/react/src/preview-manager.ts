@@ -29,9 +29,9 @@ interface Entry {
   delay: number;
 }
 
-function hasValidViewerToken(metadata: NonNullable<TailorKitApp["preview"]>): boolean {
+function viewerTokenExpiresAt(metadata: NonNullable<TailorKitApp["preview"]>): number {
   const expiresAt = Number(metadata.token.split(".", 1)[0]);
-  return Number.isSafeInteger(expiresAt) && expiresAt > Date.now();
+  return Number.isSafeInteger(expiresAt) ? expiresAt : 0;
 }
 
 function bytesFromBase64(value: string): Uint8Array {
@@ -161,8 +161,12 @@ export function createPreviewManager(baseUrl: URL, onEnded: () => void) {
       return;
     }
     entry.connecting = true;
+    const appMetadata = entry.app.preview;
     let metadata =
-      entry.metadata && hasValidViewerToken(entry.metadata) ? entry.metadata : entry.app.preview;
+      entry.metadata &&
+      viewerTokenExpiresAt(entry.metadata) > Math.max(Date.now(), viewerTokenExpiresAt(appMetadata))
+        ? entry.metadata
+        : appMetadata;
     try {
       const refresh = new URL("preview/metadata", baseUrl);
       refresh.searchParams.set("sessionId", metadata.sessionId);
@@ -218,6 +222,13 @@ export function createPreviewManager(baseUrl: URL, onEnded: () => void) {
   };
   return {
     getSnapshot: (sessionId: string): PreviewSnapshot => entries.get(sessionId)?.snapshot ?? empty,
+    updateApp: (app: TailorKitApp): void => {
+      const sessionId = app.preview?.sessionId;
+      const entry = sessionId && entries.get(sessionId);
+      if (entry) {
+        entry.app = app;
+      }
+    },
     subscribe: (app: TailorKitApp, listener: () => void): (() => void) => {
       const sessionId = app.preview?.sessionId;
       if (!sessionId) {
