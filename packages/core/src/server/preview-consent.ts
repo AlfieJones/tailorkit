@@ -39,8 +39,8 @@ interface ConsentOptions {
   }) => Promise<{ scopeId: string } | null> | { scopeId: string } | null;
 }
 
-// Keep Origin on same-origin form submissions without leaking share URLs to other origins.
-const headers = { "cache-control": "no-store", "referrer-policy": "same-origin" };
+// Strip share IDs from Referer while preserving Origin on same-origin form submissions.
+const headers = { "cache-control": "no-store", "referrer-policy": "strict-origin" };
 
 export async function handlePreviewConsent(options: ConsentOptions): Promise<Response> {
   const {

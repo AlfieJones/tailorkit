@@ -139,7 +139,7 @@ describe("preview host flow", () => {
     expect(consentHtml).toContain('class="warning" role="note"');
     expect(consentHtml).toContain("Untrusted content");
     expect(consentHtml).toContain("Only accept previews from trusted developers.");
-    expect(consent.headers.get("referrer-policy")).toBe("same-origin");
+    expect(consent.headers.get("referrer-policy")).toBe("strict-origin");
     expect(consent.headers.get("set-cookie")).toBeNull();
     expect(consent.headers.get("cache-control")).toBe("no-store");
 
@@ -244,7 +244,7 @@ describe("preview host flow", () => {
       const second = await tailor.handler(new Request(consentUrl), options);
       for (const page of [first, second]) {
         expect(page.status).toBe(200);
-        expect(page.headers.get("referrer-policy")).toBe("same-origin");
+        expect(page.headers.get("referrer-policy")).toBe("strict-origin");
         expect(page.headers.get("set-cookie")).toBeNull();
         expect(await page.text()).not.toContain('name="csrfToken"');
         const accepted = await tailor.handler(
