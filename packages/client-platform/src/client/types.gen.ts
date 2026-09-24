@@ -761,3 +761,119 @@ export type PreviewAcceptedResponses = {
 };
 
 export type PreviewAcceptedResponse = PreviewAcceptedResponses[keyof PreviewAcceptedResponses];
+
+export type BuilderAppsData = {
+  body?: never;
+  path?: never;
+  query: {
+    scopeId: string;
+    origin: string;
+  };
+  url: "/builder/apps";
+};
+
+export type BuilderAppsResponses = {
+  /**
+   * OK
+   */
+  200: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    currentDeployment: {
+      id: string;
+    } | null;
+  }>;
+};
+
+export type BuilderAppsResponse = BuilderAppsResponses[keyof BuilderAppsResponses];
+
+export type BuilderCreateAppData = {
+  body: {
+    scopeId: string;
+    origin: string;
+    name: string;
+    description?: string;
+  };
+  path?: never;
+  query?: never;
+  url: "/builder/apps";
+};
+
+export type BuilderCreateAppResponses = {
+  /**
+   * OK
+   */
+  200: {
+    id: string;
+    name: string;
+    description: string | null;
+  };
+};
+
+export type BuilderCreateAppResponse = BuilderCreateAppResponses[keyof BuilderCreateAppResponses];
+
+export type BuilderRunData = {
+  body: {
+    scopeId: string;
+    origin: string;
+    appId: string;
+    prompt: string;
+    conversationId?: string;
+  };
+  path?: never;
+  query?: never;
+  url: "/builder/runs";
+};
+
+export type BuilderRunResponses = {
+  /**
+   * OK
+   */
+  200: {
+    conversationId: string;
+    messages: Array<{
+      id: string;
+      role: "user" | "assistant";
+      content: string;
+      createdAt: string;
+    }>;
+    candidate: {
+      app: {
+        id: string;
+        name: string;
+        description: string | null;
+      };
+      previewUrl: string;
+      sourceRevision: string;
+      deploymentId: string;
+      runId: string;
+    };
+    runId: string;
+  };
+};
+
+export type BuilderRunResponse = BuilderRunResponses[keyof BuilderRunResponses];
+
+export type BuilderPublishData = {
+  body: {
+    scopeId: string;
+    origin: string;
+  };
+  path: {
+    runId: string;
+  };
+  query?: never;
+  url: "/builder/runs/{runId}/publish";
+};
+
+export type BuilderPublishResponses = {
+  /**
+   * OK
+   */
+  200: {
+    published: boolean;
+  };
+};
+
+export type BuilderPublishResponse = BuilderPublishResponses[keyof BuilderPublishResponses];

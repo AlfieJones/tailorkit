@@ -39,12 +39,15 @@
     }
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/preview-token.ts src/preview-ws.ts src/preview-ws-auth.ts src/preview-build-store.ts src/preview-lifecycle.ts src/procedures.ts src/public-id.ts src/asset-url.ts src/assets.ts src/routes/apps.ts src/routes/cli-auth.ts src/routes/deployments.ts src/routes/preview.ts src/routes/preview-grants.ts --format esm --dts --clean",
+    "build": "tsdown src/index.ts src/context.ts src/pagination.ts src/preview-token.ts src/preview-ws.ts src/preview-ws-auth.ts src/preview-build-store.ts src/preview-lifecycle.ts src/procedures.ts src/public-id.ts src/asset-url.ts src/assets.ts src/builder/app-template.ts src/builder/build-app.ts src/builder/docker-sandbox.ts src/routes/apps.ts src/routes/builder.ts src/routes/cli-auth.ts src/routes/deployments.ts src/routes/preview.ts src/routes/preview-grants.ts --format esm --dts --clean",
     "check-types": "tsc --noEmit",
     "generate:openapi": "node --conditions=development --import tsx scripts/generate-openapi.ts && oxfmt openapi.json",
     "test": "vitest run"
   },
   "dependencies": {
+    "@ai-sdk/harness": "^1.0.117",
+    "@ai-sdk/harness-fx": "^1.0.30",
+    "@ai-sdk/sandbox-vercel": "^1.0.117",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
@@ -56,6 +59,8 @@
     "@tailorkit/kv": "workspace:*",
     "@tailorkit/observability": "workspace:*",
     "@tailorkit/storage": "workspace:*",
+    "@vercel/sandbox": "^3.3.0",
+    "ai": "^7.0.99",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"
   },

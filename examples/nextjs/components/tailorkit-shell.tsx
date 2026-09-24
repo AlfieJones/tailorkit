@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BlocksIcon, XIcon } from "lucide-react";
 import type { DemoUser } from "@examples/shared";
-import { signOutDemoUser } from "@examples/shared";
+import { signOutDemoUser, BuilderExample, createBuilderTransport } from "@examples/shared";
 import { Button } from "@tailorkit/ui/button";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@tailorkit/ui/sidebar";
 import type { TailorKitApp } from "tailorkit/react";
@@ -18,7 +18,7 @@ type Apps = NonNullable<ReturnType<typeof useApps>["data"]>;
 
 function TailorKitShellWithApps({ children, user }: { children: ReactNode; user: DemoUser }) {
   const router = useRouter();
-  const { data: apps, isLoading } = useApps();
+  const { data: apps, isLoading, refetch } = useApps();
   const [currentApp, setCurrentApp] = useState<TailorKitApp | null>(null);
 
   async function signOut() {
@@ -31,6 +31,7 @@ function TailorKitShellWithApps({ children, user }: { children: ReactNode; user:
       apps={apps ?? []}
       currentApp={currentApp}
       isLoading={isLoading}
+      refreshApps={refetch}
       onSelectApp={setCurrentApp}
       signOut={signOut}
       user={user}
@@ -46,6 +47,7 @@ function TailorKitShellContent({
   currentApp,
   isLoading,
   onSelectApp,
+  refreshApps,
   signOut,
   user,
 }: {
@@ -54,10 +56,12 @@ function TailorKitShellContent({
   currentApp: TailorKitApp | null;
   isLoading: boolean;
   onSelectApp: (app: TailorKitApp | null) => void;
+  refreshApps: () => Promise<void>;
   signOut: () => Promise<void>;
   user: DemoUser;
 }) {
   useView("/", { context: { user } });
+  const [builderSlot, setBuilderSlot] = useState<"panel" | "navbar">("panel");
 
   return (
     <SidebarProvider className="isolate">
@@ -69,7 +73,31 @@ function TailorKitShellContent({
         </header>
         <main className="mx-auto w-full max-w-6xl p-6">{children}</main>
       </SidebarInset>
-      <TailorKitAppView app={currentApp} onClose={() => onSelectApp(null)} />
+      <TailorKitAppView app={currentApp} onClose={() => onSelectApp(null)} slot={builderSlot} />
+      <BuilderExample
+        apps={[]}
+        navigation={(placement) => {
+          if (placement === "panel" || placement === "navbar") {
+            setBuilderSlot(placement);
+          }
+        }}
+        placements={["panel", "navbar"]}
+        transport={createBuilderTransport({ afterPublish: refreshApps })}
+        renderCandidate={(candidate) => {
+          const app = {
+            ...candidate.app,
+            description: candidate.app.description ?? undefined,
+            clientPath: candidate.previewUrl,
+            currentDeployment: null,
+          };
+          const fallback = <p className="p-4 text-sm text-muted-foreground">Loading preview…</p>;
+          return builderSlot === "navbar" ? (
+            <AppView app={app} slot="navbar" fallback={fallback} />
+          ) : (
+            <AppView app={app} slot="panel" fallback={fallback} />
+          );
+        }}
+      />
       <TailorKitAppList
         apps={apps}
         currentApp={currentApp}
@@ -127,7 +155,15 @@ function TailorKitAppList({
   );
 }
 
-function TailorKitAppView({ app, onClose }: { app: TailorKitApp | null; onClose: () => void }) {
+function TailorKitAppView({
+  app,
+  onClose,
+  slot,
+}: {
+  app: TailorKitApp | null;
+  onClose: () => void;
+  slot: "panel" | "navbar";
+}) {
   if (!app) {
     return null;
   }
@@ -150,11 +186,19 @@ function TailorKitAppView({ app, onClose }: { app: TailorKitApp | null; onClose:
         </Button>
       </header>
       <main className="min-h-0 flex-1 overflow-auto p-4">
-        <AppView
-          slot="panel"
-          app={app}
-          fallback={<p className="text-muted-foreground text-sm">Loading app…</p>}
-        />
+        {slot === "navbar" ? (
+          <AppView
+            slot="navbar"
+            app={app}
+            fallback={<p className="text-muted-foreground text-sm">Loading app…</p>}
+          />
+        ) : (
+          <AppView
+            slot="panel"
+            app={app}
+            fallback={<p className="text-muted-foreground text-sm">Loading app…</p>}
+          />
+        )}
       </main>
     </aside>
   );

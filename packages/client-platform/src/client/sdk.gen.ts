@@ -21,6 +21,14 @@ import type {
   AppsListResponses,
   AppsUpdateData,
   AppsUpdateResponses,
+  BuilderAppsData,
+  BuilderAppsResponses,
+  BuilderCreateAppData,
+  BuilderCreateAppResponses,
+  BuilderPublishData,
+  BuilderPublishResponses,
+  BuilderRunData,
+  BuilderRunResponses,
   CliAuthApproveData,
   CliAuthApproveResponses,
   CliAuthDenyData,
@@ -278,6 +286,50 @@ export const previewAccepted = <ThrowOnError extends boolean = false>(
 ): RequestResult<PreviewAcceptedResponses, unknown, ThrowOnError> =>
   (options.client ?? client).post<PreviewAcceptedResponses, unknown, ThrowOnError>({
     url: "/preview/grants/resolve",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+export const builderApps = <ThrowOnError extends boolean = false>(
+  options: Options<BuilderAppsData, ThrowOnError>,
+): RequestResult<BuilderAppsResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).get<BuilderAppsResponses, unknown, ThrowOnError>({
+    url: "/builder/apps",
+    ...options,
+  });
+
+export const builderCreateApp = <ThrowOnError extends boolean = false>(
+  options: Options<BuilderCreateAppData, ThrowOnError>,
+): RequestResult<BuilderCreateAppResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).post<BuilderCreateAppResponses, unknown, ThrowOnError>({
+    url: "/builder/apps",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+export const builderRun = <ThrowOnError extends boolean = false>(
+  options: Options<BuilderRunData, ThrowOnError>,
+): RequestResult<BuilderRunResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).post<BuilderRunResponses, unknown, ThrowOnError>({
+    url: "/builder/runs",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+export const builderPublish = <ThrowOnError extends boolean = false>(
+  options: Options<BuilderPublishData, ThrowOnError>,
+): RequestResult<BuilderPublishResponses, unknown, ThrowOnError> =>
+  (options.client ?? client).post<BuilderPublishResponses, unknown, ThrowOnError>({
+    url: "/builder/runs/{runId}/publish",
     ...options,
     headers: {
       "Content-Type": "application/json",

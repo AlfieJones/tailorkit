@@ -4,12 +4,14 @@ import { appRouter } from "./routes/apps";
 import { cliAuthRouter } from "./routes/cli-auth";
 import { deploymentRouter } from "./routes/deployments";
 import { previewRouter } from "./routes/preview";
+import { platformBuilderRouter } from "./routes/builder";
 
 export const platformRouter = {
   apps: appRouter,
   cliAuth: cliAuthRouter,
   deployments: deploymentRouter,
   preview: previewRouter,
+  builder: platformBuilderRouter,
 };
 
 export type PlatformRouter = typeof platformRouter;

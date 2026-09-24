@@ -69,6 +69,16 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.project.id,
       to: r.previewSession.projectId,
     }),
+    appOrigins: r.many.appOrigin({ from: r.project.id, to: r.appOrigin.projectId }),
+    builderConversations: r.many.builderConversation({
+      from: r.project.id,
+      to: r.builderConversation.projectId,
+    }),
+    builderRuns: r.many.builderRun({ from: r.project.id, to: r.builderRun.projectId }),
+    appSourceRevisions: r.many.appSourceRevision({
+      from: r.project.id,
+      to: r.appSourceRevision.projectId,
+    }),
   },
 
   cliAuthSession: {
@@ -112,6 +122,13 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.app.id,
       to: r.previewSession.appId,
     }),
+    origins: r.many.appOrigin({ from: r.app.id, to: r.appOrigin.appId }),
+    builderConversations: r.many.builderConversation({
+      from: r.app.id,
+      to: r.builderConversation.appId,
+    }),
+    builderRuns: r.many.builderRun({ from: r.app.id, to: r.builderRun.appId }),
+    sourceRevisions: r.many.appSourceRevision({ from: r.app.id, to: r.appSourceRevision.appId }),
   },
 
   appDeployment: {
@@ -130,6 +147,37 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.appDeploymentFile.appDeploymentId,
       to: r.appDeployment.id,
     }),
+  },
+  appOrigin: {
+    app: r.one.app({ from: r.appOrigin.appId, to: r.app.id }),
+    project: r.one.project({ from: r.appOrigin.projectId, to: r.project.id }),
+  },
+  builderConversation: {
+    app: r.one.app({ from: r.builderConversation.appId, to: r.app.id }),
+    project: r.one.project({ from: r.builderConversation.projectId, to: r.project.id }),
+    runs: r.many.builderRun({ from: r.builderConversation.id, to: r.builderRun.conversationId }),
+    revisions: r.many.appSourceRevision({
+      from: r.builderConversation.id,
+      to: r.appSourceRevision.conversationId,
+    }),
+  },
+  builderRun: {
+    app: r.one.app({ from: r.builderRun.appId, to: r.app.id }),
+    conversation: r.one.builderConversation({
+      from: r.builderRun.conversationId,
+      to: r.builderConversation.id,
+    }),
+    project: r.one.project({ from: r.builderRun.projectId, to: r.project.id }),
+    revisions: r.many.appSourceRevision({ from: r.builderRun.id, to: r.appSourceRevision.runId }),
+  },
+  appSourceRevision: {
+    app: r.one.app({ from: r.appSourceRevision.appId, to: r.app.id }),
+    conversation: r.one.builderConversation({
+      from: r.appSourceRevision.conversationId,
+      to: r.builderConversation.id,
+    }),
+    project: r.one.project({ from: r.appSourceRevision.projectId, to: r.project.id }),
+    run: r.one.builderRun({ from: r.appSourceRevision.runId, to: r.builderRun.id }),
   },
 
   session: {
