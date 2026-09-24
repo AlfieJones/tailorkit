@@ -105,6 +105,8 @@ export function createUpstashKV(): KV<"upstash"> {
   const redis = new Redis({
     url: env.KV_REST_API_URL as string,
     token: env.KV_REST_API_TOKEN as string,
+    // The KV interface stores and returns raw strings; individual consumers parse JSON as needed.
+    automaticDeserialization: false,
   });
 
   return {
