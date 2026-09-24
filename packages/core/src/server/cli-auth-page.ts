@@ -310,6 +310,38 @@ h1 {
   line-height: 1.55;
 }
 
+.warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 18px;
+  border: 1px solid #8c6500;
+  border-radius: 8px;
+  background: hsla(38, 92%, 50%, 0.06);
+  padding: 14px 16px;
+}
+
+.warning-icon {
+  flex: none;
+  color: #f59e0b;
+  font-size: 19px;
+  line-height: 1.3;
+}
+
+.warning-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.warning-description {
+  margin: 3px 0 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .error {
   margin: 18px 0 0;
   border: 1px solid var(--border);

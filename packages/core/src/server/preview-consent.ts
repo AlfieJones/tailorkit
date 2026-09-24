@@ -39,7 +39,8 @@ interface ConsentOptions {
   }) => Promise<{ scopeId: string } | null> | { scopeId: string } | null;
 }
 
-const headers = { "cache-control": "no-store", "referrer-policy": "no-referrer" };
+// Strip share IDs from Referer while preserving Origin on same-origin form submissions.
+const headers = { "cache-control": "no-store", "referrer-policy": "strict-origin" };
 
 export async function handlePreviewConsent(options: ConsentOptions): Promise<Response> {
   const {
@@ -126,8 +127,8 @@ export async function handlePreviewConsent(options: ConsentOptions): Promise<Res
     const appName = escapeHtml(data.appName);
     return html(
       `Preview ${appName}`,
-      `${appName} will run using your host context and your existing action permissions.`,
-      `<form method="post"><div class="actions"><button class="button primary" name="intent" value="accept" type="submit">Accept preview</button><button class="button secondary" name="intent" value="cancel" type="submit">Cancel</button></div></form>`,
+      "After you accept, this preview is available only in this browser.",
+      `<aside class="warning" role="note" aria-labelledby="preview-warning-title"><span class="warning-icon" aria-hidden="true">⚠</span><div><h2 class="warning-title" id="preview-warning-title">Untrusted content</h2><p class="warning-description">Only accept previews from trusted developers.</p></div></aside><form method="post"><div class="actions"><button class="button primary" name="intent" value="accept" type="submit">Accept preview</button><button class="button secondary" name="intent" value="cancel" type="submit">Cancel</button></div></form>`,
     );
   } catch (error) {
     return previewErrorResponse(error);

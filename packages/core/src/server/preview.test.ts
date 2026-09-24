@@ -82,6 +82,23 @@ function server(requests: string[], previewError?: unknown) {
 }
 
 describe("preview host flow", () => {
+  it("routes preview start POSTs through the RPC handler", async () => {
+    const requests: string[] = [];
+    const tailor = server(requests);
+    const response = await tailor.handler(
+      new Request(`${baseUrl}/preview/start`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ json: { appId: "app" } }),
+      }),
+      { authenticate: () => ({ scopeId: "viewer" }) },
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect(await response.text()).not.toContain("Preview Example app");
+  });
+
   it("returns 503 for structured platform storage errors", async () => {
     const tailor = server([], { code: "SERVICE_UNAVAILABLE", message: "KV unavailable" });
     const consentUrl = `${baseUrl}/preview/${shareId}`;
@@ -114,7 +131,16 @@ describe("preview host flow", () => {
     const consent = await tailor.handler(new Request(consentUrl), {
       authenticate: () => ({ scopeId: "viewer" }),
     });
-    expect(await consent.text()).toContain("Accept preview");
+    const consentHtml = await consent.text();
+    expect(consentHtml).toContain(
+      "After you accept, this preview is available only in this browser.",
+    );
+    expect(consentHtml).toContain("Accept preview");
+    expect(consentHtml).toContain('class="warning" role="note"');
+    expect(consentHtml).toContain("Untrusted content");
+    expect(consentHtml).toContain("Only accept previews from trusted developers.");
+    expect(consent.headers.get("referrer-policy")).toBe("strict-origin");
+    expect(consent.headers.get("set-cookie")).toBeNull();
     expect(consent.headers.get("cache-control")).toBe("no-store");
 
     const foreign = await tailor.handler(
@@ -130,6 +156,19 @@ describe("preview host flow", () => {
     );
     expect(foreign.status).toBe(403);
     expect(requests.some((value) => value.endsWith("/accept"))).toBe(false);
+
+    const opaqueOriginWithoutToken = await tailor.handler(
+      new Request(consentUrl, {
+        method: "POST",
+        headers: {
+          origin: "null",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: "intent=accept",
+      }),
+      { authenticate: () => ({ scopeId: "viewer" }) },
+    );
+    expect(opaqueOriginWithoutToken.status).toBe(403);
 
     const accepted = await tailor.handler(
       new Request(consentUrl, {
@@ -160,6 +199,71 @@ describe("preview host flow", () => {
     expect(cancelled.status).toBe(303);
     expect(cancelled.headers.get("location")).toBe("/dashboard");
   });
+
+  it.each([
+    { origin: "null", site: "same-site" },
+    { origin: "null", site: "cross-site" },
+    { origin: "https://sibling.host.test", site: "same-site" },
+    { origin: "https://host.test", site: "cross-site" },
+    { origin: undefined, site: "same-origin" },
+  ])(
+    "rejects injected consent tokens with origin=$origin and site=$site",
+    async ({ origin, site }) => {
+      const requests: string[] = [];
+      const tailor = server(requests);
+      const token = "a".repeat(64);
+      const headers = new Headers({
+        "content-type": "application/x-www-form-urlencoded",
+        "sec-fetch-site": site,
+        cookie: `tailorkit_preview_csrf=${token}`,
+      });
+      if (origin !== undefined) {
+        headers.set("origin", origin);
+      }
+      const response = await tailor.handler(
+        new Request(`${baseUrl}/preview/${shareId}`, {
+          method: "POST",
+          headers,
+          body: `intent=accept&csrfToken=${token}`,
+        }),
+        { authenticate: () => ({ scopeId: "viewer" }) },
+      );
+      expect(response.status).toBe(403);
+      expect(requests).toEqual([]);
+    },
+  );
+
+  it.each(["https://host.test", "http://localhost:3000"])(
+    "keeps multiple consent pages usable at %s without a shared expiring token",
+    async (origin) => {
+      const requests: string[] = [];
+      const tailor = server(requests);
+      const consentUrl = `${origin}${basePath}/preview/${shareId}`;
+      const options = { authenticate: () => ({ scopeId: "viewer" }) };
+      const first = await tailor.handler(new Request(consentUrl), options);
+      const second = await tailor.handler(new Request(consentUrl), options);
+      for (const page of [first, second]) {
+        expect(page.status).toBe(200);
+        expect(page.headers.get("referrer-policy")).toBe("strict-origin");
+        expect(page.headers.get("set-cookie")).toBeNull();
+        expect(await page.text()).not.toContain('name="csrfToken"');
+        const accepted = await tailor.handler(
+          new Request(consentUrl, {
+            method: "POST",
+            headers: {
+              origin,
+              "sec-fetch-site": "same-origin",
+              "content-type": "application/x-www-form-urlencoded",
+            },
+            body: "intent=accept",
+          }),
+          options,
+        );
+        expect(accepted.status).toBe(303);
+      }
+      expect(requests.filter((value) => value.endsWith("/accept"))).toHaveLength(2);
+    },
+  );
 
   it("rejects a return path that could leave the host origin", () => {
     expect(() =>
