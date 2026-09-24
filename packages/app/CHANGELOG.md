@@ -1,5 +1,12 @@
 # @tailorkit/app
 
+## 0.1.0-beta.14
+
+### Patch Changes
+
+- Updated dependencies [e06e450]
+  - @tailorkit/core@0.1.0-beta.14
+
 ## 0.1.0-beta.13
 
 ### Patch Changes

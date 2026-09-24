@@ -1,5 +1,19 @@
 # @tailorkit/react
 
+## 0.1.0-beta.14
+
+### Minor Changes
+
+- 491f715: Rename host context declarations from `views` to `contexts`. Each context path now maps directly to its Zod, Valibot, or ArkType schema.
+
+### Patch Changes
+
+- e06e450: Upload complete preview builds to KV in bounded oRPC chunks, accept previews through a host consent page, and stream verified revisions to sandboxed app views.
+- Updated dependencies [e06e450]
+  - @tailorkit/core@0.1.0-beta.14
+  - @tailorkit/sandbox@0.1.0-beta.14
+  - @tailorkit/client-platform@0.1.0-beta.14
+
 ## 0.1.0-beta.13
 
 ### Patch Changes

@@ -1,5 +1,21 @@
 # tailorkit
 
+## 0.1.0-beta.14
+
+### Minor Changes
+
+- 491f715: Rename host context declarations from `views` to `contexts`. Each context path now maps directly to its Zod, Valibot, or ArkType schema.
+
+### Patch Changes
+
+- Updated dependencies [491f715]
+- Updated dependencies [e06e450]
+- Updated dependencies [9a8ecab]
+  - @tailorkit/react@0.1.0-beta.14
+  - @tailorkit/cli@0.1.0-beta.14
+  - @tailorkit/core@0.1.0-beta.14
+  - @tailorkit/app@0.1.0-beta.14
+
 ## 0.1.0-beta.13
 
 ### Patch Changes
