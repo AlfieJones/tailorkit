@@ -327,8 +327,9 @@ it("clears the published preview before refreshing apps when a session ends", as
     { type: "complete", revision: 1 },
   ];
   const snapshots: { revision: number; source: string | null }[] = [];
+  const endedSnapshots: { revision: number; source: string | null }[] = [];
   const onEnded = vi.fn(() => {
-    expect(snapshots.at(-1)).toEqual({ revision: 0, source: null });
+    endedSnapshots.push(manager.getSnapshot("session"));
   });
   const manager = createPreviewManager(new URL("https://host.test/api/tailorkit/"), onEnded);
   const unsubscribe = manager.subscribe(
@@ -351,6 +352,7 @@ it("clears the published preview before refreshing apps when a session ends", as
   await vi.waitFor(() => expect(FakeSocket.instances).toHaveLength(1));
   FakeSocket.instances[0]?.open();
   await vi.waitFor(() => expect(onEnded).toHaveBeenCalledOnce());
+  expect(endedSnapshots).toEqual([{ revision: 0, source: null }]);
   expect(snapshots).toEqual([
     { revision: 1, source },
     { revision: 0, source: null },
