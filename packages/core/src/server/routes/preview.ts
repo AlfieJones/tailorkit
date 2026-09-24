@@ -1,22 +1,30 @@
 import { ORPCError } from "@orpc/server";
+import { ACTIVE_PREVIEW_CONFLICT_REASON } from "@tailorkit/client-platform/preview";
 import { previewStart, previewStop } from "@tailorkit/client-platform/client";
 import { z } from "zod";
 import { getCliDeployToken, o, requireCliDeployToken } from "../procedures";
 
-function isActivePreviewConflict(error: unknown): boolean {
-  if (error instanceof Error) {
-    return /active preview already exists|preview is already running/iu.test(error.message);
-  }
+export function isActivePreviewConflict(error: unknown): boolean {
   if (!error || typeof error !== "object") {
     return false;
   }
+
   if (
-    "message" in error &&
-    typeof error.message === "string" &&
-    /active preview already exists|preview is already running/iu.test(error.message)
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object" &&
+    "reason" in error.data &&
+    error.data.reason === ACTIVE_PREVIEW_CONFLICT_REASON
   ) {
     return true;
   }
+
+  // Older platform versions do not return a structured reason. Keep their message format working.
+  const message = "message" in error && typeof error.message === "string" ? error.message : "";
+  if (/active preview already exists|preview is already running/iu.test(message)) {
+    return true;
+  }
+
   return (
     ("error" in error && isActivePreviewConflict(error.error)) ||
     ("cause" in error && isActivePreviewConflict(error.cause))

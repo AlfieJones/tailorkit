@@ -16,6 +16,7 @@ import { previewGrantRoutes } from "./preview-grants";
 const previewSessionLifetimeMs = 8 * 60 * 60 * 1000;
 const firstConnectionGraceMs = 2 * 60 * 1000;
 const maxActivePreviewsPerScope = 5;
+const activePreviewConflictReason = "ACTIVE_PREVIEW_EXISTS";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function hash(value: string): string {
@@ -135,6 +136,7 @@ const startPreview = protectedRouter
         });
         if (active && !input.body.replaceActive) {
           throw new ORPCError("CONFLICT", {
+            data: { reason: activePreviewConflictReason },
             message: "A preview is already running for this app.",
           });
         }
@@ -187,6 +189,7 @@ const startPreview = protectedRouter
           candidate.code === "23505"
         ) {
           throw new ORPCError("CONFLICT", {
+            data: { reason: activePreviewConflictReason },
             message: "A preview is already running for this app.",
           });
         }

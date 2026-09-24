@@ -1,6 +1,7 @@
 /* oxlint-disable require-await -- the platform fetch mock has the Fetch promise shape. */
 import { describe, expect, it } from "vitest";
 import { createTailorKitServer } from "./handler";
+import { isActivePreviewConflict } from "./routes/preview";
 
 const shareId = "s".repeat(43);
 const grantId = "g".repeat(43);
@@ -82,6 +83,25 @@ function server(requests: string[], previewError?: unknown) {
 }
 
 describe("preview host flow", () => {
+  it("identifies active preview conflicts by reason and supports legacy platform messages", () => {
+    expect(
+      isActivePreviewConflict({
+        code: "CONFLICT",
+        message: "The wording can change without affecting the CLI.",
+        data: { reason: "ACTIVE_PREVIEW_EXISTS" },
+      }),
+    ).toBe(true);
+    expect(
+      isActivePreviewConflict({ code: "CONFLICT", message: "A preview is already running." }),
+    ).toBe(true);
+    expect(
+      isActivePreviewConflict({
+        code: "CONFLICT",
+        message: "This scope already has 5 active previews.",
+      }),
+    ).toBe(false);
+  });
+
   it("routes preview start POSTs through the RPC handler", async () => {
     const requests: string[] = [];
     const tailor = server(requests);

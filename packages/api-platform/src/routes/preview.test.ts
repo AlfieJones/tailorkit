@@ -162,7 +162,10 @@ describe("platform preview lifecycle and grants", () => {
     const first = await start();
     expect(first.body.shareId).toHaveLength(43);
     expect(first.body.tunnelUrl).toContain("/api/platform/preview/ws");
-    await expect(start()).rejects.toMatchObject({ code: "CONFLICT" });
+    await expect(start()).rejects.toMatchObject({
+      code: "CONFLICT",
+      data: { reason: "ACTIVE_PREVIEW_EXISTS" },
+    });
     const kv = state.kv as ReturnType<typeof fakeKV>;
     const expiredBuildId = "expired_build";
     const manifest = {
