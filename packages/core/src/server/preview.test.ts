@@ -82,6 +82,23 @@ function server(requests: string[], previewError?: unknown) {
 }
 
 describe("preview host flow", () => {
+  it("routes preview start POSTs through the RPC handler", async () => {
+    const requests: string[] = [];
+    const tailor = server(requests);
+    const response = await tailor.handler(
+      new Request(`${baseUrl}/preview/start`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ json: { appId: "app" } }),
+      }),
+      { authenticate: () => ({ scopeId: "viewer" }) },
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect(await response.text()).not.toContain("Preview Example app");
+  });
+
   it("returns 503 for structured platform storage errors", async () => {
     const tailor = server([], { code: "SERVICE_UNAVAILABLE", message: "KV unavailable" });
     const consentUrl = `${baseUrl}/preview/${shareId}`;

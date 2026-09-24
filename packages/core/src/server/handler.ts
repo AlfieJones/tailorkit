@@ -26,6 +26,7 @@ import type {
 
 const defaultPlatformBaseUrl = "https://tailorkit.dev/api/platform";
 type AbsolutePath = `/${string}`;
+const previewShareIdPattern = /^[A-Za-z0-9_-]{43}$/u;
 
 export function createTailorKitServer<const TOptions extends TailorKitServerInputOptions>(
   options: TOptions & {
@@ -101,10 +102,12 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
       });
     }
 
+    const previewShareId = url.pathname.startsWith(previewPrefix)
+      ? url.pathname.slice(previewPrefix.length)
+      : "";
     if (
-      url.pathname !== `${basePath}/preview/metadata` &&
-      url.pathname.startsWith(previewPrefix) &&
-      !url.pathname.slice(previewPrefix.length).includes("/")
+      (request.method === "GET" || request.method === "POST") &&
+      previewShareIdPattern.test(previewShareId)
     ) {
       const context = await createContext({
         actions,
@@ -116,7 +119,7 @@ export function createTailorKitServer<const TOptions extends TailorKitServerInpu
       });
       return handlePreviewConsent({
         request,
-        shareId: url.pathname.slice(previewPrefix.length),
+        shareId: previewShareId,
         basePath,
         returnPath: previewReturnPath,
         signInPath: options.cliAuth?.signInPath,

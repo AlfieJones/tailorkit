@@ -95,6 +95,7 @@ export const buildApp = async (options: BuildAppOptions = {}): Promise<unknown> 
     },
     configFile: false,
     mode: options.mode,
+    oxc: { jsx: { importSource: "preact" } },
     plugins: [
       {
         name: "tailorkit-preview-build-ready",
