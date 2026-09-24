@@ -97,7 +97,7 @@ function TodoRow({
             {todo.done ? "Reopen" : "Complete"}
           </Button>
           <Button variant="secondary" onClick={() => onDelete(todo.id)}>
-            Remove
+            Delete
           </Button>
         </Flex>
       </Flex>
