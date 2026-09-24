@@ -67,3 +67,36 @@ it("closes an early message when authorization fails", async () => {
   expect(peer.close).toHaveBeenCalled();
   expect(mocks.message).not.toHaveBeenCalled();
 });
+
+it("closes a peer that sends multiple frames before authorization finishes", async () => {
+  let resolveAuthorization;
+  mocks.authorize.mockReturnValueOnce(
+    new Promise((resolve) => {
+      resolveAuthorization = resolve;
+    }),
+  );
+  const peer = { context: { ...context, token: "token" }, close: vi.fn() };
+  const opening = socket.open(peer);
+  const first = socket.message(peer, { rawData: "first" });
+  const second = socket.message(peer, { rawData: "second" });
+
+  await second;
+  expect(peer.close).toHaveBeenCalledOnce();
+  resolveAuthorization(context);
+  await Promise.all([opening, first]);
+  expect(mocks.message).not.toHaveBeenCalled();
+});
+
+it("handles multiple messages after authorization finishes", async () => {
+  mocks.authorize.mockResolvedValueOnce(context);
+  const peer = { context: { ...context, token: "token" }, close: vi.fn() };
+  await socket.open(peer);
+
+  const first = { rawData: "first" };
+  const second = { rawData: "second" };
+  await Promise.all([socket.message(peer, first), socket.message(peer, second)]);
+  expect(peer.close).not.toHaveBeenCalled();
+  expect(mocks.message).toHaveBeenCalledTimes(2);
+  expect(mocks.message).toHaveBeenNthCalledWith(1, peer, first, { context });
+  expect(mocks.message).toHaveBeenNthCalledWith(2, peer, second, { context });
+});

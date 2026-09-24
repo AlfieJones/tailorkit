@@ -6,7 +6,12 @@ import { defineWebSocketHandler } from "nitro/h3";
 import { z } from "zod";
 
 const handler = new RPCHandler(previewWebSocketRouter);
-const authorizations = new WeakMap<object, Promise<PreviewWebSocketContext | null>>();
+interface AuthorizationState {
+  promise: Promise<PreviewWebSocketContext | null>;
+  context: PreviewWebSocketContext | null | undefined;
+  pendingMessage: boolean;
+}
+const authorizations = new WeakMap<object, AuthorizationState>();
 const upgradeSchema = z.object({
   sessionId: z.uuid(),
   role: z.enum(["uploader", "viewer"]),
@@ -32,19 +37,24 @@ export default defineWebSocketHandler({
       return peer.close();
     }
     const { sessionId, role, token } = parsed.data;
-    const authorization = authorizePreviewSocket(sessionId, token, role);
-    authorizations.set(peer, authorization);
-    const context = await authorization;
-    if (authorizations.get(peer) !== authorization) {
+    const state: AuthorizationState = {
+      promise: authorizePreviewSocket(sessionId, token, role).catch(() => null),
+      context: undefined,
+      pendingMessage: false,
+    };
+    authorizations.set(peer, state);
+    const context = await state.promise;
+    if (authorizations.get(peer) !== state) {
       return;
     }
+    state.context = context;
     if (!context) {
       return peer.close();
     }
   },
   async message(peer, message) {
-    const authorization = authorizations.get(peer);
-    if (!authorization) {
+    const state = authorizations.get(peer);
+    if (!state) {
       return peer.close();
     }
     const payload = message.rawData;
@@ -55,12 +65,25 @@ export default defineWebSocketHandler({
       size = payload.byteLength;
     }
     if (size > 512 * 1024) {
+      authorizations.delete(peer);
       return peer.close();
     }
-    const context = await authorization;
-    if (authorizations.get(peer) !== authorization) {
+    if (state.context === undefined) {
+      if (state.pendingMessage) {
+        authorizations.delete(peer);
+        return peer.close();
+      }
+      state.pendingMessage = true;
+      try {
+        await state.promise;
+      } finally {
+        state.pendingMessage = false;
+      }
+    }
+    if (authorizations.get(peer) !== state) {
       return;
     }
+    const context = state.context;
     if (!context) {
       return peer.close();
     }
