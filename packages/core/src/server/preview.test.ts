@@ -132,6 +132,9 @@ describe("preview host flow", () => {
       authenticate: () => ({ scopeId: "viewer" }),
     });
     const consentHtml = await consent.text();
+    expect(consentHtml).toContain(
+      "After you accept, this preview is available only in this browser.",
+    );
     const csrfToken = consentHtml.match(/name="csrfToken" value="([a-f0-9]{64})"/u)?.[1];
     const csrfCookie = consent.headers.get("set-cookie")?.split(";", 1)[0];
     expect(consentHtml).toContain("Accept preview");
