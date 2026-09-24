@@ -25,8 +25,16 @@ vi.mock("./auth", () => ({ getDeployToken: mocks.token, runWhoami: mocks.whoami 
 
 const { runPreview } = await import("./preview");
 const dirs: string[] = [];
+let signalListeners: {
+  SIGINT: ReturnType<typeof process.listeners>;
+  SIGTERM: ReturnType<typeof process.listeners>;
+};
 
 beforeEach(() => {
+  signalListeners = {
+    SIGINT: process.listeners("SIGINT"),
+    SIGTERM: process.listeners("SIGTERM"),
+  };
   vi.resetAllMocks();
   mocks.build.mockResolvedValue({ close: mocks.close });
   mocks.close.mockImplementation(async () => {});
@@ -38,52 +46,64 @@ beforeEach(() => {
   mocks.heartbeat.mockResolvedValue({ accepted: true });
 });
 
-it("stops reconnecting when heartbeat reports an ended session", async () => {
-  class PreviewSocket extends EventTarget {
-    static instances: PreviewSocket[] = [];
-    closed = false;
-    constructor(_url: URL, _protocol: string) {
-      super();
-      PreviewSocket.instances.push(this);
+it.each(["Preview session is unavailable.", "Preview CLI token is unavailable."])(
+  "stops reconnecting when heartbeat reports %s",
+  async (message) => {
+    class PreviewSocket extends EventTarget {
+      static instances: PreviewSocket[] = [];
+      closed = false;
+      constructor(_url: URL, _protocol: string) {
+        super();
+        PreviewSocket.instances.push(this);
+      }
+      close() {
+        this.closed = true;
+        this.dispatchEvent(new Event("close"));
+      }
+      open() {
+        this.dispatchEvent(new Event("open"));
+      }
     }
-    close() {
-      this.closed = true;
-      this.dispatchEvent(new Event("close"));
-    }
-    open() {
-      this.dispatchEvent(new Event("open"));
-    }
-  }
-  vi.stubGlobal("WebSocket", PreviewSocket);
-  const cwd = await mkdtemp(path.join(tmpdir(), "tailorkit-preview-terminal-"));
-  dirs.push(cwd);
-  await mkdir(path.join(cwd, "output"));
-  await writeFile(path.join(cwd, "output/client.js"), "export default 1");
-  mocks.load.mockResolvedValue({ root: cwd, config: { appId: "app" } });
-  mocks.start.mockResolvedValue({
-    data: {
-      sessionId: "session",
-      tunnelUrl: "wss://platform.test/preview",
-      tunnelToken: "token",
-      shareId: "share",
-    },
-  });
-  mocks.heartbeat.mockRejectedValue({
-    code: "UNAUTHORIZED",
-    message: "Preview session is unavailable.",
-  });
+    vi.stubGlobal("WebSocket", PreviewSocket);
+    const cwd = await mkdtemp(path.join(tmpdir(), "tailorkit-preview-terminal-"));
+    dirs.push(cwd);
+    await mkdir(path.join(cwd, "output"));
+    await writeFile(path.join(cwd, "output/client.js"), "export default 1");
+    mocks.load.mockResolvedValue({ root: cwd, config: { appId: "app" } });
+    mocks.start.mockResolvedValue({
+      data: {
+        sessionId: "session",
+        tunnelUrl: "wss://platform.test/preview",
+        tunnelToken: "token",
+        shareId: "share",
+      },
+    });
+    mocks.heartbeat.mockRejectedValue({
+      code: "UNAUTHORIZED",
+      message,
+    });
 
-  await runPreview({ cwd, outDir: "output" });
-  const socket = PreviewSocket.instances[0];
-  socket?.open();
-  await vi.waitFor(() => expect(mocks.close).toHaveBeenCalledOnce());
-  expect(socket?.closed).toBe(true);
-  await new Promise((resolve) => setTimeout(resolve, 1100));
-  expect(PreviewSocket.instances).toHaveLength(1);
-  vi.unstubAllGlobals();
-});
+    await runPreview({ cwd, outDir: "output" });
+    const socket = PreviewSocket.instances[0];
+    socket?.open();
+    await vi.waitFor(() => expect(mocks.close).toHaveBeenCalledOnce());
+    expect(socket?.closed).toBe(true);
+    expect(process.listeners("SIGINT")).toEqual(signalListeners.SIGINT);
+    expect(process.listeners("SIGTERM")).toEqual(signalListeners.SIGTERM);
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    expect(PreviewSocket.instances).toHaveLength(1);
+  },
+);
 
 afterEach(async () => {
+  vi.unstubAllGlobals();
+  for (const signal of ["SIGINT", "SIGTERM"] as const) {
+    for (const listener of process.listeners(signal)) {
+      if (!signalListeners[signal].includes(listener)) {
+        process.off(signal, listener);
+      }
+    }
+  }
   await Promise.all(dirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
 });
 

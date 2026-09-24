@@ -8,7 +8,11 @@ import {
   previewChunkBytes,
   previewMessageBytes,
 } from "./preview-build-store";
-import { ensurePreviewDeveloperGrace, recordPreviewHeartbeat } from "./preview-lifecycle";
+import {
+  endPreviewSession,
+  ensurePreviewDeveloperGrace,
+  recordPreviewHeartbeat,
+} from "./preview-lifecycle";
 
 const file = z.object({
   path: z.string().min(1).max(1024),
@@ -65,12 +69,7 @@ const requireRole = async (
     where: { id: context.sessionId, status: "active" },
     with: { cliToken: true },
   });
-  if (
-    !session ||
-    session.expiresAt <= new Date() ||
-    (role === "uploader" &&
-      (!session.cliToken || session.cliToken.revokedAt || session.cliToken.expiresAt <= new Date()))
-  ) {
+  if (!session || session.expiresAt <= new Date()) {
     throw new ORPCError("UNAUTHORIZED", { message: "Preview session is unavailable." });
   }
   const kv = getKV();
@@ -78,6 +77,13 @@ const requireRole = async (
     throw new ORPCError("SERVICE_UNAVAILABLE", {
       message: "Preview storage is unavailable: configure KV.",
     });
+  }
+  if (
+    role === "uploader" &&
+    (!session.cliToken || session.cliToken.revokedAt || session.cliToken.expiresAt <= new Date())
+  ) {
+    await endPreviewSession(kv, context.sessionId);
+    throw new ORPCError("UNAUTHORIZED", { message: "Preview CLI token is unavailable." });
   }
   if (!(await ensurePreviewDeveloperGrace(kv, context.sessionId))) {
     throw new ORPCError("UNAUTHORIZED", { message: "Preview developer reconnect grace expired." });

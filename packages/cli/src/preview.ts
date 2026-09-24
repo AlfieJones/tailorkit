@@ -30,7 +30,9 @@ const isEndedSessionError = (error: unknown): boolean =>
   error.code === "UNAUTHORIZED" &&
   "message" in error &&
   typeof error.message === "string" &&
-  /Preview session is unavailable|Preview developer reconnect grace expired/u.test(error.message);
+  /Preview session is unavailable|Preview developer reconnect grace expired|Preview CLI token is unavailable/u.test(
+    error.message,
+  );
 
 export interface PreviewOptions {
   configPath?: string;
@@ -233,6 +235,8 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
       return;
     }
     closed = true;
+    process.off("SIGINT", handleSignal);
+    process.off("SIGTERM", handleSignal);
     if (idleTimer) {
       clearTimeout(idleTimer);
     }
@@ -359,11 +363,13 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     socket.addEventListener("error", () => socket.close());
   };
   connect();
-  const closePreview = () => {
+  const handleSignal = () => {
     if (closed) {
       return;
     }
     closed = true;
+    process.off("SIGINT", handleSignal);
+    process.off("SIGTERM", handleSignal);
     void closeWatcher().catch((error: unknown) => {
       log.warn(`Unable to close preview watcher: ${errorMessage(error)}`);
     });
@@ -379,8 +385,8 @@ export async function runPreview(options: PreviewOptions): Promise<void> {
     activeSocket?.close();
     void stop().finally(() => process.exit(0));
   };
-  process.once("SIGINT", closePreview);
-  process.once("SIGTERM", closePreview);
+  process.once("SIGINT", handleSignal);
+  process.once("SIGTERM", handleSignal);
   const shareUrl = new URL(auth.hostUrl);
   shareUrl.pathname = `${shareUrl.pathname.replace(/\/+$/u, "")}/preview/${data.shareId}`;
   log.info(pc.green(`Host preview: ${shareUrl.href}`));

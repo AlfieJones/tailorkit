@@ -3,7 +3,7 @@ import { db } from "@tailorkit/db";
 import { env } from "@tailorkit/env/server";
 import { getKV } from "@tailorkit/kv";
 import { previewViewerTokenExpiresAt } from "./preview-token";
-import { ensurePreviewDeveloperGrace } from "./preview-lifecycle";
+import { endPreviewSession, ensurePreviewDeveloperGrace } from "./preview-lifecycle";
 import type { PreviewWebSocketContext } from "./preview-ws";
 
 export async function authorizePreviewSocket(
@@ -31,6 +31,7 @@ export async function authorizePreviewSocket(
     return viewerTokenExpiresAt === null ? null : { sessionId, role, viewerTokenExpiresAt };
   }
   if (!session.cliToken || session.cliToken.revokedAt || session.cliToken.expiresAt <= new Date()) {
+    await endPreviewSession(kv, sessionId);
     return null;
   }
   return session.tunnelTokenHash === hashSecret(token, env.AUTH_SECRET)

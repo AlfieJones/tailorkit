@@ -198,6 +198,32 @@ describe("platform preview lifecycle and grants", () => {
     expect(
       await authorizePreviewSocket(second.body.sessionId, second.body.tunnelToken, "uploader"),
     ).toBeNull();
+    const revokedSession = await db.query.previewSession.findFirst({
+      where: { id: second.body.sessionId },
+    });
+    expect(revokedSession?.status).toBe("ended");
+    expect(await kv.get(`preview:ended:${second.body.sessionId}`)).toBe("1");
+  });
+
+  it("retires a session when its CLI token expires during a heartbeat", async () => {
+    const started = await start();
+    await db
+      .update(cliToken)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(cliToken.id, tokenId));
+
+    await expect(
+      call(previewWebSocketRouter.heartbeat, undefined, {
+        context: { sessionId: started.body.sessionId, role: "uploader" },
+      }),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED", message: "Preview CLI token is unavailable." });
+    const session = await db.query.previewSession.findFirst({
+      where: { id: started.body.sessionId },
+    });
+    expect(session?.status).toBe("ended");
+    expect(
+      await (state.kv as ReturnType<typeof fakeKV>).get(`preview:ended:${started.body.sessionId}`),
+    ).toBe("1");
   });
 
   it("retires a disconnected developer before checking the app conflict", async () => {

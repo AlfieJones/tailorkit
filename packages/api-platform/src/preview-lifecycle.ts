@@ -23,6 +23,14 @@ export function recordPreviewHeartbeat(kv: KV, sessionId: string): Promise<boole
   );
 }
 
+export async function endPreviewSession(kv: KV, sessionId: string): Promise<void> {
+  await db
+    .update(previewSession)
+    .set({ status: "ended", endedAt: new Date() })
+    .where(and(eq(previewSession.id, sessionId), eq(previewSession.status, "active")));
+  await createPreviewBuildStore(kv).end(sessionId);
+}
+
 /** A developer has 75 seconds from the last heartbeat to reconnect. */
 export async function ensurePreviewDeveloperGrace(
   kv: KV,
@@ -40,10 +48,6 @@ export async function ensurePreviewDeveloperGrace(
   ) {
     return true;
   }
-  await db
-    .update(previewSession)
-    .set({ status: "ended", endedAt: new Date() })
-    .where(and(eq(previewSession.id, sessionId), eq(previewSession.status, "active")));
-  await createPreviewBuildStore(kv).end(sessionId);
+  await endPreviewSession(kv, sessionId);
   return false;
 }

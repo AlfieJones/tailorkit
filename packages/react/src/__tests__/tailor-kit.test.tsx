@@ -175,6 +175,13 @@ describe("tailorKitClient React adapter", () => {
   });
 
   it("keeps a preview subscription when an inline app is rendered again", async () => {
+    vi.mocked(globalThis.fetch).mockImplementation((input) =>
+      Promise.resolve(
+        input instanceof URL && input.pathname.endsWith("/preview/metadata")
+          ? new Response(null, { status: 503 })
+          : Response.json({ assetsBaseUrl: "http://assets.test/", schema: schema.serialize() }),
+      ),
+    );
     class PreviewSocket extends EventTarget {
       static instances: PreviewSocket[] = [];
       closed = false;
