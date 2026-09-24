@@ -16,6 +16,7 @@ import { previewGrantRoutes } from "./preview-grants";
 const previewSessionLifetimeMs = 8 * 60 * 60 * 1000;
 const firstConnectionGraceMs = 2 * 60 * 1000;
 const maxActivePreviewsPerScope = 5;
+const activePreviewConflictReason = "ACTIVE_PREVIEW_EXISTS";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function hash(value: string): string {
@@ -44,7 +45,15 @@ async function getValidCliToken(projectId: string, deployToken: string) {
 
 const startPreview = protectedRouter
   .route({ path: "/start", method: "POST" })
-  .input(z.object({ body: z.object({ appId: z.string().min(1), deployToken: z.string().min(1) }) }))
+  .input(
+    z.object({
+      body: z.object({
+        appId: z.string().min(1),
+        deployToken: z.string().min(1),
+        replaceActive: z.boolean().optional(),
+      }),
+    }),
+  )
   .output(
     z.object({
       body: z.object({
@@ -125,11 +134,19 @@ const startPreview = protectedRouter
             status: "active",
           },
         });
-        if (active) {
+        if (active && !input.body.replaceActive) {
           throw new ORPCError("CONFLICT", {
-            message: "An active preview already exists for this app.",
+            data: { reason: activePreviewConflictReason },
+            message: "A preview is already running for this app.",
           });
         }
+        const replacedSessions = active
+          ? await tx
+              .update(previewSession)
+              .set({ endedAt: now, status: "ended" })
+              .where(and(eq(previewSession.id, active.id), eq(previewSession.status, "active")))
+              .returning({ id: previewSession.id })
+          : [];
         const [scopeCount] = await tx
           .select({ total: count() })
           .from(previewSession)
@@ -157,7 +174,7 @@ const startPreview = protectedRouter
             tunnelTokenHash: hash(tunnelToken),
           })
           .returning({ id: previewSession.id });
-        return { session: created, expiredSessions };
+        return { session: created, expiredSessions, replacedSessions };
       })
       .catch((error: unknown) => {
         if (error instanceof ORPCError) {
@@ -172,7 +189,8 @@ const startPreview = protectedRouter
           candidate.code === "23505"
         ) {
           throw new ORPCError("CONFLICT", {
-            message: "An active preview already exists for this app.",
+            data: { reason: activePreviewConflictReason },
+            message: "A preview is already running for this app.",
           });
         }
         throw error;
@@ -181,9 +199,9 @@ const startPreview = protectedRouter
       throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Failed to create preview." });
     }
     const builds = createPreviewBuildStore(kv);
-    for (const expired of started.expiredSessions) {
+    for (const ended of [...started.expiredSessions, ...started.replacedSessions]) {
       try {
-        await builds.end(expired.id);
+        await builds.end(ended.id);
       } catch {
         // Existing KV TTLs bound cleanup if the store is temporarily unavailable.
       }

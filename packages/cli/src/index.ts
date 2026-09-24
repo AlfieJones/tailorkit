@@ -39,6 +39,7 @@ cli
   .option("--entry <path>", "Client entry file")
   .option("--out-dir <path>", "Build output directory")
   .option("--mode <mode>", "Vite mode")
+  .option("--replace", "End the active preview for this app and start a new one")
   .action(async (options: Record<string, unknown>) => {
     intro(pc.bold("TailorKit"));
     try {

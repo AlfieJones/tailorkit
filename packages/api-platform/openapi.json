@@ -2327,6 +2327,9 @@
                   },
                   "deployToken": {
                     "type": "string"
+                  },
+                  "replaceActive": {
+                    "type": "boolean"
                   }
                 },
                 "required": ["appId", "deployToken"]

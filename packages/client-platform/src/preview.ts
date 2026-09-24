@@ -2,6 +2,9 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/websocket";
 import { z } from "zod";
 
+/** Stable error discriminator for an app that already has an active preview. */
+export const ACTIVE_PREVIEW_CONFLICT_REASON = "ACTIVE_PREVIEW_EXISTS" as const;
+
 const identifier = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/u);
 const base64 = z
   .string()
