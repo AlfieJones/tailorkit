@@ -21,9 +21,16 @@ vi.mock("@orpc/server/crossws", () => ({
     }
   },
 }));
-vi.mock("nitro/h3", () => ({ defineWebSocketHandler: (handlers) => handlers }));
+vi.mock("crossws", () => ({ defineHooks: (handlers) => handlers }));
 
-const { default: socket } = await import("../nitro/routes/api/platform/preview/ws.ts");
+const { Route } = await import("../routes/api/platform.preview.ws.ts");
+const response = Route.options.server.handlers.GET();
+const socket = response.crossws;
+
+it("returns an upgrade-required response for ordinary HTTP requests", () => {
+  expect(response.status).toBe(426);
+  expect(response.crossws).toBe(socket);
+});
 const context = { sessionId: "11111111-1111-4111-8111-111111111111", role: "uploader" };
 
 beforeEach(() => {

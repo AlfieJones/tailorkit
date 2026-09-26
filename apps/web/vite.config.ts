@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       tanstackStart(),
       nitro({
-        serverDir: "./src/nitro",
+        serverDir: false,
         // Preview uploads and viewer revisions share this Nitro deployment.
         // KV leases give the CLI 75 seconds to reconnect after an upgrade.
         features: { websocket: !isTest },

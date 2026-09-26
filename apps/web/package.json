@@ -18,7 +18,7 @@
     "test": "vp test run",
     "build": "vp build",
     "preview": "vp preview",
-    "dev": "vp dev --port 3000"
+    "dev": "VITE_USE_NITRO=true vp dev --port 3000"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -53,6 +53,7 @@
     "@tanstack/react-table": "^9.2.4",
     "@vercel/functions": "^3.9.9",
     "better-auth": "catalog:",
+    "crossws": "0.4.12",
     "drizzle-orm": "catalog:",
     "lucide-react": "catalog:",
     "nitro": "3.0.260903-beta",
