@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nitro",
-  "buildCommand": "cd ../.. && turbo run build --filter=web...",
+  "buildCommand": "TURBO_PLATFORM_ENV_DISABLED=true turbo run build --filter=web...",
   "installCommand": "pnpm install --filter web...",
   "rewrites": [
     {

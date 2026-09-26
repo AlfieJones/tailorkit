@@ -7,7 +7,7 @@ import { previewSession } from "@tailorkit/db/schema/preview-session";
 import { project as projectTable } from "@tailorkit/db/schema/project";
 import { env } from "#env";
 import { eq } from "drizzle-orm";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import type { Context } from "../context";
 import { createTestDb } from "../test/pglite";
 

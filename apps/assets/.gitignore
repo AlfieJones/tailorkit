@@ -1,2 +1,3 @@
 # Generated from the pinned Wrangler version and wrangler.jsonc.
 worker-configuration.d.ts
+.vitest/

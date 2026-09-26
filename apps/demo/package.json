@@ -14,9 +14,9 @@
     ]
   },
   "scripts": {
-    "dev": "npm run build:clients && vite dev --port 3000",
-    "build": "npm run build:clients && vite build",
-    "preview": "vite preview",
+    "dev": "npm run build:clients && vp dev --port 3000",
+    "build": "npm run build:clients && vp build",
+    "preview": "vp preview",
     "check-types": "tsc --noEmit",
     "build:clients": "node clients/build.mjs"
   },

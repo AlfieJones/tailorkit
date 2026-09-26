@@ -14,13 +14,13 @@
     ]
   },
   "scripts": {
-    "dev": "vite dev --port 5010",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
-    "format": "oxfmt --check",
-    "format:fix": "oxfmt --write",
+    "dev": "vp dev --port 5010",
+    "build": "vp build",
+    "preview": "vp preview",
+    "lint": "vp lint",
+    "lint:fix": "vp lint --fix",
+    "format": "vp fmt --check",
+    "format:fix": "vp fmt --write",
     "check": "pnpm run lint && pnpm run format",
     "fix": "pnpm run lint:fix && pnpm run format:fix",
     "check-types": "tsc --noEmit"
