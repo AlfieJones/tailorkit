@@ -29,7 +29,8 @@ const socket = response.crossws;
 
 it("returns an upgrade-required response for ordinary HTTP requests", () => {
   expect(response.status).toBe(426);
-  expect(response.crossws).toBe(socket);
+  expect(response.crossws.open).toBeTypeOf("function");
+  expect(response.crossws.message).toBeTypeOf("function");
 });
 const context = { sessionId: "11111111-1111-4111-8111-111111111111", role: "uploader" };
 
