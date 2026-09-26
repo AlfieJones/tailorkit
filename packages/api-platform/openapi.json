@@ -2756,6 +2756,310 @@
           }
         }
       }
+    },
+    "/builder/apps": {
+      "get": {
+        "operationId": "builder.apps",
+        "parameters": [
+          {
+            "name": "scopeId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
+          },
+          {
+            "name": "origin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "allowEmptyValue": true,
+            "allowReserved": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "currentDeployment": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id"]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": ["id", "name", "description", "currentDeployment"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "builder.createApp",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "scopeId": {
+                    "type": "string"
+                  },
+                  "origin": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": ["scopeId", "origin", "name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["id", "name", "description"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/builder/runs": {
+      "post": {
+        "operationId": "builder.run",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "scopeId": {
+                    "type": "string"
+                  },
+                  "origin": {
+                    "type": "string"
+                  },
+                  "appId": {
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "type": "string"
+                  },
+                  "conversationId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["scopeId", "origin", "appId", "prompt"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "conversationId": {
+                      "type": "string"
+                    },
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "enum": ["user", "assistant"],
+                            "type": "string"
+                          },
+                          "content": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "role", "content", "createdAt"]
+                      }
+                    },
+                    "candidate": {
+                      "type": "object",
+                      "properties": {
+                        "app": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": ["id", "name", "description"]
+                        },
+                        "previewUrl": {
+                          "type": "string"
+                        },
+                        "sourceRevision": {
+                          "type": "string"
+                        },
+                        "deploymentId": {
+                          "type": "string"
+                        },
+                        "runId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["app", "previewUrl", "sourceRevision", "deploymentId", "runId"]
+                    },
+                    "runId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["conversationId", "messages", "candidate", "runId"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/builder/runs/{runId}/publish": {
+      "post": {
+        "operationId": "builder.publish",
+        "parameters": [
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "scopeId": {
+                    "type": "string"
+                  },
+                  "origin": {
+                    "type": "string"
+                  }
+                },
+                "required": ["scopeId", "origin"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "published": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["published"]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

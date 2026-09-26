@@ -28,6 +28,7 @@
     "@examples/shared": "workspace:*",
     "@tailorkit/core": "workspace:*",
     "@tailorkit/ui": "workspace:*",
+    "@tailorkit/ui-primitives": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",

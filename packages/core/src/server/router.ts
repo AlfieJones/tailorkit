@@ -4,6 +4,7 @@ import { appRouter } from "./routes/apps";
 import { cliAuthRouter } from "./routes/cli-auth";
 import { deploymentRouter } from "./routes/deployments";
 import { previewRouter } from "./routes/preview";
+import { builderRouter } from "./routes/builder";
 
 export const tailorkitRouter = {
   actions: actionRouter,
@@ -11,6 +12,7 @@ export const tailorkitRouter = {
   cliAuth: cliAuthRouter,
   deployments: deploymentRouter,
   preview: previewRouter,
+  builder: builderRouter,
 };
 
 export type TailorKitRouter = typeof tailorkitRouter;

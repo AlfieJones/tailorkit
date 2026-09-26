@@ -1,5 +1,6 @@
 import { AppView, Root, useApps, useView } from "tailorkit/react";
 import type { DemoUser } from "@examples/shared";
+import { createBuilderTransport, BuilderExample } from "@examples/shared";
 import { Button } from "@tailorkit/ui/button";
 import { SidebarInset, SidebarProvider } from "@tailorkit/ui/sidebar";
 import { XIcon } from "lucide-react";
@@ -20,13 +21,14 @@ function TailorKitShellWithApps({
   signOut: () => Promise<void>;
   user: DemoUser;
 }) {
-  const { data: apps } = useApps();
+  const { data: apps, refetch } = useApps();
   const [currentApp, setCurrentApp] = useState<TailorKitApp | null>(null);
 
   return (
     <TailorKitShellContent
       apps={apps ?? []}
       currentApp={currentApp}
+      refreshApps={refetch}
       onSelectApp={setCurrentApp}
       signOut={signOut}
       user={user}
@@ -41,6 +43,7 @@ function TailorKitShellContent({
   children,
   currentApp,
   onSelectApp,
+  refreshApps,
   signOut,
   user,
 }: {
@@ -48,10 +51,12 @@ function TailorKitShellContent({
   children: ReactNode;
   currentApp: TailorKitApp | null;
   onSelectApp: (app: TailorKitApp | null) => void;
+  refreshApps: () => Promise<void>;
   signOut: () => Promise<void>;
   user: DemoUser;
 }) {
   useView("/", { context: { user } });
+  const [builderSlot, setBuilderSlot] = useState<"panel" | "navbar">("panel");
 
   return (
     <SidebarProvider>
@@ -59,7 +64,30 @@ function TailorKitShellContent({
       <SidebarInset className="me-12">
         <main className="mx-auto w-full max-w-6xl p-6">{children}</main>
       </SidebarInset>
-      <TailorKitAppView app={currentApp} onClose={() => onSelectApp(null)} />
+      <TailorKitAppView app={currentApp} onClose={() => onSelectApp(null)} slot={builderSlot} />
+      <BuilderExample
+        apps={[]}
+        navigation={(placement) => {
+          if (placement === "panel" || placement === "navbar") {
+            setBuilderSlot(placement);
+          }
+        }}
+        placements={["panel", "navbar"]}
+        transport={createBuilderTransport({ afterPublish: refreshApps })}
+        renderCandidate={(candidate) => {
+          const app = {
+            ...candidate.app,
+            description: candidate.app.description ?? undefined,
+            clientPath: candidate.previewUrl,
+            currentDeployment: null,
+          };
+          return builderSlot === "navbar" ? (
+            <AppView app={app} slot="navbar" />
+          ) : (
+            <AppView app={app} slot="panel" />
+          );
+        }}
+      />
       <TailorKitAppList apps={apps} currentApp={currentApp} onSelect={onSelectApp} />
     </SidebarProvider>
   );
@@ -101,7 +129,15 @@ function TailorKitAppList({
   );
 }
 
-function TailorKitAppView({ app, onClose }: { app: TailorKitApp | null; onClose: () => void }) {
+function TailorKitAppView({
+  app,
+  onClose,
+  slot,
+}: {
+  app: TailorKitApp | null;
+  onClose: () => void;
+  slot: "panel" | "navbar";
+}) {
   if (!app) {
     return null;
   }
@@ -124,7 +160,11 @@ function TailorKitAppView({ app, onClose }: { app: TailorKitApp | null; onClose:
         </Button>
       </header>
       <main className="min-h-0 flex-1 overflow-auto p-4">
-        <AppView slot="panel" app={app} />
+        {slot === "navbar" ? (
+          <AppView slot="navbar" app={app} />
+        ) : (
+          <AppView slot="panel" app={app} />
+        )}
       </main>
     </aside>
   );
