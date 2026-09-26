@@ -12,6 +12,19 @@ export function createDb(): NodePgDatabase<typeof relations> {
   return drizzle(env.DATABASE_URL, { relations });
 }
 
-export const db = createDb();
+let dbInstance: NodePgDatabase<typeof relations> | undefined;
+
+function getDb(): NodePgDatabase<typeof relations> {
+  return (dbInstance ??= createDb());
+}
+
+export const db = new Proxy({} as NodePgDatabase<typeof relations>, {
+  get(_target, property) {
+    const instance = getDb();
+    const value = Reflect.get(instance, property, instance);
+
+    return typeof value === "function" ? value.bind(instance) : value;
+  },
+});
 
 export { isOrgSlugReserved } from "./validate-org-slug";

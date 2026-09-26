@@ -7,11 +7,11 @@
   "imports": {
     "#tailorkit": "./src/tailorkit.gen.ts",
     "#*": [
+      "./src/*",
       "./src/*.ts",
       "./src/*.tsx",
       "./src/*/index.ts",
-      "./src/*/index.tsx",
-      "./src/*"
+      "./src/*/index.tsx"
     ]
   },
   "scripts": {

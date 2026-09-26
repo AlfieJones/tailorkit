@@ -4,12 +4,13 @@
   "license": "Apache-2.0",
   "type": "module",
   "imports": {
+    "#env": "./src/env.ts",
     "#*": [
+      "./src/*",
       "./src/*.ts",
       "./src/*.tsx",
       "./src/*/index.ts",
-      "./src/*/index.tsx",
-      "./src/*"
+      "./src/*/index.tsx"
     ]
   },
   "scripts": {
