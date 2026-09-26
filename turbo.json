@@ -2,6 +2,8 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "noUpdateNotifier": true,
+  "envMode": "strict",
+  "globalEnv": ["!VERCEL_TARGET_ENV"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
