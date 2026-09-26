@@ -35,6 +35,8 @@
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",
+    "oxfmt": "0.70.0",
+    "oxlint": "1.85.0",
     "sherif": "^1.13.0",
     "turbo": "2.11.3",
     "ultracite": "7.12.0",

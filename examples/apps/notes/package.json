@@ -30,6 +30,8 @@
   },
   "devDependencies": {
     "@tailorkit/cli": "workspace:*",
+    "oxfmt": "0.70.0",
+    "oxlint": "1.85.0",
     "typescript": "catalog:"
   }
 }
