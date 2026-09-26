@@ -1,16 +1,16 @@
 import * as z from "zod";
 import { createEnv, warnIfMissing } from "@tailorkit/env";
 
-export const env = createEnv(
-  "kv",
-  z.object({
+export const env = createEnv({
+  scope: "kv",
+  schema: {
     KV_PROVIDER: z.enum(["upstash", "redis"]).optional(),
     KV_REDIS_URL: z.url().optional(),
     KV_REST_API_TOKEN: z.string().min(1).optional(),
     KV_REST_API_URL: z.url().optional(),
-  }),
-  import.meta.url,
-);
+  },
+  moduleUrl: import.meta.url,
+});
 
 if (env.KV_PROVIDER === "upstash") {
   warnIfMissing("kv", {

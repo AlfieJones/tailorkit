@@ -1,9 +1,9 @@
 import * as z from "zod";
 import { createEnv, resolveProductionUrl, warnIfMissing } from "@tailorkit/env";
 
-export const env = createEnv(
-  "auth",
-  z.object({
+export const env = createEnv({
+  scope: "auth",
+  schema: {
     AUTH_SECRET: z.string().min(32).optional(),
     AUTH_TRUSTED_ORIGINS: z.string().min(1).optional(),
     BETTER_AUTH_API_KEY: z.string().min(1).optional(),
@@ -18,10 +18,10 @@ export const env = createEnv(
     VERCEL_URL: z.string().optional(),
     VERCEL_BRANCH_URL: z.string().optional(),
     VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
-  }),
-  import.meta.url,
-  ["AUTH_SECRET"],
-);
+  },
+  moduleUrl: import.meta.url,
+  required: ["AUTH_SECRET"],
+});
 
 if (Boolean(env.GITHUB_CLIENT_ID) !== Boolean(env.GITHUB_CLIENT_SECRET)) {
   warnIfMissing("auth", {

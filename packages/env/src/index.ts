@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "dotenv";
-import type * as z from "zod";
+import * as z from "zod";
 
 type EnvShape = z.ZodRawShape;
 
@@ -83,12 +83,18 @@ function warn(scope: string, message: string): void {
   console.warn(`[env:${scope}] ${message}`);
 }
 
-export function createEnv<const T extends EnvShape>(
-  scope: string,
-  schema: z.ZodObject<T>,
-  moduleUrl: string,
-  required: readonly (keyof T & string)[] = [],
-): Partial<z.output<z.ZodObject<T>>> {
+export function createEnv<const T extends EnvShape>({
+  scope,
+  schema: schemaShape,
+  moduleUrl,
+  required = [],
+}: {
+  scope: string;
+  schema: T;
+  moduleUrl: string;
+  required?: readonly (keyof T & string)[];
+}): Partial<z.output<z.ZodObject<T>>> {
+  const schema = z.object(schemaShape);
   const source = readEnvironment(moduleUrl);
   const requiredNames = new Set<string>(required);
   const parsedValues: Record<string, unknown> = {};
