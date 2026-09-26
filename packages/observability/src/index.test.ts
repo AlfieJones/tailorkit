@@ -23,7 +23,7 @@ vi.mock("@vercel/otel", () => ({
   registerOTel,
 }));
 
-vi.mock("@tailorkit/env/server", () => ({
+vi.mock("#env", () => ({
   env: mockEnv,
 }));
 

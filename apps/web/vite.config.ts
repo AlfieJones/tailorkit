@@ -5,6 +5,7 @@ import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import babel from "@rolldown/plugin-babel";
 import { nitro } from "nitro/vite";
+import { env } from "#env";
 
 const serverPackages = [
   "@tailorkit/api",
@@ -22,9 +23,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
-      "import.meta.env.VITE_ORG_CREATION_MANAGED": JSON.stringify(
-        process.env.VERCEL_ENV === "production",
-      ),
+      "import.meta.env.VITE_ORG_CREATION_MANAGED": JSON.stringify(env.VERCEL_ENV === "production"),
     },
     plugins: [
       devtools(),

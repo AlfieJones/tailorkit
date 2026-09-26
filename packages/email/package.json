@@ -33,7 +33,8 @@
     "nodemailer": "^10.0.8",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-email": "6.9.5"
+    "react-email": "6.9.5",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@react-email/ui": "6.9.5",

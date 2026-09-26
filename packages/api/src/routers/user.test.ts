@@ -31,7 +31,7 @@ vi.mock("@tailorkit/auth", () => ({
   },
 }));
 
-vi.mock("@tailorkit/env/server", () => ({
+vi.mock("#env", () => ({
   env: testState.env,
 }));
 

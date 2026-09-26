@@ -6,7 +6,7 @@ const env = vi.hoisted(() => ({
   ASSET_DOMAIN: "tailorkit.app",
   NODE_ENV: "production" as "development" | "production",
 }));
-vi.mock("@tailorkit/env/server", () => ({
+vi.mock("#env", () => ({
   env,
   getBaseUrl: () => "http://localhost:3000",
 }));

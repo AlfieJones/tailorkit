@@ -32,7 +32,8 @@
   },
   "dependencies": {
     "@tailorkit/env": "workspace:*",
-    "@tailorkit/observability": "workspace:*"
+    "@tailorkit/observability": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",

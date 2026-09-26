@@ -19,7 +19,7 @@ function read(store: typeof state.redis, key: string): string | null {
   return record.value;
 }
 
-vi.mock("@tailorkit/env/server", () => ({
+vi.mock("#env", () => ({
   env: { KV_REST_API_URL: "https://kv.test", KV_REST_API_TOKEN: "token" },
 }));
 vi.mock("ioredis", () => ({

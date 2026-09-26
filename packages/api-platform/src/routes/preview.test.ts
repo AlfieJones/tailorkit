@@ -131,7 +131,7 @@ describe("platform preview lifecycle and grants", () => {
       id: tokenId,
       projectId,
       scopeId: "author",
-      tokenHash: hashSecret("deploy-token", process.env.AUTH_SECRET!),
+      tokenHash: hashSecret("deploy-token", "test-preview-secret"),
       expiresAt: new Date(Date.now() + 60_000),
     });
     await db.insert(appTable).values([
@@ -379,7 +379,7 @@ describe("platform preview lifecycle and grants", () => {
       id: "44444444-4444-4444-8444-444444444444",
       projectId,
       scopeId: "other",
-      tokenHash: hashSecret("other-token", process.env.AUTH_SECRET!),
+      tokenHash: hashSecret("other-token", "test-preview-secret"),
       expiresAt: new Date(Date.now() + 60_000),
     });
     const otherScope = await call(

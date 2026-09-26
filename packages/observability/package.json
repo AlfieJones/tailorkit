@@ -33,7 +33,8 @@
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@orpc/otel": "catalog:",
     "@tailorkit/env": "workspace:*",
-    "@vercel/otel": "catalog:"
+    "@vercel/otel": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",

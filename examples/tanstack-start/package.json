@@ -27,6 +27,7 @@
   "dependencies": {
     "@examples/shared": "workspace:*",
     "@tailorkit/core": "workspace:*",
+    "@tailorkit/env": "workspace:*",
     "@tailorkit/ui": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-router": "catalog:",
