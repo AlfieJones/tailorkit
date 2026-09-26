@@ -24,6 +24,10 @@ export default defineConfig(({ mode }) => {
   return {
     define: {
       "import.meta.env.VITE_ORG_CREATION_MANAGED": JSON.stringify(env.VERCEL_ENV === "production"),
+      "import.meta.env.VITE_VERCEL_DEPLOYMENT_ID": JSON.stringify(env.VERCEL_DEPLOYMENT_ID ?? ""),
+      "import.meta.env.VITE_VERCEL_SKEW_PROTECTION_ENABLED": JSON.stringify(
+        env.VERCEL_SKEW_PROTECTION_ENABLED === "1",
+      ),
     },
     plugins: [
       devtools(),
