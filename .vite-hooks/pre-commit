@@ -1,0 +1,17 @@
+#!/bin/sh
+
+staged_manifests=$(git diff --cached --name-only --diff-filter=ACMR -- ':(glob)**/package.json' 'package.json')
+
+vp staged --no-concurrent || true
+
+if [ -n "$staged_manifests" ]; then
+  pnpm sherif:fix || true
+
+  while IFS= read -r file; do
+    [ -z "$file" ] || git add -- "$file" || true
+  done <<EOF
+$staged_manifests
+EOF
+fi
+
+exit 0
