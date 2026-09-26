@@ -27,6 +27,11 @@ const getORPCClient = createIsomorphicFn()
   .client((): RouterClient<typeof appRouter> => {
     const link = new RPCLink({
       url: `${window.location.origin}/api/rpc`,
+      headers:
+        import.meta.env.VITE_VERCEL_SKEW_PROTECTION_ENABLED &&
+        import.meta.env.VITE_VERCEL_DEPLOYMENT_ID
+          ? { "x-deployment-id": import.meta.env.VITE_VERCEL_DEPLOYMENT_ID }
+          : {},
     });
 
     return createORPCClient(link);
