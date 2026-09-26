@@ -6,7 +6,7 @@ import { passkeyClient } from "@better-auth/passkey/client";
 import { deploymentHeaders } from "./deployment-headers";
 
 export const authClient = createAuthClient({
-  fetchOptions: { headers: deploymentHeaders },
+  fetchOptions: { headers: typeof window === "undefined" ? {} : deploymentHeaders },
   plugins: [
     dashClient(),
     passkeyClient(),
