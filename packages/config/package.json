@@ -5,11 +5,11 @@
   "license": "BUSL-1.1",
   "imports": {
     "#*": [
-      "./src/*",
       "./src/*.ts",
       "./src/*.tsx",
       "./src/*/index.ts",
-      "./src/*/index.tsx"
+      "./src/*/index.tsx",
+      "./src/*"
     ]
   },
   "devDependencies": {
