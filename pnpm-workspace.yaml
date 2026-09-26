@@ -58,7 +58,3 @@ allowBuilds:
   msw: false
   protobufjs: false
   sharp: false
-
-minimumReleaseAgeExclude:
-  - "@mastra/deployer@1.70.0"
-  - mastra@1.31.2

@@ -78,6 +78,10 @@ export function createEnv<const T extends EnvShape>({
     }
 
     if (!parsed.success) {
+      if (rawValue !== undefined) {
+        const issueMessages = parsed.error.issues.map((issue) => issue.message).join(", ");
+        warn(scope, `Invalid ${name}: ${issueMessages}`);
+      }
       continue;
     }
 

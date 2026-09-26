@@ -13,6 +13,7 @@ export const env = createEnv({
     EMAIL_ACCESS_KEY_ID: z.string().min(1).optional(),
     EMAIL_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     EMAIL_REGION: z.string().min(1).optional(),
+    PORT: z.coerce.number().optional(),
     VERCEL_ENV: z.string().optional(),
     VERCEL_URL: z.string().optional(),
     VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),

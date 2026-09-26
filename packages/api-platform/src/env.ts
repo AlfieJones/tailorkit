@@ -5,6 +5,7 @@ export const env = createEnv({
   scope: "api-platform",
   schema: {
     AUTH_SECRET: z.string().min(32).optional(),
+    PORT: z.coerce.number().optional(),
     VERCEL_ENV: z.string().optional(),
     VERCEL_URL: z.string().optional(),
     VERCEL_BRANCH_URL: z.string().optional(),
