@@ -18,7 +18,7 @@
     "test": "vp test run",
     "build": "vp build",
     "preview": "vp preview",
-    "dev": "VITE_USE_NITRO=true vp dev --port 3000"
+    "dev": "cross-env VITE_USE_NITRO=true vp dev --port 3000"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -71,6 +71,7 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "^1.0.0",
+    "cross-env": "7.0.3",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
