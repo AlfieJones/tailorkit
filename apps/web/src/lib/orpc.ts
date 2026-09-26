@@ -7,6 +7,7 @@ import { createIsomorphicFn } from "@tanstack/react-start";
 import { createContext, appRouter } from "@tailorkit/api";
 import { QueryClient } from "@tanstack/react-query";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { deploymentHeaders } from "./deployment-headers";
 
 export const getQueryClient = () =>
   new QueryClient({
@@ -27,11 +28,7 @@ const getORPCClient = createIsomorphicFn()
   .client((): RouterClient<typeof appRouter> => {
     const link = new RPCLink({
       url: `${window.location.origin}/api/rpc`,
-      headers:
-        import.meta.env.VITE_VERCEL_SKEW_PROTECTION_ENABLED &&
-        import.meta.env.VITE_VERCEL_DEPLOYMENT_ID
-          ? { "x-deployment-id": import.meta.env.VITE_VERCEL_DEPLOYMENT_ID }
-          : {},
+      headers: deploymentHeaders,
     });
 
     return createORPCClient(link);
