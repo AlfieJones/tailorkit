@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "type": "module",
   "imports": {
+    "#env": "./src/env.ts",
     "#*": [
       "./src/*",
       "./src/*.ts",
@@ -14,19 +15,19 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "test": "vitest run",
-    "build": "vite build",
-    "preview": "vite preview",
-    "dev": "vite dev --port 3000"
+    "test": "vp test run",
+    "build": "vp build",
+    "preview": "vp preview",
+    "dev": "vp dev --port 3000"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
-    "@better-auth/infra": "^0.4.9",
-    "@better-auth/passkey": "1.7.4",
+    "@better-auth/infra": "^0.4.10",
+    "@better-auth/passkey": "1.7.5",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
-    "@orpc/tanstack-query": "^1.15.0",
+    "@orpc/tanstack-query": "^1.15.3",
     "@rolldown/plugin-babel": "^0.2.4",
     "@tailorkit/api": "workspace:*",
     "@tailorkit/api-platform": "workspace:*",
@@ -45,12 +46,12 @@
     "@tanstack/react-devtools": "^0.10.12",
     "@tanstack/react-form": "^1.33.5",
     "@tanstack/react-form-devtools": "^0.2.34",
-    "@tanstack/react-query": "^5.102.8",
+    "@tanstack/react-query": "^5.103.2",
     "@tanstack/react-router": "catalog:",
-    "@tanstack/react-router-ssr-query": "^1.167.2",
+    "@tanstack/react-router-ssr-query": "^1.167.3",
     "@tanstack/react-start": "catalog:",
     "@tanstack/react-table": "^9.2.4",
-    "@vercel/functions": "^3.9.7",
+    "@vercel/functions": "^3.9.9",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "lucide-react": "catalog:",
@@ -63,7 +64,7 @@
   },
   "devDependencies": {
     "@tailorkit/config": "workspace:*",
-    "@tanstack/react-query-devtools": "^5.102.8",
+    "@tanstack/react-query-devtools": "^5.103.2",
     "@tanstack/react-router-devtools": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -71,6 +72,6 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vite-plus": "catalog:"
   }
 }

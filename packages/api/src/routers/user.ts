@@ -1,7 +1,7 @@
 import { auth } from "@tailorkit/auth";
 import { db } from "@tailorkit/db";
 import { account } from "@tailorkit/db/schema/auth";
-import { env } from "@tailorkit/env/server";
+import { env } from "#env";
 import { and, eq } from "drizzle-orm";
 import { publicProcedure, protectedProcedure, requireOrg } from "../procedures";
 import z from "zod";
