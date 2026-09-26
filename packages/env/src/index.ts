@@ -110,15 +110,15 @@ export function resolveProductionUrl(values: {
     return;
   }
 
-  try {
-    const url = new URL(value);
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      return;
-    }
-    return url.href.replace(/\/$/u, "");
-  } catch {
+  if (!URL.canParse(value)) {
     return;
   }
+
+  const url = new URL(value);
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return;
+  }
+  return url.href.replace(/\/$/u, "");
 }
 
 export function getProductionUrl(values: {
