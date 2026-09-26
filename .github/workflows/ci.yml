@@ -23,6 +23,9 @@ jobs:
   quality:
     name: Lint, Format and Typecheck
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -34,17 +37,14 @@ jobs:
           cache: true
           run-install: false
 
-      - name: Restore Turbo cache
-        uses: actions/cache@v6
-        with:
-          path: .turbo
-          key: turbo-quality-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-quality-${{ runner.os }}-
-            turbo-${{ runner.os }}-
-
       - name: Install dependencies
         run: vp install --frozen-lockfile
+
+      - name: Set up Turborepo Remote Cache
+        if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
+        uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
+        with:
+          team: ${{ vars.TURBO_TEAM }}
 
       - name: Check package licenses
         run: vp run licenses:check
@@ -61,6 +61,9 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -72,17 +75,14 @@ jobs:
           cache: true
           run-install: false
 
-      - name: Restore Turbo cache
-        uses: actions/cache@v6
-        with:
-          path: .turbo
-          key: turbo-tests-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-tests-${{ runner.os }}-
-            turbo-${{ runner.os }}-
-
       - name: Install dependencies
         run: vp install --frozen-lockfile
+
+      - name: Set up Turborepo Remote Cache
+        if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
+        uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
+        with:
+          team: ${{ vars.TURBO_TEAM }}
 
       - name: Run tests
         run: vp run test
@@ -90,6 +90,9 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -101,17 +104,14 @@ jobs:
           cache: true
           run-install: false
 
-      - name: Restore Turbo cache
-        uses: actions/cache@v6
-        with:
-          path: .turbo
-          key: turbo-build-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-build-${{ runner.os }}-
-            turbo-${{ runner.os }}-
-
       - name: Install dependencies
         run: vp install --frozen-lockfile
+
+      - name: Set up Turborepo Remote Cache
+        if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
+        uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
+        with:
+          team: ${{ vars.TURBO_TEAM }}
 
       - name: Build
         run: vp run build

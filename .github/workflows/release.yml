@@ -122,6 +122,11 @@ jobs:
       - name: Install dependencies
         run: vp install --frozen-lockfile
 
+      - name: Set up Turborepo Remote Cache
+        uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
+        with:
+          team: ${{ vars.TURBO_TEAM }}
+
       - name: Build and publish prerelease
         uses: changesets/action/publish@v2.1.2
         with:

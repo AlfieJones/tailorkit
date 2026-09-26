@@ -1,4 +1,4 @@
-import { env } from "@tailorkit/env/server";
+import { env } from "#env";
 import { sanitizeErrorForLog, withSpan } from "@tailorkit/observability";
 import { Redis } from "@upstash/redis";
 import type { KV, MessageHandler, SetOptions, Unsubscribe } from "./types.js";
