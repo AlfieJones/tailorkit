@@ -1,4 +1,6 @@
 import { config } from "dotenv";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createEnv } from "@t3-oss/env-core";
 import { vercel } from "@t3-oss/env-core/presets-zod";
 import { z } from "zod";
@@ -27,8 +29,10 @@ function resolveProductionUrl(values: {
   }
 }
 
+const webAppEnvDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "../../../apps/web");
+
 config({
-  path: ["../../apps/web/.env.local", "../../apps/web/.env"],
+  path: [resolve(webAppEnvDirectory, ".env.local"), resolve(webAppEnvDirectory, ".env")],
   quiet: true,
 });
 
@@ -130,6 +134,7 @@ export const env = createEnv({
 
     // Database
     DATABASE_URL: z.string().min(1),
+    AI_GATEWAY_API_KEY: z.string().min(1).optional(),
 
     // Deployment
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
