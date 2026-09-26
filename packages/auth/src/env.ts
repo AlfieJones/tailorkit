@@ -19,7 +19,6 @@ export const env = createEnv({
     VERCEL_BRANCH_URL: z.string().optional(),
     VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
   },
-  moduleUrl: import.meta.url,
   required: ["AUTH_SECRET"],
 });
 

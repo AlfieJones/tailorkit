@@ -12,5 +12,4 @@ export const env = createEnv({
     ASSET_DOMAIN: z.string().default("tailorkit.app"),
     ASSET_BASE_URL: z.url().optional(),
   },
-  moduleUrl: import.meta.url,
 });

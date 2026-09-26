@@ -9,7 +9,6 @@ export const env = createEnv({
     KV_REST_API_TOKEN: z.string().min(1).optional(),
     KV_REST_API_URL: z.url().optional(),
   },
-  moduleUrl: import.meta.url,
 });
 
 if (env.KV_PROVIDER === "upstash") {

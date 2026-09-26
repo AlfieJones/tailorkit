@@ -11,6 +11,5 @@ export const env = createEnv({
     VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
     OPENAPI_SERVER_URL: z.url().default("https://tailorkit.dev/api/platform"),
   },
-  moduleUrl: import.meta.url,
   required: ["AUTH_SECRET"],
 });

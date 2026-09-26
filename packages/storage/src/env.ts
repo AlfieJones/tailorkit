@@ -11,7 +11,6 @@ export const env = createEnv({
     BLOB_ACCESS_KEY_ID: z.string().min(1).optional(),
     BLOB_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   },
-  moduleUrl: import.meta.url,
 });
 
 if (env.BLOB_BUCKET) {

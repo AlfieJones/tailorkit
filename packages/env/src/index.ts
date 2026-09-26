@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { parse } from "dotenv";
 import * as z from "zod";
 
@@ -25,41 +24,14 @@ function findWorkspaceRoot(startDirectory: string): string | undefined {
   }
 }
 
-function findPackageRoot(startDirectory: string, workspaceRoot: string): string {
-  let directory = startDirectory;
-
-  while (directory.startsWith(workspaceRoot)) {
-    if (existsSync(resolve(directory, "package.json"))) {
-      return directory;
-    }
-
-    const parentDirectory = dirname(directory);
-    if (parentDirectory === directory || parentDirectory === workspaceRoot) {
-      break;
-    }
-
-    directory = parentDirectory;
-  }
-
-  return startDirectory;
-}
-
-function readEnvironment(moduleUrl: string): Record<string, string | undefined> {
-  const moduleDirectory = dirname(fileURLToPath(moduleUrl));
-  const workspaceRoot =
-    findWorkspaceRoot(moduleDirectory) ?? findWorkspaceRoot(process.cwd()) ?? process.cwd();
-  const modulePackageRoot = findPackageRoot(moduleDirectory, workspaceRoot);
-  const workingPackageRoot = findPackageRoot(process.cwd(), workspaceRoot);
-  const packageRoot =
-    modulePackageRoot === moduleDirectory ? workingPackageRoot : modulePackageRoot;
+function readEnvironment(): Record<string, string | undefined> {
+  const workspaceRoot = findWorkspaceRoot(process.cwd()) ?? process.cwd();
   const webRoot = resolve(workspaceRoot, "apps/web");
   const dotenvFiles = [
     resolve(workspaceRoot, ".env"),
     resolve(webRoot, ".env"),
-    resolve(packageRoot, ".env"),
     resolve(workspaceRoot, ".env.local"),
     resolve(webRoot, ".env.local"),
-    resolve(packageRoot, ".env.local"),
   ];
 
   const fileValues: Record<string, string> = {};
@@ -86,16 +58,14 @@ function warn(scope: string, message: string): void {
 export function createEnv<const T extends EnvShape>({
   scope,
   schema: schemaShape,
-  moduleUrl,
   required = [],
 }: {
   scope: string;
   schema: T;
-  moduleUrl: string;
   required?: readonly (keyof T & string)[];
 }): Partial<z.output<z.ZodObject<T>>> {
   const schema = z.object(schemaShape);
-  const source = readEnvironment(moduleUrl);
+  const source = readEnvironment();
   const requiredNames = new Set<string>(required);
   const parsedValues: Record<string, unknown> = {};
 

@@ -4,6 +4,5 @@ import { createEnv } from "@tailorkit/env";
 export const env = createEnv({
   scope: "db",
   schema: { DATABASE_URL: z.url() },
-  moduleUrl: import.meta.url,
   required: ["DATABASE_URL"],
 });

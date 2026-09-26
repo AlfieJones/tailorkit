@@ -17,7 +17,6 @@ export const env = createEnv({
     VERCEL_URL: z.string().optional(),
     VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
   },
-  moduleUrl: import.meta.url,
   required: ["EMAIL_FROM", "EMAIL_PROVIDER"],
 });
 

@@ -14,5 +14,4 @@ export const env = createEnv({
     TAILORKIT_OTEL_DISABLED: z.stringbool().optional(),
     TAILORKIT_OTEL_SAMPLE_RATE: z.string().min(1).optional(),
   },
-  moduleUrl: import.meta.url,
 });
