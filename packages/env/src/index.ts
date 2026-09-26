@@ -4,6 +4,13 @@ import { parse } from "dotenv";
 import * as z from "zod";
 
 type EnvShape = z.ZodRawShape;
+interface EnvValidator {
+  safeParse(
+    value: unknown,
+  ):
+    | { success: true; data: unknown }
+    | { success: false; error: { issues: { message: string }[] } };
+}
 
 const reportedWarnings = new Set<string>();
 
@@ -69,7 +76,7 @@ export function createEnv<const T extends EnvShape>({
   const requiredNames = new Set<string>(required);
   const parsedValues: Record<string, unknown> = {};
 
-  for (const [name, validator] of Object.entries(schema.shape)) {
+  for (const [name, validator] of Object.entries(schema.shape) as [string, EnvValidator][]) {
     const rawValue = source[name] === "" ? undefined : source[name];
     const parsed = validator.safeParse(rawValue);
 
