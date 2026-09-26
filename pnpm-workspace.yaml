@@ -1,5 +1,8 @@
 minimumReleaseAge: 4320
 
+overrides:
+  "@better-fetch/fetch": 1.3.2
+
 packages:
   - apps/*
   - examples/*
