@@ -146,9 +146,7 @@ export function resolveProductionUrl(values: {
       return;
     }
     return url.href.replace(/\/$/u, "");
-  } catch {
-    return;
-  }
+  } catch {}
 }
 
 export function getProductionUrl(values: {
