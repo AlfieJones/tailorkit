@@ -4,6 +4,7 @@
   "noUpdateNotifier": true,
   "envMode": "strict",
   "globalEnv": ["!VERCEL_TARGET_ENV"],
+  "globalPassThroughEnv": ["OTEL_SDK_DISABLED", "TAILORKIT_OTEL_DISABLED"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
