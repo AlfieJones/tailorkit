@@ -2,7 +2,7 @@ minimumReleaseAge: 4320
 
 overrides:
   "@better-fetch/fetch": 1.3.2
-  vite@*: 'catalog:'
+  vite@*: "catalog:"
 
 packages:
   - apps/*
@@ -65,15 +65,15 @@ peerDependencyRules:
   allowAny:
     - vite
   allowedVersions:
-    vite: '*'
+    vite: "*"
 minimumReleaseAgeExclude:
   - vite-plus
-  - '@voidzero-dev/*'
+  - "@voidzero-dev/*"
   - oxlint
-  - '@oxlint/*'
+  - "@oxlint/*"
   - oxlint-tsgolint
-  - '@oxlint-tsgolint/*'
+  - "@oxlint-tsgolint/*"
   - oxfmt
-  - '@oxfmt/*'
+  - "@oxfmt/*"
   - vitest
-  - '@vitest/*'
+  - "@vitest/*"
